@@ -22,6 +22,19 @@ const upload = multer({
 
 const PHONE_REGEX = /^0\d{9}$/;
 const OTP_TTL_MS = 5 * 60 * 1000;
+const VERIFIED_OTP_WINDOW_MS = 10 * 60 * 1000;
+
+// Xác nhận đã có OTP xác thực thành công (consumed) cho SĐT này trong ít phút gần đây, rồi
+// xoá hết OTP của SĐT đó để không dùng lại được — bắt buộc phải gọi trước khi cho phép
+// register/reset-password, tránh chiếm tài khoản chỉ bằng cách biết số điện thoại.
+async function consumeVerifiedOtp(phoneNumber) {
+  const otpDoc = await OtpCode.findOne({ phoneNumber, consumed: true }).sort({ updatedAt: -1 });
+  if (!otpDoc || Date.now() - otpDoc.updatedAt.getTime() > VERIFIED_OTP_WINDOW_MS) {
+    return false;
+  }
+  await OtpCode.deleteMany({ phoneNumber });
+  return true;
+}
 
 function validatePasswordStrength(password) {
   // Tối thiểu 8 ký tự, 1 chữ in hoa, 1 ký tự đặc biệt (tham khảo quy tắc mật khẩu VitaCare-main).
@@ -98,6 +111,9 @@ router.post('/register', async (req, res) => {
     const existing = await User.findOne({ phoneNumber });
     if (existing) {
       return res.status(400).json({ success: false, error: 'Số điện thoại đã được đăng ký.' });
+    }
+    if (!(await consumeVerifiedOtp(phoneNumber))) {
+      return res.status(400).json({ success: false, error: 'Vui lòng xác thực mã OTP trước khi đăng ký.' });
     }
     const hashed = await bcrypt.hash(password, 10);
     const user = await User.create({ phoneNumber, password: hashed, lastLogin: new Date() });
@@ -182,6 +198,9 @@ router.post('/reset-password', async (req, res) => {
     const user = await User.findOne({ phoneNumber });
     if (!user) {
       return res.status(404).json({ success: false, error: 'Không tìm thấy tài khoản' });
+    }
+    if (!(await consumeVerifiedOtp(phoneNumber))) {
+      return res.status(400).json({ success: false, error: 'Vui lòng xác thực mã OTP trước khi đặt lại mật khẩu.' });
     }
     user.password = await bcrypt.hash(newPassword, 10);
     await user.save();

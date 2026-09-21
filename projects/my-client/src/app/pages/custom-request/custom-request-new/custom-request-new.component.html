@@ -1,0 +1,226 @@
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+      
+      <!-- Back Link & Header -->
+      <div>
+        <a routerLink="/custom-request" class="text-xs font-semibold text-neutral-600 hover:text-amber-400 flex items-center gap-1 mb-2 transition">
+          ← Quay lại danh sách yêu cầu
+        </a>
+        <h1 class="font-serif text-3xl font-extrabold text-neutral-900">
+          Gửi Yêu Cầu Thiết Kế Riêng
+        </h1>
+        <p class="text-xs sm:text-sm text-neutral-600 mt-1">
+          Mô tả chi tiết ý tưởng của bạn để kỹ thuật viên Luméa phân tích và gửi báo giá chính xác.
+        </p>
+      </div>
+
+      <!-- Notice if populated from AI Idea Assistant -->
+      <div *ngIf="fromAi" class="bg-gradient-to-r from-amber-950/40 via-neutral-900 to-[#FFFFFF] p-4 rounded-2xl border border-amber-500/30 flex items-center justify-between gap-4">
+        <div class="flex items-center gap-2.5 text-xs text-neutral-700">
+          <app-icon name="sparkles" [size]="18" class="text-amber-400 flex-shrink-0"></app-icon>
+          <span>
+            Thông tin bên dưới đã được tự động điền từ <strong class="text-amber-400">Design Brief</strong> của cuộc trò chuyện với AI Idea Assistant!
+          </span>
+        </div>
+        <span class="text-[10px] font-bold uppercase bg-gradient-to-r from-amber-400 to-amber-600 text-neutral-950 px-2 py-0.5 rounded shadow-sm">
+          AI Generated
+        </span>
+      </div>
+
+      <!-- Main Form Card -->
+      <form (ngSubmit)="submitRequest()" class="bg-[#FFFFFF] rounded-3xl p-6 sm:p-10 border border-neutral-200 shadow-xl space-y-8">
+        
+        <!-- Section 1: Customer Info -->
+        <div class="space-y-4">
+          <h3 class="font-serif text-lg font-bold text-neutral-900 border-b border-neutral-200 pb-2">
+            1. Thông Tin Liên Hệ
+          </h3>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Họ và tên *</label>
+              <input 
+                type="text" 
+                [(ngModel)]="customerName" 
+                name="cName" 
+                required 
+                placeholder="Nguyễn Văn A" 
+                class="w-full text-xs rounded-xl border border-neutral-300 p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500 transition">
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Email nhận báo giá *</label>
+              <input 
+                type="email" 
+                [(ngModel)]="customerEmail" 
+                name="cEmail" 
+                required 
+                placeholder="email@example.com" 
+                class="w-full text-xs rounded-xl border border-neutral-300 p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500 transition">
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Số điện thoại (Zalo)</label>
+              <input 
+                type="text" 
+                [(ngModel)]="customerPhone" 
+                name="cPhone" 
+                placeholder="0912 345 678" 
+                class="w-full text-xs rounded-xl border border-neutral-300 p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500 transition">
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: Request Brief Details -->
+        <div class="space-y-4">
+          <h3 class="font-serif text-lg font-bold text-neutral-900 border-b border-neutral-200 pb-2">
+            2. Chi Tiết Ý Tưởng & Quy Cách (Design Brief)
+          </h3>
+
+          <div class="space-y-4">
+            <div>
+              <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Tiêu đề yêu cầu *</label>
+              <input 
+                type="text" 
+                [(ngModel)]="title" 
+                name="rTitle" 
+                required 
+                placeholder="Ví dụ: Đèn ngủ mini hình mèo con cuộn tròn" 
+                class="w-full text-xs rounded-xl border border-neutral-300 p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500 transition">
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Loại sản phẩm</label>
+                <input 
+                  type="text" 
+                  [(ngModel)]="brief.productType" 
+                  name="bProductType" 
+                  placeholder="Đèn ngủ, bình hoa, khay đựng, tượng..." 
+                  class="w-full text-xs rounded-xl border border-neutral-300 p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500 transition">
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Chủ đề & Cảm hứng</label>
+                <input 
+                  type="text" 
+                  [(ngModel)]="brief.theme" 
+                  name="bTheme" 
+                  placeholder="Hình chú mèo, núi Phú Sĩ, hoa tulip..." 
+                  class="w-full text-xs rounded-xl border border-neutral-300 p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500 transition">
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Phong cách thiết kế</label>
+                <input 
+                  type="text" 
+                  [(ngModel)]="brief.style" 
+                  name="bStyle" 
+                  placeholder="Minimalist, Cute, Geometric, Cyberpunk..." 
+                  class="w-full text-xs rounded-xl border border-neutral-300 p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500 transition">
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Màu sắc mong muốn</label>
+                <input 
+                  type="text" 
+                  [(ngModel)]="brief.color" 
+                  name="bColor" 
+                  placeholder="Trắng ngà, xanh rêu sage, pastel..." 
+                  class="w-full text-xs rounded-xl border border-neutral-300 p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500 transition">
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Kích thước dự kiến</label>
+                <input 
+                  type="text" 
+                  [(ngModel)]="brief.size" 
+                  name="bSize" 
+                  placeholder="Khoảng 18cm x 15cm" 
+                  class="w-full text-xs rounded-xl border border-neutral-300 p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500 transition">
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Mục đích sử dụng</label>
+                <input 
+                  type="text" 
+                  [(ngModel)]="brief.usage" 
+                  name="bUsage" 
+                  placeholder="Đèn ngủ đầu giường, đựng bút bàn làm việc..." 
+                  class="w-full text-xs rounded-xl border border-neutral-300 p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500 transition">
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Khắc chữ / Tên / Ngày tháng</label>
+                <input 
+                  type="text" 
+                  [(ngModel)]="brief.customText" 
+                  name="bCustomText" 
+                  placeholder="Ví dụ: Luna, 2026..." 
+                  class="w-full text-xs rounded-xl border border-neutral-300 p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500 transition">
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Ngân sách dự kiến</label>
+                <input 
+                  type="text" 
+                  [(ngModel)]="brief.estimatedBudget" 
+                  name="bBudget" 
+                  placeholder="Ví dụ: 300.000đ - 500.000đ" 
+                  class="w-full text-xs rounded-xl border border-neutral-300 p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500 transition">
+              </div>
+            </div>
+
+            <!-- Notes -->
+            <div>
+              <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Ghi chú thêm cho shop</label>
+              <textarea 
+                [(ngModel)]="brief.notes" 
+                name="bNotes" 
+                rows="3" 
+                placeholder="Bất kỳ yêu cầu nào khác về độ hoàn thiện, màu ánh sáng đèn, hoặc cách đóng gói quà tặng..." 
+                class="w-full text-xs rounded-xl border border-neutral-300 p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500 transition"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: Reference Media & AI Concept -->
+        <div class="space-y-4">
+          <h3 class="font-serif text-lg font-bold text-neutral-900 border-b border-neutral-200 pb-2">
+            3. Hình Ảnh Phác Họa & Tham Khảo
+          </h3>
+
+          <!-- AI Concept Preview if available -->
+          <div *ngIf="aiConceptImage" class="p-4 bg-[#F6F5F2] rounded-2xl border border-neutral-200 space-y-2">
+            <span class="text-xs font-bold text-amber-400">Ảnh Concept từ AI Assistant:</span>
+            <img [src]="aiConceptImage" alt="AI Concept" class="max-h-48 rounded-xl object-cover border border-neutral-300">
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Link ảnh tham khảo (Pinterest, Unsplash hoặc Google Drive)</label>
+            <input 
+              type="text" 
+              [(ngModel)]="referenceImageUrl" 
+              name="refImg" 
+              placeholder="https://images.unsplash.com/..." 
+              class="w-full text-xs rounded-xl border border-neutral-300 p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500 transition">
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="pt-4 border-t border-neutral-200 flex items-center justify-between">
+          <p class="text-[11px] text-neutral-600">
+            Shop sẽ phản hồi và gửi báo giá trong vòng 24h làm việc.
+          </p>
+
+          <button 
+            type="submit" 
+            [disabled]="!title || !customerName || !customerEmail"
+            class="px-8 py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 disabled:opacity-50 text-neutral-950 font-extrabold text-sm shadow-[0_4px_25px_rgba(212,175,55,0.35)] transition flex items-center gap-2">
+            <app-icon name="send" [size]="16"></app-icon>
+            <span>Gửi Yêu Cầu Thiết Kế</span>
+          </button>
+        </div>
+
+      </form>
+
+    </div>

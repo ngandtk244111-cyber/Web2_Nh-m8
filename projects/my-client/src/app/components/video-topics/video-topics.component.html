@@ -1,0 +1,49 @@
+<section class="vt_section">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center gap-2 mb-6">
+      <span class="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_6px_#d4af37]"></span>
+      <div>
+        <h2 class="font-serif text-xl sm:text-2xl font-bold text-neutral-900">Các Dịch Vụ &amp; Chủ Đề Hữu Ích</h2>
+        <p class="text-xs sm:text-sm text-neutral-600 mt-1">Cuộn để khám phá — video tự phát khi vào tầm nhìn, dừng khi rời khỏi</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="vt_track">
+    <article
+      *ngFor="let topic of topics; let i = index"
+      #topicCard
+      [attr.data-index]="i"
+      class="vt_card"
+      [class.vt_card--active]="activeIndex === i">
+
+      <div class="vt_card__media">
+        <video
+          #topicVideo
+          *ngIf="topic.videoUrl"
+          [poster]="topic.poster"
+          [src]="isLoaded(i) ? topic.videoUrl : null"
+          muted
+          loop
+          playsinline
+          preload="none"
+          class="vt_card__video">
+        </video>
+        <img *ngIf="!topic.videoUrl" [src]="topic.poster" [alt]="topic.title" class="vt_card__poster" loading="lazy">
+        <div class="vt_card__fade"></div>
+      </div>
+
+      <div class="vt_card__icon">
+        <app-icon [name]="topic.icon" [size]="20"></app-icon>
+      </div>
+
+      <div class="vt_card__body">
+        <h3 class="vt_card__title">{{ topic.title }}</h3>
+        <p class="vt_card__desc">{{ topic.description }}</p>
+        <a *ngIf="topic.link" [routerLink]="topic.link" class="vt_card__cta">
+          {{ topic.ctaLabel }} <app-icon name="chevron-right" [size]="13"></app-icon>
+        </a>
+      </div>
+    </article>
+  </div>
+</section>

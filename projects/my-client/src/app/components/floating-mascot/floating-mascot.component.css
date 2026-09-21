@@ -1,0 +1,80 @@
+.fm {
+  position: fixed;
+  /* Chat widget: fixed bottom-5 right-5, cao 56px -> mép trên cách đáy viewport 76px.
+     Đặt mascot ngay phía trên, cách Chat 16px (nằm trong khoảng 12-20px yêu cầu). */
+  bottom: 92px;
+  right: 20px;
+  z-index: 32;
+  width: 58px;
+  animation: fm-in 0.5s ease both;
+}
+
+@keyframes fm-in {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.fm__btn {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  animation: fm-float 3.6s ease-in-out infinite;
+  transition: transform 0.2s ease;
+}
+
+.fm__btn:hover {
+  transform: scale(1.06);
+}
+
+@keyframes fm-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.fm__img {
+  width: 100%;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.45));
+}
+
+.fm__close {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 17px;
+  height: 17px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.55);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+  transition: background 0.15s ease;
+}
+
+.fm__close:hover {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+@media (max-width: 1200px), (max-height: 640px) {
+  .fm {
+    display: none;
+  }
+}

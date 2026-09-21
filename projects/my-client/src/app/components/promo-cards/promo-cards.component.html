@@ -1,0 +1,17 @@
+<section class="pc_section">
+  <div class="pc_grid">
+    <a
+      *ngFor="let card of cards"
+      [routerLink]="card.link"
+      class="pc_card">
+      <div class="pc_card__icon">
+        <app-icon [name]="card.icon" [size]="22"></app-icon>
+      </div>
+      <div class="pc_card__text">
+        <div class="pc_card__title">{{ card.title }}</div>
+        <div class="pc_card__subtitle">{{ card.subtitle }}</div>
+      </div>
+      <app-icon name="chevron-right" [size]="16" class="pc_card__arrow"></app-icon>
+    </a>
+  </div>
+</section>

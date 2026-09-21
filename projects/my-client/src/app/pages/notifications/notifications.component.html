@@ -1,0 +1,41 @@
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="font-serif text-2xl sm:text-3xl font-bold text-neutral-900">Thông Báo</h1>
+    <button
+      *ngIf="notificationService.unreadCount() > 0"
+      type="button"
+      (click)="markAllAsRead()"
+      class="text-xs font-semibold text-amber-400 hover:text-amber-700">
+      Đánh dấu tất cả đã đọc
+    </button>
+  </div>
+
+  <div class="space-y-3" *ngIf="notificationService.notifications().length > 0; else empty">
+    <a
+      *ngFor="let n of notificationService.notifications()"
+      [routerLink]="n.link || null"
+      (click)="!n.read && markAsRead(n._id, $event)"
+      class="p-4 rounded-2xl border border-neutral-200 hover:border-amber-500/40 transition flex items-start gap-3"
+      [ngClass]="!n.read ? 'bg-[#FFF7F2]' : 'bg-white'">
+      <span class="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" [class.bg-amber-400]="!n.read"></span>
+      <div class="flex-1 min-w-0">
+        <div class="text-sm font-bold text-neutral-900">{{ n.title }}</div>
+        <p class="text-xs text-neutral-600 mt-1">{{ n.message }}</p>
+        <div class="text-[11px] text-neutral-500 mt-2">{{ n.createdAt | date:'dd/MM/yyyy HH:mm' }}</div>
+      </div>
+      <button
+        type="button"
+        *ngIf="!n.read"
+        (click)="markAsRead(n._id, $event)"
+        class="text-[11px] font-semibold text-amber-400 hover:text-amber-700 flex-shrink-0">
+        Đánh dấu đã đọc
+      </button>
+    </a>
+  </div>
+
+  <ng-template #empty>
+    <div class="text-center py-16 bg-white rounded-3xl border border-neutral-200">
+      <p class="text-sm text-neutral-600">Bạn chưa có thông báo nào.</p>
+    </div>
+  </ng-template>
+</div>

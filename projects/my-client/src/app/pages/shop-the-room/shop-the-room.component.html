@@ -1,0 +1,147 @@
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      
+      <!-- Top Header & Room Switcher -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-neutral-200 pb-6">
+        <div>
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/15 text-amber-700 text-xs font-bold uppercase tracking-wider mb-2 border border-amber-500/30">
+            <app-icon name="room" [size]="14"></app-icon>
+            <span>Không Gian 3D Trực Quan (Shop The Room)</span>
+          </div>
+          <h1 class="font-serif text-2xl sm:text-3xl font-extrabold text-neutral-900">
+            {{ currentRoom.name }}
+          </h1>
+          <p class="text-xs sm:text-sm text-neutral-600 mt-1">
+            {{ currentRoom.description }}
+          </p>
+        </div>
+
+        <!-- Room selector pills -->
+        <div class="flex items-center gap-2 overflow-x-auto pb-1">
+          <span class="text-xs text-neutral-600 whitespace-nowrap font-medium">Chọn căn phòng:</span>
+          <button 
+            *ngFor="let r of rooms"
+            (click)="selectRoom(r)"
+            [class]="currentRoom.id === r.id 
+              ? 'bg-gradient-to-r from-amber-400 to-amber-600 text-neutral-950 font-extrabold shadow-[0_0_12px_rgba(212,175,55,0.3)]' 
+              : 'bg-neutral-100 border border-neutral-300 text-neutral-700 hover:text-amber-700 hover:border-amber-500/40 font-medium'"
+            class="px-4 py-2 rounded-2xl text-xs whitespace-nowrap transition flex items-center gap-2">
+            <app-icon name="room" [size]="14"></app-icon>
+            <span>{{ r.name.split('(')[0] }}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Main Layout: 3D Room Viewer + Buy This Look Drawer -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        <!-- Left: 3D Interactive Room Stage (8 cols) -->
+        <div class="lg:col-span-8 space-y-4">
+          <app-room-viewer 
+            [room]="currentRoom"
+            (hotspotClicked)="onHotspotSelected($event)">
+          </app-room-viewer>
+
+          <div class="p-4 bg-[#FFFFFF] rounded-2xl border border-neutral-200 text-xs text-neutral-700 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <app-icon name="sparkles" [size]="16" class="text-amber-400"></app-icon>
+              <span>Mẹo: Kéo chuột để đổi góc nhìn xung quanh bàn, click vào các chấm tròn để khám phá món đồ.</span>
+            </div>
+            <span class="hidden sm:inline text-neutral-500">Thiết kế bởi Luméa Studio</span>
+          </div>
+        </div>
+
+        <!-- Right: "Shop This Room / Buy This Look" Panel (4 cols) -->
+        <div class="lg:col-span-4 bg-[#FFFFFF] rounded-3xl p-6 border border-neutral-200 shadow-soft space-y-6">
+          
+          <div class="border-b border-neutral-200 pb-4">
+            <div class="flex items-center justify-between">
+              <h3 class="font-serif text-lg font-bold text-neutral-900">
+                Mua Trọn Bộ Phòng (Buy This Look)
+              </h3>
+              <span class="text-xs font-extrabold text-neutral-950 bg-gradient-to-r from-amber-400 to-amber-500 px-2.5 py-0.5 rounded-full shadow-sm">
+                -15% Combo
+              </span>
+            </div>
+            <p class="text-xs text-neutral-600 mt-1">
+              Chọn các món đồ được bài trí trong phòng và thêm vào giỏ hàng chỉ với 1 thao tác.
+            </p>
+          </div>
+
+          <!-- Select All Checkbox -->
+          <div class="flex items-center justify-between text-xs pb-2 border-b border-neutral-200">
+            <label class="flex items-center gap-2 font-semibold text-neutral-800 cursor-pointer select-none">
+              <input 
+                type="checkbox" 
+                [checked]="isAllSelected()"
+                (change)="toggleSelectAll()"
+                class="w-4 h-4 text-amber-500 rounded border-neutral-300 bg-neutral-200 focus:ring-amber-400">
+              <span>Chọn tất cả ({{ roomProducts.length }} sản phẩm)</span>
+            </label>
+            <span class="text-neutral-600 font-medium">
+              Đã chọn: {{ selectedProductIds.size }}/{{ roomProducts.length }}
+            </span>
+          </div>
+
+          <!-- Products in Room List -->
+          <div class="space-y-3 max-h-[380px] overflow-y-auto pr-1">
+            <div 
+              *ngFor="let p of roomProducts"
+              class="p-3 rounded-2xl border transition flex items-center gap-3"
+              [class.border-amber-500]="selectedProductIds.has(p.id)"
+              [class.bg-amber-950]="selectedProductIds.has(p.id)"
+              [class.border-neutral-200]="!selectedProductIds.has(p.id)"
+              [class.bg-neutral-100]="!selectedProductIds.has(p.id)">
+              
+              <input 
+                type="checkbox" 
+                [checked]="selectedProductIds.has(p.id)"
+                (change)="toggleProductSelection(p.id)"
+                class="w-4 h-4 text-amber-500 rounded border-neutral-300 bg-neutral-200 focus:ring-amber-400 flex-shrink-0">
+
+              <img 
+                [src]="p.images[0]" 
+                [alt]="p.name"
+                class="w-14 h-14 rounded-xl object-cover border border-neutral-300 bg-neutral-200 flex-shrink-0">
+
+              <div class="min-w-0 flex-1">
+                <h4 class="text-xs font-bold text-neutral-900 truncate">{{ p.name }}</h4>
+                <div class="text-[10px] text-neutral-600 mt-0.5">{{ p.categoryName }}</div>
+                <div class="mt-1 flex items-baseline gap-2">
+                  <span class="text-xs font-bold text-amber-400">{{ p.basePrice | vnd }}</span>
+                  <a [routerLink]="['/product', p.slug]" class="text-[10px] text-neutral-500 hover:text-amber-400 underline">
+                    Xem
+                  </a>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Price & Buy The Look CTA -->
+          <div class="border-t border-neutral-200 pt-4 space-y-3">
+            <div class="flex justify-between items-baseline text-sm">
+              <span class="text-neutral-600">Tổng giá trị các món đã chọn:</span>
+              <span class="text-lg font-semibold text-amber-400">
+                {{ selectedTotal | vnd }}
+              </span>
+            </div>
+
+            <div class="bg-amber-500/10 p-3 rounded-xl border border-amber-500/25 text-[11px] text-amber-800">
+              🎁 Nhập mã <strong>ROOMCOMBO</strong> tại bước thanh toán để được giảm thêm 15% cho đơn hàng này.
+            </div>
+
+            <button 
+              type="button" 
+              (click)="addSelectedToCart()"
+              [disabled]="selectedProductIds.size === 0"
+              class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 disabled:opacity-50 text-neutral-950 font-extrabold text-xs sm:text-sm shadow-[0_4px_25px_rgba(212,175,55,0.35)] transition flex items-center justify-center gap-2">
+              <app-icon name="cart" [size]="16"></app-icon>
+              <span>Thêm {{ selectedProductIds.size }} món vào giỏ hàng</span>
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>

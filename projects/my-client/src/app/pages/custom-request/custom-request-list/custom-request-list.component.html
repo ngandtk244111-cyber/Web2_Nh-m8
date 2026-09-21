@@ -1,0 +1,132 @@
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+      
+      <!-- Header -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-neutral-200 pb-6">
+        <div>
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-950/40 text-amber-400 border border-amber-500/30 text-xs font-bold uppercase tracking-wider mb-2">
+            <app-icon name="cube" [size]="14"></app-icon>
+            <span>Dịch Vụ Thiết Kế Riêng (Create Your Own)</span>
+          </div>
+          <h1 class="font-serif text-3xl font-extrabold text-neutral-900">
+            Đặt Thiết Kế Sản Phẩm Độc Bản
+          </h1>
+          <p class="text-xs sm:text-sm text-neutral-600 mt-1 max-w-2xl">
+            Nếu các mẫu có sẵn chưa hoàn toàn đúng ý bạn, hãy gửi ý tưởng phác thảo. Đội ngũ Luméa sẽ kiểm tra tính khả thi kỹ thuật in 3D, báo giá và dựng mô phỏng preview duyệt trước khi sản xuất.
+          </p>
+        </div>
+
+        <div class="flex flex-wrap gap-2.5">
+          <button 
+            type="button" 
+            (click)="openAiAssistant()"
+            class="px-4 py-2.5 rounded-2xl bg-amber-950/40 hover:bg-amber-950/70 text-amber-400 font-bold text-xs border border-amber-500/30 transition flex items-center gap-1.5">
+            <app-icon name="sparkles" [size]="14" class="text-amber-400"></app-icon>
+            <span>AI Giúp Lên Ý Tưởng</span>
+          </button>
+
+          <a 
+            routerLink="/custom-request/new"
+            class="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-neutral-950 font-extrabold text-xs shadow-md transition flex items-center gap-1.5">
+            <app-icon name="plus" [size]="14"></app-icon>
+            <span>Gửi Yêu Cầu Mới</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Process 5-Step Workflow Banner -->
+      <div class="bg-[#FFFFFF] rounded-3xl p-6 border border-neutral-200 shadow-xl">
+        <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider mb-4">
+          Quy Trình Thực Hiện Sản Phẩm Theo Yêu Cầu
+        </h3>
+
+        <div class="grid grid-cols-1 sm:grid-cols-5 gap-3 text-xs">
+          <div class="p-3 bg-[#F6F5F2] rounded-2xl border border-neutral-200">
+            <span class="w-6 h-6 rounded-full bg-gradient-to-r from-amber-400 to-amber-600 text-neutral-950 text-[11px] font-extrabold flex items-center justify-center mb-2">1</span>
+            <div class="font-bold text-neutral-800">Gửi Ý Tưởng</div>
+            <p class="text-[11px] text-neutral-600 mt-1">Mô tả kiểu dáng, ảnh tham khảo hoặc brief từ AI.</p>
+          </div>
+
+          <div class="p-3 bg-[#F6F5F2] rounded-2xl border border-neutral-200">
+            <span class="w-6 h-6 rounded-full bg-gradient-to-r from-amber-400 to-amber-600 text-neutral-950 text-[11px] font-extrabold flex items-center justify-center mb-2">2</span>
+            <div class="font-bold text-neutral-800">Shop Báo Giá</div>
+            <p class="text-[11px] text-neutral-600 mt-1">Đánh giá tính khả thi kỹ thuật và gửi báo giá chi tiết.</p>
+          </div>
+
+          <div class="p-3 bg-[#F6F5F2] rounded-2xl border border-neutral-200">
+            <span class="w-6 h-6 rounded-full bg-gradient-to-r from-amber-400 to-amber-600 text-neutral-950 text-[11px] font-extrabold flex items-center justify-center mb-2">3</span>
+            <div class="font-bold text-neutral-800">Xem Preview 3D</div>
+            <p class="text-[11px] text-neutral-600 mt-1">Shop gửi bản vẽ / mô hình preview để khách duyệt trước.</p>
+          </div>
+
+          <div class="p-3 bg-[#F6F5F2] rounded-2xl border border-neutral-200">
+            <span class="w-6 h-6 rounded-full bg-gradient-to-r from-amber-400 to-amber-600 text-neutral-950 text-[11px] font-extrabold flex items-center justify-center mb-2">4</span>
+            <div class="font-bold text-neutral-800">Đặt Hàng</div>
+            <p class="text-[11px] text-neutral-600 mt-1">Khách duyệt thiết kế và chuyển thành đơn hàng chính thức.</p>
+          </div>
+
+          <div class="p-3 bg-[#F6F5F2] rounded-2xl border border-neutral-200">
+            <span class="w-6 h-6 rounded-full bg-emerald-500 text-neutral-950 text-[11px] font-extrabold flex items-center justify-center mb-2">5</span>
+            <div class="font-bold text-neutral-800">In 3D & Giao Hàng</div>
+            <p class="text-[11px] text-neutral-600 mt-1">Sản xuất FDM, chà nhám, hoàn thiện và giao tận tay.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Requests List -->
+      <div class="space-y-4">
+        <h2 class="font-serif text-xl font-bold text-neutral-900">
+          Danh Sách Yêu Cầu Thiết Kế Của Bạn
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div 
+            *ngFor="let req of requests"
+            class="bg-[#FFFFFF] rounded-3xl p-6 border border-neutral-200 shadow-xl hover:border-amber-500/40 transition flex flex-col justify-between space-y-4">
+            
+            <div>
+              <div class="flex items-start justify-between gap-2">
+                <span class="text-[11px] font-mono text-neutral-600 font-semibold">{{ req.requestCode }}</span>
+                
+                <!-- Status Badge -->
+                <span [ngSwitch]="req.status" class="text-[11px] font-bold px-2.5 py-0.5 rounded-full">
+                  <span *ngSwitchCase="'PENDING_REVIEW'" class="text-amber-400 bg-amber-950/40 border border-amber-500/30">Đang xem xét</span>
+                  <span *ngSwitchCase="'QUOTED'" class="text-blue-400 bg-blue-950/40 border border-blue-500/30">Đã có báo giá</span>
+                  <span *ngSwitchCase="'PREVIEW_READY'" class="text-purple-400 bg-purple-950/40 border border-purple-500/30">Đã có 3D Preview</span>
+                  <span *ngSwitchCase="'APPROVED'" class="text-emerald-400 bg-emerald-950/40 border border-emerald-500/30">Đã duyệt thiết kế</span>
+                  <span *ngSwitchCase="'CONVERTED_TO_ORDER'" class="text-emerald-400 bg-emerald-950/40 border border-emerald-500/30">Đã lên đơn hàng</span>
+                  <span *ngSwitchDefault class="text-neutral-600 bg-neutral-200">Đang xử lý</span>
+                </span>
+              </div>
+
+              <h3 class="font-serif text-base font-bold text-neutral-900 mt-2">
+                <a [routerLink]="['/custom-request', req.id]" class="hover:text-amber-400 transition">
+                  {{ req.title }}
+                </a>
+              </h3>
+
+              <div class="mt-2 text-xs text-neutral-700 space-y-1">
+                <div><span class="text-neutral-500">Loại:</span> {{ req.brief.productType }}</div>
+                <div><span class="text-neutral-500">Phong cách:</span> {{ req.brief.style }}</div>
+                <div *ngIf="req.quotationPrice" class="text-sm font-bold text-amber-400 pt-1">
+                  Giá báo: {{ req.quotationPrice | vnd }} (Thời gian: ~{{ req.estimatedDays }} ngày)
+                </div>
+              </div>
+            </div>
+
+            <!-- Footer Action -->
+            <div class="pt-3 border-t border-neutral-200 flex items-center justify-between">
+              <span class="text-[10px] text-neutral-500">{{ req.createdAt }}</span>
+              <a 
+                [routerLink]="['/custom-request', req.id]"
+                class="px-4 py-2 rounded-xl bg-[#F0EEE8] hover:bg-[#252636] border border-neutral-300 text-neutral-800 font-bold text-xs transition flex items-center gap-1">
+                <span>Xem chi tiết & Trao đổi</span>
+                <app-icon name="chevron-right" [size]="14"></app-icon>
+              </a>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+    </div>

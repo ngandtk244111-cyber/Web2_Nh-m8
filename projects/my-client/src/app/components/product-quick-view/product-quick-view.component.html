@@ -1,0 +1,63 @@
+<div class="qv-overlay" *ngIf="quickViewService.activeProduct() as product" (click)="onOverlayClick($event)">
+  <div class="qv-modal">
+    <button type="button" class="qv-close" (click)="quickViewService.close()">
+      <app-icon name="x" [size]="16"></app-icon>
+    </button>
+
+    <div class="qv-modal__grid">
+      <div class="qv-modal__image">
+        <img [src]="product.images[0]" [alt]="product.name">
+        <span *ngIf="product.productionType === 'PRINT_ON_DEMAND'" class="qv-badge">
+          <app-icon name="cube" [size]="12"></app-icon>
+          In 3D (POD)
+        </span>
+      </div>
+
+      <div class="qv-modal__body">
+        <div class="qv-modal__category">{{ product.categoryName }}</div>
+        <h2 class="qv-modal__title">{{ product.name }}</h2>
+
+        <div class="qv-modal__rating">
+          <app-icon name="star" [size]="14"></app-icon>
+          <span>{{ product.rating }}</span>
+          <span class="qv-modal__rating-count">({{ product.reviewCount }} đánh giá)</span>
+        </div>
+
+        <p class="qv-modal__desc">{{ product.description }}</p>
+
+        <div class="qv-modal__price">
+          <span class="qv-modal__price-current">{{ product.basePrice | vnd }}</span>
+          <span *ngIf="product.originalPrice" class="qv-modal__price-original">{{ product.originalPrice | vnd }}</span>
+        </div>
+
+        <div class="qv-modal__actions">
+          <button
+            *ngIf="!product.customizable"
+            type="button"
+            class="qv-btn qv-btn--primary"
+            (click)="addToCart()">
+            <app-icon name="cart" [size]="16"></app-icon>
+            <span>Thêm vào giỏ hàng</span>
+          </button>
+
+          <a
+            *ngIf="product.customizable"
+            [routerLink]="['/customizer-3d']"
+            [queryParams]="{ productId: product.id }"
+            (click)="quickViewService.close()"
+            class="qv-btn qv-btn--primary">
+            <app-icon name="sliders" [size]="16"></app-icon>
+            <span>Tùy biến 3D sản phẩm này</span>
+          </a>
+
+          <a
+            [routerLink]="['/product', product.slug]"
+            (click)="quickViewService.close()"
+            class="qv-btn qv-btn--ghost">
+            Xem chi tiết đầy đủ →
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

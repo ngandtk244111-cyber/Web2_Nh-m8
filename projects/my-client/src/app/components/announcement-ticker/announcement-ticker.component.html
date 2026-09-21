@@ -1,0 +1,13 @@
+<div class="at_viewport" [class.at_viewport--compact]="compact" (mouseenter)="onMouseEnter()" (mouseleave)="onMouseLeave()">
+  <div class="at_track" [class.at_track--paused]="tickerService.isPaused()" [class.at_track--compact]="compact">
+    <button
+      type="button"
+      *ngFor="let item of displayItems; let i = index"
+      class="at_item"
+      [class.at_item--compact]="compact"
+      [class.at_item--active]="originalIndex(i) === tickerService.activeIndex()"
+      (click)="onItemClick(i)">
+      {{ item.tickerLabel }}
+    </button>
+  </div>
+</div>

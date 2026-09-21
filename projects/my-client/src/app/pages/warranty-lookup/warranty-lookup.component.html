@@ -1,0 +1,107 @@
+<div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+
+  <div class="text-center space-y-2">
+    <h1 class="font-serif text-3xl font-extrabold text-neutral-900">Tra Cứu Bảo Hành</h1>
+    <p class="text-xs sm:text-sm text-neutral-600 max-w-md mx-auto">
+      Nhập mã bảo hành (in trên phiếu đi kèm sản phẩm) và số điện thoại đặt hàng để kiểm tra tình trạng bảo hành.
+    </p>
+  </div>
+
+  <div class="bg-[#FFFFFF] p-6 rounded-2xl border border-neutral-200 shadow-xl space-y-4">
+    <div>
+      <label class="text-xs font-bold text-neutral-700 block mb-1">Mã bảo hành</label>
+      <input
+        type="text"
+        [(ngModel)]="warrantyCode"
+        placeholder="VD: WR-000123"
+        class="w-full p-2.5 rounded-xl border border-neutral-300 bg-white text-neutral-900 text-sm uppercase placeholder:normal-case focus:outline-none focus:border-amber-400">
+    </div>
+    <div>
+      <label class="text-xs font-bold text-neutral-700 block mb-1">Số điện thoại đặt hàng</label>
+      <input
+        type="text"
+        [(ngModel)]="phone"
+        placeholder="VD: 0912345678"
+        class="w-full p-2.5 rounded-xl border border-neutral-300 bg-white text-neutral-900 text-sm focus:outline-none focus:border-amber-400">
+    </div>
+    <button
+      (click)="search()"
+      [disabled]="isSearching"
+      class="w-full py-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-300 hover:to-amber-500 disabled:opacity-50 text-neutral-950 font-extrabold text-sm shadow-md transition flex items-center justify-center gap-2">
+      <app-icon name="search" [size]="16"></app-icon>
+      <span>{{ isSearching ? 'Đang tra cứu...' : 'Tra cứu bảo hành' }}</span>
+    </button>
+
+    <div *ngIf="errorMessage" class="text-center text-xs text-red-500 bg-red-50 border border-red-200 rounded-xl p-3">
+      {{ errorMessage }}
+    </div>
+  </div>
+
+  <div *ngIf="warranty" class="bg-[#FFFFFF] p-6 rounded-2xl border border-neutral-200 shadow-xl space-y-4">
+    <div class="flex items-center justify-between border-b border-neutral-200 pb-3">
+      <div>
+        <span class="text-[10px] font-bold uppercase text-neutral-500">Mã bảo hành</span>
+        <h3 class="font-serif text-xl font-bold text-neutral-900">{{ warranty.warrantyCode }}</h3>
+      </div>
+      <span
+        class="px-3 py-1.5 rounded-full text-xs font-bold border"
+        [class.bg-emerald-50]="warranty.status === 'ACTIVE'"
+        [class.text-emerald-600]="warranty.status === 'ACTIVE'"
+        [class.border-emerald-300]="warranty.status === 'ACTIVE'"
+        [class.bg-amber-50]="warranty.status === 'CLAIMED'"
+        [class.text-amber-700]="warranty.status === 'CLAIMED'"
+        [class.border-amber-300]="warranty.status === 'CLAIMED'"
+        [class.bg-neutral-100]="warranty.status === 'EXPIRED'"
+        [class.text-neutral-500]="warranty.status === 'EXPIRED'"
+        [class.border-neutral-300]="warranty.status === 'EXPIRED'">
+        {{ statusLabel(warranty.status) }}
+      </span>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+      <div>
+        <span class="text-[10px] font-bold uppercase text-neutral-500 block">Sản phẩm</span>
+        <span class="text-neutral-800">{{ warranty.productName }}</span>
+      </div>
+      <div>
+        <span class="text-[10px] font-bold uppercase text-neutral-500 block">Mã đơn hàng</span>
+        <span class="text-neutral-800 font-mono">{{ warranty.orderNumber }}</span>
+      </div>
+      <div>
+        <span class="text-[10px] font-bold uppercase text-neutral-500 block">Ngày mua</span>
+        <span class="text-neutral-800">{{ warranty.purchasedAt | date:'dd/MM/yyyy' }}</span>
+      </div>
+      <div>
+        <span class="text-[10px] font-bold uppercase text-neutral-500 block">Hết hạn bảo hành</span>
+        <span class="text-neutral-800">{{ warranty.expiresAt | date:'dd/MM/yyyy' }}</span>
+      </div>
+    </div>
+
+    <div *ngIf="warranty.claimHistory.length > 0" class="border-t border-neutral-200 pt-3 space-y-2">
+      <span class="text-[10px] font-bold uppercase text-neutral-500 block">Lịch sử yêu cầu bảo hành</span>
+      <div *ngFor="let c of warranty.claimHistory" class="text-xs text-neutral-600 bg-[#F6F5F2] p-2.5 rounded-xl border border-neutral-200">
+        {{ c.note }} <span class="text-neutral-400">— {{ c.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+      </div>
+    </div>
+
+    <div *ngIf="warranty.status === 'ACTIVE'" class="border-t border-neutral-200 pt-4 space-y-2">
+      <label class="text-xs font-bold text-neutral-700 block">Gửi yêu cầu bảo hành mới</label>
+      <textarea
+        [(ngModel)]="claimNote"
+        rows="3"
+        placeholder="Mô tả vấn đề bạn gặp phải với sản phẩm..."
+        class="w-full p-2.5 rounded-xl border border-neutral-300 bg-white text-neutral-900 text-sm focus:outline-none focus:border-amber-400"></textarea>
+      <button
+        (click)="submitClaim()"
+        [disabled]="isSubmittingClaim || !claimNote.trim()"
+        class="px-5 py-2.5 rounded-xl bg-[#2055AF] hover:bg-[#2864C8] disabled:opacity-50 text-white text-xs font-bold transition">
+        {{ isSubmittingClaim ? 'Đang gửi...' : 'Gửi yêu cầu bảo hành' }}
+      </button>
+    </div>
+
+    <div *ngIf="claimSubmitted" class="text-center text-xs text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-xl p-3">
+      Đã ghi nhận yêu cầu bảo hành. Đội ngũ Luméa sẽ liên hệ bạn sớm.
+    </div>
+  </div>
+
+</div>

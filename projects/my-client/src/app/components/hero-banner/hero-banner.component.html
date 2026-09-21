@@ -1,0 +1,53 @@
+<section class="hb" (mouseenter)="onMouseEnter()" (mouseleave)="onMouseLeave()">
+  <div class="hb_slides">
+    <div
+      *ngFor="let item of tickerService.items; let i = index"
+      class="hb_slide"
+      [class.hb_slide--active]="i === tickerService.activeIndex()"
+      [style.background]="item.gradient">
+
+      <div class="hb_slide__inner">
+        <div class="hb_slide__icon">
+          <app-icon [name]="item.icon" [size]="40"></app-icon>
+        </div>
+        <h1 class="hb_slide__title">{{ item.title }}</h1>
+        <p class="hb_slide__subtitle">{{ item.subtitle }}</p>
+
+        <button
+          *ngIf="item.id === 'ai-assistant'; else ctaLink"
+          type="button"
+          class="hb_slide__cta"
+          (click)="onCtaClick(item.id, $event)">
+          {{ item.ctaLabel }}
+          <app-icon name="chevron-right" [size]="16"></app-icon>
+        </button>
+        <ng-template #ctaLink>
+          <a [routerLink]="item.ctaLink" class="hb_slide__cta">
+            {{ item.ctaLabel }}
+            <app-icon name="chevron-right" [size]="16"></app-icon>
+          </a>
+        </ng-template>
+      </div>
+    </div>
+  </div>
+
+  <!-- Prev/Next arrows -->
+  <button type="button" class="hb_arrow hb_arrow--prev" aria-label="Banner trước" (click)="goPrev()">
+    <app-icon name="chevron-left" [size]="20"></app-icon>
+  </button>
+  <button type="button" class="hb_arrow hb_arrow--next" aria-label="Banner tiếp theo" (click)="goNext()">
+    <app-icon name="chevron-right" [size]="20"></app-icon>
+  </button>
+
+  <!-- Indicators -->
+  <div class="hb_dots">
+    <button
+      type="button"
+      *ngFor="let item of tickerService.items; let i = index"
+      class="hb_dot"
+      [class.hb_dot--active]="i === tickerService.activeIndex()"
+      [attr.aria-label]="item.title"
+      (click)="tickerService.setActive(i)">
+    </button>
+  </div>
+</section>

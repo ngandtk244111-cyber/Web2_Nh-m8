@@ -1,0 +1,156 @@
+    <div class="relative w-full h-[480px] sm:h-[540px] lg:h-[640px] bg-gradient-to-b from-[#FFFFFF] to-[#FFFFFF] rounded-3xl overflow-hidden border border-amber-500/25 select-none shadow-float">
+      
+      <!-- Canvas Container -->
+      <div 
+        #canvasContainer 
+        class="w-full h-full cursor-grab active:cursor-grabbing"
+        [class.pointer-events-none]="hasError">
+      </div>
+
+      <!-- 2D Interactive Hotspot Pins projected from 3D space -->
+      <!-- Position is directly updated via DOM translate3d in render callback, zero NgZone pollution -->
+      <div 
+        *ngFor="let item of hotspotViewModels"
+        #hotspotPin
+        [attr.data-id]="item.hotspot.id"
+        class="absolute top-0 left-0 z-20 pointer-events-auto"
+        style="display: none; will-change: transform;">
+        
+        <!-- Pin Button Container -->
+        <div class="relative group/pin">
+          <button 
+            type="button" 
+            (click)="selectHotspot(item)"
+            class="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-400 via-amber-500 to-amber-600 text-neutral-950 shadow-[0_0_12px_rgba(212,175,55,0.6)] flex items-center justify-center border-2 border-neutral-100 hover:scale-110 active:scale-95 transition-transform font-bold"
+            [class.hotspot-pulse]="selectedHotspot?.hotspot?.id === item.hotspot.id"
+            [class.ring-4]="selectedHotspot?.hotspot?.id === item.hotspot.id"
+            [class.ring-amber-400]="selectedHotspot?.hotspot?.id === item.hotspot.id">
+            <app-icon name="tag" [size]="14"></app-icon>
+          </button>
+
+          <!-- Floating Tooltip on Hover (Desktop) -->
+          <div class="absolute left-10 top-1/2 -translate-y-1/2 hidden sm:group-hover/pin:flex items-center gap-1.5 bg-[#FFFFFF]/95 border border-amber-500/30 backdrop-blur-md text-neutral-900 px-3 py-1.5 rounded-xl shadow-float whitespace-nowrap text-xs pointer-events-none z-30">
+            <span class="font-semibold">{{ item.product?.name || item.hotspot.label }}</span>
+            <span *ngIf="item.product" class="text-amber-400 font-bold">• {{ item.product.basePrice | vnd }}</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Top Tools & Instruction Overlay -->
+      <div class="absolute top-4 left-4 right-4 flex items-center justify-between pointer-events-none">
+        
+        <!-- Helper banner -->
+        <div class="bg-black/70 border border-amber-500/20 backdrop-blur-md text-amber-800 px-3.5 py-1.5 rounded-full text-xs flex items-center gap-2 shadow-sm pointer-events-auto">
+          <app-icon name="room" [size]="14" class="text-amber-400"></app-icon>
+          <span class="hidden md:inline">Click vào các <strong>chấm tròn vàng</strong> để tương tác với sản phẩm trong phòng</span>
+          <span class="md:hidden">Chạm <strong>chấm tròn</strong> để xem đồ</span>
+        </div>
+
+        <!-- Quality Selector (Desktop) -->
+        <div class="hidden sm:flex pointer-events-auto items-center gap-1 bg-neutral-100/90 border border-neutral-300 backdrop-blur-md p-1 rounded-xl shadow-sm text-[10px]">
+          <button 
+            type="button"
+            *ngFor="let opt of qualityOptions"
+            (click)="setQuality(opt.mode)"
+            [class]="qualityMode === opt.mode 
+              ? 'bg-gradient-to-r from-amber-400 to-amber-600 text-neutral-950 font-bold shadow-xs' 
+              : 'text-neutral-600 hover:text-amber-700 hover:bg-neutral-200'"
+            class="px-2 py-0.5 rounded-lg transition"
+            [title]="opt.description">
+            {{ opt.label }}
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Active Hotspot Detail Card Modal / Popover -->
+      <!-- Responsive: Bottom Sheet on Mobile, Floating Card on Desktop -->
+      <div 
+        *ngIf="selectedHotspot && selectedHotspot.product" 
+        class="absolute bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 sm:w-80 bg-[#FFFFFF]/95 backdrop-blur-md rounded-2xl p-4 shadow-float border border-amber-500/30 z-30 animate-in slide-in-from-bottom-3 duration-200">
+        
+        <div class="flex items-start justify-between gap-2 mb-2">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-amber-700 bg-amber-500/20 border border-amber-500/30 px-2 py-0.5 rounded">
+            {{ selectedHotspot.product.categoryName }}
+          </span>
+          <button 
+            (click)="selectedHotspot = null" 
+            class="text-neutral-600 hover:text-amber-400 p-1">
+            <app-icon name="x" [size]="16"></app-icon>
+          </button>
+        </div>
+
+        <div class="flex gap-3">
+          <img 
+            [src]="selectedHotspot.product.images[0]" 
+            [alt]="selectedHotspot.product.name" 
+            class="w-16 h-16 rounded-xl object-cover border border-neutral-300 bg-neutral-200 flex-shrink-0">
+          
+          <div class="min-w-0 flex-1">
+            <h4 class="font-semibold text-xs text-neutral-900 line-clamp-1">
+              {{ selectedHotspot.product.name }}
+            </h4>
+            <p class="text-[11px] text-neutral-600 line-clamp-1 mt-0.5">
+              {{ selectedHotspot.hotspot.annotationNote }}
+            </p>
+            <div class="mt-1 flex items-baseline gap-1.5">
+              <span class="font-bold text-sm text-amber-400">
+                {{ selectedHotspot.product.basePrice | vnd }}
+              </span>
+              <span *ngIf="selectedHotspot.product.originalPrice" class="text-[10px] text-neutral-500 line-through">
+                {{ selectedHotspot.product.originalPrice | vnd }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card Actions -->
+        <div class="mt-3.5 grid grid-cols-2 gap-2 pt-2 border-t border-neutral-200">
+          <button 
+            (click)="viewProduct(selectedHotspot.product)"
+            class="py-2 px-3 rounded-xl border border-neutral-300 hover:bg-neutral-200 text-neutral-700 hover:text-amber-700 font-semibold text-xs transition text-center">
+            Chi tiết
+          </button>
+          <button 
+            (click)="addToCart(selectedHotspot.product)"
+            class="py-2 px-3 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-neutral-950 font-extrabold text-xs shadow-sm transition text-center flex items-center justify-center gap-1">
+            <app-icon name="cart" [size]="13"></app-icon>
+            <span>Thêm giỏ</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Bottom Controls: Reset Camera Button & Touch Hint -->
+      <div class="absolute bottom-4 left-4 flex items-center gap-2 z-20 pointer-events-none">
+        <button 
+          type="button"
+          (click)="resetCamera()"
+          class="pointer-events-auto bg-neutral-100/90 hover:bg-neutral-200 text-neutral-800 hover:text-amber-700 px-3 py-1.5 rounded-full text-xs font-medium shadow-soft border border-neutral-300 hover:border-amber-400/50 flex items-center gap-1.5 transition active:scale-95">
+          <app-icon name="rotate" [size]="14"></app-icon>
+          <span>Góc nhìn chuẩn</span>
+        </button>
+      </div>
+
+      <!-- WebGL Failure / Context Lost Fallback Overlay -->
+      <div 
+        *ngIf="hasError" 
+        class="absolute inset-0 bg-[#FFFFFF]/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center z-20 space-y-3">
+        <div class="w-12 h-12 rounded-2xl bg-amber-950/50 text-amber-400 border border-amber-500/30 flex items-center justify-center">
+          <app-icon name="room" [size]="24"></app-icon>
+        </div>
+        <h4 class="font-serif text-sm font-bold text-neutral-900">Không thể tải không gian phòng 3D</h4>
+        <p class="text-xs text-neutral-600 max-w-xs leading-relaxed">
+          WebGL bị ngắt kết nối trên thiết bị. Bạn vẫn có thể mua các sản phẩm trong phòng bằng danh sách bên cạnh.
+        </p>
+        <button 
+          type="button"
+          (click)="retryInit()"
+          class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-amber-600 text-neutral-950 text-xs font-bold shadow-md transition active:scale-95 flex items-center gap-1.5">
+          <app-icon name="rotate" [size]="14"></app-icon>
+          <span>Thử lại tải phòng 3D</span>
+        </button>
+      </div>
+
+    </div>

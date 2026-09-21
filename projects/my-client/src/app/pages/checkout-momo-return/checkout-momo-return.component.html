@@ -1,0 +1,28 @@
+<div class="max-w-md mx-auto px-4 py-16 text-center space-y-5">
+  <div
+    class="w-16 h-16 rounded-full mx-auto flex items-center justify-center"
+    [class.bg-emerald-50]="isSuccess"
+    [class.text-emerald-500]="isSuccess"
+    [class.bg-red-50]="!isSuccess"
+    [class.text-red-500]="!isSuccess">
+    <app-icon [name]="isSuccess ? 'check' : 'x'" [size]="28"></app-icon>
+  </div>
+
+  <h1 class="font-serif text-2xl font-bold text-neutral-900">
+    {{ isSuccess ? 'Thanh Toán MoMo Thành Công' : 'Thanh Toán MoMo Chưa Hoàn Tất' }}
+  </h1>
+
+  <p class="text-sm text-neutral-600">
+    {{ isSuccess
+      ? 'Đơn hàng ' + orderNumber + ' đã được ghi nhận thanh toán qua MoMo.'
+      : (message || 'Giao dịch không thành công hoặc đã bị huỷ. Bạn có thể thử lại hoặc chọn phương thức khác.') }}
+  </p>
+
+  <a
+    *ngIf="orderNumber"
+    [routerLink]="['/orders/track']"
+    [queryParams]="{ orderNumber }"
+    class="inline-flex px-6 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-600 text-neutral-950 font-extrabold text-sm shadow-md">
+    Xem tiến độ đơn hàng
+  </a>
+</div>

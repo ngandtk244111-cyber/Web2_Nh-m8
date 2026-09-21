@@ -1,0 +1,24 @@
+<ng-container *ngFor="let banner of banners">
+  <a
+    *ngIf="!isDismissed(banner.side)"
+    [routerLink]="banner.link"
+    class="fsb fsb--{{ banner.side }}"
+    [style.background]="banner.gradient"
+    [attr.aria-label]="banner.eyebrow + ' - ' + banner.title">
+
+    <button
+      type="button"
+      class="fsb__close"
+      [attr.aria-label]="'Đóng banner ' + banner.eyebrow"
+      (click)="dismiss(banner.side, $event)">
+      <app-icon name="x" [size]="13"></app-icon>
+    </button>
+
+    <div class="fsb__icon">
+      <app-icon [name]="banner.icon" [size]="24"></app-icon>
+    </div>
+    <span class="fsb__eyebrow">{{ banner.eyebrow }}</span>
+    <h4 class="fsb__title">{{ banner.title }}</h4>
+    <span class="fsb__cta">{{ banner.ctaLabel }}</span>
+  </a>
+</ng-container>

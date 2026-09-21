@@ -1,0 +1,39 @@
+<div class="min-h-screen flex flex-col bg-white text-neutral-900 selection:bg-amber-500/30 selection:text-amber-900">
+  <!-- Sticky Global Header -->
+  <app-header></app-header>
+
+  <!-- Page Route Content -->
+  <main class="flex-1 route-fade" [class.route-fade--leaving]="routeLeaving()">
+    <router-outlet></router-outlet>
+  </main>
+
+  <!-- Global Footer -->
+  <app-footer></app-footer>
+
+  <!-- Slide-over Cart Drawer -->
+  <app-cart-drawer></app-cart-drawer>
+
+  <!-- AI Idea Assistant Modal Dialog -->
+  <app-ai-modal></app-ai-modal>
+
+  <!-- Login Modal (OTP) -->
+  <app-login-modal></app-login-modal>
+
+  <!-- Support Chat Widget (realtime) -->
+  <app-support-chat-widget></app-support-chat-widget>
+
+  <!-- Product Quick View Modal -->
+  <app-product-quick-view></app-product-quick-view>
+
+  <!-- Global Toast Notifications -->
+  <app-toast></app-toast>
+
+  <!-- Floating Side Banners (desktop only) -->
+  <app-floating-side-banners></app-floating-side-banners>
+
+  <!-- Floating Mascot Sticker (desktop only) -->
+  <app-floating-mascot></app-floating-mascot>
+
+  <!-- Túi Xu Luméa nổi góc màn hình -->
+  <app-floating-coin-widget></app-floating-coin-widget>
+</div>

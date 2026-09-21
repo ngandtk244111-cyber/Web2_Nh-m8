@@ -1,0 +1,259 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+  <!-- Callout: Tùy Biến In 3D là danh mục riêng -->
+  <a
+    routerLink="/customizer-3d"
+    class="flex items-center justify-between gap-4 p-4 mb-6 rounded-2xl bg-gradient-to-r from-amber-500/15 to-transparent border border-amber-500/30 hover:border-amber-400 transition group">
+    <div class="flex items-center gap-3.5">
+      <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-400 to-amber-600 flex items-center justify-center text-white shadow-[0_0_15px_rgba(255,109,45,0.4)] flex-shrink-0">
+        <app-icon name="sliders" [size]="18"></app-icon>
+      </div>
+      <div>
+        <div class="text-sm font-bold text-neutral-900">Muốn một món đồ độc bản, tự thiết kế màu/kích thước/khắc chữ?</div>
+        <div class="text-xs text-neutral-600 mt-0.5">Ghé danh mục riêng "Tùy Biến In 3D" — sản phẩm in theo yêu cầu, xem trước trực quan trên mô hình 3D.</div>
+      </div>
+    </div>
+    <app-icon name="chevron-right" [size]="18" class="text-amber-500 flex-shrink-0 group-hover:translate-x-1 transition-transform"></app-icon>
+  </a>
+
+  <!-- Mobile: nút mở bộ lọc -->
+  <button
+    type="button"
+    (click)="openMobileFilters()"
+    class="cg_mobile-filter-btn lg:hidden mb-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-neutral-200 text-neutral-700 text-xs font-bold shadow-soft">
+    <app-icon name="sliders" [size]="15"></app-icon>
+    <span>Bộ lọc{{ activeFilterCount > 0 ? ' (' + activeFilterCount + ')' : '' }}</span>
+  </button>
+
+  <div class="cg_layout">
+
+    <!-- ============ SIDEBAR (desktop) ============ -->
+    <aside class="cg_sidebar hidden lg:block">
+      <ng-container *ngTemplateOutlet="sidebarContent"></ng-container>
+    </aside>
+
+    <!-- ============ MAIN CONTENT ============ -->
+    <div class="cg_main min-w-0">
+
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+        <div>
+          <h1 class="font-serif text-xl sm:text-2xl font-bold text-neutral-900">Danh Sách Sản Phẩm</h1>
+          <p class="text-xs text-neutral-600 mt-1">Khám phá các sản phẩm decor mini 3D được thiết kế và in theo phong cách riêng.</p>
+        </div>
+      </div>
+
+      <!-- Search + Sorting + View toggle -->
+      <div class="cg_toolbar bg-white rounded-2xl p-3 border border-neutral-200 shadow-soft flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between mb-5">
+        <div class="relative flex-1 max-w-xs">
+          <input
+            type="text"
+            [(ngModel)]="searchQuery"
+            (ngModelChange)="onSearchChange()"
+            placeholder="Tìm kiếm sản phẩm..."
+            class="w-full pl-9 pr-3 py-2 rounded-xl border border-neutral-300 bg-neutral-100 text-neutral-800 placeholder:text-neutral-500 text-xs focus:outline-none focus:border-amber-400 transition">
+          <app-icon name="search" [size]="14" class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500"></app-icon>
+        </div>
+
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="text-xs text-neutral-600">Sắp xếp theo:</span>
+          <button (click)="setSort('bestseller')" [class.cg_sort--active]="sortBy === 'bestseller'" class="cg_sort-chip">Bán chạy</button>
+          <button (click)="setSort('newest')" [class.cg_sort--active]="sortBy === 'newest'" class="cg_sort-chip">Mới nhất</button>
+          <button (click)="setSort('price-asc')" [class.cg_sort--active]="sortBy === 'price-asc'" class="cg_sort-chip">Giá thấp → cao</button>
+          <button (click)="setSort('price-desc')" [class.cg_sort--active]="sortBy === 'price-desc'" class="cg_sort-chip">Giá cao → thấp</button>
+          <button (click)="setSort('rating')" [class.cg_sort--active]="sortBy === 'rating'" class="cg_sort-chip">Đánh giá cao</button>
+
+          <div class="cg_view-toggle">
+            <button type="button" (click)="setViewMode('grid')" [class.cg_view--active]="viewMode === 'grid'" aria-label="Xem dạng lưới">
+              <app-icon name="box" [size]="15"></app-icon>
+            </button>
+            <button type="button" (click)="setViewMode('list')" [class.cg_view--active]="viewMode === 'list'" aria-label="Xem dạng danh sách">
+              <app-icon name="menu" [size]="15"></app-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results -->
+      <div
+        *ngIf="filteredProducts.length > 0"
+        class="grid gap-5"
+        [class.grid-cols-1]="viewMode === 'list'"
+        [class.sm:grid-cols-2]="viewMode === 'grid'"
+        [class.lg:grid-cols-3]="viewMode === 'grid'">
+        <app-product-card
+          *ngFor="let p of filteredProducts"
+          [product]="p"
+          [layout]="viewMode">
+        </app-product-card>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="filteredProducts.length === 0" class="text-center py-16 bg-white rounded-3xl border border-neutral-200 shadow-soft p-8 space-y-4">
+        <p class="text-sm text-neutral-600">Không tìm thấy sản phẩm nào phù hợp với bộ lọc.</p>
+        <button
+          (click)="resetFilters()"
+          class="px-5 py-2 rounded-full border border-amber-400 text-amber-400 text-xs font-bold hover:bg-amber-400 hover:text-neutral-950 transition">
+          Xóa bộ lọc
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Mobile filter drawer -->
+<div class="cg_overlay lg:hidden" *ngIf="mobileFiltersOpen" (click)="closeMobileFilters()"></div>
+<aside class="cg_drawer lg:hidden" [class.cg_drawer--open]="mobileFiltersOpen">
+  <div class="cg_drawer__head">
+    <span class="font-bold text-sm text-neutral-900">Bộ lọc nâng cao</span>
+    <button type="button" (click)="closeMobileFilters()" aria-label="Đóng">
+      <app-icon name="x" [size]="18"></app-icon>
+    </button>
+  </div>
+  <div class="cg_drawer__body">
+    <ng-container *ngTemplateOutlet="sidebarContent"></ng-container>
+  </div>
+  <div class="cg_drawer__foot">
+    <button type="button" (click)="closeMobileFilters()" class="cg_drawer__apply">
+      Xem {{ filteredProducts.length }} sản phẩm
+    </button>
+  </div>
+</aside>
+
+<!-- ============ SIDEBAR CONTENT (dùng chung desktop + mobile drawer) ============ -->
+<ng-template #sidebarContent>
+  <div class="cg_sidebar__title">
+    <app-icon name="sliders" [size]="15"></app-icon>
+    <span>Bộ lọc nâng cao</span>
+  </div>
+
+  <!-- LOẠI SẢN PHẨM -->
+  <div class="cg_group">
+    <button type="button" class="cg_group__head" (click)="toggleGroup('category')">
+      <span>Loại Sản Phẩm</span>
+      <app-icon name="chevron-down" [size]="14" [class.cg_group__arrow--open]="isGroupExpanded('category')"></app-icon>
+    </button>
+    <div class="cg_group__body" *ngIf="isGroupExpanded('category')">
+      <label class="cg_checkbox">
+        <input type="checkbox" [checked]="selectedCategoryKeys.size === 0" (change)="clearCategoryFilter()">
+        <span>Tất cả</span>
+      </label>
+      <label class="cg_checkbox" *ngFor="let group of visibleCategoryGroups()">
+        <input type="checkbox" [checked]="selectedCategoryKeys.has(group.key)" (change)="toggleCategory(group.key)">
+        <span>{{ group.label }}</span>
+      </label>
+      <button type="button" class="cg_see-more" (click)="toggleSeeMore('category')" *ngIf="categoryGroups.length > seeMoreThreshold">
+        <app-icon [name]="isSeeMoreExpanded('category') ? 'chevron-down' : 'chevron-right'" [size]="12"></app-icon>
+        {{ isSeeMoreExpanded('category') ? 'Thu gọn' : 'Xem thêm' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- GIÁ BÁN -->
+  <div class="cg_group">
+    <button type="button" class="cg_group__head" (click)="toggleGroup('price')">
+      <span>Giá Bán</span>
+      <app-icon name="chevron-down" [size]="14" [class.cg_group__arrow--open]="isGroupExpanded('price')"></app-icon>
+    </button>
+    <div class="cg_group__body" *ngIf="isGroupExpanded('price')">
+      <label class="cg_radio">
+        <input type="radio" name="priceRange" [checked]="selectedPriceRange === null" (change)="setPriceRange(null)">
+        <span>Tất Cả</span>
+      </label>
+      <label class="cg_radio" *ngFor="let range of priceRanges">
+        <input type="radio" name="priceRange" [checked]="selectedPriceRange === range.key" (change)="setPriceRange(range.key)">
+        <span>{{ range.label }}</span>
+      </label>
+    </div>
+  </div>
+
+  <!-- PHONG CÁCH -->
+  <div class="cg_group">
+    <button type="button" class="cg_group__head" (click)="toggleGroup('style')">
+      <span>Phong Cách</span>
+      <app-icon name="chevron-down" [size]="14" [class.cg_group__arrow--open]="isGroupExpanded('style')"></app-icon>
+    </button>
+    <div class="cg_group__body" *ngIf="isGroupExpanded('style')">
+      <label class="cg_checkbox">
+        <input type="checkbox" [checked]="selectedStyles.size === 0" (change)="clearStyleFilter()">
+        <span>Tất cả</span>
+      </label>
+      <label class="cg_checkbox" *ngFor="let style of visibleStyleOptions()">
+        <input type="checkbox" [checked]="selectedStyles.has(style)" (change)="toggleStyle(style)">
+        <span>{{ style }}</span>
+      </label>
+      <button type="button" class="cg_see-more" (click)="toggleSeeMore('style')" *ngIf="styleOptions.length > seeMoreThreshold">
+        <app-icon [name]="isSeeMoreExpanded('style') ? 'chevron-down' : 'chevron-right'" [size]="12"></app-icon>
+        {{ isSeeMoreExpanded('style') ? 'Thu gọn' : 'Xem thêm' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- MÀU SẮC -->
+  <div class="cg_group">
+    <button type="button" class="cg_group__head" (click)="toggleGroup('color')">
+      <span>Màu Sắc</span>
+      <app-icon name="chevron-down" [size]="14" [class.cg_group__arrow--open]="isGroupExpanded('color')"></app-icon>
+    </button>
+    <div class="cg_group__body" *ngIf="isGroupExpanded('color')">
+      <label class="cg_checkbox">
+        <input type="checkbox" [checked]="selectedColors.size === 0" (change)="clearColorFilter()">
+        <span>Tất cả</span>
+      </label>
+      <label class="cg_checkbox" *ngFor="let color of visibleColorOptions()">
+        <input type="checkbox" [checked]="selectedColors.has(color)" (change)="toggleColor(color)">
+        <span>{{ color }}</span>
+      </label>
+      <button type="button" class="cg_see-more" (click)="toggleSeeMore('color')" *ngIf="colorOptions.length > seeMoreThreshold">
+        <app-icon [name]="isSeeMoreExpanded('color') ? 'chevron-down' : 'chevron-right'" [size]="12"></app-icon>
+        {{ isSeeMoreExpanded('color') ? 'Thu gọn' : 'Xem thêm' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- CHẤT LIỆU IN -->
+  <div class="cg_group">
+    <button type="button" class="cg_group__head" (click)="toggleGroup('material')">
+      <span>Chất Liệu In</span>
+      <app-icon name="chevron-down" [size]="14" [class.cg_group__arrow--open]="isGroupExpanded('material')"></app-icon>
+    </button>
+    <div class="cg_group__body" *ngIf="isGroupExpanded('material')">
+      <label class="cg_checkbox" *ngFor="let material of materialOptions">
+        <input type="checkbox" [checked]="selectedMaterials.has(material)" (change)="toggleMaterial(material)">
+        <span>{{ material }}</span>
+      </label>
+    </div>
+  </div>
+
+  <!-- KÍCH THƯỚC -->
+  <div class="cg_group">
+    <button type="button" class="cg_group__head" (click)="toggleGroup('size')">
+      <span>Kích Thước</span>
+      <app-icon name="chevron-down" [size]="14" [class.cg_group__arrow--open]="isGroupExpanded('size')"></app-icon>
+    </button>
+    <div class="cg_group__body" *ngIf="isGroupExpanded('size')">
+      <label class="cg_checkbox" *ngFor="let size of sizeOptions">
+        <input type="checkbox" [checked]="selectedSizes.has(size)" (change)="toggleSize(size)">
+        <span>{{ size }}</span>
+      </label>
+    </div>
+  </div>
+
+  <!-- TÙY CHỈNH -->
+  <div class="cg_group">
+    <button type="button" class="cg_group__head" (click)="toggleGroup('customization')">
+      <span>Tùy Chỉnh</span>
+      <app-icon name="chevron-down" [size]="14" [class.cg_group__arrow--open]="isGroupExpanded('customization')"></app-icon>
+    </button>
+    <div class="cg_group__body" *ngIf="isGroupExpanded('customization')">
+      <label class="cg_checkbox" *ngFor="let opt of customizationOptions">
+        <input type="checkbox" [checked]="selectedCustomizations.has(opt.key)" (change)="toggleCustomization(opt.key)">
+        <span>{{ opt.label }}</span>
+      </label>
+    </div>
+  </div>
+
+  <button type="button" class="cg_reset-btn" (click)="resetFilters()" *ngIf="activeFilterCount > 0">
+    Xóa tất cả bộ lọc
+  </button>
+</ng-template>

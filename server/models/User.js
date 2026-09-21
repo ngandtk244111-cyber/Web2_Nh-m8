@@ -15,10 +15,14 @@ const addressSchema = new mongoose.Schema({
 });
 
 const userSchema = new mongoose.Schema({
-  phoneNumber: { type: String, required: true, unique: true },
+  // sparse: cho phép tạm thời chưa có SĐT (tài khoản mới đăng nhập Google/Facebook, chưa gắn SĐT) —
+  // route /register vẫn tự bắt buộc SĐT ở tầng application, chỉ nới ở tầng schema.
+  phoneNumber: { type: String, unique: true, sparse: true, default: null },
   // Băm bằng bcrypt — không lưu plain text. Đăng nhập bằng SĐT + mật khẩu (tham khảo VitaCare-main),
-  // không còn OTP-login/JWT.
-  password: { type: String, required: true },
+  // không còn OTP-login/JWT. Tài khoản Google/Facebook không có password.
+  password: { type: String, default: null },
+  googleId: { type: String, unique: true, sparse: true, default: null },
+  facebookId: { type: String, unique: true, sparse: true, default: null },
   fullName: { type: String, default: '' },
   email: { type: String, default: '' },
   gender: { type: String, enum: ['male', 'female', 'other', ''], default: '' },

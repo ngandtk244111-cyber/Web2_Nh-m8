@@ -18,12 +18,12 @@
       <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" appScrollReveal="up">
         <div class="flex items-end justify-between mb-6 gap-4">
           <div>
+            <p class="text-xs sm:text-sm font-bold uppercase tracking-wide text-amber-700 mb-1">
+              Khám Phá Theo Danh Mục
+            </p>
             <h2 class="font-serif text-2xl sm:text-3xl font-bold text-neutral-900">
               Danh Mục Sản Phẩm
             </h2>
-            <p class="text-xs sm:text-sm font-bold uppercase tracking-wide text-neutral-600 mt-1">
-              Danh Mục Sản Phẩm
-            </p>
           </div>
           <a
             routerLink="/catalog"
@@ -38,8 +38,8 @@
             [routerLink]="cat.link || '/catalog'"
             [queryParams]="cat.queryParams"
             class="flex flex-col items-center justify-center gap-2 text-center group">
-            <span class="w-14 h-14 sm:w-20 sm:h-20 rounded-full overflow-hidden bg-neutral-100 group-hover:scale-105 transition-transform">
-              <img [src]="cat.image" [alt]="cat.label" class="w-full h-full object-cover">
+            <span class="cat-icon w-14 h-14 sm:w-20 sm:h-20 rounded-full overflow-hidden">
+              <img [src]="cat.image" [alt]="cat.label" class="w-full h-full object-cover" (error)="onCategoryImageError($event)">
             </span>
             <span class="text-[11px] sm:text-xs font-medium text-neutral-700 group-hover:text-amber-700 leading-tight">{{ cat.label }}</span>
           </a>
@@ -85,9 +85,13 @@
 
       <!-- 5. SHOP THE ROOM -->
       <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" appScrollReveal="up">
-        <div class="bg-gradient-to-br from-[#FFFFFF] via-[#FBF7EE] to-[#FFFFFF] rounded-3xl p-6 sm:p-10 border border-amber-500/25 shadow-2xl">
+        <div class="relative overflow-hidden bg-gradient-to-br from-[#FFFFFF] via-[#FBF7EE] to-[#FFFFFF] rounded-3xl p-6 sm:p-10 border border-amber-500/25 shadow-2xl sr-card">
 
-          <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+          <span class="sr-card__photo" aria-hidden="true"></span>
+          <span class="sr-card__shine" aria-hidden="true"></span>
+          <span class="sr-card__sparkles" aria-hidden="true"></span>
+
+          <div class="relative z-10 flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
             <div>
               <div class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-amber-700 bg-amber-500/15 px-3 py-1 rounded-full mb-2 border border-amber-500/30">
                 <app-icon name="room" [size]="14"></app-icon>
@@ -109,7 +113,7 @@
           </div>
 
           <!-- Live 3D Room Viewer: hiển thị ngay khi vào trang, không cần bấm kích hoạt -->
-          <app-room-viewer *ngIf="activeRoom" [room]="activeRoom" qualityMode="auto"></app-room-viewer>
+          <app-room-viewer *ngIf="activeRoom" [room]="activeRoom" qualityMode="auto" class="relative z-10 block"></app-room-viewer>
 
         </div>
       </section>
@@ -153,7 +157,7 @@
 
       <!-- AI IDEA ASSISTANT BANNER: đi kèm ngay sau tùy biến 3D -->
       <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" appScrollReveal="up">
-        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#FFFFFF] via-[#FBF7EE] to-[#FFFFFF] text-white p-8 sm:p-12 shadow-2xl border border-amber-500/25">
+        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#FFFFFF] via-[#FBF7EE] to-[#FFFFFF] text-white p-8 sm:p-12 shadow-2xl border border-amber-500/25 ai-banner">
 
           <div class="relative z-10 max-w-2xl space-y-5">
             <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 text-amber-700 text-xs font-semibold border border-amber-500/30">
@@ -173,7 +177,7 @@
               <button
                 type="button"
                 (click)="openAiAssistant()"
-                class="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-neutral-950 font-extrabold text-sm shadow-[0_4px_25px_rgba(212,175,55,0.35)] hover:shadow-[0_4px_35px_rgba(212,175,55,0.5)] transition flex items-center gap-2">
+                class="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-neutral-950 font-extrabold text-sm shadow-[0_4px_25px_rgba(169,198,234,0.35)] hover:shadow-[0_4px_35px_rgba(169,198,234,0.5)] transition flex items-center gap-2">
                 <app-icon name="sparkles" [size]="18"></app-icon>
                 <span>Trò Chuyện Với AI Ngay</span>
               </button>
@@ -186,9 +190,10 @@
             </div>
           </div>
 
-          <!-- Decorative right graphic -->
-          <div class="absolute right-0 bottom-0 top-0 w-1/3 opacity-15 pointer-events-none hidden lg:flex items-center justify-center">
-            <app-icon name="cube" [size]="280" class="text-amber-400"></app-icon>
+          <!-- Decorative right graphic: ảnh concept AI/3D thật, có hiệu ứng động (shine + sparkle + zoom nhẹ) -->
+          <div class="ai-banner__photo-panel" aria-hidden="true">
+            <span class="ai-banner__shine"></span>
+            <span class="ai-banner__sparkles"></span>
           </div>
 
         </div>
@@ -198,7 +203,7 @@
       <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" appScrollReveal="up">
         <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-6 gap-4">
           <div class="flex items-center gap-2">
-            <span class="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_6px_#d4af37]"></span>
+            <span class="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_6px_#A9C6EA]"></span>
             <div>
               <h2 class="font-serif text-2xl sm:text-3xl font-bold text-neutral-900">Tin Tức</h2>
               <p class="text-xs sm:text-sm text-neutral-600 mt-1">
@@ -237,7 +242,7 @@
       <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" *ngIf="lifeTipsArticles.length > 0" appScrollReveal="up">
         <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-6 gap-4">
           <div class="flex items-center gap-2">
-            <span class="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_6px_#d4af37]"></span>
+            <span class="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_6px_#A9C6EA]"></span>
             <div>
               <h2 class="font-serif text-2xl sm:text-3xl font-bold text-neutral-900">Mẹo Sống</h2>
               <p class="text-xs sm:text-sm text-neutral-600 mt-1">
@@ -276,7 +281,7 @@
       <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" appScrollReveal="up">
         <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-6 gap-4">
           <div class="flex items-center gap-2">
-            <span class="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_6px_#d4af37]"></span>
+            <span class="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_6px_#A9C6EA]"></span>
             <div>
               <h2 class="font-serif text-2xl sm:text-3xl font-bold text-neutral-900">Ý Tưởng Phối Đồ</h2>
               <p class="text-xs sm:text-sm text-neutral-600 mt-1">

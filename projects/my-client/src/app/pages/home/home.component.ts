@@ -108,6 +108,11 @@ export class HomeComponent implements OnInit {
     });
   }
 
+  /** Ảnh danh mục (lấy từ ảnh sản phẩm thật) lỗi tải — ẩn đi để lộ nền gradient thay vì icon "ảnh vỡ". */
+  onCategoryImageError(event: Event): void {
+    (event.target as HTMLImageElement).classList.add('cat-icon__broken');
+  }
+
   ngOnInit(): void {}
 
   openAiAssistant(): void {

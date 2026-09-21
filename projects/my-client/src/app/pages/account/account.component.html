@@ -1,0 +1,46 @@
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+
+  <!-- Not logged in -->
+  <div *ngIf="!authService.currentUser()" class="text-center py-16 space-y-4">
+    <h1 class="font-serif text-2xl font-bold text-neutral-900">Bạn chưa đăng nhập</h1>
+    <p class="text-sm text-neutral-500">Đăng nhập bằng số điện thoại để xem thông tin tài khoản và lịch sử đơn hàng.</p>
+    <button
+      (click)="loginModalService.open()"
+      class="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-600 text-neutral-950 font-extrabold text-sm shadow-md">
+      Đăng nhập ngay
+    </button>
+  </div>
+
+  <!-- Logged in -->
+  <div *ngIf="authService.currentUser() as user" class="space-y-6">
+    <div class="flex items-center justify-between">
+      <h1 class="font-serif text-2xl sm:text-3xl font-extrabold text-neutral-900">Tài Khoản Của Tôi</h1>
+      <button (click)="logout()" class="text-xs font-semibold text-neutral-500 hover:text-red-500 flex items-center gap-1">
+        <span>Đăng xuất</span>
+      </button>
+    </div>
+
+    <!-- Tab nav -->
+    <div class="flex items-center gap-2 overflow-x-auto pb-1">
+      <button
+        *ngFor="let tab of tabs"
+        type="button"
+        (click)="switchTab(tab.id)"
+        [class.bg-neutral-900]="activeTab === tab.id"
+        [class.text-white]="activeTab === tab.id"
+        [class.bg-neutral-100]="activeTab !== tab.id"
+        [class.text-neutral-700]="activeTab !== tab.id"
+        class="flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-bold whitespace-nowrap transition hover:opacity-90">
+        <app-icon [name]="tab.icon" [size]="14"></app-icon>
+        <span>{{ tab.label }}</span>
+      </button>
+    </div>
+
+    <!-- Tab content -->
+    <app-account-profile-tab *ngIf="activeTab === 'profile'"></app-account-profile-tab>
+    <app-account-orders-tab *ngIf="activeTab === 'orders'"></app-account-orders-tab>
+    <app-account-addresses-tab *ngIf="activeTab === 'addresses'"></app-account-addresses-tab>
+    <app-account-coins-tab *ngIf="activeTab === 'coins'"></app-account-coins-tab>
+  </div>
+
+</div>

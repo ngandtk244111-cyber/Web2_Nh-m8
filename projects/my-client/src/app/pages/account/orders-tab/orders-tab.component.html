@@ -1,0 +1,53 @@
+<div class="bg-[#FFFFFF] rounded-3xl p-6 sm:p-8 border border-neutral-200 shadow-xl space-y-5">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-neutral-200 pb-4">
+    <h3 class="font-serif text-lg font-bold text-neutral-900">Đơn Hàng Của Tôi</h3>
+    <div class="relative w-full sm:w-64">
+      <input
+        type="text"
+        [(ngModel)]="searchQuery"
+        placeholder="Tìm theo mã đơn / tên sản phẩm..."
+        class="w-full pl-9 pr-3 py-2 rounded-xl border border-neutral-300 bg-neutral-100 text-neutral-800 placeholder:text-neutral-500 text-xs focus:outline-none focus:border-amber-400 transition">
+      <app-icon name="search" [size]="14" class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500"></app-icon>
+    </div>
+  </div>
+
+  <!-- Status tabs -->
+  <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+    <button
+      *ngFor="let tab of statusTabs"
+      (click)="setStatusTab(tab.id)"
+      [class]="statusTab === tab.id
+        ? 'bg-gradient-to-r from-amber-400 to-amber-600 text-white font-extrabold shadow-[0_0_12px_rgba(255,109,45,0.3)]'
+        : 'bg-neutral-100 border border-neutral-300 text-neutral-700 hover:text-amber-700'"
+      class="px-3.5 py-1.5 rounded-full text-xs whitespace-nowrap transition">
+      {{ tab.label }}
+    </button>
+  </div>
+
+  <div *ngIf="loading" class="text-xs text-neutral-500 text-center py-8">Đang tải...</div>
+
+  <div *ngIf="!loading && filteredOrders.length === 0" class="text-xs text-neutral-500 text-center py-8">
+    Không có đơn hàng nào phù hợp.
+  </div>
+
+  <div class="space-y-3">
+    <a
+      *ngFor="let order of filteredOrders"
+      [routerLink]="['/orders/track']"
+      [queryParams]="{ orderNumber: order.orderNumber }"
+      class="block p-4 rounded-2xl border border-neutral-200 bg-[#F6F5F2] hover:border-amber-400/50 transition">
+      <div class="flex items-center justify-between gap-3">
+        <div>
+          <div class="font-mono text-sm font-bold text-neutral-900">{{ order.orderNumber }}</div>
+          <div class="text-[11px] text-neutral-500 mt-0.5">{{ order.createdAtLabel }} • {{ order.items.length }} sản phẩm</div>
+        </div>
+        <div class="text-right">
+          <div class="text-sm font-semibold text-amber-600">{{ order.total | vnd }}</div>
+          <span class="inline-block mt-1 px-2 py-0.5 rounded-full border text-[10px] font-bold" [class]="statusClass(order.status)">
+            {{ statusLabel(order.status) }}
+          </span>
+        </div>
+      </div>
+    </a>
+  </div>
+</div>

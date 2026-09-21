@@ -1,0 +1,38 @@
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+  <a routerLink="/" class="text-xs font-semibold text-neutral-600 hover:text-amber-600 flex items-center gap-1 mb-6 transition">
+    ← Về trang chủ
+  </a>
+
+  <ng-container *ngIf="page; else notFound">
+    <div class="border-b border-neutral-200 pb-6 mb-8">
+      <h1 class="font-serif text-3xl font-extrabold text-neutral-900">{{ page.title }}</h1>
+      <p class="text-xs text-neutral-500 mt-2">Cập nhật lần cuối: {{ page.updatedAt }}</p>
+      <p class="text-sm text-neutral-600 mt-4 leading-relaxed">{{ page.intro }}</p>
+    </div>
+
+    <div class="space-y-8">
+      <section *ngFor="let section of page.sections">
+        <h2 class="font-serif text-lg font-bold text-neutral-900 mb-2">{{ section.heading }}</h2>
+        <ul class="space-y-2">
+          <li *ngFor="let line of section.body" class="text-sm text-neutral-700 leading-relaxed flex gap-2">
+            <span class="text-amber-500 mt-1">•</span>
+            <span>{{ line }}</span>
+          </li>
+        </ul>
+      </section>
+    </div>
+
+    <div class="mt-12 p-5 rounded-2xl bg-neutral-100 border border-neutral-200 text-xs text-neutral-600">
+      Cần hỗ trợ thêm? Liên hệ hotline <a href="tel:18006928" class="text-amber-600 font-semibold hover:underline">1800 6928</a> hoặc dùng khung chat hỗ trợ trực tuyến ở góc màn hình.
+    </div>
+  </ng-container>
+
+  <ng-template #notFound>
+    <div class="text-center py-20">
+      <h1 class="font-serif text-2xl font-bold text-neutral-900">Không tìm thấy trang</h1>
+      <p class="text-sm text-neutral-600 mt-2">Nội dung chính sách bạn tìm không tồn tại.</p>
+    </div>
+  </ng-template>
+
+</div>

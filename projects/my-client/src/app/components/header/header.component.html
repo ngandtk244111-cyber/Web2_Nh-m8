@@ -1,0 +1,293 @@
+<header class="hd" [class.hd--scrolled]="isScrolled">
+
+  <!-- ============ MOBILE HEADER (< 1024px) ============ -->
+  <div class="hd_m">
+    <div class="hd_m__top">
+      <button type="button" class="hd_m__icon-btn" (click)="mobileMenuOpen = true" aria-label="Mở menu">
+        <app-icon name="menu" [size]="20"></app-icon>
+      </button>
+
+      <a routerLink="/" class="hd_m__logo">
+        <img src="assets/logo/lumea-mark.png" alt="Luméa" class="hd_logo__mark-img">
+        <span class="hd_logo__text">Luméa</span>
+      </a>
+
+      <div class="hd_m__right">
+        <button type="button" class="hd_m__icon-btn" [routerLink]="['/cart']" aria-label="Giỏ hàng">
+          <app-icon name="cart" [size]="19"></app-icon>
+          <span class="hd_m__badge" *ngIf="cartService.itemCount() > 0">{{ cartService.itemCount() }}</span>
+        </button>
+      </div>
+    </div>
+
+    <form (ngSubmit)="search(mobileSearchInput.value)" class="hd_m__search">
+      <button type="submit" class="hd_m__search-icon-btn" aria-label="Tìm kiếm">
+        <img src="assets/mascot/search-cat-mascot.png" alt="Tìm kiếm" class="hd_m__search-icon-img">
+      </button>
+      <input #mobileSearchInput type="text" class="hd_m__search-input" placeholder="Tìm kiếm đèn, kệ, bình hoa...">
+    </form>
+  </div>
+
+  <!-- Overlay + Drawer (mobile) -->
+  <div class="hd_overlay" *ngIf="mobileMenuOpen" (click)="mobileMenuOpen = false"></div>
+  <aside class="hd_drawer" [class.hd_drawer--open]="mobileMenuOpen">
+    <div class="hd_drawer__head">
+      <a routerLink="/" class="hd_m__logo" (click)="mobileMenuOpen = false">
+        <img src="assets/logo/lumea-mark.png" alt="Luméa" class="hd_logo__mark-img">
+        <div class="hd_drawer__brand">
+          <span class="hd_drawer__brand-sub">ELEVATE YOUR SPACE</span>
+          <span class="hd_drawer__brand-main">LUMÉA</span>
+        </div>
+      </a>
+      <button type="button" class="hd_drawer__close" (click)="mobileMenuOpen = false" aria-label="Đóng">
+        <app-icon name="x" [size]="18"></app-icon>
+      </button>
+    </div>
+
+    <div class="hd_drawer__login" *ngIf="!authService.currentUser()">
+      <div class="hd_drawer__login-title">Đăng nhập để tích xu & lưu thiết kế</div>
+      <button type="button" class="hd_drawer__login-btn" (click)="loginModalService.open(); mobileMenuOpen = false">Đăng nhập ngay</button>
+    </div>
+
+    <button type="button" class="hd_drawer__location" (click)="goToAddresses(); mobileMenuOpen = false">
+      <app-icon name="map-pin" [size]="14"></app-icon>
+      <span>Thay đổi vị trí giao hàng</span>
+    </button>
+
+    <nav class="hd_drawer__nav">
+      <div class="hd_drawer__accordion" *ngFor="let group of megaMenuGroups">
+        <button type="button" class="hd_drawer__accordion-head" (click)="toggleMobileGroup(group.title)" [class.hd_drawer__accordion-head--open]="expandedMobileGroup === group.title">
+          <span>{{ group.title }}</span>
+          <app-icon name="chevron-down" [size]="15"></app-icon>
+        </button>
+        <div class="hd_drawer__accordion-body" *ngIf="expandedMobileGroup === group.title">
+          <a
+            *ngFor="let item of group.items"
+            [routerLink]="item.link || '/catalog'"
+            [queryParams]="item.queryParams"
+            (click)="mobileMenuOpen = false"
+            class="hd_drawer__item">
+            {{ item.label }}
+          </a>
+        </div>
+      </div>
+
+      <div class="hd_drawer__group-title">Khám phá</div>
+      <a *ngFor="let item of exploreMenu" [routerLink]="item.link" (click)="mobileMenuOpen = false" class="hd_drawer__item">
+        {{ item.label }}
+      </a>
+
+      <div class="hd_drawer__group-title">Khác</div>
+      <a *ngIf="authService.currentUser()" routerLink="/account" (click)="mobileMenuOpen = false" class="hd_drawer__item">Tài khoản của tôi</a>
+      <a routerLink="/orders/track" (click)="mobileMenuOpen = false" class="hd_drawer__item">Tra cứu đơn hàng</a>
+    </nav>
+
+    <div class="hd_drawer__bottom">
+      <a href="tel:18006928" class="hd_drawer__support-btn">
+        <app-icon name="message" [size]="15"></app-icon>
+        Hỗ trợ: 1800 6928
+      </a>
+    </div>
+  </aside>
+
+  <!-- ============ TẦNG 1: TOP STRIP ============ -->
+  <div class="hd_top">
+    <div class="hd_container hd_top__inner">
+      <a routerLink="/" class="hd_top__left">Tìm hiểu về LUMÉA</a>
+      <a href="tel:18006928" class="hd_top__right">Hỗ trợ: 1800 6928</a>
+    </div>
+  </div>
+
+  <!-- ============ TẦNG 2: MAIN BAR (logo | search | actions) ============ -->
+  <div class="hd_main">
+    <div class="hd_container hd_main__inner">
+
+      <a routerLink="/" class="hd_logo">
+        <span class="hd_mascot" aria-hidden="true">
+          <app-icon name="sparkles" [size]="16"></app-icon>
+        </span>
+        <img src="assets/logo/lumea-mark.png" alt="Luméa" class="hd_logo__mark-img">
+        <span class="hd_logo__group">
+          <span class="hd_logo__text">Luméa</span>
+          <span class="hd_logo__tagline">Interior & 3D</span>
+        </span>
+      </a>
+
+      <div class="hd_search-wrap">
+        <form (ngSubmit)="search(searchInput.value)" class="hd_search">
+          <button type="submit" class="hd_search__icon-btn" aria-label="Tìm kiếm">
+            <img src="assets/mascot/search-cat-mascot.png" alt="Tìm kiếm" class="hd_search__icon-img">
+          </button>
+          <input #searchInput type="text" class="hd_search__input" placeholder="Tìm kiếm đèn, kệ, bình hoa..." (focus)="openSearchSuggestions()">
+        </form>
+
+        <div class="hd_search-suggest" *ngIf="searchSuggestionsOpen" (click)="$event.stopPropagation()">
+          <span class="hd_search-suggest__label">Tìm kiếm phổ biến</span>
+          <div class="hd_search-suggest__chips">
+            <button
+              type="button"
+              *ngFor="let s of searchSuggestions"
+              class="hd_search-suggest__chip"
+              (click)="selectSuggestion(s)">
+              {{ s.label }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="hd_actions">
+        <a *ngIf="authService.currentUser() as user" routerLink="/account" [title]="user.fullName || user.phoneNumber" class="hd_action hd_action--login">
+          <app-icon name="user" [size]="16"></app-icon>
+          <span class="hd_action__text">{{ user.fullName || user.phoneNumber }}</span>
+        </a>
+        <button *ngIf="!authService.currentUser()" type="button" (click)="loginModalService.open()" class="hd_action hd_action--login">
+          <app-icon name="user" [size]="16"></app-icon>
+          <span class="hd_action__text">Đăng nhập</span>
+        </button>
+
+        <div class="hd_notify-wrap">
+          <button type="button" class="hd_action hd_action--icon" (click)="toggleNotifications()" aria-label="Thông báo">
+            <app-icon name="bell" [size]="18"></app-icon>
+            <span class="hd_badge" *ngIf="notificationService.unreadCount() > 0">{{ notificationService.unreadCount() }}</span>
+          </button>
+          <div class="hd_notify-dropdown" *ngIf="notificationsOpen" (click)="$event.stopPropagation()">
+            <div class="hd_notify-dropdown__head">
+              <span class="hd_notify-dropdown__title">Thông báo</span>
+              <button
+                type="button"
+                *ngIf="notificationService.unreadCount() > 0"
+                class="hd_notify-dropdown__mark-all"
+                (click)="markAllNotificationsRead()">
+                Đánh dấu đã đọc
+              </button>
+            </div>
+
+            <div class="hd_notify-dropdown__list" *ngIf="notificationService.notifications().length > 0; else notifyEmpty">
+              <a
+                *ngFor="let n of notificationService.notifications()"
+                [routerLink]="n.link || null"
+                (click)="!n.read && markNotificationRead(n._id, $event); notificationsOpen = false"
+                class="hd_notify-item"
+                [class.hd_notify-item--unread]="!n.read">
+                <span class="hd_notify-item__dot" *ngIf="!n.read"></span>
+                <div class="hd_notify-item__body">
+                  <div class="hd_notify-item__title">{{ n.title }}</div>
+                  <p class="hd_notify-item__message">{{ n.message }}</p>
+                </div>
+              </a>
+            </div>
+            <ng-template #notifyEmpty>
+              <div class="hd_notify-dropdown__empty">Bạn chưa có thông báo mới.</div>
+            </ng-template>
+
+            <button type="button" class="hd_notify-dropdown__view-all" (click)="viewAllNotifications()">
+              Xem tất cả thông báo
+            </button>
+          </div>
+        </div>
+
+        <div class="hd_cart-wrap">
+          <button id="cart-icon-btn" type="button" (click)="toggleCartPreview()" class="hd_action hd_action--cart" aria-label="Giỏ hàng">
+            <app-icon name="cart" [size]="18"></app-icon>
+            <span class="hd_badge" *ngIf="cartService.itemCount() > 0">{{ cartService.itemCount() }}</span>
+          </button>
+
+          <div class="hd_cart-dropdown" *ngIf="cartPreviewOpen" (click)="$event.stopPropagation()">
+            <div class="hd_cart-dropdown__head">
+              <span class="hd_cart-dropdown__title">Giỏ hàng</span>
+            </div>
+
+            <div class="hd_cart-dropdown__empty" *ngIf="cartService.items().length === 0">
+              Giỏ hàng của bạn đang trống.
+            </div>
+
+            <div class="hd_cart-dropdown__list" *ngIf="cartService.items().length > 0">
+              <div class="hd_cart-item" *ngFor="let item of cartService.items().slice(0, 4)">
+                <img [src]="item.product.images[0]" [alt]="item.product.name" class="hd_cart-item__img">
+                <div class="hd_cart-item__info">
+                  <span class="hd_cart-item__name">{{ item.product.name }}</span>
+                  <span class="hd_cart-item__price">{{ item.totalPrice | vnd }}</span>
+                  <span class="hd_cart-item__qty">x{{ item.quantity }}</span>
+                </div>
+                <button type="button" class="hd_cart-item__remove" (click)="removeCartItem(item.id, $event)" aria-label="Xóa sản phẩm">
+                  <app-icon name="trash" [size]="14"></app-icon>
+                </button>
+              </div>
+              <div class="hd_cart-dropdown__more" *ngIf="cartService.items().length > 4">
+                + {{ cartService.items().length - 4 }} sản phẩm khác
+              </div>
+            </div>
+
+            <div class="hd_cart-dropdown__footer" *ngIf="cartService.items().length > 0">
+              <span class="hd_cart-dropdown__count">{{ cartService.itemCount() }} sản phẩm</span>
+              <a routerLink="/cart" (click)="cartPreviewOpen = false" class="hd_cart-dropdown__view-btn">Xem giỏ hàng</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============ TẦNG 3: UTILITY BAR (menu | vị trí giao hàng) ============ -->
+  <div class="hd_utility" (mouseleave)="onMegaMenuAreaLeave()">
+    <div class="hd_container hd_utility__inner">
+      <button type="button" class="hd_menu-btn" (click)="toggleMegaMenu()" [class.hd_menu-btn--active]="megaMenuOpen">
+        <app-icon name="menu" [size]="15"></app-icon>
+        <span>Menu</span>
+      </button>
+
+      <app-announcement-ticker class="hd_utility__ticker" [compact]="isScrolled"></app-announcement-ticker>
+
+      <button type="button" class="hd_location-btn" (click)="goToAddresses()">
+        <app-icon name="map-pin" [size]="13"></app-icon>
+        <span>Thay đổi vị trí giao hàng</span>
+      </button>
+    </div>
+
+    <!-- MEGA MENU -->
+    <div
+      class="hd_overlay hd_overlay--mega"
+      [class.hd_overlay--mega-closing]="megaMenuClosing"
+      *ngIf="megaMenuOpen || megaMenuClosing"
+      (click)="closeMenus()"></div>
+    <div
+      class="hd_megamenu"
+      [class.hd_megamenu--closing]="megaMenuClosing"
+      *ngIf="megaMenuOpen || megaMenuClosing">
+      <div class="hd_container hd_megamenu__inner">
+
+        <div class="hd_megamenu__columns">
+          <div class="hd_megamenu__col" *ngFor="let col of megaMenuColumns; let i = index" [style.--col-index]="i">
+            <div class="hd_megamenu__group" *ngFor="let group of col">
+              <div class="hd_megamenu__title">{{ group.title }}</div>
+              <a
+                *ngFor="let item of group.items"
+                [routerLink]="item.link || '/catalog'"
+                [queryParams]="item.queryParams"
+                (click)="closeMenus()"
+                class="hd_megamenu__link">
+                {{ item.label }}
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <a
+          [routerLink]="megaMenuBanner.link"
+          class="hd_megamenu__banner"
+          [style.background]="megaMenuBanner.gradient"
+          (click)="closeMenus()">
+          <div class="hd_megamenu__banner-icon">
+            <app-icon [name]="megaMenuBanner.icon" [size]="30"></app-icon>
+          </div>
+          <h4 class="hd_megamenu__banner-title">{{ megaMenuBanner.title }}</h4>
+          <p class="hd_megamenu__banner-desc">{{ megaMenuBanner.description }}</p>
+          <span class="hd_megamenu__banner-cta">{{ megaMenuBanner.ctaLabel }} <app-icon name="chevron-right" [size]="13"></app-icon></span>
+        </a>
+
+      </div>
+    </div>
+  </div>
+
+</header>

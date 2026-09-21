@@ -1,0 +1,9 @@
+<div class="fm" *ngIf="!dismissed()">
+  <button type="button" class="fm__close" aria-label="Đóng mascot" (click)="dismiss($event)">
+    <app-icon name="x" [size]="9"></app-icon>
+  </button>
+
+  <button type="button" class="fm__btn" aria-label="Mở trợ lý AI Luméa" (click)="open()">
+    <img src="assets/mascot/lumea-mascot.png" alt="Luméa mascot" class="fm__img">
+  </button>
+</div>

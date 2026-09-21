@@ -1,0 +1,318 @@
+    <div *ngIf="request" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+      
+      <!-- Back navigation & Title Header -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-neutral-200 pb-6">
+        <div>
+          <a routerLink="/custom-request" class="text-xs font-semibold text-neutral-600 hover:text-amber-400 flex items-center gap-1 mb-2 transition">
+            ← Danh sách yêu cầu
+          </a>
+          <div class="flex items-center gap-3">
+            <h1 class="font-serif text-2xl sm:text-3xl font-extrabold text-neutral-900">
+              {{ request.title }}
+            </h1>
+            <span class="font-mono text-xs font-bold text-amber-400 bg-[#FFFFFF] border border-neutral-200 px-2.5 py-1 rounded-lg">
+              {{ request.requestCode }}
+            </span>
+          </div>
+          <p class="text-xs text-neutral-600 mt-1">
+            Khách hàng: <strong class="text-neutral-800">{{ request.customerName }}</strong> • Khởi tạo lúc: {{ request.createdAt }}
+          </p>
+        </div>
+
+        <!-- Status Badge -->
+        <div>
+          <span [ngSwitch]="request.status" class="text-xs font-bold px-3.5 py-1.5 rounded-full inline-flex items-center gap-1.5 shadow-sm">
+            <span *ngSwitchCase="'PENDING_REVIEW'" class="text-amber-400 bg-amber-950/40 border border-amber-500/30">
+              <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+              Đang tiếp nhận & Xem xét
+            </span>
+            <span *ngSwitchCase="'QUOTED'" class="text-blue-400 bg-blue-950/40 border border-blue-500/30">
+              <span class="w-2 h-2 rounded-full bg-blue-400"></span>
+              Đã gửi báo giá
+            </span>
+            <span *ngSwitchCase="'PREVIEW_READY'" class="text-purple-400 bg-purple-950/40 border border-purple-500/30">
+              <span class="w-2 h-2 rounded-full bg-purple-400"></span>
+              Đã có mô hình 3D Preview
+            </span>
+            <span *ngSwitchCase="'APPROVED'" class="text-emerald-400 bg-emerald-950/40 border border-emerald-500/30">
+              ✓ Đã duyệt thiết kế
+            </span>
+            <span *ngSwitchCase="'CONVERTED_TO_ORDER'" class="text-emerald-400 bg-emerald-950/40 border border-emerald-500/30">
+              ✓ Đã chuyển thành đơn hàng
+            </span>
+          </span>
+        </div>
+      </div>
+
+      <!-- Stepper Flow Indicator -->
+      <div class="bg-[#FFFFFF] rounded-3xl p-6 border border-neutral-200 shadow-xl">
+        <div class="grid grid-cols-4 gap-2 text-center text-xs">
+          
+          <!-- Step 1 -->
+          <div class="space-y-1">
+            <div class="w-7 h-7 rounded-full bg-emerald-500 text-neutral-950 font-extrabold mx-auto flex items-center justify-center text-[11px]">✓</div>
+            <div class="font-bold text-neutral-800">Gửi Ý Tưởng</div>
+            <div class="text-[10px] text-neutral-500">Đã hoàn thành</div>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="space-y-1">
+            <div 
+              class="w-7 h-7 rounded-full font-bold mx-auto flex items-center justify-center text-[11px]"
+              [class.bg-gradient-to-r]="request.quotationPrice"
+              [class.from-amber-400]="request.quotationPrice"
+              [class.to-amber-600]="request.quotationPrice"
+              [class.text-neutral-950]="request.quotationPrice"
+              [class.bg-[#F6F5F2]]="!request.quotationPrice"
+              [class.border]="!request.quotationPrice"
+              [class.border-neutral-200]="!request.quotationPrice"
+              [class.text-neutral-500]="!request.quotationPrice">
+              {{ request.quotationPrice ? '✓' : '2' }}
+            </div>
+            <div class="font-bold text-neutral-800">Shop Báo Giá</div>
+            <div class="text-[10px] text-neutral-600">
+              {{ request.quotationPrice ? (request.quotationPrice | vnd) : 'Đang tính toán' }}
+            </div>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="space-y-1">
+            <div 
+              class="w-7 h-7 rounded-full font-bold mx-auto flex items-center justify-center text-[11px]"
+              [class.bg-gradient-to-r]="request.status === 'PREVIEW_READY' || request.status === 'APPROVED' || request.status === 'CONVERTED_TO_ORDER'"
+              [class.from-amber-400]="request.status === 'PREVIEW_READY' || request.status === 'APPROVED' || request.status === 'CONVERTED_TO_ORDER'"
+              [class.to-amber-600]="request.status === 'PREVIEW_READY' || request.status === 'APPROVED' || request.status === 'CONVERTED_TO_ORDER'"
+              [class.text-neutral-950]="request.status === 'PREVIEW_READY' || request.status === 'APPROVED' || request.status === 'CONVERTED_TO_ORDER'"
+              [class.bg-[#F6F5F2]]="request.status !== 'PREVIEW_READY' && request.status !== 'APPROVED' && request.status !== 'CONVERTED_TO_ORDER'"
+              [class.border]="request.status !== 'PREVIEW_READY' && request.status !== 'APPROVED' && request.status !== 'CONVERTED_TO_ORDER'"
+              [class.border-neutral-200]="request.status !== 'PREVIEW_READY' && request.status !== 'APPROVED' && request.status !== 'CONVERTED_TO_ORDER'"
+              [class.text-neutral-500]="request.status !== 'PREVIEW_READY' && request.status !== 'APPROVED' && request.status !== 'CONVERTED_TO_ORDER'">
+              3
+            </div>
+            <div class="font-bold text-neutral-800">Mô Phỏng 3D</div>
+            <div class="text-[10px] text-neutral-600">
+              {{ request.preview3dModelType ? 'Sẵn sàng xem' : 'Chờ chuẩn bị file' }}
+            </div>
+          </div>
+
+          <!-- Step 4 -->
+          <div class="space-y-1">
+            <div 
+              class="w-7 h-7 rounded-full font-bold mx-auto flex items-center justify-center text-[11px]"
+              [class.bg-emerald-500]="request.status === 'CONVERTED_TO_ORDER'"
+              [class.text-neutral-950]="request.status === 'CONVERTED_TO_ORDER'"
+              [class.bg-[#F6F5F2]]="request.status !== 'CONVERTED_TO_ORDER'"
+              [class.border]="request.status !== 'CONVERTED_TO_ORDER'"
+              [class.border-neutral-200]="request.status !== 'CONVERTED_TO_ORDER'"
+              [class.text-neutral-500]="request.status !== 'CONVERTED_TO_ORDER'">
+              4
+            </div>
+            <div class="font-bold text-neutral-800">Chuyển Đơn Hàng</div>
+            <div class="text-[10px] text-neutral-600">
+              {{ request.status === 'CONVERTED_TO_ORDER' ? 'Đã lên đơn' : 'Sau khi khách duyệt' }}
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Main Layout: Left Brief & 3D Preview, Right Chat & Quotation -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        <!-- Left Column: 3D Preview + Brief Details (7 cols) -->
+        <div class="lg:col-span-7 space-y-6">
+          
+          <!-- 3D Preview Stage (if preview ready) -->
+          <div *ngIf="request.preview3dModelType || request.status === 'PREVIEW_READY'" class="bg-[#FFFFFF] rounded-3xl p-6 border border-neutral-200 shadow-xl space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="font-serif text-lg font-bold text-neutral-900 flex items-center gap-2">
+                <app-icon name="cube" [size]="18" class="text-amber-400"></app-icon>
+                <span>Bản Vẽ Mô Phỏng 3D Preview</span>
+              </h3>
+              <span class="text-[10px] font-bold text-amber-400 bg-amber-950/40 border border-amber-500/30 px-2.5 py-0.5 rounded-full">
+                Duyệt trước khi in
+              </span>
+            </div>
+
+            <div class="h-80 w-full rounded-2xl overflow-hidden shadow-inner bg-[#F6F5F2] border border-neutral-200">
+              <app-three-viewer 
+                [modelType]="request.preview3dModelType || 'moon_lamp'"
+                [colorHex]="'#D4AF37'"
+                [customText]="request.brief.customText || ''">
+              </app-three-viewer>
+            </div>
+          </div>
+
+          <!-- Quotation & Approval Action Card -->
+          <div *ngIf="request.quotationPrice" class="bg-gradient-to-br from-[#FBF3E0] to-[#FFFFFF] rounded-3xl p-6 border border-amber-500/30 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-amber-400">Báo giá từ Luméa</span>
+                <h3 class="text-2xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-amber-400 to-amber-500 mt-0.5">
+                  {{ request.quotationPrice | vnd }}
+                </h3>
+              </div>
+              <div class="text-right text-xs text-neutral-600">
+                <div>Thời gian in & hoàn thiện:</div>
+                <strong class="text-neutral-800">~{{ request.estimatedDays || 3 }} ngày làm việc</strong>
+              </div>
+            </div>
+
+            <p *ngIf="request.adminNote" class="text-xs text-neutral-700 bg-[#F6F5F2] p-3 rounded-xl border border-neutral-200">
+              💬 <strong class="text-amber-400">Ghi chú kỹ thuật:</strong> {{ request.adminNote }}
+            </p>
+
+            <!-- Actions -->
+            <div class="pt-2 flex flex-col sm:flex-row gap-3">
+              <button 
+                *ngIf="request.status !== 'CONVERTED_TO_ORDER'"
+                type="button" 
+                (click)="approveAndAddToCart()"
+                class="flex-1 py-3.5 px-5 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-neutral-950 font-extrabold text-xs sm:text-sm shadow-[0_4px_25px_rgba(212,175,55,0.35)] transition flex items-center justify-center gap-2">
+                <app-icon name="check" [size]="16"></app-icon>
+                <span>Chấp Thuận Báo Giá & Đặt Hàng Ngay</span>
+              </button>
+
+              <button 
+                *ngIf="request.status !== 'CONVERTED_TO_ORDER'"
+                type="button" 
+                (click)="requestRevision()"
+                class="py-3.5 px-4 rounded-2xl bg-[#F0EEE8] hover:bg-[#252636] text-neutral-700 font-semibold text-xs border border-neutral-300 transition">
+                Yêu cầu sửa chi tiết
+              </button>
+
+              <div *ngIf="request.status === 'CONVERTED_TO_ORDER'" class="w-full text-center py-2.5 text-xs font-bold text-emerald-400 bg-emerald-950/40 border border-emerald-500/30 rounded-xl">
+                ✓ Yêu cầu này đã được chuyển thành đơn hàng và đưa vào giỏ hàng!
+              </div>
+            </div>
+          </div>
+
+          <!-- Design Brief Card -->
+          <div class="bg-[#FFFFFF] rounded-3xl p-6 border border-neutral-200 shadow-xl space-y-4">
+            <h3 class="font-serif text-lg font-bold text-neutral-900 border-b border-neutral-200 pb-2">
+              Thông Số Design Brief Đã Đăng Ký
+            </h3>
+
+            <div class="grid grid-cols-2 gap-3 text-xs">
+              <div class="p-2.5 bg-[#F6F5F2] rounded-xl border border-neutral-200">
+                <span class="text-neutral-500 block text-[10px] uppercase font-bold">Loại sản phẩm</span>
+                <span class="font-semibold text-neutral-800">{{ request.brief.productType }}</span>
+              </div>
+
+              <div class="p-2.5 bg-[#F6F5F2] rounded-xl border border-neutral-200">
+                <span class="text-neutral-500 block text-[10px] uppercase font-bold">Chủ đề & Cảm hứng</span>
+                <span class="font-semibold text-neutral-800">{{ request.brief.theme }}</span>
+              </div>
+
+              <div class="p-2.5 bg-[#F6F5F2] rounded-xl border border-neutral-200">
+                <span class="text-neutral-500 block text-[10px] uppercase font-bold">Phong cách</span>
+                <span class="font-semibold text-neutral-800">{{ request.brief.style }}</span>
+              </div>
+
+              <div class="p-2.5 bg-[#F6F5F2] rounded-xl border border-neutral-200">
+                <span class="text-neutral-500 block text-[10px] uppercase font-bold">Màu sắc</span>
+                <span class="font-semibold text-neutral-800">{{ request.brief.color }}</span>
+              </div>
+
+              <div class="p-2.5 bg-[#F6F5F2] rounded-xl border border-neutral-200">
+                <span class="text-neutral-500 block text-[10px] uppercase font-bold">Kích thước</span>
+                <span class="font-semibold text-neutral-800">{{ request.brief.size }}</span>
+              </div>
+
+              <div class="p-2.5 bg-[#F6F5F2] rounded-xl border border-neutral-200">
+                <span class="text-neutral-500 block text-[10px] uppercase font-bold">Khắc chữ</span>
+                <span class="font-semibold text-neutral-800">{{ request.brief.customText || 'Không khắc' }}</span>
+              </div>
+            </div>
+
+            <!-- AI Concept image or Customer Reference Images -->
+            <div *ngIf="request.aiConceptImage || request.customerImages?.length" class="space-y-2 pt-2">
+              <span class="text-xs font-bold text-neutral-700 block">Hình ảnh đính kèm:</span>
+              <div class="flex flex-wrap gap-3">
+                <img 
+                  *ngIf="request.aiConceptImage" 
+                  [src]="request.aiConceptImage" 
+                  alt="AI Concept" 
+                  class="w-24 h-24 rounded-xl object-cover border border-neutral-300">
+                
+                <img 
+                  *ngFor="let img of request.customerImages" 
+                  [src]="img" 
+                  alt="Reference" 
+                  class="w-24 h-24 rounded-xl object-cover border border-neutral-300">
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right Column: Live Chat Timeline with Shop Specialist (5 cols) -->
+        <div class="lg:col-span-5 bg-[#FFFFFF] rounded-3xl p-6 border border-neutral-200 shadow-xl flex flex-col h-[600px]">
+          
+          <!-- Chat Header -->
+          <div class="border-b border-neutral-200 pb-3 flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-400 border border-amber-500/30">
+                <app-icon name="message" [size]="16"></app-icon>
+              </div>
+              <div>
+                <h4 class="font-bold text-xs sm:text-sm text-neutral-900">Trao Đổi Kỹ Thuật Với Shop</h4>
+                <p class="text-[10px] text-emerald-400 flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Kỹ sư Luméa đang trực tuyến
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Messages Thread -->
+          <div class="flex-1 overflow-y-auto py-4 space-y-3 pr-1">
+            <div 
+              *ngFor="let msg of request.messages"
+              class="flex flex-col" 
+              [class.items-end]="msg.sender === 'CUSTOMER'">
+              
+              <div class="flex items-start gap-2 max-w-[88%]" [class.flex-row-reverse]="msg.sender === 'CUSTOMER'">
+                <img [src]="msg.avatar" [alt]="msg.senderName" class="w-6 h-6 rounded-full object-cover flex-shrink-0 mt-0.5 border border-neutral-300">
+                
+                <div>
+                  <div class="text-[9px] text-neutral-500 mb-0.5" [class.text-right]="msg.sender === 'CUSTOMER'">
+                    {{ msg.senderName }}
+                  </div>
+                  <div 
+                    [class]="msg.sender === 'CUSTOMER' 
+                      ? 'bg-gradient-to-r from-amber-400 to-amber-600 text-neutral-950 font-semibold rounded-2xl rounded-tr-sm px-3.5 py-2 text-xs shadow-md' 
+                      : 'bg-[#F6F5F2] border border-neutral-200 text-neutral-800 rounded-2xl rounded-tl-sm px-3.5 py-2 text-xs'">
+                    {{ msg.text }}
+                  </div>
+                  <span class="text-[9px] text-neutral-500 mt-0.5 block" [class.text-right]="msg.sender === 'CUSTOMER'">
+                    {{ msg.timestamp }}
+                  </span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Send Message Input -->
+          <div class="border-t border-neutral-200 pt-3">
+            <form (ngSubmit)="sendChatMessage()" class="flex items-center gap-2">
+              <input 
+                type="text" 
+                [(ngModel)]="chatInput" 
+                name="chatText" 
+                placeholder="Gửi phản hồi hoặc câu hỏi cho kỹ sư shop..." 
+                class="flex-1 text-xs rounded-xl border border-neutral-300 px-3 py-2.5 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500">
+              <button 
+                type="submit" 
+                [disabled]="!chatInput.trim()" 
+                class="p-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-300 hover:to-amber-500 disabled:opacity-50 text-neutral-950 font-bold transition">
+                <app-icon name="send" [size]="14"></app-icon>
+              </button>
+            </form>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>

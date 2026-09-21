@@ -1,0 +1,16 @@
+<div class="toast-stack">
+  <div
+    *ngFor="let t of toastService.toasts()"
+    class="toast-item"
+    [class.toast-item--success]="t.type === 'success'"
+    [class.toast-item--error]="t.type === 'error'"
+    [class.toast-item--info]="t.type === 'info'">
+    <span class="toast-item__icon">
+      <app-icon [name]="t.icon" [size]="16"></app-icon>
+    </span>
+    <span class="toast-item__msg">{{ t.message }}</span>
+    <button type="button" class="toast-item__close" (click)="toastService.dismiss(t.id)">
+      <app-icon name="x" [size]="13"></app-icon>
+    </button>
+  </div>
+</div>

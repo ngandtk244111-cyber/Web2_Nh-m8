@@ -1,0 +1,116 @@
+<div class="quiz-page">
+
+  <!-- ============ INTRO ============ -->
+  <section class="quiz-intro" *ngIf="screen === 'intro'">
+    <div class="quiz-intro__badge">
+      <app-icon name="sparkles" [size]="14"></app-icon>
+      <span>Trắc Nghiệm Phong Cách Decor</span>
+    </div>
+    <h1 class="quiz-intro__title">Không Gian Của Bạn Hợp Phong Cách Nào?</h1>
+    <p class="quiz-intro__desc">
+      Trả lời 5 câu hỏi ngắn để Luméa gợi ý phong cách trang trí phù hợp nhất với gu thẩm mỹ của bạn —
+      kèm theo danh mục sản phẩm nên khám phá đầu tiên. Hoàn thành bài test còn được thưởng
+      <strong>+{{ rewardAmount }} xu</strong> vào tài khoản.
+    </p>
+
+    <button type="button" class="quiz-btn quiz-btn--primary" (click)="startQuiz()">
+      Bắt Đầu Trắc Nghiệm
+    </button>
+
+    <div class="quiz-intro__grid">
+      <div class="quiz-intro__tile">Tối Giản</div>
+      <div class="quiz-intro__tile">Bắc Âu</div>
+      <div class="quiz-intro__tile">Công Nghiệp</div>
+      <div class="quiz-intro__tile">Bohemian</div>
+    </div>
+  </section>
+
+  <!-- ============ QUIZ ============ -->
+  <section class="quiz-run" *ngIf="screen === 'quiz' && currentQuestion">
+    <div class="quiz-progress">
+      <div class="quiz-progress__bar" [style.width.%]="progress"></div>
+    </div>
+    <div class="quiz-run__meta">Câu {{ currentIndex + 1 }} / {{ questions.length }}</div>
+
+    <h2 class="quiz-run__question">{{ currentQuestion.text }}</h2>
+
+    <div class="quiz-options">
+      <button
+        type="button"
+        class="quiz-option"
+        *ngFor="let option of currentQuestion.options"
+        (click)="selectOption(option)">
+        {{ option.label }}
+      </button>
+    </div>
+
+    <button type="button" class="quiz-btn quiz-btn--ghost" *ngIf="currentIndex > 0" (click)="goBack()">
+      ← Câu trước
+    </button>
+  </section>
+
+  <!-- ============ RESULT ============ -->
+  <section class="quiz-result" *ngIf="screen === 'result' && result">
+    <div class="quiz-result__hero" [style.backgroundImage]="'url(' + result.image + ')'"></div>
+
+    <div class="quiz-result__body">
+      <div class="quiz-result__eyebrow">Kết quả của bạn</div>
+      <h2 class="quiz-result__title">{{ result.title }}</h2>
+      <p class="quiz-result__desc">{{ result.description }}</p>
+
+      <div class="quiz-palette">
+        <span class="quiz-palette__swatch" *ngFor="let hex of result.paletteHex" [style.backgroundColor]="hex"></span>
+      </div>
+
+      <div class="quiz-result__categories">
+        <a
+          *ngFor="let cat of result.suggestedCategories"
+          class="quiz-chip"
+          routerLink="/catalog"
+          [queryParams]="{ category: cat }">
+          Khám phá danh mục →
+        </a>
+      </div>
+
+      <!-- Coin reward -->
+      <div class="quiz-reward">
+        <div class="quiz-reward__info">
+          <app-icon name="coin" [size]="20" class="quiz-reward__icon"></app-icon>
+          <span *ngIf="!coinClaimed">Hoàn thành bài test — nhận ngay +{{ rewardAmount }} xu</span>
+          <span *ngIf="coinClaimed">Bạn đã nhận +{{ rewardAmount }} xu cho bài test này 🎉</span>
+        </div>
+        <button
+          type="button"
+          class="quiz-btn quiz-btn--coin"
+          *ngIf="!coinClaimed"
+          [disabled]="coinBusy"
+          (click)="openClaimCelebration()">
+          {{ coinBusy ? 'Đang xử lý...' : ('Nhận +' + rewardAmount + ' xu') }}
+        </button>
+      </div>
+
+      <div class="quiz-result__actions">
+        <button type="button" class="quiz-btn quiz-btn--ghost" (click)="retakeQuiz()">Làm lại bài test</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ Celebration popup ============ -->
+  <div class="quiz-overlay" *ngIf="showCelebration" (click)="closeCelebration()">
+    <div class="quiz-modal" (click)="$event.stopPropagation()">
+      <app-icon name="coin" [size]="40" class="quiz-modal__icon"></app-icon>
+      <h3 class="quiz-modal__title">Nhận thưởng +{{ rewardAmount }} xu?</h3>
+      <p class="quiz-modal__desc">Xu có thể dùng để đổi ưu đãi trong các đơn hàng sắp tới.</p>
+      <div class="quiz-modal__actions">
+        <button type="button" class="quiz-btn quiz-btn--ghost" (click)="closeCelebration()">Để sau</button>
+        <button type="button" class="quiz-btn quiz-btn--coin" (click)="confirmClaim()">Nhận ngay</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ Flying coin effect ============ -->
+  <div class="quiz-flying-coin" *ngIf="showFlyingCoin">
+    <app-icon name="coin" [size]="28"></app-icon>
+  </div>
+
+</div>

@@ -1,0 +1,20 @@
+<div class="bg-[#FFFFFF] rounded-3xl p-6 sm:p-8 border border-neutral-200 shadow-xl space-y-4">
+  <div class="flex items-center justify-between border-b border-neutral-200 pb-3">
+    <h3 class="font-serif text-lg font-bold text-neutral-900">Xu Thưởng Của Bạn</h3>
+    <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-700 text-xs font-bold">
+      <app-icon name="coin" [size]="14"></app-icon>
+      <span>{{ coinService.balance() }} xu</span>
+    </div>
+  </div>
+
+  <div *ngIf="coinService.transactions().length === 0" class="text-xs text-neutral-500 text-center py-4">
+    Bạn chưa có lịch sử nhận xu. Thử làm
+    <a routerLink="/style-quiz" class="text-amber-600 font-semibold hover:underline">Trắc Nghiệm Phong Cách</a>
+    để nhận xu đầu tiên nhé!
+  </div>
+
+  <div *ngFor="let txn of coinService.transactions()" class="p-4 rounded-2xl border border-neutral-200 bg-[#F6F5F2] flex items-center justify-between gap-3">
+    <div class="text-xs font-medium text-neutral-700">{{ txn.note }}</div>
+    <div class="text-sm font-bold text-amber-600">+{{ txn.amount }} xu</div>
+  </div>
+</div>

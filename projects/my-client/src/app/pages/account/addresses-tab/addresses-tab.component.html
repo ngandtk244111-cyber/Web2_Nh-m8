@@ -1,0 +1,119 @@
+<div class="bg-[#FFFFFF] rounded-3xl p-6 sm:p-8 border border-neutral-200 shadow-xl space-y-5">
+  <div class="flex items-center justify-between border-b border-neutral-200 pb-4">
+    <h3 class="font-serif text-lg font-bold text-neutral-900">Sổ Địa Chỉ Giao Hàng</h3>
+    <button
+      (click)="openAdd()"
+      class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-amber-600 text-white text-xs font-bold flex items-center gap-1.5 shadow-md">
+      <app-icon name="plus" [size]="14"></app-icon>
+      <span>Thêm địa chỉ</span>
+    </button>
+  </div>
+
+  <div *ngIf="addressService.addresses().length === 0" class="text-xs text-neutral-500 text-center py-8">
+    Bạn chưa lưu địa chỉ giao hàng nào.
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div
+      *ngFor="let addr of addressService.addresses()"
+      class="p-4 rounded-2xl border bg-[#F6F5F2] space-y-2 transition"
+      [class.border-amber-400]="addr.isDefault"
+      [class.border-neutral-200]="!addr.isDefault">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-bold text-neutral-900">{{ addr.label }}</span>
+        <span *ngIf="addr.isDefault" class="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-700">
+          Mặc định
+        </span>
+      </div>
+      <div class="text-sm font-semibold text-neutral-800">{{ addr.fullName }} • {{ addr.phone }}</div>
+      <div class="text-xs text-neutral-600 leading-relaxed">
+        {{ addr.address }}, {{ addr.ward }}, {{ addr.district }}, {{ addr.city }}
+      </div>
+      <div class="flex items-center gap-3 pt-2 border-t border-neutral-200 text-xs">
+        <button (click)="openEdit(addr)" class="font-semibold text-neutral-700 hover:text-amber-600">Sửa</button>
+        <button *ngIf="!addr.isDefault" (click)="setDefault(addr._id)" class="font-semibold text-neutral-700 hover:text-amber-600">Đặt làm mặc định</button>
+        <button (click)="confirmDelete(addr._id)" class="font-semibold text-rose-500 hover:text-rose-600 ml-auto">Xoá</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit modal -->
+<div *ngIf="showModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4" (click)="closeModal()">
+  <div class="bg-white rounded-3xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto space-y-4" (click)="$event.stopPropagation()">
+    <h3 class="font-serif text-lg font-bold text-neutral-900">{{ modalMode === 'add' ? 'Thêm Địa Chỉ Mới' : 'Sửa Địa Chỉ' }}</h3>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div class="sm:col-span-2">
+        <label class="text-xs font-bold text-neutral-600 block mb-1">Loại địa chỉ</label>
+        <select [(ngModel)]="label" class="w-full p-2.5 rounded-xl border border-neutral-300 bg-neutral-100 text-neutral-900 text-sm focus:outline-none focus:border-amber-400">
+          <option value="Nhà riêng">Nhà riêng</option>
+          <option value="Văn phòng">Văn phòng</option>
+          <option value="Khác">Khác</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-xs font-bold text-neutral-600 block mb-1">Họ và tên người nhận</label>
+        <input type="text" [(ngModel)]="fullName" class="w-full p-2.5 rounded-xl border border-neutral-300 bg-neutral-100 text-neutral-900 text-sm focus:outline-none focus:border-amber-400">
+        <span *ngIf="errors['fullName']" class="text-[11px] text-rose-400">{{ errors['fullName'] }}</span>
+      </div>
+      <div>
+        <label class="text-xs font-bold text-neutral-600 block mb-1">Số điện thoại</label>
+        <input type="text" [(ngModel)]="phone" class="w-full p-2.5 rounded-xl border border-neutral-300 bg-neutral-100 text-neutral-900 text-sm focus:outline-none focus:border-amber-400">
+        <span *ngIf="errors['phone']" class="text-[11px] text-rose-400">{{ errors['phone'] }}</span>
+      </div>
+      <div>
+        <label class="text-xs font-bold text-neutral-600 block mb-1">Tỉnh / Thành phố</label>
+        <select [(ngModel)]="city" (ngModelChange)="onProvinceChange()" class="w-full p-2.5 rounded-xl border border-neutral-300 bg-neutral-100 text-neutral-900 text-sm focus:outline-none focus:border-amber-400">
+          <option value="">-- Chọn --</option>
+          <option *ngFor="let p of addressService.provinces()" [value]="p.name">{{ p.name }}</option>
+        </select>
+        <span *ngIf="errors['city']" class="text-[11px] text-rose-400">{{ errors['city'] }}</span>
+      </div>
+      <div>
+        <label class="text-xs font-bold text-neutral-600 block mb-1">Quận / Huyện</label>
+        <select [(ngModel)]="district" (ngModelChange)="onDistrictChange()" [disabled]="!city" class="w-full p-2.5 rounded-xl border border-neutral-300 bg-neutral-100 text-neutral-900 text-sm focus:outline-none focus:border-amber-400 disabled:opacity-50">
+          <option value="">-- Chọn --</option>
+          <option *ngFor="let d of districts()" [value]="d.name">{{ d.name }}</option>
+        </select>
+        <span *ngIf="errors['district']" class="text-[11px] text-rose-400">{{ errors['district'] }}</span>
+      </div>
+      <div>
+        <label class="text-xs font-bold text-neutral-600 block mb-1">Phường / Xã</label>
+        <select [(ngModel)]="ward" [disabled]="!district" class="w-full p-2.5 rounded-xl border border-neutral-300 bg-neutral-100 text-neutral-900 text-sm focus:outline-none focus:border-amber-400 disabled:opacity-50">
+          <option value="">-- Chọn --</option>
+          <option *ngFor="let w of wards()" [value]="w.name">{{ w.name }}</option>
+        </select>
+        <span *ngIf="errors['ward']" class="text-[11px] text-rose-400">{{ errors['ward'] }}</span>
+      </div>
+      <div class="sm:col-span-2">
+        <label class="text-xs font-bold text-neutral-600 block mb-1">Địa chỉ cụ thể (số nhà, tên đường)</label>
+        <input type="text" [(ngModel)]="address" class="w-full p-2.5 rounded-xl border border-neutral-300 bg-neutral-100 text-neutral-900 text-sm focus:outline-none focus:border-amber-400">
+        <span *ngIf="errors['address']" class="text-[11px] text-rose-400">{{ errors['address'] }}</span>
+      </div>
+      <div class="sm:col-span-2">
+        <label class="inline-flex items-center gap-2 text-xs text-neutral-600 cursor-pointer">
+          <input type="checkbox" [(ngModel)]="isDefault" class="text-amber-500 focus:ring-amber-400">
+          Đặt làm địa chỉ mặc định
+        </label>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-end gap-3 pt-2">
+      <button (click)="closeModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-neutral-600 hover:text-neutral-900 transition">Hủy</button>
+      <button (click)="save()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-600 text-white text-xs font-bold shadow-md">Lưu địa chỉ</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete confirm -->
+<div *ngIf="showDeleteConfirm" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4" (click)="cancelDelete()">
+  <div class="bg-white rounded-3xl p-6 max-w-sm w-full space-y-4 text-center" (click)="$event.stopPropagation()">
+    <h3 class="font-serif text-lg font-bold text-neutral-900">Xoá địa chỉ này?</h3>
+    <p class="text-xs text-neutral-500">Bạn sẽ không thể hoàn tác sau khi xoá.</p>
+    <div class="flex items-center justify-center gap-3 pt-2">
+      <button (click)="cancelDelete()" class="px-4 py-2 rounded-xl text-xs font-bold text-neutral-600 hover:text-neutral-900 transition">Hủy</button>
+      <button (click)="deleteConfirmed()" class="px-5 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold shadow-md">Xoá</button>
+    </div>
+  </div>
+</div>

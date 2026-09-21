@@ -1,0 +1,82 @@
+<div class="bg-[#FFFFFF] rounded-3xl p-6 sm:p-8 border border-neutral-200 shadow-xl space-y-6">
+  <h3 class="font-serif text-lg font-bold text-neutral-900 border-b border-neutral-200 pb-3">Thông Tin Cá Nhân</h3>
+
+  <!-- Avatar -->
+  <div class="flex items-center gap-4">
+    <div class="relative group">
+      <div class="w-20 h-20 rounded-full overflow-hidden border-2 border-amber-500/30 bg-neutral-100 flex items-center justify-center">
+        <img
+          *ngIf="authService.getAvatarUrl(authService.currentUser()?.avatar) as avatarUrl; else avatarFallback"
+          [src]="avatarUrl"
+          alt="Ảnh đại diện"
+          class="w-full h-full object-cover">
+        <ng-template #avatarFallback>
+          <app-icon name="user" [size]="32" class="text-neutral-400"></app-icon>
+        </ng-template>
+      </div>
+      <button
+        type="button"
+        (click)="triggerAvatarPicker()"
+        [disabled]="isUploadingAvatar"
+        class="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-amber-500 hover:bg-amber-400 text-white flex items-center justify-center shadow-md border-2 border-white transition disabled:opacity-60"
+        title="Đổi ảnh đại diện">
+        <app-icon name="sliders" [size]="13"></app-icon>
+      </button>
+      <input #avatarInput type="file" accept="image/*" class="hidden" (change)="onAvatarSelected($event)">
+    </div>
+    <div>
+      <div class="text-sm font-bold text-neutral-900">{{ authService.currentUser()?.fullName || 'Chưa đặt tên' }}</div>
+      <div class="text-xs text-neutral-500">{{ authService.currentUser()?.phoneNumber }}</div>
+      <div *ngIf="isUploadingAvatar" class="text-[11px] text-amber-600 mt-1">Đang tải ảnh lên...</div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div>
+      <label class="text-xs font-bold text-neutral-700 block mb-1">Số điện thoại</label>
+      <input type="text" [value]="authService.currentUser()?.phoneNumber" disabled
+        class="w-full p-2.5 rounded-xl border border-neutral-200 bg-neutral-100 text-neutral-500 text-sm">
+    </div>
+    <div>
+      <label class="text-xs font-bold text-neutral-700 block mb-1">Họ và tên</label>
+      <input type="text" [(ngModel)]="fullName" placeholder="Nhập họ tên của bạn"
+        class="w-full p-2.5 rounded-xl border border-neutral-300 bg-white text-neutral-900 text-sm focus:outline-none focus:border-amber-400">
+    </div>
+    <div>
+      <label class="text-xs font-bold text-neutral-700 block mb-1">Email</label>
+      <input type="email" [(ngModel)]="email" placeholder="Nhập email của bạn"
+        class="w-full p-2.5 rounded-xl border border-neutral-300 bg-white text-neutral-900 text-sm focus:outline-none focus:border-amber-400">
+    </div>
+    <div>
+      <label class="text-xs font-bold text-neutral-700 block mb-1">Ngày sinh</label>
+      <input type="date" [(ngModel)]="dateOfBirth"
+        class="w-full p-2.5 rounded-xl border border-neutral-300 bg-white text-neutral-900 text-sm focus:outline-none focus:border-amber-400">
+    </div>
+    <div class="sm:col-span-2">
+      <label class="text-xs font-bold text-neutral-700 block mb-2">Giới tính</label>
+      <div class="flex items-center gap-4">
+        <label class="inline-flex items-center gap-1.5 text-sm text-neutral-700 cursor-pointer">
+          <input type="radio" name="gender" value="male" [(ngModel)]="gender" class="text-amber-500 focus:ring-amber-400">
+          Nam
+        </label>
+        <label class="inline-flex items-center gap-1.5 text-sm text-neutral-700 cursor-pointer">
+          <input type="radio" name="gender" value="female" [(ngModel)]="gender" class="text-amber-500 focus:ring-amber-400">
+          Nữ
+        </label>
+        <label class="inline-flex items-center gap-1.5 text-sm text-neutral-700 cursor-pointer">
+          <input type="radio" name="gender" value="other" [(ngModel)]="gender" class="text-amber-500 focus:ring-amber-400">
+          Khác
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex items-center gap-3 pt-2 border-t border-neutral-200">
+    <button
+      (click)="saveProfile()"
+      [disabled]="isSaving"
+      class="px-5 py-2.5 rounded-xl bg-[#2055AF] hover:bg-[#2864C8] disabled:opacity-50 text-white text-xs font-bold transition mt-4">
+      {{ isSaving ? 'Đang lưu...' : 'Lưu thay đổi' }}
+    </button>
+  </div>
+</div>

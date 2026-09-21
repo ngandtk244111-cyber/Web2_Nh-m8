@@ -1,0 +1,36 @@
+<div
+  class="tp_overlay"
+  *ngIf="visible()"
+  [class.tp_overlay--closing]="closing()"
+  (click)="close()">
+
+  <div class="tp_popup" [class.tp_popup--closing]="closing()" (click)="$event.stopPropagation()">
+
+    <span class="tp_sparkle tp_sparkle--1" aria-hidden="true">✦</span>
+    <span class="tp_sparkle tp_sparkle--2" aria-hidden="true">✦</span>
+    <span class="tp_sparkle tp_sparkle--3" aria-hidden="true">✦</span>
+
+    <button type="button" class="tp_icon-badge" aria-label="Mẹo hay">
+      <app-icon name="sparkles" [size]="16"></app-icon>
+    </button>
+
+    <button type="button" class="tp_close" (click)="close()" aria-label="Đóng">
+      <app-icon name="x" [size]="18"></app-icon>
+    </button>
+
+    <div class="tp_image-wrap" *ngIf="article() as a">
+      <img [src]="a.coverImage" [alt]="a.title" class="tp_image">
+      <div class="tp_image-fade"></div>
+    </div>
+
+    <div class="tp_body" *ngIf="article() as a">
+      <span class="tp_label">CÓ THỂ BẠN CHƯA BIẾT?</span>
+      <h3 class="tp_title">{{ a.title }}</h3>
+      <p class="tp_desc">{{ a.excerpt }}</p>
+      <button type="button" class="tp_cta" (click)="goToArticle()">
+        Xem ngay <app-icon name="chevron-right" [size]="18"></app-icon>
+      </button>
+    </div>
+
+  </div>
+</div>

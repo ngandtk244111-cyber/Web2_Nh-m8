@@ -1,0 +1,405 @@
+/*
+ * Footer ecommerce cho Mini 3D Studio: nền trắng đồng bộ toàn site, không gradient,
+ * accent cam thương hiệu cho CTA, accent xanh dương đậm cho hover link.
+ */
+:host {
+  display: block;
+  font-family: var(--font-family-content, 'Montserrat', sans-serif);
+
+  --ft-bg: #ffffff;
+  --ft-text: #171717;
+  --ft-text-secondary: #4a4a4a;
+  --ft-text-muted: #767676;
+  --ft-accent-orange: #FF6D2D;
+  --ft-accent-blue: #2F6FE0;
+  --ft-divider: rgba(0, 0, 0, 0.08);
+  --ft-surface: #F5F4F0;
+}
+
+.ft {
+  background: var(--ft-bg);
+  padding: 64px 0 28px;
+  color: var(--ft-text-muted);
+  margin-top: 80px;
+  border-top: 1px solid var(--ft-divider);
+}
+
+.ft__inner {
+  width: min(1200px, calc(100% - 32px));
+  margin: 0 auto;
+}
+
+/* ---------- 4 cột chính ---------- */
+.ft_cols {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr 1fr;
+  gap: 32px;
+}
+
+.ft_col--brand {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ft_brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.ft_brand__mark {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+}
+
+.ft_brand__name {
+  font-family: var(--font-family-heading, 'Cormorant Garamond', serif);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--ft-text);
+}
+
+.ft_brand__tagline {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--ft-text-secondary);
+  margin: 0;
+  max-width: 260px;
+}
+
+.ft_brand__sub {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--ft-text-muted);
+  margin: 0 0 6px;
+}
+
+.ft_col__head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: transparent;
+  border: none;
+  padding: 0 0 16px;
+  cursor: default;
+  text-align: left;
+}
+
+.ft_title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ft-text);
+}
+
+.ft_chev {
+  display: none;
+  color: var(--ft-text-muted);
+  transition: transform 0.2s ease;
+}
+
+.ft_links {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ft_link {
+  display: block;
+  text-decoration: none;
+  color: var(--ft-text-secondary);
+  font-size: 14.5px;
+  line-height: 2.2;
+  padding: 0;
+  background: transparent;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  transition: color 0.15s ease;
+  width: fit-content;
+}
+
+.ft_link:hover {
+  color: var(--ft-accent-blue);
+}
+
+.ft_link--btn {
+  font-family: inherit;
+}
+
+.ft_link--static {
+  color: var(--ft-text-muted);
+  cursor: default;
+}
+
+.ft_link--static:hover {
+  color: var(--ft-text-muted);
+}
+
+/* ---------- Social icons ---------- */
+.ft_social {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.ft_social--brand {
+  margin-top: 4px;
+}
+
+.ft_social__btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  text-decoration: none;
+  background: var(--ft-surface);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: var(--ft-text-secondary);
+  transition: transform 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.ft_social__btn:hover {
+  transform: translateY(-2px);
+  border-color: var(--ft-accent-blue);
+  color: var(--ft-accent-blue);
+}
+
+/* ---------- Divider ---------- */
+.ft_divider {
+  height: 1px;
+  background: var(--ft-divider);
+  margin: 44px 0 32px;
+}
+
+/* ---------- Newsletter + Kết nối ---------- */
+.ft_newsletter {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+
+.ft_newsletter__text {
+  flex: 1 1 260px;
+  min-width: 220px;
+}
+
+.ft_newsletter__title {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ft-text);
+}
+
+.ft_newsletter__desc {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ft-text-muted);
+  max-width: 360px;
+}
+
+.ft_newsletter__form {
+  flex: 1 1 320px;
+  display: flex;
+  gap: 10px;
+  min-width: 280px;
+}
+
+.ft_newsletter__input {
+  flex: 1;
+  height: 44px;
+  padding: 0 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: var(--ft-surface);
+  color: var(--ft-text);
+  font-size: 13.5px;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.ft_newsletter__input::placeholder {
+  color: var(--ft-text-muted);
+}
+
+.ft_newsletter__input:focus {
+  border-color: var(--ft-accent-orange);
+}
+
+.ft_newsletter__btn {
+  flex-shrink: 0;
+  height: 44px;
+  padding: 0 22px;
+  border-radius: 10px;
+  border: none;
+  background: var(--ft-accent-orange);
+  color: #ffffff;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.ft_newsletter__btn:hover {
+  background: #E05418;
+  transform: translateY(-1px);
+}
+
+.ft_connect {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.ft_connect__title {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ft-text-muted);
+  white-space: nowrap;
+}
+
+/* ---------- Bottom bar ---------- */
+.ft_bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 12.5px;
+  color: var(--ft-text-muted);
+}
+
+.ft_bottom__left {
+  white-space: nowrap;
+}
+
+.ft_bottom__right {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.ft_bottom__right .ft_link {
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+
+/* ===== Tablet: 2 cột ===== */
+@media (max-width: 1023px) and (min-width: 641px) {
+  .ft_cols {
+    grid-template-columns: 1fr 1fr;
+    row-gap: 36px;
+  }
+
+  .ft_col--brand {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ===== Mobile: accordion ===== */
+@media (max-width: 640px) {
+  .ft {
+    padding: 40px 0 24px;
+  }
+
+  .ft_cols {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .ft_col--brand {
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--ft-divider);
+    margin-bottom: 6px;
+  }
+
+  .ft_col:not(.ft_col--brand) {
+    border-bottom: 1px solid var(--ft-divider);
+  }
+
+  .ft_col__head {
+    padding: 16px 0;
+    cursor: pointer;
+  }
+
+  .ft_chev {
+    display: inline-flex;
+  }
+
+  .ft_chev--open {
+    transform: rotate(180deg);
+  }
+
+  .ft_links {
+    display: none;
+    padding-bottom: 14px;
+  }
+
+  .ft_links--open {
+    display: flex;
+  }
+
+  .ft_divider {
+    margin: 28px 0 24px;
+  }
+
+  .ft_newsletter {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 20px;
+  }
+
+  .ft_newsletter__form {
+    flex-direction: column;
+  }
+
+  .ft_newsletter__btn {
+    width: 100%;
+  }
+
+  .ft_connect {
+    align-items: flex-start;
+  }
+
+  .ft_social__btn {
+    width: 38px;
+    height: 38px;
+  }
+
+  .ft_bottom {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .ft_bottom__right {
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+}
+
+/* ===== Desktop: cột luôn mở ===== */
+@media (min-width: 641px) {
+  .ft_links {
+    display: flex !important;
+  }
+}

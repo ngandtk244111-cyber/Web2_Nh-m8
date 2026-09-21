@@ -1,0 +1,147 @@
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+      
+      <!-- Page Title -->
+      <div class="text-center space-y-2">
+        <h1 class="font-serif text-3xl font-extrabold text-neutral-900">
+          Tra Cứu Tiến Độ Đơn Hàng In 3D
+        </h1>
+        <p class="text-xs sm:text-sm text-neutral-600 max-w-md mx-auto">
+          Nhập mã đơn hàng của bạn để kiểm tra quy trình slicing, in 3D và tiến độ đóng gói theo thời gian thực.
+        </p>
+      </div>
+
+      <!-- Search Input Box -->
+      <div class="max-w-lg mx-auto bg-[#FFFFFF] p-2 rounded-2xl border border-neutral-200 shadow-xl flex items-center gap-2">
+        <app-icon name="search" [size]="18" class="text-neutral-600 ml-3"></app-icon>
+        <input 
+          type="text" 
+          [(ngModel)]="searchCode" 
+          placeholder="Nhập mã đơn hàng (Ví dụ: ORD-982104)..." 
+          class="flex-1 text-xs sm:text-sm p-2 outline-none uppercase placeholder:normal-case font-mono bg-transparent text-neutral-900 placeholder:text-neutral-500">
+        <button 
+          (click)="searchOrder()"
+          class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-neutral-950 font-extrabold text-xs shadow-md transition">
+          Tra cứu
+        </button>
+      </div>
+
+      <!-- Not found message -->
+      <div *ngIf="notFound" class="max-w-lg mx-auto text-center text-sm text-neutral-600 bg-[#F6F5F2] border border-neutral-200 rounded-2xl p-4">
+        Không tìm thấy đơn hàng với mã này. Vui lòng kiểm tra lại mã đơn hàng.
+      </div>
+
+      <!-- Active Order Details -->
+      <div *ngIf="currentOrder" class="space-y-6">
+        
+        <!-- Header status card -->
+        <div class="bg-[#FFFFFF] rounded-3xl p-6 sm:p-8 border border-neutral-200 shadow-xl space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-neutral-200 pb-4">
+            <div>
+              <span class="text-xs font-mono font-bold text-neutral-600">MÃ ĐƠN HÀNG</span>
+              <h2 class="font-serif text-xl sm:text-2xl font-bold text-neutral-900">{{ currentOrder.orderNumber }}</h2>
+              <span class="text-[11px] text-neutral-500">Khởi tạo lúc: {{ currentOrder.createdAtLabel || currentOrder.createdAt }}</span>
+            </div>
+
+            <!-- Status Pill -->
+            <div>
+              <span class="px-4 py-1.5 rounded-full text-xs font-bold bg-amber-950/40 text-amber-400 border border-amber-500/30 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                <span>{{ getStatusLabel(currentOrder.status) }}</span>
+              </span>
+            </div>
+          </div>
+
+          <!-- 3D Production Pipeline Progress Tracker -->
+          <div *ngIf="currentOrder.hasPrintOnDemandItems && currentOrder.productionProgress" class="space-y-4 pt-2">
+            
+            <div class="flex items-center justify-between text-xs">
+              <span class="font-bold text-neutral-800 flex items-center gap-1.5">
+                <app-icon name="cube" [size]="16" class="text-amber-400"></app-icon>
+                <span>Quy trình sản xuất in 3D: {{ currentOrder.productionProgress.stepTitle }}</span>
+              </span>
+              <span class="font-mono font-bold text-amber-400">{{ currentOrder.productionProgress.percentage }}%</span>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="w-full h-3 rounded-full bg-[#F6F5F2] border border-neutral-200 overflow-hidden">
+              <div 
+                class="h-full bg-gradient-to-r from-amber-500 to-amber-300 transition-all duration-500 rounded-full"
+                [style.width.%]="currentOrder.productionProgress.percentage"></div>
+            </div>
+
+            <p class="text-xs text-neutral-700 bg-[#F6F5F2] p-3 rounded-xl border border-neutral-200">
+              💡 <strong class="text-amber-400">Chi tiết kỹ thuật:</strong> {{ currentOrder.productionProgress.notes }}
+            </p>
+
+            <!-- Steps icon row -->
+            <div class="grid grid-cols-2 sm:grid-cols-6 gap-2 pt-2 text-[10px]">
+              <div 
+                *ngFor="let step of pipelineSteps"
+                [class.text-amber-400]="isStepReached(step.key)"
+                [class.font-bold]="isStepReached(step.key)"
+                [class.text-neutral-500]="!isStepReached(step.key)"
+                class="p-2 rounded-xl text-center border"
+                [class.border-amber-500]="isStepReached(step.key)"
+                [class.bg-amber-950]="isStepReached(step.key)"
+                [class.border-neutral-200]="!isStepReached(step.key)">
+                {{ step.label }}
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Shipping destination recap -->
+          <div class="border-t border-neutral-200 pt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+            <div>
+              <span class="text-neutral-500 block uppercase font-bold text-[10px]">Người nhận & Liên hệ:</span>
+              <span class="font-semibold text-neutral-800">{{ currentOrder.shippingAddress.fullName }}</span>
+              <span class="text-neutral-600 block">{{ currentOrder.shippingAddress.phone }} • {{ currentOrder.shippingAddress.email }}</span>
+            </div>
+            <div>
+              <span class="text-neutral-500 block uppercase font-bold text-[10px]">Địa chỉ giao hàng:</span>
+              <span class="text-neutral-700">{{ currentOrder.shippingAddress.street }}, {{ currentOrder.shippingAddress.district }}, {{ currentOrder.shippingAddress.city }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Items Ordered Card -->
+        <div class="bg-[#FFFFFF] rounded-3xl p-6 sm:p-8 border border-neutral-200 shadow-xl space-y-4">
+          <h3 class="font-serif text-lg font-bold text-neutral-900 border-b border-neutral-200 pb-3">
+            Sản Phẩm Trong Đơn Hàng
+          </h3>
+
+          <div class="divide-y divide-neutral-800">
+            <div *ngFor="let item of currentOrder.items" class="py-3 flex gap-4 items-center">
+              <img [src]="item.product.images[0]" [alt]="item.product.name" class="w-16 h-16 rounded-xl object-cover border border-neutral-200 bg-[#F6F5F2] flex-shrink-0">
+              
+              <div class="min-w-0 flex-1">
+                <h4 class="text-xs sm:text-sm font-bold text-neutral-800">{{ item.product.name }}</h4>
+                
+                <div *ngIf="item.selectedCustomization" class="text-[11px] text-neutral-600 mt-1 space-x-2">
+                  <span class="inline-flex items-center gap-1 bg-[#F6F5F2] px-2 py-0.5 rounded border border-neutral-200">
+                    Màu: {{ item.selectedCustomization.color.name }}
+                  </span>
+                  <span class="inline-flex items-center gap-1 bg-[#F6F5F2] px-2 py-0.5 rounded border border-neutral-200">
+                    Kích thước: {{ item.selectedCustomization.size.label }}
+                  </span>
+                  <span *ngIf="item.selectedCustomization.customText" class="text-amber-400 font-semibold">
+                    Khắc: "{{ item.selectedCustomization.customText }}"
+                  </span>
+                </div>
+
+                <div class="text-xs font-bold text-amber-400 mt-1">
+                  {{ item.totalPrice | vnd }} (Số lượng: {{ item.quantity }})
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="border-t border-neutral-200 pt-3 flex justify-between items-baseline text-sm font-bold text-neutral-900">
+            <span>Tổng thanh toán ({{ currentOrder.paymentMethod }}):</span>
+            <span class="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-amber-400 to-amber-500">{{ currentOrder.total | vnd }}</span>
+          </div>
+        </div>
+
+      </div>
+
+    </div>

@@ -1,0 +1,121 @@
+    <div
+      class="group relative bg-[#FFFFFF] rounded-3xl overflow-hidden border border-neutral-200 hover:border-amber-500/50 shadow-soft hover:shadow-[0_8px_30px_rgba(212,175,55,0.15)] hover:-translate-y-1 transition-all duration-300 flex h-full"
+      [class.flex-col]="layout === 'grid'"
+      [class.flex-row]="layout === 'list'">
+
+      <!-- Image Thumbnail Container -->
+      <div
+        class="relative aspect-square overflow-hidden bg-[#F3F1EC]"
+        [class.w-full]="layout === 'grid'"
+        [class.w-36]="layout === 'list'"
+        [class.flex-shrink-0]="layout === 'list'">
+        <img
+          #cardImg
+          [src]="product.images[0]"
+          [alt]="product.name"
+          class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+
+        <!-- Top Badges -->
+        <div class="absolute top-3 left-3 flex flex-col gap-1.5 items-start">
+          <span
+            *ngIf="product.productionType === 'PRINT_ON_DEMAND'"
+            class="text-[10px] font-extrabold tracking-wide uppercase px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-400 to-amber-600 text-neutral-950 shadow-md flex items-center gap-1">
+            <app-icon name="cube" [size]="12"></app-icon>
+            <span>In 3D (POD)</span>
+          </span>
+
+          <span
+            *ngIf="product.productionType === 'READY_STOCK'"
+            class="text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-sm">
+            Có sẵn
+          </span>
+
+          <span
+            *ngIf="product.customizable"
+            class="text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full bg-amber-400/20 text-amber-700 border border-amber-400/30 shadow-sm flex items-center gap-1">
+            <app-icon name="sliders" [size]="12"></app-icon>
+            <span>Tùy biến 3D</span>
+          </span>
+        </div>
+
+        <!-- Quick 3D Customizer Link overlay on hover -->
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 p-4">
+          <a
+            *ngIf="product.customizable"
+            [routerLink]="['/customizer-3d']"
+            [queryParams]="{ productId: product.id }"
+            class="px-4 py-2 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-neutral-950 text-xs font-extrabold shadow-[0_0_15px_rgba(212,175,55,0.4)] hover:scale-105 transition flex items-center gap-1.5">
+            <app-icon name="sliders" [size]="14"></app-icon>
+            <span>Tùy biến 3D</span>
+          </a>
+
+          <button
+            type="button"
+            (click)="openQuickView()"
+            class="px-4 py-2 rounded-full bg-neutral-100/95 hover:bg-neutral-200 text-neutral-900 text-xs font-bold border border-neutral-300 hover:border-amber-400/50 shadow-md hover:scale-105 transition flex items-center gap-1.5">
+            <app-icon name="eye" [size]="14"></app-icon>
+            <span>Xem nhanh</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Card Content -->
+      <div class="p-5 flex-1 flex flex-col justify-between min-w-0">
+        <div>
+          <!-- Category & Rating -->
+          <div class="flex items-center justify-between text-[11px] text-neutral-600 mb-1.5">
+            <span class="font-medium text-neutral-600 uppercase tracking-wider">{{ product.categoryName }}</span>
+            <div class="flex items-center gap-1 text-amber-400 font-semibold">
+              <app-icon name="star" [size]="12"></app-icon>
+              <span>{{ product.rating }}</span>
+              <span class="text-neutral-500 font-normal">({{ product.reviewCount }})</span>
+            </div>
+          </div>
+
+          <!-- Title -->
+          <h3 class="font-medium text-neutral-900 text-base sm:text-lg line-clamp-2 group-hover:text-amber-400 transition-colors">
+            <a [routerLink]="['/product', product.slug]">{{ product.name }}</a>
+          </h3>
+
+          <!-- Dimensions preview -->
+          <p class="text-xs text-neutral-600 mt-1 line-clamp-1">
+            📐 {{ product.dimensions }}
+          </p>
+        </div>
+
+        <!-- Footer Price & Add Button -->
+        <div class="mt-4 pt-3 border-t border-neutral-200 flex items-center justify-between">
+          <div class="flex flex-col">
+            <span class="text-base sm:text-lg font-semibold text-amber-400">
+              {{ product.basePrice | vnd }}
+            </span>
+            <span *ngIf="product.originalPrice" class="text-[11px] text-neutral-500 line-through">
+              {{ product.originalPrice | vnd }}
+            </span>
+          </div>
+
+          <!-- Add to Cart or Customize CTA -->
+          <button
+            *ngIf="!product.customizable"
+            type="button"
+            (click)="quickAddToCart()"
+            class="p-2.5 rounded-2xl bg-neutral-100 hover:bg-amber-400 text-neutral-700 hover:text-neutral-950 border border-neutral-300 hover:border-amber-400 transition shadow-sm"
+            title="Thêm vào giỏ hàng">
+            <app-icon name="cart" [size]="16"></app-icon>
+          </button>
+
+          <a
+            *ngIf="product.customizable"
+            [routerLink]="['/customizer-3d']"
+            [queryParams]="{ productId: product.id }"
+            class="px-3 py-1.5 rounded-xl bg-amber-400/15 hover:bg-amber-400/25 border border-amber-400/30 text-amber-700 text-xs font-semibold transition flex items-center gap-1"
+            title="Tùy biến 3D">
+            <app-icon name="sliders" [size]="13"></app-icon>
+            <span>Tùy biến</span>
+          </a>
+        </div>
+
+      </div>
+
+    </div>

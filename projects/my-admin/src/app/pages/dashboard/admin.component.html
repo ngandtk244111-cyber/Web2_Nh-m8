@@ -1,0 +1,462 @@
+<div class="flex h-screen overflow-hidden bg-[#F6F5F2]">
+
+  <!-- Sidebar -->
+  <aside class="w-60 shrink-0 bg-neutral-900 text-white flex flex-col">
+    <div class="h-[78px] shrink-0 flex items-center gap-2.5 px-5 border-b border-white/10">
+      <div class="w-9 h-9 rounded-xl bg-black flex items-center justify-center shrink-0 overflow-hidden">
+        <img src="/logo/lumea-mark.png" alt="Luméa" class="w-full h-full object-contain p-1">
+      </div>
+      <div class="min-w-0">
+        <div class="font-serif uppercase text-sm font-bold leading-none truncate">Luméa</div>
+        <div class="text-[10px] text-white/50 uppercase tracking-wider mt-0.5 truncate">Admin Portal</div>
+      </div>
+    </div>
+
+    <nav class="flex-1 overflow-y-auto py-3 px-2 space-y-1">
+      <button
+        (click)="activeTab = 'orders'"
+        [class]="activeTab === 'orders' ? 'bg-white/10 text-amber-400' : 'text-white/70 hover:bg-white/5 hover:text-white'"
+        class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition">
+        <app-icon name="truck" [size]="16"></app-icon>
+        <span class="flex-1 text-left">Đơn Hàng & Tiến Độ In</span>
+        <span class="text-[10px] bg-white/10 px-1.5 py-0.5 rounded-full">{{ orders.length }}</span>
+      </button>
+
+      <button
+        (click)="activeTab = 'custom-requests'"
+        [class]="activeTab === 'custom-requests' ? 'bg-white/10 text-amber-400' : 'text-white/70 hover:bg-white/5 hover:text-white'"
+        class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition">
+        <app-icon name="sliders" [size]="16"></app-icon>
+        <span class="flex-1 text-left">Thiết Kế Riêng</span>
+        <span class="text-[10px] bg-white/10 px-1.5 py-0.5 rounded-full">{{ customRequests.length }}</span>
+      </button>
+
+      <button
+        (click)="activeTab = 'products'"
+        [class]="activeTab === 'products' ? 'bg-white/10 text-amber-400' : 'text-white/70 hover:bg-white/5 hover:text-white'"
+        class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition">
+        <app-icon name="box" [size]="16"></app-icon>
+        <span class="flex-1 text-left">Sản Phẩm</span>
+        <span class="text-[10px] bg-white/10 px-1.5 py-0.5 rounded-full">{{ products.length }}</span>
+      </button>
+
+      <button
+        (click)="activeTab = 'rooms'"
+        [class]="activeTab === 'rooms' ? 'bg-white/10 text-amber-400' : 'text-white/70 hover:bg-white/5 hover:text-white'"
+        class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition">
+        <app-icon name="room" [size]="16"></app-icon>
+        <span class="flex-1 text-left">Phòng 3D & Hotspot</span>
+      </button>
+    </nav>
+
+    <div class="p-3 border-t border-white/10 shrink-0">
+      <a
+        [href]="clientAppUrl"
+        class="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-semibold text-white/70 hover:bg-white/5 hover:text-white transition">
+        <span>← Về trang khách hàng</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main column -->
+  <div class="flex-1 flex flex-col min-w-0">
+
+    <!-- Topbar -->
+    <header class="h-[78px] shrink-0 bg-white border-b border-neutral-200 flex items-center justify-between px-8 shadow-sm z-10">
+      <div class="min-w-0">
+        <h1 class="font-serif text-lg font-bold text-neutral-900 truncate">
+          {{ activeTab === 'orders' ? 'Đơn Hàng & Tiến Độ In 3D'
+            : activeTab === 'custom-requests' ? 'Yêu Cầu Thiết Kế Riêng'
+            : activeTab === 'products' ? 'Quản Lý Sản Phẩm'
+            : 'Phòng 3D & Hotspot' }}
+        </h1>
+        <p class="text-[11px] text-neutral-500 truncate">
+          {{ activeTab === 'orders' ? 'Theo dõi & cập nhật công đoạn sản xuất in 3D theo thời gian thực'
+            : activeTab === 'custom-requests' ? 'Xem brief, duyệt báo giá và cấp mô hình preview 3D'
+            : activeTab === 'products' ? 'Thêm/sửa/xoá sản phẩm trong kho'
+            : 'Cấu hình các điểm Hotspot gắn sản phẩm trong phòng mẫu' }}
+        </p>
+      </div>
+    </header>
+
+    <!-- Content body -->
+    <main class="flex-1 overflow-y-auto p-8 space-y-8">
+
+      <!-- 4 Key Metric Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div class="bg-[#FFFFFF] p-5 rounded-3xl border border-neutral-200 shadow-xl space-y-2">
+          <span class="text-xs font-bold text-neutral-600 uppercase tracking-wider">Tổng Doanh Thu</span>
+          <div class="font-serif text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-amber-400 to-amber-500">
+            {{ totalRevenue | vnd }}
+          </div>
+          <div class="text-[11px] text-emerald-400 font-semibold flex items-center gap-1">
+            <span>↑ 18.5%</span> <span class="text-neutral-500 font-normal">so với tháng trước</span>
+          </div>
+        </div>
+
+        <div class="bg-[#FFFFFF] p-5 rounded-3xl border border-neutral-200 shadow-xl space-y-2">
+          <span class="text-xs font-bold text-neutral-600 uppercase tracking-wider">Đơn Hàng Đã Đặt</span>
+          <div class="font-serif text-2xl font-bold text-neutral-900">
+            {{ orders.length }} Đơn
+          </div>
+          <div class="text-[11px] text-amber-400 font-medium">
+            Có {{ podOrdersCount }} đơn có sản phẩm in 3D (POD)
+          </div>
+        </div>
+
+        <div class="bg-[#FFFFFF] p-5 rounded-3xl border border-neutral-200 shadow-xl space-y-2">
+          <span class="text-xs font-bold text-neutral-600 uppercase tracking-wider">Yêu Cầu Thiết Kế Riêng</span>
+          <div class="font-serif text-2xl font-bold text-neutral-900">
+            {{ customRequests.length }} Yêu cầu
+          </div>
+          <div class="text-[11px] text-amber-400 font-medium">
+            {{ pendingRequestsCount }} yêu cầu chờ báo giá
+          </div>
+        </div>
+
+        <div class="bg-[#FFFFFF] p-5 rounded-3xl border border-neutral-200 shadow-xl space-y-2">
+          <span class="text-xs font-bold text-neutral-600 uppercase tracking-wider">Sản Phẩm Trong Kho</span>
+          <div class="font-serif text-2xl font-bold text-neutral-900">
+            {{ products.length }} Mẫu
+          </div>
+          <div class="text-[11px] text-neutral-600 font-medium">
+            {{ customizableProductsCount }} mẫu tùy biến 3D
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 1: ORDERS & 3D PRODUCTION PIPELINE -->
+      <div *ngIf="activeTab === 'orders'" class="space-y-6">
+        <div class="bg-[#FFFFFF] rounded-3xl border border-neutral-200 shadow-xl overflow-hidden">
+          <div class="p-6 border-b border-neutral-200 flex items-center justify-between">
+            <h3 class="font-serif text-lg font-bold text-neutral-900">Danh Sách Đơn Hàng</h3>
+            <span class="text-xs text-neutral-600">Cập nhật công đoạn sản xuất in 3D theo thời gian thực</span>
+          </div>
+
+          <div class="divide-y divide-neutral-200">
+            <div *ngFor="let ord of orders" class="p-6 space-y-4">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="font-mono font-bold text-sm text-neutral-900">{{ ord.orderNumber }}</span>
+                    <span *ngIf="ord.hasPrintOnDemandItems" class="text-[10px] font-bold bg-amber-950/50 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded">
+                      In 3D Theo Yêu Cầu
+                    </span>
+                    <span *ngIf="!ord.hasPrintOnDemandItems" class="text-[10px] font-bold bg-emerald-950/50 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded">
+                      Hàng có sẵn
+                    </span>
+                  </div>
+                  <div class="text-xs text-neutral-600 mt-1">
+                    Khách hàng: <strong class="text-neutral-800">{{ ord.shippingAddress.fullName }}</strong> ({{ ord.shippingAddress.phone }}) • {{ ord.createdAt }}
+                  </div>
+                </div>
+
+                <div class="text-right">
+                  <span class="font-serif font-bold text-base text-amber-400">{{ ord.total | vnd }}</span>
+                  <div class="text-[11px] text-neutral-500">{{ ord.paymentMethod }} ({{ ord.paymentStatus }})</div>
+                </div>
+              </div>
+
+              <!-- Items in order -->
+              <div class="bg-[#F6F5F2] p-3 rounded-2xl border border-neutral-200 text-xs space-y-1 text-neutral-700">
+                <div *ngFor="let it of ord.items" class="flex justify-between">
+                  <span>{{ it.quantity }}x {{ it.product.name }}</span>
+                  <span class="font-semibold text-neutral-800">{{ it.totalPrice | vnd }}</span>
+                </div>
+              </div>
+
+              <!-- Advance 3D Production Step Controls -->
+              <div *ngIf="ord.hasPrintOnDemandItems" class="p-4 bg-[#F6F5F2] rounded-2xl border border-amber-500/30 space-y-3">
+                <div class="flex items-center justify-between text-xs">
+                  <span class="font-bold text-amber-400">
+                    ⚙️ Công đoạn hiện tại: {{ ord.productionProgress?.stepTitle }} ({{ ord.productionProgress?.percentage }}%)
+                  </span>
+                  <span class="text-[11px] text-neutral-600">Chuyển bước sản xuất:</span>
+                </div>
+
+                <div class="flex flex-wrap gap-2">
+                  <button
+                    (click)="setProductionStep(ord.id, 'FILE_PREPARATION', 'Kiểm tra file Slicing', 20, 'Đã chuẩn bị xong G-code')"
+                    class="px-2.5 py-1 text-[11px] bg-[#F0EEE8] border border-neutral-300 hover:border-amber-500 text-neutral-700 hover:text-white rounded-lg transition">
+                    1. Slicing File
+                  </button>
+                  <button
+                    (click)="setProductionStep(ord.id, '3D_PRINTING', 'Đang in 3D FDM', 50, 'Máy in đang chạy lớp 250')"
+                    class="px-2.5 py-1 text-[11px] bg-[#F0EEE8] border border-neutral-300 hover:border-amber-500 text-neutral-700 hover:text-white rounded-lg transition">
+                    2. Đang in 3D
+                  </button>
+                  <button
+                    (click)="setProductionStep(ord.id, 'POST_PROCESSING', 'Chà nhám & Xử lý bề mặt', 75, 'Gỡ support và làm mịn')"
+                    class="px-2.5 py-1 text-[11px] bg-[#F0EEE8] border border-neutral-300 hover:border-amber-500 text-neutral-700 hover:text-white rounded-lg transition">
+                    3. Xử lý bề mặt
+                  </button>
+                  <button
+                    (click)="setProductionStep(ord.id, 'ASSEMBLY_TESTING', 'Lắp ráp & Test điện', 85, 'Đèn sáng đều, pin tốt')"
+                    class="px-2.5 py-1 text-[11px] bg-[#F0EEE8] border border-neutral-300 hover:border-amber-500 text-neutral-700 hover:text-white rounded-lg transition">
+                    4. Lắp ráp & Test
+                  </button>
+                  <button
+                    (click)="setProductionStep(ord.id, 'PACKAGING', 'Đóng gói chống sốc', 95, 'Đã bọc xốp bóng khí')"
+                    class="px-2.5 py-1 text-[11px] bg-[#F0EEE8] border border-neutral-300 hover:border-amber-500 text-neutral-700 hover:text-white rounded-lg transition">
+                    5. Đóng gói
+                  </button>
+                  <button
+                    (click)="setProductionStep(ord.id, 'DISPATCHED', 'Đã bàn giao vận chuyển', 100, 'Đã gửi bưu tá Viettel Post')"
+                    class="px-2.5 py-1 text-[11px] bg-gradient-to-r from-amber-400 to-amber-600 text-neutral-950 font-bold rounded-lg shadow-sm">
+                    6. Đã giao bưu tá
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: CUSTOM REQUESTS MANAGEMENT -->
+      <div *ngIf="activeTab === 'custom-requests'" class="space-y-6">
+        <div class="bg-[#FFFFFF] rounded-3xl border border-neutral-200 shadow-xl overflow-hidden">
+          <div class="p-6 border-b border-neutral-200 flex items-center justify-between">
+            <h3 class="font-serif text-lg font-bold text-neutral-900">Quản Lý Yêu Cầu Thiết Kế Riêng</h3>
+            <span class="text-xs text-neutral-600">Xem brief, duyệt báo giá và cấp mô hình preview 3D</span>
+          </div>
+
+          <div class="divide-y divide-neutral-200">
+            <div *ngFor="let req of customRequests" class="p-6 space-y-4">
+              <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="font-mono text-xs font-bold text-amber-400">{{ req.requestCode }}</span>
+                    <span class="font-serif font-bold text-base text-neutral-900">{{ req.title }}</span>
+                  </div>
+                  <div class="text-xs text-neutral-600 mt-1">
+                    Khách hàng: <strong class="text-neutral-800">{{ req.customerName }}</strong> ({{ req.customerEmail }}) • {{ req.createdAt }}
+                  </div>
+                  <div class="mt-2 text-xs text-neutral-700 bg-[#F6F5F2] p-2.5 rounded-xl border border-neutral-200 max-w-xl">
+                    <strong>Brief:</strong> {{ req.brief.productType }} • {{ req.brief.style }} • Màu: {{ req.brief.color }} • Size: {{ req.brief.size }} • Khắc: {{ req.brief.customText || 'Không' }}
+                  </div>
+                </div>
+
+                <div class="text-right space-y-2">
+                  <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-[#F6F5F2] border border-neutral-200 text-amber-400">
+                    {{ req.status }}
+                  </span>
+                  <div *ngIf="req.quotationPrice" class="font-serif font-bold text-amber-400">
+                    Đã báo: {{ req.quotationPrice | vnd }}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Admin Action Tools for this request -->
+              <div class="bg-[#F6F5F2] p-4 rounded-2xl border border-neutral-200 flex flex-wrap items-center gap-3">
+                <span class="text-xs font-bold text-neutral-700">Tác vụ Shop:</span>
+
+                <!-- Set Quotation -->
+                <div class="flex items-center gap-1.5">
+                  <input
+                    type="number"
+                    [(ngModel)]="quotationInputs[req.id]"
+                    placeholder="Nhập giá (VNĐ)"
+                    class="text-xs p-2 rounded-xl border border-neutral-300 w-32 bg-[#FBF7EE] text-neutral-900 focus:outline-none focus:border-amber-500">
+                  <button
+                    (click)="submitQuotation(req.id)"
+                    class="px-3 py-2 bg-gradient-to-r from-amber-400 to-amber-600 text-neutral-950 rounded-xl text-xs font-bold">
+                    Gửi Báo Giá
+                  </button>
+                </div>
+
+                <!-- Set Preview 3D ready -->
+                <button
+                  (click)="setPreviewReady(req.id)"
+                  class="px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold flex items-center gap-1">
+                  <app-icon name="cube" [size]="14"></app-icon>
+                  <span>Mở 3D Preview Cho Khách</span>
+                </button>
+
+                <a
+                  [href]="clientAppUrl + '/custom-request/' + req.id"
+                  class="ml-auto text-xs font-semibold text-amber-400 hover:underline">
+                  Vào trang trao đổi chi tiết →
+                </a>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: PRODUCTS CRUD -->
+      <div *ngIf="activeTab === 'products'" class="space-y-6">
+
+        <!-- Sub-tab: Sản phẩm có sẵn vs Tùy biến in 3D là 2 danh mục quản lý riêng biệt -->
+        <div class="flex items-center gap-2">
+          <button
+            (click)="productSubTab = 'ready'"
+            [class]="productSubTab === 'ready'
+              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold'
+              : 'bg-[#FFFFFF] text-neutral-600 border border-neutral-200 hover:border-emerald-500/30'"
+            class="px-4 py-2.5 rounded-xl text-xs transition flex items-center gap-1.5">
+            <app-icon name="check" [size]="14"></app-icon>
+            <span>Sản Phẩm Có Sẵn ({{ readyStockProducts.length }})</span>
+          </button>
+          <button
+            (click)="productSubTab = 'customizable'"
+            [class]="productSubTab === 'customizable'
+              ? 'bg-gradient-to-r from-amber-400 to-amber-600 text-white font-extrabold shadow-[0_0_12px_rgba(255,109,45,0.3)]'
+              : 'bg-[#FFFFFF] text-neutral-600 border border-neutral-200 hover:border-amber-500/30'"
+            class="px-4 py-2.5 rounded-xl text-xs transition flex items-center gap-1.5">
+            <app-icon name="sliders" [size]="14"></app-icon>
+            <span>Sản Phẩm Tùy Biến In 3D ({{ customizableAdminProducts.length }})</span>
+          </button>
+        </div>
+
+        <!-- Bảng: Sản phẩm có sẵn -->
+        <div *ngIf="productSubTab === 'ready'" class="bg-[#FFFFFF] rounded-3xl border border-neutral-200 shadow-xl p-6">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h3 class="font-serif text-lg font-bold text-neutral-900">Sản Phẩm Có Sẵn (Ready Stock)</h3>
+              <p class="text-[11px] text-neutral-600 mt-0.5">Giao ngay từ kho, không qua bước tùy biến 3D</p>
+            </div>
+            <button
+              (click)="showAddProductModal = true"
+              class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-amber-600 text-white text-xs font-bold flex items-center gap-1.5 shadow-md">
+              <app-icon name="plus" [size]="14"></app-icon>
+              <span>Thêm sản phẩm mới</span>
+            </button>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs text-left">
+              <thead class="bg-[#F6F5F2] text-neutral-600 uppercase font-bold text-[10px] border-b border-neutral-200">
+                <tr>
+                  <th class="p-3">Sản phẩm</th>
+                  <th class="p-3">Phân loại</th>
+                  <th class="p-3">Giá gốc</th>
+                  <th class="p-3">Kho</th>
+                  <th class="p-3 text-right">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-neutral-200">
+                <tr *ngFor="let p of readyStockProducts" class="hover:bg-neutral-100 text-neutral-700">
+                  <td class="p-3 flex items-center gap-3">
+                    <img [src]="p.images[0]" class="w-10 h-10 rounded-lg object-cover bg-[#F6F5F2] border border-neutral-200">
+                    <div>
+                      <div class="font-bold text-neutral-900">{{ p.name }}</div>
+                      <div class="text-[10px] text-neutral-600">{{ p.categoryName }}</div>
+                    </div>
+                  </td>
+                  <td class="p-3 font-medium">{{ p.categoryGroup }}</td>
+                  <td class="p-3 font-bold text-amber-400">{{ p.basePrice | vnd }}</td>
+                  <td class="p-3">{{ p.inStock }} chiếc</td>
+                  <td class="p-3 text-right">
+                    <button
+                      (click)="deleteProduct(p.id)"
+                      class="text-neutral-500 hover:text-rose-400 p-1 transition">
+                      <app-icon name="trash" [size]="14"></app-icon>
+                    </button>
+                  </td>
+                </tr>
+                <tr *ngIf="readyStockProducts.length === 0">
+                  <td colspan="5" class="p-6 text-center text-neutral-500">Chưa có sản phẩm có sẵn nào.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Bảng: Sản phẩm tùy biến in 3D -->
+        <div *ngIf="productSubTab === 'customizable'" class="bg-[#FFFFFF] rounded-3xl border border-neutral-200 shadow-xl p-6">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h3 class="font-serif text-lg font-bold text-neutral-900">Sản Phẩm Tùy Biến In 3D (Print On Demand)</h3>
+              <p class="text-[11px] text-neutral-600 mt-0.5">Khách tự cấu hình màu/chất liệu/kích thước trên Trình Tùy Biến 3D trước khi in</p>
+            </div>
+            <button
+              (click)="showAddProductModal = true"
+              class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-amber-600 text-white text-xs font-bold flex items-center gap-1.5 shadow-md">
+              <app-icon name="plus" [size]="14"></app-icon>
+              <span>Thêm sản phẩm tùy biến mới</span>
+            </button>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs text-left">
+              <thead class="bg-[#F6F5F2] text-neutral-600 uppercase font-bold text-[10px] border-b border-neutral-200">
+                <tr>
+                  <th class="p-3">Sản phẩm</th>
+                  <th class="p-3">Phân loại</th>
+                  <th class="p-3">Tùy chọn cấu hình</th>
+                  <th class="p-3">Giá gốc</th>
+                  <th class="p-3">Kho</th>
+                  <th class="p-3 text-right">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-neutral-200">
+                <tr *ngFor="let p of customizableAdminProducts" class="hover:bg-neutral-100 text-neutral-700">
+                  <td class="p-3 flex items-center gap-3">
+                    <img [src]="p.images[0]" class="w-10 h-10 rounded-lg object-cover bg-[#F6F5F2] border border-neutral-200">
+                    <div>
+                      <div class="font-bold text-neutral-900">{{ p.name }}</div>
+                      <div class="text-[10px] text-neutral-600">{{ p.categoryName }}</div>
+                    </div>
+                  </td>
+                  <td class="p-3 font-medium">{{ p.categoryGroup }}</td>
+                  <td class="p-3 font-semibold text-[11px]">
+                    {{ p.customization?.colors?.length || 0 }} màu ·
+                    {{ p.customization?.materials?.length || 0 }} chất liệu ·
+                    {{ p.customization?.sizes?.length || 0 }} size
+                  </td>
+                  <td class="p-3 font-bold text-amber-400">{{ p.basePrice | vnd }}</td>
+                  <td class="p-3">{{ p.inStock }} chiếc</td>
+                  <td class="p-3 text-right">
+                    <button
+                      (click)="deleteProduct(p.id)"
+                      class="text-neutral-500 hover:text-rose-400 p-1 transition">
+                      <app-icon name="trash" [size]="14"></app-icon>
+                    </button>
+                  </td>
+                </tr>
+                <tr *ngIf="customizableAdminProducts.length === 0">
+                  <td colspan="6" class="p-6 text-center text-neutral-500">Chưa có sản phẩm tùy biến in 3D nào.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 4: ROOMS & HOTSPOTS -->
+      <div *ngIf="activeTab === 'rooms'" class="space-y-6">
+        <div class="bg-[#FFFFFF] rounded-3xl border border-neutral-200 shadow-xl p-6 space-y-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="font-serif text-lg font-bold text-neutral-900">Quản Lý Không Gian Phòng 3D</h3>
+              <p class="text-xs text-neutral-600">Cấu hình các điểm Hotspot gắn sản phẩm trong phòng mẫu</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div *ngFor="let r of rooms" class="p-5 rounded-2xl border border-neutral-200 bg-[#F6F5F2] space-y-3">
+              <h4 class="font-bold text-sm text-neutral-900">{{ r.name }}</h4>
+              <p class="text-xs text-neutral-600">{{ r.description }}</p>
+
+              <div class="pt-2">
+                <span class="text-[11px] font-bold uppercase text-amber-400 block mb-2">Các điểm Hotspot đang hiển thị ({{ r.hotspots.length }} điểm):</span>
+                <div class="space-y-1.5">
+                  <div *ngFor="let hs of r.hotspots" class="bg-[#FBF7EE] p-2.5 rounded-xl border border-neutral-300/60 text-xs flex justify-between items-center">
+                    <div>
+                      <span class="font-bold text-neutral-800">{{ hs.label }}</span>
+                      <span class="text-neutral-500 text-[10px] block">Tọa độ: [{{ hs.position.join(', ') }}]</span>
+                    </div>
+                    <span class="text-amber-400 text-[11px] font-semibold">Tương tác 3D ✓</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>

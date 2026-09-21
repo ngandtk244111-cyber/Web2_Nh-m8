@@ -1,0 +1,123 @@
+<footer class="ft">
+  <div class="ft__inner">
+
+    <!-- ============ 4 CỘT CHÍNH ============ -->
+    <div class="ft_cols">
+
+      <!-- Cột 1: Thương hiệu -->
+      <div class="ft_col ft_col--brand">
+        <a routerLink="/" class="ft_brand">
+          <img src="assets/logo/lumea-mark.png" alt="Mini 3D Studio" class="ft_brand__mark">
+          <span class="ft_brand__name">Mini 3D Studio</span>
+        </a>
+        <p class="ft_brand__tagline">Mini 3D decor cho những không gian mang dấu ấn riêng.</p>
+        <p class="ft_brand__sub">Thiết kế • Tùy biến • In 3D</p>
+
+        <div class="ft_social ft_social--brand">
+          <a class="ft_social__btn" href="#" aria-label="Facebook" title="Facebook (sắp cập nhật)">
+            <app-icon name="facebook" [size]="15"></app-icon>
+          </a>
+          <a class="ft_social__btn" href="#" aria-label="Instagram" title="Instagram (sắp cập nhật)">
+            <app-icon name="instagram" [size]="15"></app-icon>
+          </a>
+          <a class="ft_social__btn" href="#" aria-label="TikTok" title="TikTok (sắp cập nhật)">
+            <app-icon name="tiktok" [size]="15"></app-icon>
+          </a>
+          <a class="ft_social__btn" href="#" aria-label="YouTube" title="YouTube (sắp cập nhật)">
+            <app-icon name="youtube" [size]="15"></app-icon>
+          </a>
+        </div>
+      </div>
+
+      <!-- Cột 2: Mua Sắm -->
+      <div class="ft_col">
+        <button class="ft_col__head" type="button" (click)="toggle('shop')">
+          <span class="ft_title">Mua Sắm</span>
+          <app-icon name="chevron-down" [size]="14" class="ft_chev" [class.ft_chev--open]="open.shop"></app-icon>
+        </button>
+        <nav class="ft_links" [class.ft_links--open]="open.shop">
+          <a class="ft_link" *ngFor="let item of shopLinks" [routerLink]="item.link" [queryParams]="item.queryParams">{{ item.label }}</a>
+        </nav>
+      </div>
+
+      <!-- Cột 3: Khám Phá -->
+      <div class="ft_col">
+        <button class="ft_col__head" type="button" (click)="toggle('explore')">
+          <span class="ft_title">Khám Phá</span>
+          <app-icon name="chevron-down" [size]="14" class="ft_chev" [class.ft_chev--open]="open.explore"></app-icon>
+        </button>
+        <nav class="ft_links" [class.ft_links--open]="open.explore">
+          <a class="ft_link" *ngFor="let item of exploreLinks" [routerLink]="item.link" [queryParams]="item.queryParams">{{ item.label }}</a>
+        </nav>
+      </div>
+
+      <!-- Cột 4: Hỗ Trợ -->
+      <div class="ft_col">
+        <button class="ft_col__head" type="button" (click)="toggle('support')">
+          <span class="ft_title">Hỗ Trợ</span>
+          <app-icon name="chevron-down" [size]="14" class="ft_chev" [class.ft_chev--open]="open.support"></app-icon>
+        </button>
+        <nav class="ft_links" [class.ft_links--open]="open.support">
+          <button type="button" class="ft_link ft_link--btn" (click)="openSupportCenter()">Trung tâm hỗ trợ</button>
+          <a class="ft_link" *ngFor="let item of supportLinks" [routerLink]="item.link" [queryParams]="item.queryParams">{{ item.label }}</a>
+          <a class="ft_link" routerLink="/chinh-sach/giao-hang">Chính sách giao hàng</a>
+          <a class="ft_link" routerLink="/chinh-sach/doi-tra">Chính sách đổi trả</a>
+          <a class="ft_link" routerLink="/chinh-sach/thanh-toan">Phương thức thanh toán</a>
+          <a class="ft_link" routerLink="/chinh-sach/faq">Câu hỏi thường gặp</a>
+          <a class="ft_link" href="tel:18006928">Liên hệ</a>
+        </nav>
+      </div>
+
+    </div>
+
+    <!-- ============ NEWSLETTER + KẾT NỐI ============ -->
+    <div class="ft_divider"></div>
+    <div class="ft_newsletter">
+      <div class="ft_newsletter__text">
+        <h4 class="ft_newsletter__title">Nhận Cảm Hứng Decor</h4>
+        <p class="ft_newsletter__desc">Đăng ký để nhận những ý tưởng decor mới, sản phẩm mới và ưu đãi từ Mini 3D Studio.</p>
+      </div>
+
+      <form class="ft_newsletter__form" (ngSubmit)="subscribeNewsletter()">
+        <input
+          type="email"
+          name="newsletterEmail"
+          [(ngModel)]="newsletterEmail"
+          placeholder="Nhập email của bạn"
+          required
+          class="ft_newsletter__input">
+        <button type="submit" class="ft_newsletter__btn">Đăng ký</button>
+      </form>
+
+      <div class="ft_connect">
+        <span class="ft_connect__title">Kết Nối Với Chúng Tôi</span>
+        <div class="ft_social">
+          <a class="ft_social__btn" href="#" aria-label="Facebook" title="Facebook (sắp cập nhật)">
+            <app-icon name="facebook" [size]="16"></app-icon>
+          </a>
+          <a class="ft_social__btn" href="#" aria-label="Instagram" title="Instagram (sắp cập nhật)">
+            <app-icon name="instagram" [size]="16"></app-icon>
+          </a>
+          <a class="ft_social__btn" href="#" aria-label="TikTok" title="TikTok (sắp cập nhật)">
+            <app-icon name="tiktok" [size]="16"></app-icon>
+          </a>
+          <a class="ft_social__btn" href="#" aria-label="YouTube" title="YouTube (sắp cập nhật)">
+            <app-icon name="youtube" [size]="16"></app-icon>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ FOOTER BOTTOM ============ -->
+    <div class="ft_divider"></div>
+    <div class="ft_bottom">
+      <div class="ft_bottom__left">© 2026 Mini 3D Studio. All rights reserved.</div>
+      <div class="ft_bottom__right">
+        <a class="ft_link" routerLink="/chinh-sach/bao-mat">Chính sách bảo mật</a>
+        <a class="ft_link" routerLink="/chinh-sach/dieu-khoan">Điều khoản sử dụng</a>
+        <a class="ft_link" routerLink="/chinh-sach/cookie">Chính sách cookie</a>
+      </div>
+    </div>
+
+  </div>
+</footer>

@@ -226,6 +226,12 @@
   gap: 10px;
 }
 
+.lm_google-btn {
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+}
+
 .lm_social-btn {
   height: 40px;
   border-radius: 12px;

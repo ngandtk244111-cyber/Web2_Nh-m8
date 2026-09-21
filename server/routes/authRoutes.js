@@ -3,11 +3,14 @@ const bcrypt = require('bcryptjs');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
 const OtpCode = require('../models/OtpCode');
 const { generateOtpCode, sendOtpSms } = require('../utils/otp');
 const { requireUserId } = require('../middleware/auth');
 const { awardCoins } = require('../utils/coins');
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const PROFILE_COMPLETE_REWARD = 20;
 
@@ -120,6 +123,85 @@ router.post('/register', async (req, res) => {
     res.json({ success: true, user });
   } catch (err) {
     console.error('register error', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ===================== ĐĂNG NHẬP GOOGLE =====================
+// FE dùng Google Identity Services (google.accounts.id), lấy được 1 ID token (JWT) rồi gửi
+// nguyên token đó lên đây — BE verify chữ ký + audience qua google-auth-library (không cần
+// client secret, không cần redirect URI). Tài khoản Google chưa có SĐT sẽ được yêu cầu nhập
+// SĐT + xác thực OTP ngay (dùng lại /register-otp và /verify-otp-any hiện có) trước khi coi
+// là đăng nhập xong, vì đơn hàng/bảo hành/sổ địa chỉ trong hệ thống đều khoá theo SĐT.
+
+router.post('/google', async (req, res) => {
+  try {
+    const { credential } = req.body;
+    if (!credential) {
+      return res.status(400).json({ success: false, error: 'Thiếu thông tin đăng nhập Google.' });
+    }
+    if (!process.env.GOOGLE_CLIENT_ID) {
+      return res.status(500).json({ success: false, error: 'Server chưa cấu hình GOOGLE_CLIENT_ID.' });
+    }
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    const googleId = payload.sub;
+
+    let user = await User.findOne({ googleId });
+    if (!user) {
+      user = await User.create({
+        googleId,
+        email: payload.email || '',
+        fullName: payload.name || '',
+        avatar: payload.picture || '',
+        active: true,
+        lastLogin: new Date(),
+      });
+    } else {
+      user.lastLogin = new Date();
+      await user.save();
+    }
+
+    if (!user.phoneNumber) {
+      return res.json({ success: true, needsPhone: true, userId: user._id });
+    }
+    res.json({ success: true, user });
+  } catch (err) {
+    console.error('google login error', err);
+    res.status(400).json({ success: false, error: 'Đăng nhập Google thất bại, vui lòng thử lại.' });
+  }
+});
+
+router.post('/google/attach-phone', async (req, res) => {
+  try {
+    const { userId, phoneNumber } = req.body;
+    if (!phoneNumber || !PHONE_REGEX.test(phoneNumber)) {
+      return res.status(400).json({ success: false, error: 'Số điện thoại không hợp lệ' });
+    }
+    const user = await User.findById(userId);
+    if (!user || !user.googleId) {
+      return res.status(404).json({ success: false, error: 'Không tìm thấy tài khoản Google.' });
+    }
+    if (user.phoneNumber) {
+      return res.json({ success: true, user });
+    }
+    const existingPhone = await User.findOne({ phoneNumber });
+    if (existingPhone) {
+      return res.status(400).json({ success: false, error: 'Số điện thoại đã được đăng ký bởi tài khoản khác.' });
+    }
+    if (!(await consumeVerifiedOtp(phoneNumber))) {
+      return res.status(400).json({ success: false, error: 'Vui lòng xác thực mã OTP trước khi tiếp tục.' });
+    }
+    user.phoneNumber = phoneNumber;
+    user.lastLogin = new Date();
+    await user.save();
+    res.json({ success: true, user });
+  } catch (err) {
+    console.error('google attach-phone error', err);
     res.status(500).json({ success: false, error: err.message });
   }
 });

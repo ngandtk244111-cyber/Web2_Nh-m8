@@ -1,4 +1,4 @@
-import { Component, ElementRef, QueryList, ViewChildren, effect } from '@angular/core';
+import { AfterViewChecked, Component, ElementRef, QueryList, ViewChild, ViewChildren, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
@@ -6,15 +6,13 @@ import { AuthApiService } from '../../core/services/auth-api.service';
 import { LoginModalService } from '../../core/services/login-modal.service';
 import { ToastService } from '../../core/services/toast.service';
 import { AppIconComponent } from '../icon/icon.component';
+import { environment } from '../../../environments/environment';
 
-type Mode = 'login' | 'register' | 'forgot-password';
+declare const google: any;
 
-/**
- * Đăng nhập bằng SĐT + mật khẩu (không OTP-login/JWT) — tham khảo đúng luồng và cấu trúc
- * của VitaCare-main (my-user/features/accounts/auth): đăng nhập / đăng ký (OTP xác thực SĐT
- * rồi đặt mật khẩu) / quên mật khẩu (OTP rồi đặt lại mật khẩu), OTP nhập theo 6 ô số riêng lẻ
- * tự nhảy focus, đếm ngược gửi lại mã. Giao diện viết lại theo theme tối/cam của Luméa.
- */
+type Mode = 'login' | 'register' | 'forgot-password' | 'google-phone';
+
+
 @Component({
   selector: 'app-login-modal',
   standalone: true,
@@ -22,8 +20,9 @@ type Mode = 'login' | 'register' | 'forgot-password';
   templateUrl: './login-modal.component.html',
   styleUrl: './login-modal.component.css'
 })
-export class LoginModalComponent {
+export class LoginModalComponent implements AfterViewChecked {
   @ViewChildren('otpInput') otpInputs!: QueryList<ElementRef<HTMLInputElement>>;
+  @ViewChild('googleBtnContainer') googleBtnContainer!: ElementRef<HTMLDivElement>;
 
   mode: Mode = 'login';
   /** register: 1 = nhập SĐT, 2 = nhập OTP, 3 = đặt mật khẩu */
@@ -43,6 +42,9 @@ export class LoginModalComponent {
 
   otpTimer = 60;
   private otpInterval: ReturnType<typeof setInterval> | null = null;
+
+  /** userId của tài khoản Google vừa đăng nhập lần đầu, đang chờ gắn SĐT (mode 'google-phone'). */
+  pendingGoogleUserId: string | null = null;
 
   constructor(
     public modalService: LoginModalService,
@@ -67,7 +69,43 @@ export class LoginModalComponent {
     this.otpCode = '';
     this.isSubmitting = false;
     this.errors = {};
+    this.pendingGoogleUserId = null;
     this.stopOtpTimer();
+  }
+
+  /**
+   * `<div #googleBtnContainer>` chỉ tồn tại trong DOM khi modal đang mở VÀ mode === 'login'
+   * (bị *ngIf huỷ/tạo lại mỗi lần đóng/mở modal), nên không thể chỉ render 1 lần ở
+   * ngAfterViewInit — phải kiểm tra lại mỗi lần view check và render lại vào container mới
+   * mỗi khi nó xuất hiện rỗng (chưa có nút Google bên trong).
+   */
+  ngAfterViewChecked(): void {
+    const container = this.googleBtnContainer?.nativeElement;
+    if (container && !container.hasChildNodes()) {
+      this.renderGoogleButton();
+    }
+  }
+
+  /** Google Identity Services script tải async — chờ tới khi `window.google` sẵn sàng rồi mới render nút. */
+  private renderGoogleButton(retriesLeft = 20): void {
+    if (typeof google === 'undefined' || !google?.accounts?.id) {
+      if (retriesLeft <= 0) return;
+      setTimeout(() => this.renderGoogleButton(retriesLeft - 1), 250);
+      return;
+    }
+    const container = this.googleBtnContainer?.nativeElement;
+    if (!container) return;
+    google.accounts.id.initialize({
+      client_id: environment.googleClientId,
+      callback: (response: { credential: string }) => this.handleGoogleCredential(response.credential),
+    });
+    google.accounts.id.renderButton(container, {
+      theme: 'outline',
+      size: 'large',
+      shape: 'pill',
+      text: 'continue_with',
+      width: 220,
+    });
   }
 
   close(): void {
@@ -84,6 +122,9 @@ export class LoginModalComponent {
       if (this.forgotStep === 1) return 'Quên Mật Khẩu';
       if (this.forgotStep === 2) return 'Nhập Mã OTP';
       return 'Đặt Mật Khẩu Mới';
+    }
+    if (this.mode === 'google-phone') {
+      return this.registerStep === 1 ? 'Hoàn Tất Đăng Nhập Google' : 'Nhập Mã OTP';
     }
     if (this.mode === 'register') {
       if (this.registerStep === 1) return 'Đăng Ký Tài Khoản';
@@ -250,9 +291,13 @@ export class LoginModalComponent {
       next: (res) => {
         this.isSubmitting = false;
         if (res.success) {
-          this.registerStep = 3;
           this.otpCode = '';
           this.stopOtpTimer();
+          if (this.mode === 'google-phone') {
+            this.finishGoogleLogin();
+          } else {
+            this.registerStep = 3;
+          }
         } else {
           this.errors.otp = res.error || 'Mã không đúng, yêu cầu nhập lại.';
         }
@@ -398,7 +443,50 @@ export class LoginModalComponent {
     });
   }
 
-  // ---------- Đăng nhập mạng xã hội (giao diện, chưa cấu hình provider thật) ----------
+  // ---------- Đăng nhập Google ----------
+  private handleGoogleCredential(credential: string): void {
+    this.errors = {};
+    this.authApi.loginWithGoogle(credential).subscribe({
+      next: (res) => {
+        if (res.success && res.needsPhone && res.userId) {
+          this.pendingGoogleUserId = res.userId;
+          this.mode = 'google-phone';
+          this.registerStep = 1;
+          this.phoneNumber = '';
+        } else if (res.success && res.user) {
+          this.authService.setUser(res.user);
+          this.toastService.success('Đăng nhập Google thành công!');
+          this.close();
+        } else {
+          this.toastService.error(res.error || 'Đăng nhập Google thất bại.');
+        }
+      },
+      error: () => this.toastService.error('Không thể kết nối tới máy chủ.'),
+    });
+  }
+
+  private finishGoogleLogin(): void {
+    if (!this.pendingGoogleUserId) return;
+    this.isSubmitting = true;
+    this.authApi.attachGooglePhone(this.pendingGoogleUserId, this.phoneNumber.trim()).subscribe({
+      next: (res) => {
+        this.isSubmitting = false;
+        if (res.success && res.user) {
+          this.authService.setUser(res.user);
+          this.toastService.success('Đăng nhập Google thành công!');
+          this.close();
+        } else {
+          this.errors.otp = res.error || 'Không thể hoàn tất đăng nhập.';
+        }
+      },
+      error: (err) => {
+        this.isSubmitting = false;
+        this.errors.otp = err.error?.error || 'Không thể kết nối tới máy chủ.';
+      },
+    });
+  }
+
+  // ---------- Đăng nhập Facebook (chưa cấu hình provider thật) ----------
   onSocialLoginStub(provider: string): void {
     this.toastService.info(`Đăng nhập bằng ${provider} đang được phát triển.`);
   }

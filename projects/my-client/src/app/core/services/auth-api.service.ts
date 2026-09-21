@@ -12,6 +12,9 @@ export interface AuthApiResponse {
   message?: string;
   error?: string;
   devOtp?: string;
+  /** Đăng nhập Google lần đầu chưa có SĐT trong hệ thống — FE cần hỏi SĐT + OTP trước khi coi là xong. */
+  needsPhone?: boolean;
+  userId?: string;
 }
 
 /**
@@ -36,6 +39,14 @@ export class AuthApiService {
 
   login(phoneNumber: string, password: string): Observable<AuthApiResponse> {
     return this.http.post<AuthApiResponse>(`${BASE}/login`, { phoneNumber, password });
+  }
+
+  loginWithGoogle(credential: string): Observable<AuthApiResponse> {
+    return this.http.post<AuthApiResponse>(`${BASE}/google`, { credential });
+  }
+
+  attachGooglePhone(userId: string, phoneNumber: string): Observable<AuthApiResponse> {
+    return this.http.post<AuthApiResponse>(`${BASE}/google/attach-phone`, { userId, phoneNumber });
   }
 
   forgotPassword(phoneNumber: string): Observable<AuthApiResponse> {

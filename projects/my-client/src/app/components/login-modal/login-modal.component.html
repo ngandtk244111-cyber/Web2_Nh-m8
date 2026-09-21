@@ -41,15 +41,16 @@
       <div class="lm_divider"><span>hoặc</span></div>
 
       <div class="lm_social">
-        <button type="button" class="lm_social-btn" (click)="onSocialLoginStub('Google')">Google</button>
+        <div #googleBtnContainer class="lm_google-btn"></div>
         <button type="button" class="lm_social-btn" (click)="onSocialLoginStub('Facebook')">Facebook</button>
       </div>
 
       <p class="lm_switch">Chưa có tài khoản? <button type="button" class="lm_link" (click)="switchToRegister()">Đăng ký ngay</button></p>
     </form>
 
-    <!-- ============ ĐĂNG KÝ — BƯỚC 1: SĐT ============ -->
-    <form *ngIf="mode === 'register' && registerStep === 1" class="lm_form" (ngSubmit)="submitRegisterPhone()">
+    <!-- ============ ĐĂNG KÝ / GOOGLE — BƯỚC 1: SĐT ============ -->
+    <form *ngIf="(mode === 'register' || mode === 'google-phone') && registerStep === 1" class="lm_form" (ngSubmit)="submitRegisterPhone()">
+      <p class="lm_hint" *ngIf="mode === 'google-phone'">Đăng nhập Google thành công! Nhập số điện thoại để hoàn tất (dùng cho đơn hàng, bảo hành...).</p>
       <div class="lm_field">
         <label class="lm_label">Số điện thoại</label>
         <div class="lm_input-wrap">
@@ -63,11 +64,11 @@
         {{ isSubmitting ? 'Đang gửi...' : 'Gửi Mã OTP' }}
       </button>
 
-      <p class="lm_switch">Đã có tài khoản? <button type="button" class="lm_link" (click)="switchToLogin()">Đăng nhập</button></p>
+      <p class="lm_switch" *ngIf="mode === 'register'">Đã có tài khoản? <button type="button" class="lm_link" (click)="switchToLogin()">Đăng nhập</button></p>
     </form>
 
-    <!-- ============ ĐĂNG KÝ — BƯỚC 2: OTP ============ -->
-    <form *ngIf="mode === 'register' && registerStep === 2" class="lm_form" (ngSubmit)="submitRegisterOtp()">
+    <!-- ============ ĐĂNG KÝ / GOOGLE — BƯỚC 2: OTP ============ -->
+    <form *ngIf="(mode === 'register' || mode === 'google-phone') && registerStep === 2" class="lm_form" (ngSubmit)="submitRegisterOtp()">
       <p class="lm_hint">Mã OTP đã gửi tới <strong>{{ phoneNumber }}</strong></p>
 
       <div class="lm_otp-row">

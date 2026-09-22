@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, map, tap, catchError, of } from 'rxjs';
 import { Order, OrderStatus, ProductionStep, ProductionProgress, ShippingAddress } from '../models/order.model';
 import { CartItem } from '../models/cart.model';
+import { AdminAuthService } from './admin-auth.service';
 import { environment } from '../../../environments/environment';
 
 interface OrderApiResponse {
@@ -21,6 +22,7 @@ interface OrdersApiResponse {
 })
 export class OrderService {
   private http = inject(HttpClient);
+  private adminAuth = inject(AdminAuthService);
   private readonly baseUrl = `${environment.apiUrl}/orders`;
 
   private ordersSignal = signal<Order[]>([]);
@@ -37,9 +39,9 @@ export class OrderService {
     return now.toLocaleDateString('vi-VN') + ' ' + now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
   }
 
-  /** Nạp toàn bộ đơn hàng (dùng cho trang admin). */
+  /** Nạp toàn bộ đơn hàng (dùng cho trang admin) — backend yêu cầu adminId (requireAdminId). */
   fetchAll(): Observable<Order[]> {
-    return this.http.get<OrdersApiResponse>(this.baseUrl).pipe(
+    return this.http.get<OrdersApiResponse>(this.baseUrl, { params: { adminId: this.adminAuth.adminId } }).pipe(
       map(res => (res.orders || []).map(o => this.normalize(o))),
       tap(orders => this.ordersSignal.set(orders)),
       catchError(err => {
@@ -96,6 +98,7 @@ export class OrderService {
     return this.http.patch<OrderApiResponse>(`${this.baseUrl}/${encodeURIComponent(orderNumber)}/production`, {
       status,
       productionProgress: progress,
+      adminId: this.adminAuth.adminId,
     }).pipe(
       map(res => this.normalize(res.order!)),
       tap(order => this.replaceInSignal(order))

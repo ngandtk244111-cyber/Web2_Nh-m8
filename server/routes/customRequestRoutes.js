@@ -1,5 +1,6 @@
 const express = require('express');
 const CustomRequest = require('../models/CustomRequest');
+const { requireAdminId } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -83,7 +84,7 @@ router.post('/:id/messages', async (req, res) => {
   }
 });
 
-router.patch('/:id/status', async (req, res) => {
+router.patch('/:id/status', requireAdminId, async (req, res) => {
   try {
     const { status, quotationPrice, estimatedDays, preview3dModelType } = req.body;
     const update = { updatedAt: new Date().toLocaleDateString('vi-VN') };

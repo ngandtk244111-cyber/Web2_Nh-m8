@@ -6,6 +6,7 @@ import { CartService } from '../../core/services/cart.service';
 import { CartFlyService } from '../../core/services/cart-fly.service';
 import { ToastService } from '../../core/services/toast.service';
 import { QuickViewService } from '../../core/services/quick-view.service';
+import { FavoriteService } from '../../core/services/favorite.service';
 import { AppIconComponent } from '../icon/icon.component';
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
 
@@ -26,7 +27,8 @@ export class ProductCardComponent {
     private cartService: CartService,
     private cartFlyService: CartFlyService,
     private toastService: ToastService,
-    public quickViewService: QuickViewService
+    public quickViewService: QuickViewService,
+    public favoriteService: FavoriteService
   ) {}
 
   quickAddToCart(): void {
@@ -35,6 +37,16 @@ export class ProductCardComponent {
       this.cartFlyService.flyToCart(this.product.images[0], this.cardImg.nativeElement);
     }
     this.toastService.success(`Đã thêm "${this.product.name}" vào giỏ hàng`);
+  }
+
+  toggleFavorite(event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    const wasFavorite = this.favoriteService.isFavorite(this.product.id);
+    this.favoriteService.toggle(this.product.id);
+    this.toastService.success(
+      wasFavorite ? `Đã bỏ "${this.product.name}" khỏi yêu thích` : `Đã thêm "${this.product.name}" vào yêu thích`
+    );
   }
 
   openQuickView(): void {

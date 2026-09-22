@@ -1,4 +1,4 @@
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
       
       <!-- Header -->
       <div class="border-b border-neutral-200 pb-6">
@@ -12,28 +12,6 @@
         <p class="text-xs sm:text-sm text-neutral-600 mt-1 max-w-2xl">
           Nội dung chính thức do Luméa biên soạn: Cập nhật xu hướng thiết kế nội thất nhỏ gọn, so sánh vật liệu PLA/PETG và video hậu trường máy in hoạt động.
         </p>
-      </div>
-
-      <!-- Categories Filter Tabs -->
-      <div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-        <button 
-          (click)="filterCategory('ALL')"
-          [class]="selectedCategory === 'ALL' 
-            ? 'bg-gradient-to-r from-amber-400 to-amber-600 text-neutral-950 font-extrabold shadow-md' 
-            : 'bg-[#FFFFFF] border border-neutral-200 text-neutral-700 hover:text-white hover:border-neutral-300'"
-          class="px-4 py-2 rounded-full text-xs transition whitespace-nowrap">
-          Tất cả bài viết
-        </button>
-
-        <button 
-          *ngFor="let cat of categories"
-          (click)="filterCategory(cat)"
-          [class]="selectedCategory === cat 
-            ? 'bg-gradient-to-r from-amber-400 to-amber-600 text-neutral-950 font-extrabold shadow-md' 
-            : 'bg-[#FFFFFF] border border-neutral-200 text-neutral-700 hover:text-white hover:border-neutral-300'"
-          class="px-4 py-2 rounded-full text-xs transition whitespace-nowrap">
-          {{ cat }}
-        </button>
       </div>
 
       <!-- Detail Modal / Drawer if viewing an article -->
@@ -122,51 +100,112 @@
         </div>
       </div>
 
-      <!-- Articles Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div 
-          *ngFor="let a of displayedArticles"
-          class="bg-[#FFFFFF] rounded-3xl border border-neutral-200 shadow-xl hover:border-amber-500/40 transition overflow-hidden flex flex-col justify-between group">
-          
+      <!-- Sidebar + Content -->
+      <div class="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-10">
+
+        <!-- Sidebar -->
+        <aside class="space-y-8">
           <div>
-            <div class="relative aspect-[16/10] overflow-hidden bg-[#F6F5F2]">
-              <img [src]="a.coverImage" [alt]="a.title" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-              <span class="absolute top-3 left-3 bg-gradient-to-r from-amber-400 to-amber-600 text-neutral-950 text-[10px] font-extrabold px-2.5 py-1 rounded-md shadow-md">
-                {{ a.category }}
-              </span>
-            </div>
+            <h3 class="font-serif text-xs font-extrabold text-neutral-900 uppercase tracking-wider mb-3">Danh mục</h3>
+            <div class="flex flex-col gap-1.5">
+              <button
+                (click)="filterCategory('ALL')"
+                [class]="selectedCategory === 'ALL'
+                  ? 'bg-gradient-to-r from-amber-400 to-amber-600 text-neutral-950 font-extrabold shadow-md'
+                  : 'bg-[#FFFFFF] border border-neutral-200 text-neutral-700 hover:border-amber-500/40 font-bold'"
+                class="text-left px-3.5 py-2.5 rounded-xl text-xs transition">
+                Tất cả bài viết
+              </button>
 
-            <div class="p-6 space-y-3">
-              <div class="text-[11px] text-neutral-500 flex items-center gap-2">
-                <span>{{ a.publishedAt }}</span>
-                <span>•</span>
-                <span>{{ a.readTime }}</span>
-                <span>•</span>
-                <span>{{ a.viewsCount }} lượt xem</span>
-              </div>
-
-              <h3 class="font-serif text-lg font-bold text-neutral-900 leading-snug group-hover:text-amber-400 transition">
-                {{ a.title }}
-              </h3>
-
-              <p class="text-xs text-neutral-600 leading-relaxed line-clamp-3">
-                {{ a.excerpt }}
-              </p>
+              <button
+                *ngFor="let cat of categories"
+                (click)="filterCategory(cat)"
+                [class]="selectedCategory === cat
+                  ? 'bg-gradient-to-r from-amber-400 to-amber-600 text-neutral-950 font-extrabold shadow-md'
+                  : 'bg-[#FFFFFF] border border-neutral-200 text-neutral-700 hover:border-amber-500/40 font-bold'"
+                class="text-left px-3.5 py-2.5 rounded-xl text-xs transition">
+                {{ cat }}
+              </button>
             </div>
           </div>
 
-          <div class="px-6 pb-6 pt-2 flex items-center justify-between border-t border-neutral-200/80">
-            <div class="flex items-center gap-2 text-xs text-neutral-600">
-              <img [src]="a.author.avatar" class="w-6 h-6 rounded-full object-cover border border-neutral-300">
-              <span>{{ a.author.name }}</span>
+          <div *ngIf="articles.length > 0">
+            <h3 class="font-serif text-xs font-extrabold text-neutral-900 uppercase tracking-wider mb-3">Bài viết mới nhất</h3>
+            <div class="space-y-3">
+              <button
+                *ngFor="let a of articles.slice(0, 5)"
+                (click)="openArticle(a)"
+                class="flex items-start gap-3 text-left group w-full">
+                <img [src]="a.coverImage" [alt]="a.title" class="w-14 h-14 rounded-lg object-cover flex-shrink-0 border border-neutral-200">
+                <div class="min-w-0">
+                  <h4 class="text-xs font-bold text-neutral-800 leading-snug line-clamp-2 group-hover:text-amber-600 transition">
+                    {{ a.title }}
+                  </h4>
+                  <div class="flex items-center gap-1 text-[11px] text-neutral-500 mt-1.5">
+                    <app-icon name="calendar" [size]="12"></app-icon>
+                    <span>{{ a.publishedAt }}</span>
+                  </div>
+                </div>
+              </button>
             </div>
+          </div>
+        </aside>
 
-            <button 
+        <!-- Main content -->
+        <div class="space-y-8">
+
+          <!-- Empty state -->
+          <div *ngIf="displayedArticles.length === 0" class="text-center py-16 text-neutral-500 text-sm">
+            Chưa có bài viết nào trong danh mục này.
+          </div>
+
+          <!-- Featured row -->
+          <div *ngIf="displayedArticles.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div
+              *ngFor="let a of displayedArticles.slice(0, 2)"
               (click)="openArticle(a)"
-              class="text-xs font-bold text-amber-400 hover:text-amber-700 flex items-center gap-1 transition">
-              <span>Đọc toàn bộ →</span>
-            </button>
+              class="bg-[#FFFFFF] rounded-3xl border border-neutral-200 shadow-xl hover:border-amber-500/40 transition overflow-hidden cursor-pointer group">
+              <div class="relative aspect-[16/9] overflow-hidden bg-[#F6F5F2]">
+                <img [src]="a.coverImage" [alt]="a.title" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                <span class="absolute top-3 left-3 bg-gradient-to-r from-amber-400 to-amber-600 text-neutral-950 text-[10px] font-extrabold px-2.5 py-1 rounded-md shadow-md">
+                  {{ a.category }}
+                </span>
+              </div>
+              <div class="p-6 space-y-2">
+                <span class="text-[11px] text-neutral-500">{{ a.publishedAt }}</span>
+                <h3 class="font-serif text-lg font-bold text-neutral-900 leading-snug group-hover:text-amber-600 transition">
+                  {{ a.title }}
+                </h3>
+                <p class="text-xs text-neutral-600 leading-relaxed line-clamp-2">{{ a.excerpt }}</p>
+                <span class="inline-block text-xs font-bold text-amber-500 group-hover:text-amber-700 transition">Xem thêm ›</span>
+              </div>
+            </div>
           </div>
+
+          <!-- Rest of the articles -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div
+              *ngFor="let a of displayedArticles.slice(2)"
+              (click)="openArticle(a)"
+              class="bg-[#FFFFFF] rounded-2xl border border-neutral-200 shadow-soft hover:border-amber-500/40 transition overflow-hidden cursor-pointer group">
+              <div class="relative aspect-video overflow-hidden bg-[#F6F5F2]">
+                <img [src]="a.coverImage" [alt]="a.title" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                <span class="absolute top-3 left-3 bg-[#FFFFFF] text-amber-700 text-[10px] font-extrabold px-2 py-0.5 rounded-md shadow">
+                  {{ a.category }}
+                </span>
+              </div>
+              <div class="p-4 space-y-1.5">
+                <h4 class="font-bold text-sm text-neutral-900 leading-snug line-clamp-2 group-hover:text-amber-600 transition">
+                  {{ a.title }}
+                </h4>
+                <p class="text-xs text-neutral-600 leading-relaxed line-clamp-2">{{ a.excerpt }}</p>
+                <div class="text-[11px] text-neutral-500 pt-1">
+                  <span>{{ a.publishedAt }}</span> • <span>{{ a.readTime }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
 

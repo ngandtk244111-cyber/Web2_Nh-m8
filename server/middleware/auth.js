@@ -23,4 +23,21 @@ function attachUserId(req, _res, next) {
   next();
 }
 
-module.exports = { requireUserId, attachUserId };
+function extractAdminId(req) {
+  return req.body?.adminId || req.query?.adminId || null;
+}
+
+// Bắt buộc phải có adminId hợp lệ trong request — dùng cho các route ghi dữ liệu chỉ my-admin
+// được phép gọi (CRUD sản phẩm/phòng, duyệt yêu cầu thiết kế, cập nhật tiến độ đơn...). Cùng
+// mức bảo mật với requireUserId (tin thẳng id client gửi lên, không verify token) — chấp nhận
+// đánh đổi để nhất quán với toàn bộ auth hiện có của Lam-a-main thay vì chỉ riêng admin dùng JWT.
+function requireAdminId(req, res, next) {
+  const adminId = extractAdminId(req);
+  if (!adminId) {
+    return res.status(401).json({ success: false, error: 'Thiếu adminId — vui lòng đăng nhập lại.' });
+  }
+  req.adminId = adminId;
+  next();
+}
+
+module.exports = { requireUserId, attachUserId, requireAdminId };

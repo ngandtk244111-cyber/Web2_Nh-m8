@@ -45,7 +45,7 @@ export interface Order {
   productionProgress?: ProductionProgress;
   items: CartItem[];
   shippingAddress: ShippingAddress;
-  paymentMethod: 'COD' | 'BANK_TRANSFER' | 'MOMO' | 'ZALOPAY' | 'VNPAY';
+  paymentMethod: 'COD' | 'BANK_TRANSFER' | 'MOMO' | 'ZALOPAY' | 'VNPAY' | 'ATM';
   paymentStatus: 'PAID' | 'UNPAID';
   subtotal: number;
   discount: number;

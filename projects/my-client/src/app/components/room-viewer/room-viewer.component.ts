@@ -177,7 +177,7 @@ export class RoomViewerComponent implements OnInit, AfterViewInit, OnChanges, On
     const worldPoint = hits[0].point;
     const rawPoint = this.roomScenes.worldToRawPosition(worldPoint.clone());
 
-    console.log('%c[Room Debug] Toạ độ tại điểm vừa click:', 'color:#d4af37;font-weight:bold;');
+    console.log('%c[Room Debug] Toạ độ tại điểm vừa click:', 'color:#A9C6EA;font-weight:bold;');
     console.log(
       'Toạ độ GỐC (dán thẳng vào "position" của hotspot trong mock-data.ts):',
       `[${rawPoint.x.toFixed(3)}, ${rawPoint.y.toFixed(3)}, ${rawPoint.z.toFixed(3)}]`

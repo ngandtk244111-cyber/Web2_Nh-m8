@@ -22,7 +22,7 @@
             *ngFor="let r of rooms"
             (click)="selectRoom(r)"
             [class]="currentRoom.id === r.id 
-              ? 'bg-gradient-to-r from-amber-400 to-amber-600 text-neutral-950 font-extrabold shadow-[0_0_12px_rgba(212,175,55,0.3)]' 
+              ? 'bg-gradient-to-r from-amber-400 to-amber-600 text-neutral-950 font-extrabold shadow-[0_0_12px_rgba(169,198,234,0.3)]' 
               : 'bg-neutral-100 border border-neutral-300 text-neutral-700 hover:text-amber-700 hover:border-amber-500/40 font-medium'"
             class="px-4 py-2 rounded-2xl text-xs whitespace-nowrap transition flex items-center gap-2">
             <app-icon name="room" [size]="14"></app-icon>
@@ -134,7 +134,7 @@
               type="button" 
               (click)="addSelectedToCart()"
               [disabled]="selectedProductIds.size === 0"
-              class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 disabled:opacity-50 text-neutral-950 font-extrabold text-xs sm:text-sm shadow-[0_4px_25px_rgba(212,175,55,0.35)] transition flex items-center justify-center gap-2">
+              class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 disabled:opacity-50 text-neutral-950 font-extrabold text-xs sm:text-sm shadow-[0_4px_25px_rgba(169,198,234,0.35)] transition flex items-center justify-center gap-2">
               <app-icon name="cart" [size]="16"></app-icon>
               <span>Thêm {{ selectedProductIds.size }} món vào giỏ hàng</span>
             </button>

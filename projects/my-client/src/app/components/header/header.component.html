@@ -145,6 +145,11 @@
           <span class="hd_action__text">Đăng nhập</span>
         </button>
 
+        <a routerLink="/favorites" class="hd_action hd_action--icon" aria-label="Sản phẩm yêu thích">
+          <app-icon name="heart" [size]="18"></app-icon>
+          <span class="hd_badge" *ngIf="favoriteService.ids().size > 0">{{ favoriteService.ids().size }}</span>
+        </a>
+
         <div class="hd_notify-wrap">
           <button type="button" class="hd_action hd_action--icon" (click)="toggleNotifications()" aria-label="Thông báo">
             <app-icon name="bell" [size]="18"></app-icon>

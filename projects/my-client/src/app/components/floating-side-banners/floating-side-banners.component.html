@@ -3,7 +3,7 @@
     *ngIf="!isDismissed(banner.side)"
     [routerLink]="banner.link"
     class="fsb fsb--{{ banner.side }}"
-    [style.background]="banner.gradient"
+    [style.background-image]="background(banner)"
     [attr.aria-label]="banner.eyebrow + ' - ' + banner.title">
 
     <button
@@ -13,6 +13,13 @@
       (click)="dismiss(banner.side, $event)">
       <app-icon name="x" [size]="13"></app-icon>
     </button>
+
+    <img
+      *ngIf="banner.image && banner.imageMode !== 'cover'"
+      class="fsb__image"
+      [src]="banner.image"
+      alt=""
+      aria-hidden="true">
 
     <div class="fsb__icon">
       <app-icon [name]="banner.icon" [size]="24"></app-icon>

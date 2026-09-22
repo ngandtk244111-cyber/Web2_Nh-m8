@@ -1,5 +1,8 @@
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-      
+
+      <!-- Step navigation -->
+      <app-checkout-steps></app-checkout-steps>
+
       <!-- Header -->
       <div class="border-b border-neutral-200 pb-6">
         <a routerLink="/catalog" class="text-xs font-semibold text-neutral-600 hover:text-amber-400 flex items-center gap-1 mb-2 transition">
@@ -38,17 +41,22 @@
       </div>
 
       <!-- Checkout Form & Summary Grid -->
-      <form *ngIf="cartService.checkoutItems().length > 0 && !showBankQrModal" (ngSubmit)="placeOrder()" class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        
-        <!-- Left: Shipping Address & Payment (7 cols) -->
+      <form *ngIf="cartService.checkoutItems().length > 0 && !showBankQrModal && !showOrderSuccess" (ngSubmit)="handlePrimaryAction()" class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+        <!-- Left: Shipping Address & Payment (7 cols) — chỉ hiển thị đúng 1 khối theo bước hiện tại -->
         <div class="lg:col-span-7 space-y-6">
-          
-          <!-- Shipping Details Card -->
-          <div class="bg-[#FFFFFF] rounded-3xl p-6 sm:p-8 border border-neutral-200 shadow-xl space-y-4">
-            <h3 class="font-serif text-lg font-bold text-neutral-900 border-b border-neutral-200 pb-3 flex items-center gap-2">
-              <app-icon name="truck" [size]="18" class="text-amber-400"></app-icon>
-              <span>1. Thông Tin Nhận Hàng</span>
-            </h3>
+
+          <!-- STEP 2: Shipping Details Card -->
+          <div *ngIf="flow.currentStep() === 2" id="shipping-info" class="bg-[#FFFFFF] rounded-3xl p-6 sm:p-8 border border-neutral-200 shadow-xl space-y-4 scroll-mt-24">
+            <div class="flex items-center justify-between border-b border-neutral-200 pb-3">
+              <h3 class="font-serif text-lg font-bold text-neutral-900 flex items-center gap-2">
+                <app-icon name="truck" [size]="18" class="text-amber-400"></app-icon>
+                <span>2. Thông Tin Nhận Hàng</span>
+              </h3>
+              <button type="button" (click)="goToStep(1)" class="text-xs font-semibold text-neutral-600 hover:text-amber-500 flex items-center gap-1 transition">
+                ← Quay lại giỏ hàng
+              </button>
+            </div>
 
             <div class="space-y-4">
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -104,15 +112,16 @@
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Tỉnh / Thành phố *</label>
-                  <input 
-                    type="text" 
-                    [(ngModel)]="shipping.city" 
-                    name="city" 
-                    (input)="clearError('city')"
-                    placeholder="Hà Nội, TP.HCM, Đà Nẵng..."
+                  <select
+                    [(ngModel)]="shipping.city"
+                    name="city"
+                    (ngModelChange)="clearError('city'); onProvinceChange()"
                     class="w-full text-xs rounded-xl border p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500 transition"
                     [class.border-rose-500]="errors['city']"
                     [class.border-neutral-300]="!errors['city']">
+                    <option value="">-- Chọn Tỉnh / Thành phố --</option>
+                    <option *ngFor="let p of addressService.provinces()" [value]="p.name">{{ p.name }}</option>
+                  </select>
                   <span *ngIf="errors['city']" class="text-[11px] text-rose-400 mt-1 block font-medium">
                     {{ errors['city'] }}
                   </span>
@@ -120,15 +129,17 @@
 
                 <div>
                   <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Quận / Huyện *</label>
-                  <input 
-                    type="text" 
-                    [(ngModel)]="shipping.district" 
-                    name="district" 
-                    (input)="clearError('district')"
-                    placeholder="Ba Đình, Quận 1, Hải Châu..."
-                    class="w-full text-xs rounded-xl border p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500 transition"
+                  <select
+                    [(ngModel)]="shipping.district"
+                    name="district"
+                    (ngModelChange)="clearError('district')"
+                    [disabled]="!shipping.city"
+                    class="w-full text-xs rounded-xl border p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500 transition disabled:opacity-50"
                     [class.border-rose-500]="errors['district']"
                     [class.border-neutral-300]="!errors['district']">
+                    <option value="">-- Chọn Quận / Huyện --</option>
+                    <option *ngFor="let d of districts()" [value]="d.name">{{ d.name }}</option>
+                  </select>
                   <span *ngIf="errors['district']" class="text-[11px] text-rose-400 mt-1 block font-medium">
                     {{ errors['district'] }}
                   </span>
@@ -163,12 +174,17 @@
             </div>
           </div>
 
-          <!-- Payment Method Card -->
-          <div class="bg-[#FFFFFF] rounded-3xl p-6 sm:p-8 border border-neutral-200 shadow-xl space-y-4">
-            <h3 class="font-serif text-lg font-bold text-neutral-900 border-b border-neutral-200 pb-3 flex items-center gap-2">
-              <app-icon name="shield" [size]="18" class="text-amber-400"></app-icon>
-              <span>2. Phương Thức Thanh Toán</span>
-            </h3>
+          <!-- STEP 3: Payment Method Card -->
+          <div *ngIf="flow.currentStep() === 3" id="payment-method" class="bg-[#FFFFFF] rounded-3xl p-6 sm:p-8 border border-neutral-200 shadow-xl space-y-4 scroll-mt-24">
+            <div class="flex items-center justify-between border-b border-neutral-200 pb-3">
+              <h3 class="font-serif text-lg font-bold text-neutral-900 flex items-center gap-2">
+                <app-icon name="shield" [size]="18" class="text-amber-400"></app-icon>
+                <span>3. Phương Thức Thanh Toán</span>
+              </h3>
+              <button type="button" (click)="goToStep(2)" class="text-xs font-semibold text-neutral-600 hover:text-amber-500 flex items-center gap-1 transition">
+                ← Quay lại thông tin
+              </button>
+            </div>
 
             <div class="space-y-3">
               <label
@@ -183,11 +199,12 @@
                 <input type="radio" name="pay" [checked]="paymentMethod === method.id && method.supported" [disabled]="!method.supported" class="accent-amber-500 text-amber-500 flex-shrink-0">
 
                 <div
-                  class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                  [style.background]="method.badge ? method.badge.bg : '#FFF3EA'"
-                  [style.color]="method.badge ? method.badge.color : '#E0641F'">
-                  <span *ngIf="method.badge" class="font-black text-sm">{{ method.badge.text }}</span>
-                  <app-icon *ngIf="!method.badge" [name]="method.icon" [size]="18"></app-icon>
+                  class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden"
+                  [style.background]="method.image ? 'transparent' : (method.badge ? method.badge.bg : '#EAF1FA')"
+                  [style.color]="method.badge ? method.badge.color : '#2E63B8'">
+                  <img *ngIf="method.image" [src]="method.image" [alt]="method.label" class="w-full h-full object-cover">
+                  <span *ngIf="!method.image && method.badge" class="font-black text-sm">{{ method.badge.text }}</span>
+                  <app-icon *ngIf="!method.image && !method.badge" [name]="method.icon" [size]="18"></app-icon>
                 </div>
 
                 <div class="min-w-0 flex-1">
@@ -266,17 +283,18 @@
               </div>
             </div>
 
-            <!-- Place Order Button -->
+            <!-- Primary Action Button — text/chức năng đổi theo currentStep, luôn đi qua handlePrimaryAction() -->
             <button
               type="submit"
               [disabled]="placingOrder"
-              class="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 disabled:opacity-60 text-neutral-950 font-extrabold text-sm shadow-[0_4px_25px_rgba(212,175,55,0.35)] transition flex items-center justify-center gap-2">
-              <app-icon name="check" [size]="18"></app-icon>
-              <span>{{ placingOrder ? 'Đang xử lý...' : 'Đặt Hàng Ngay (' + (cartService.checkoutTotal() | vnd) + ')' }}</span>
+              class="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 disabled:opacity-60 text-neutral-950 font-extrabold text-sm shadow-[0_4px_25px_rgba(169,198,234,0.35)] transition flex items-center justify-center gap-2">
+              <app-icon [name]="flow.currentStep() === 2 ? 'chevron-right' : 'check'" [size]="18"></app-icon>
+              <span *ngIf="flow.currentStep() === 2">Tiếp Tục Đến Thanh Toán</span>
+              <span *ngIf="flow.currentStep() === 3">{{ placingOrder ? 'Đang xử lý...' : 'Xác Nhận & Đặt Hàng (' + (cartService.checkoutTotal() | vnd) + ')' }}</span>
             </button>
 
             <p class="text-[10px] text-center text-neutral-500 leading-relaxed">
-              Nhấn "Đặt Hàng Ngay" đồng nghĩa với việc bạn đồng ý với các điều khoản bảo hành & chính sách sản xuất in 3D của Luméa.
+              Nhấn "Xác Nhận & Đặt Hàng" đồng nghĩa với việc bạn đồng ý với các điều khoản bảo hành & chính sách sản xuất in 3D của Luméa.
             </p>
           </div>
 

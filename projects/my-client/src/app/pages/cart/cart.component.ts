@@ -1,11 +1,13 @@
-import { Component, computed, effect, signal, untracked } from '@angular/core';
+import { Component, OnInit, computed, effect, signal, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CartService } from '../../core/services/cart.service';
 import { CoinService } from '../../core/services/coin.service';
 import { AuthService } from '../../core/services/auth.service';
+import { CheckoutFlowService } from '../../core/services/checkout-flow.service';
 import { AppIconComponent } from '../../components/icon/icon.component';
+import { CheckoutStepsComponent } from '../../components/checkout-steps/checkout-steps.component';
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
 
 const FREE_SHIPPING_THRESHOLD = 500_000;
@@ -19,11 +21,11 @@ const DEFAULT_SHIPPING_FEE = 30_000;
 @Component({
   selector: 'app-cart',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, AppIconComponent, VndPipe],
+  imports: [CommonModule, FormsModule, RouterLink, AppIconComponent, CheckoutStepsComponent, VndPipe],
   templateUrl: './cart.component.html',
   styleUrl: './cart.component.css'
 })
-export class CartComponent {
+export class CartComponent implements OnInit {
   couponCodeInput = '';
   couponMessage = '';
   couponSuccess = false;
@@ -37,6 +39,7 @@ export class CartComponent {
     public cartService: CartService,
     public coinService: CoinService,
     public authService: AuthService,
+    public flow: CheckoutFlowService,
     private router: Router
   ) {
     // Đồng bộ selection theo giỏ hàng thật: giữ lựa chọn cũ, tự chọn sẵn sản phẩm mới thêm vào.
@@ -56,6 +59,12 @@ export class CartComponent {
         this.selectedIds.set(next);
       }
     });
+  }
+
+  ngOnInit(): void {
+    // Đang đứng trên trang /cart thì luôn coi là Bước 1 — không được để trạng thái Stepper
+    // trỏ tới bước khác trong khi người dùng đang thực sự nhìn thấy trang giỏ hàng.
+    this.flow.enterCartPage();
   }
 
   readonly selectedItems = computed(() =>
@@ -141,10 +150,18 @@ export class CartComponent {
     }
   }
 
-  /** Chỉ mang các sản phẩm ĐÃ CHỌN sang thanh toán — sản phẩm chưa chọn vẫn được giữ nguyên trong giỏ. */
-  proceedToCheckout(): void {
+  /**
+   * Hàm điều hướng bước DUY NHẤT dùng cho trang giỏ hàng — nút "Tiến hành thanh toán" gọi qua đây
+   * thay vì tự set trạng thái/điều hướng trực tiếp. Chỉ mang các sản phẩm ĐÃ CHỌN sang thanh toán,
+   * sản phẩm chưa chọn vẫn được giữ nguyên trong giỏ.
+   */
+  goToStep(step: 2): void {
     const selected = this.selectedItems();
-    if (selected.length === 0) return;
+    const ok = this.flow.goToStep(step, {
+      validate: () => selected.length > 0 && this.selectedSubtotal() > 0,
+    });
+    if (!ok) return;
+
     this.cartService.setCheckoutSelection(selected.map(i => i.id));
     this.router.navigate(['/checkout']);
   }

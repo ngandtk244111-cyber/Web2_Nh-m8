@@ -7,8 +7,12 @@
   margin: 0 auto;
 }
 
-/* ---------- 1. Banner: FLASH SALE GIÁ TỐT ---------- */
+
 .dd_hero {
+  --dd-gold: #FFD666;
+  --dd-orange: #FF8A3D;
+  --dd-red: #E5303D;
+  --dd-red-dark: #A81E28;
   position: relative;
   overflow: hidden;
   display: flex;
@@ -17,9 +21,54 @@
   gap: 16px;
   padding: 22px 28px;
   min-height: 130px;
-  background: linear-gradient(120deg, #050505 0%, #2a1608 55%, #B34213 100%);
+  background: linear-gradient(180deg, #FFE9A8 0%, var(--dd-gold) 30%, var(--dd-orange) 75%, #F2622E 100%);
   border-radius: 20px 90px 20px 20px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: inset 0 -8px 24px rgba(168, 30, 40, 0.15);
+}
+
+.dd_hero__rays {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 260%;
+  aspect-ratio: 1;
+  z-index: 0;
+  pointer-events: none;
+  background: repeating-conic-gradient(rgba(255, 255, 255, 0.35) 0deg 6deg, transparent 6deg 16deg);
+  opacity: 0.55;
+  transform: translate(-50%, -50%);
+  animation: dd-rays-spin 40s linear infinite;
+}
+
+.dd_hero__shine {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(100deg, transparent 40%, rgba(255, 255, 255, 0.35) 50%, transparent 60%);
+  background-size: 220% 100%;
+  animation: dd-shine-sweep 5.5s ease-in-out infinite;
+}
+
+.dd_hero__sparkles {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.8;
+  background-image:
+    radial-gradient(1.5px 1.5px at 15% 30%, #ffffff 100%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 35% 70%, #ffffff 100%, transparent 100%),
+    radial-gradient(2px 2px at 55% 22%, #ffffff 100%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 72% 60%, #ffffff 100%, transparent 100%),
+    radial-gradient(2px 2px at 88% 40%, #ffffff 100%, transparent 100%);
+  animation: dd-sparkle-twinkle 3.4s ease-in-out infinite;
+}
+
+@keyframes dd-rays-spin {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
 }
 
 .dd_hero__mascot {
@@ -27,24 +76,33 @@
   display: flex;
   filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.4));
   z-index: 2;
+  animation: dd-mascot-float 3.6s ease-in-out infinite;
 }
 
 .dd_hero__title {
   flex: 1;
   text-align: center;
-  color: #ffffff;
-  font-weight: 900;
-  font-size: 22px;
-  line-height: 1.15;
-  letter-spacing: 0.01em;
-  text-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
+  font-family: 'Anton', var(--font-family-heading, 'Cormorant Garamond', serif);
+  font-style: normal;
+  color: #FFF6DD;
+  font-weight: 400;
+  font-size: 26px;
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+  text-shadow:
+    0 2px 0 #ffffff,
+    2px 0 0 #ffffff,
+    0 -2px 0 #ffffff,
+    -2px 0 0 #ffffff,
+    0 5px 0 var(--dd-red-dark),
+    0 7px 10px rgba(74, 20, 10, 0.45);
   margin: 0;
   z-index: 2;
 }
 
 @media (min-width: 640px) {
   .dd_hero__title {
-    font-size: 30px;
+    font-size: 36px;
   }
 }
 
@@ -52,20 +110,42 @@
   flex-shrink: 0;
   padding: 11px 24px;
   border-radius: 999px;
-  background: #FF6D2D;
+  background: linear-gradient(180deg, #FF9A4D, var(--dd-red));
   color: #ffffff;
   font-weight: 800;
   font-size: 13px;
   letter-spacing: 0.02em;
   text-decoration: none;
-  box-shadow: 0 8px 18px rgba(255, 109, 45, 0.4);
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.55);
   z-index: 2;
+  animation: dd-cta-glow 2.2s ease-in-out infinite;
   transition: transform 0.15s ease, background 0.15s ease;
 }
 
 .dd_hero__cta:hover {
   transform: translateY(-2px);
-  background: #E05418;
+  background: linear-gradient(180deg, #FF8235, var(--dd-red-dark));
+}
+
+@keyframes dd-shine-sweep {
+  0%, 55% { background-position: 220% 0; }
+  100% { background-position: -20% 0; }
+}
+
+@keyframes dd-sparkle-twinkle {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.85; }
+}
+
+@keyframes dd-mascot-float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-5px) rotate(-3deg); }
+}
+
+@keyframes dd-cta-glow {
+  0%, 100% { box-shadow: 0 8px 18px rgba(168, 30, 40, 0.35), 0 0 0 0 rgba(255, 255, 255, 0.6); }
+  50% { box-shadow: 0 8px 18px rgba(168, 30, 40, 0.35), 0 0 0 7px rgba(255, 255, 255, 0); }
 }
 
 .dd_hero__blossoms {
@@ -124,31 +204,40 @@
   padding: 22px 24px 26px;
   border-radius: 20px;
   background:
-    radial-gradient(circle at 8% 10%, rgba(255, 109, 45, 0.06), transparent 45%),
-    radial-gradient(circle at 92% 15%, rgba(255, 109, 45, 0.05), transparent 45%),
-    #FAFAFA;
+    radial-gradient(circle at 8% 10%, rgba(46, 99, 184, 0.06), transparent 45%),
+    radial-gradient(circle at 92% 15%, rgba(46, 99, 184, 0.05), transparent 45%),
+    #F6EBE3;
   border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .dd_dealrow {
+  position: relative;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 16px;
   padding: 0 6px 16px;
 }
 
 .dd_dealtext {
-  font-family: var(--font-family-heading, 'Cormorant Garamond', serif);
-  font-size: 26px;
-  font-weight: 800;
-  font-style: italic;
-  color: #111111;
+  position: absolute;
+  left: calc(50% - 50px);
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-family: 'Anton', var(--font-family-heading, 'Cormorant Garamond', serif);
+  font-style: normal;
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #2E63B8;
+  text-shadow: 0 2px 0 rgba(15, 44, 87, 0.22);
+  white-space: nowrap;
 }
 
 @media (min-width: 640px) {
   .dd_dealtext {
-    font-size: 34px;
+    font-size: 32px;
   }
 }
 
@@ -162,7 +251,7 @@
   height: 52px;
   border-radius: 16px;
   background: #ffffff;
-  border: 2px solid rgba(255, 109, 45, 0.4);
+  border: 2px solid rgba(46, 99, 184, 0.4);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
 }
 
@@ -175,7 +264,7 @@
 .dd_badge40 strong {
   font-size: 20px;
   font-weight: 900;
-  color: #FF9561;
+  color: #9C4A42;
   line-height: 1.1;
 }
 
@@ -210,13 +299,13 @@
 }
 
 .dd_tab:hover {
-  background: #FAFAFA;
+  background: #F6EBE3;
 }
 
 .dd_tab--active {
-  background: rgba(255, 109, 45, 0.1);
-  color: #FF9561;
-  border-bottom-color: #FF6D2D;
+  background: rgba(46, 99, 184, 0.1);
+  color: #2055AF;
+  border-bottom-color: #2E63B8;
 }
 
 .dd_tab__time {
@@ -230,7 +319,7 @@
 }
 
 .dd_tab--active .dd_tab__status {
-  color: #FF9561;
+  color: #2055AF;
   font-weight: 600;
 }
 
@@ -262,7 +351,7 @@
   min-width: 30px;
   padding: 5px 7px;
   border-radius: 8px;
-  background: #FF6D2D;
+  background: #2E63B8;
   color: #ffffff;
   font-family: ui-monospace, monospace;
   font-size: 15px;
@@ -272,7 +361,7 @@
 .dd_countdown-sep {
   font-size: 15px;
   font-weight: 800;
-  color: #FF6D2D;
+  color: #2E63B8;
 }
 
 /* ---------- 5. Product carousel: chỉ vài card nhỏ, khoảng trắng lớn còn lại ---------- */
@@ -301,8 +390,8 @@
 }
 
 .dd_nav:hover {
-  background: #FF6D2D;
-  border-color: #FF6D2D;
+  background: #2E63B8;
+  border-color: #2E63B8;
   color: #ffffff;
 }
 
@@ -331,25 +420,27 @@
   flex: 0 0 176px;
   width: 176px;
   background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  border: 2px solid #FFD666;
   border-radius: 14px;
   padding: 12px;
   text-decoration: none;
   display: flex;
   flex-direction: column;
-  transition: border-color 0.15s ease, transform 0.15s ease;
+  box-shadow: 0 4px 12px rgba(255, 138, 61, 0.12);
+  transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .dd_card:hover {
-  border-color: rgba(255, 109, 45, 0.4);
+  border-color: #FF8A3D;
   transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(255, 138, 61, 0.25);
 }
 
 .dd_card__img-wrap {
   position: relative;
   border-radius: 10px;
   overflow: hidden;
-  border: 2px solid #FF6D2D;
+  border: 2px solid #2E63B8;
   margin-bottom: 8px;
 }
 
@@ -364,12 +455,13 @@
   position: absolute;
   top: 0;
   right: 0;
-  background: #FF6D2D;
+  background: linear-gradient(180deg, #FF5A5F, #E5303D);
   color: #ffffff;
   font-size: 11px;
   font-weight: 800;
   padding: 3px 8px;
   border-radius: 0 8px 0 8px;
+  box-shadow: 0 2px 4px rgba(168, 30, 40, 0.35);
 }
 
 .dd_card__name {
@@ -395,7 +487,7 @@
   font-family: ui-monospace, monospace;
   font-size: 14.5px;
   font-weight: 800;
-  color: #FF9561;
+  color: #9C4A42;
 }
 
 .dd_card__original {
@@ -410,13 +502,14 @@
 
 .dd_card__promo {
   margin-top: 8px;
-  padding: 4px 8px;
+  padding: 4px 9px;
   border-radius: 999px;
-  background: rgba(255, 109, 45, 0.12);
-  color: #FF9561;
+  background: linear-gradient(180deg, #FFA94D, #FF8A3D);
+  color: #ffffff;
   font-size: 10.5px;
-  font-weight: 700;
+  font-weight: 800;
   width: fit-content;
+  box-shadow: 0 2px 6px rgba(255, 138, 61, 0.35);
 }
 
 .dd_card__cta {
@@ -424,7 +517,7 @@
   padding: 8px;
   border-radius: 10px;
   border: none;
-  background: #FF6D2D;
+  background: linear-gradient(180deg, #FF8A3D, #E5303D);
   color: #ffffff;
   font-size: 12.5px;
   font-weight: 800;
@@ -433,7 +526,7 @@
 }
 
 .dd_card__cta:hover {
-  background: #E05418;
+  background: linear-gradient(180deg, #FF7526, #A81E28);
 }
 
 .dd_empty {

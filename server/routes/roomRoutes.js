@@ -1,5 +1,6 @@
 const express = require('express');
 const Room = require('../models/Room');
+const { requireAdminId } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -12,7 +13,7 @@ router.get('/', async (_req, res) => {
   }
 });
 
-router.post('/', async (req, res) => {
+router.post('/', requireAdminId, async (req, res) => {
   try {
     const id = req.body.id || 'room-' + Date.now();
     const room = await Room.create({ ...req.body, id });
@@ -23,7 +24,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', requireAdminId, async (req, res) => {
   try {
     const room = await Room.findOneAndUpdate({ id: req.params.id }, req.body, { new: true });
     if (!room) return res.status(404).json({ success: false, error: 'Không tìm thấy phòng' });
@@ -33,7 +34,7 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', requireAdminId, async (req, res) => {
   try {
     await Room.deleteOne({ id: req.params.id });
     res.json({ success: true });

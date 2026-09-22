@@ -1,10 +1,12 @@
 import { Component, OnInit, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { ProductService } from '../../core/services/product.service';
 import { OrderService } from '../../core/services/order.service';
 import { CustomRequestService } from '../../core/services/custom-request.service';
 import { RoomService } from '../../core/services/room.service';
+import { AdminAuthService } from '../../core/services/admin-auth.service';
 import { Product, ProductionType, ProductCategory } from '../../core/models/product.model';
 import { Order, ProductionStep } from '../../core/models/order.model';
 import { CustomRequest, CustomRequestStatus } from '../../core/models/custom-request.model';
@@ -48,7 +50,9 @@ export class AdminComponent implements OnInit {
     private productService: ProductService,
     private orderService: OrderService,
     private customRequestService: CustomRequestService,
-    private roomService: RoomService
+    private roomService: RoomService,
+    public adminAuth: AdminAuthService,
+    private router: Router
   ) {
     // Product/CustomRequest/Room giờ nạp & tự cập nhật bất đồng bộ từ backend (mỗi service tự
     // refresh signal của nó sau khi ghi) — effect() giữ các field cục bộ của dashboard đồng bộ
@@ -111,6 +115,11 @@ export class AdminComponent implements OnInit {
 
   deleteProduct(id: string): void {
     this.productService.deleteProduct(id).subscribe();
+  }
+
+  logout(): void {
+    this.adminAuth.logout();
+    this.router.navigate(['/login']);
   }
 
   get readyStockProducts(): Product[] {

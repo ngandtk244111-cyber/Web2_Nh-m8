@@ -53,8 +53,8 @@
 }
 
 .lm_close:hover {
-  color: #FF6D2D;
-  border-color: rgba(255, 109, 45, 0.3);
+  color: #2E63B8;
+  border-color: rgba(46, 99, 184, 0.3);
 }
 
 .lm_head {
@@ -126,7 +126,7 @@
 }
 
 .lm_input:focus {
-  border-color: #FF6D2D;
+  border-color: #2E63B8;
 }
 
 .lm_input--error {
@@ -144,7 +144,7 @@
 }
 
 .lm_toggle-eye:hover {
-  color: #E05418;
+  color: #2055AF;
 }
 
 .lm_error {
@@ -160,14 +160,14 @@
   background: none;
   border: none;
   padding: 0;
-  color: #E05418;
+  color: #2055AF;
   font-size: 12.5px;
   font-weight: 700;
   cursor: pointer;
 }
 
 .lm_link:hover {
-  color: #FF6D2D;
+  color: #2E63B8;
   text-decoration: underline;
 }
 
@@ -186,7 +186,7 @@
   height: 44px;
   border-radius: 12px;
   border: none;
-  background: linear-gradient(135deg, #FF9561, #FF6D2D 60%, #E05418);
+  background: linear-gradient(135deg, #A9C6EA, #2E63B8 60%, #2055AF);
   color: #ffffff;
   font-size: 14px;
   font-weight: 800;
@@ -245,8 +245,8 @@
 }
 
 .lm_social-btn:hover {
-  border-color: #FF6D2D;
-  color: #E05418;
+  border-color: #2E63B8;
+  color: #2055AF;
 }
 
 .lm_switch {
@@ -284,7 +284,7 @@
 }
 
 .lm_otp-box:focus {
-  border-color: #FF6D2D;
+  border-color: #2E63B8;
 }
 
 .lm_otp-footer {

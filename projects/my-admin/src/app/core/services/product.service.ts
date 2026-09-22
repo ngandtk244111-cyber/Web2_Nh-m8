@@ -2,6 +2,7 @@ import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { Product, ProductCategory, ProductionType } from '../models/product.model';
+import { AdminAuthService } from './admin-auth.service';
 import { environment } from '../../../environments/environment';
 
 const BASE = `${environment.apiUrl}/products`;
@@ -20,6 +21,7 @@ export interface ProductFilters {
 })
 export class ProductService {
   private http = inject(HttpClient);
+  private adminAuth = inject(AdminAuthService);
 
   // State signal — nạp từ backend thật (MongoDB), không còn localStorage/mock.
   private productsSignal = signal<Product[]>([]);
@@ -123,20 +125,21 @@ export class ProductService {
   }
 
   // Admin Actions — gọi backend thật, tự refresh cache cục bộ khi thành công.
+  // Gắn kèm adminId để backend (requireAdminId) chấp nhận request — xem middleware/auth.js.
   addProduct(product: Omit<Product, 'id'>): Observable<{ success: boolean; product: Product }> {
-    return this.http.post<{ success: boolean; product: Product }>(BASE, product).pipe(
+    return this.http.post<{ success: boolean; product: Product }>(BASE, { ...product, adminId: this.adminAuth.adminId }).pipe(
       tap(() => this.refresh())
     );
   }
 
   updateProduct(id: string, updates: Partial<Product>): Observable<{ success: boolean; product: Product }> {
-    return this.http.put<{ success: boolean; product: Product }>(`${BASE}/${id}`, updates).pipe(
+    return this.http.put<{ success: boolean; product: Product }>(`${BASE}/${id}`, { ...updates, adminId: this.adminAuth.adminId }).pipe(
       tap(() => this.refresh())
     );
   }
 
   deleteProduct(id: string): Observable<{ success: boolean }> {
-    return this.http.delete<{ success: boolean }>(`${BASE}/${id}`).pipe(
+    return this.http.delete<{ success: boolean }>(`${BASE}/${id}`, { body: { adminId: this.adminAuth.adminId } }).pipe(
       tap(() => this.refresh())
     );
   }

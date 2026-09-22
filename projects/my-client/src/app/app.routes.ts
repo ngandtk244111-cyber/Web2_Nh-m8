@@ -54,6 +54,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/cart/cart.component').then(m => m.CartComponent),
   },
   {
+    path: 'favorites',
+    loadComponent: () => import('./pages/favorites/favorites.component').then(m => m.FavoritesComponent),
+  },
+  {
     path: 'chinh-sach/:slug',
     loadComponent: () => import('./pages/policy/policy.component').then(m => m.PolicyComponent),
   },

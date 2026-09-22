@@ -1,49 +1,136 @@
 <section class="vt_section">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex items-center gap-2 mb-6">
-      <span class="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_6px_#d4af37]"></span>
+      <span class="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_6px_#A9C6EA]"></span>
       <div>
         <h2 class="font-serif text-xl sm:text-2xl font-bold text-neutral-900">Các Dịch Vụ &amp; Chủ Đề Hữu Ích</h2>
-        <p class="text-xs sm:text-sm text-neutral-600 mt-1">Cuộn để khám phá — video tự phát khi vào tầm nhìn, dừng khi rời khỏi</p>
+        <p class="text-xs sm:text-sm text-neutral-600 mt-1">Bấm mũi tên để khám phá — trỏ chuột vào video để xem trước</p>
       </div>
     </div>
   </div>
 
-  <div class="vt_track">
-    <article
-      *ngFor="let topic of topics; let i = index"
-      #topicCard
-      [attr.data-index]="i"
-      class="vt_card"
-      [class.vt_card--active]="activeIndex === i">
+  <div class="vt_slider">
+    <button type="button" class="vt_nav vt_nav--prev" [disabled]="!canGoPrev" (click)="goPrev()" aria-label="Nhóm video trước">
+      <app-icon name="chevron-left" [size]="18"></app-icon>
+    </button>
 
-      <div class="vt_card__media">
-        <video
-          #topicVideo
-          *ngIf="topic.videoUrl"
-          [poster]="topic.poster"
-          [src]="isLoaded(i) ? topic.videoUrl : null"
-          muted
-          loop
-          playsinline
-          preload="none"
-          class="vt_card__video">
-        </video>
-        <img *ngIf="!topic.videoUrl" [src]="topic.poster" [alt]="topic.title" class="vt_card__poster" loading="lazy">
-        <div class="vt_card__fade"></div>
+    <div class="vt_viewport" #viewport>
+      <div class="vt_track" #track>
+        <article
+          *ngFor="let topic of topics; let i = index"
+          [attr.data-index]="i"
+          class="vt_card">
+
+          <div
+            class="vt_card__media"
+            (click)="onCardMediaClick(i, $event)"
+            (mouseenter)="onCardHoverStart(i)"
+            (mouseleave)="onCardHoverEnd(i)">
+            <div
+              *ngIf="topic.youtubeId && isLoaded(i)"
+              #ytTarget
+              [attr.data-index]="i"
+              class="vt_card__yt">
+            </div>
+
+            <img
+              [src]="posterUrl(topic)"
+              [alt]="topic.title"
+              class="vt_card__poster"
+              [class.vt_card__poster--hidden]="isPlaying(i)"
+              loading="lazy"
+              draggable="false">
+
+            <div class="vt_card__fade"></div>
+
+            <span class="vt_card__badge" *ngIf="topic.youtubeId && !hasError(i)">
+              <app-icon name="play" [size]="10"></app-icon> VIDEO
+            </span>
+
+            <div class="vt_card__caption">
+              <h3 class="vt_card__title">{{ topic.title }}</h3>
+              <p class="vt_card__desc">{{ topic.description }}</p>
+              <a *ngIf="topic.link" [routerLink]="topic.link" class="vt_card__cta">
+                {{ topic.ctaLabel }} <app-icon name="chevron-right" [size]="13"></app-icon>
+              </a>
+            </div>
+          </div>
+        </article>
       </div>
+    </div>
 
-      <div class="vt_card__icon">
-        <app-icon [name]="topic.icon" [size]="20"></app-icon>
-      </div>
+    <button type="button" class="vt_nav vt_nav--next" [disabled]="!canGoNext" (click)="goNext()" aria-label="Nhóm video tiếp theo">
+      <app-icon name="chevron-right" [size]="18"></app-icon>
+    </button>
+  </div>
 
-      <div class="vt_card__body">
-        <h3 class="vt_card__title">{{ topic.title }}</h3>
-        <p class="vt_card__desc">{{ topic.description }}</p>
-        <a *ngIf="topic.link" [routerLink]="topic.link" class="vt_card__cta">
-          {{ topic.ctaLabel }} <app-icon name="chevron-right" [size]="13"></app-icon>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="vt_progress" #progressTrack>
+      <div class="vt_progress__thumb" #progressThumb></div>
+    </div>
+  </div>
+
+  <!-- ============ VIEWER DỌC KIỂU REELS/TIKTOK — mở khi bấm 1 thẻ ============ -->
+  <div class="vw" *ngIf="viewerOpen" (click)="closeViewer()">
+    <button type="button" class="vw__close" (click)="closeViewer()" aria-label="Đóng">
+      <app-icon name="x" [size]="20"></app-icon>
+    </button>
+
+    <div class="vw__stage" (click)="$event.stopPropagation()" *ngIf="viewerTopic as vt">
+      <div
+        class="vw__video"
+        [class.vw__video--slide-next]="viewerAnimDirection === 'next'"
+        [class.vw__video--slide-prev]="viewerAnimDirection === 'prev'"
+        (animationend)="onViewerAnimEnd()"
+        (pointerdown)="onViewerPointerDown($event)"
+        (pointerup)="onViewerPointerUp($event)"
+        (wheel)="onViewerWheel($event)">
+        <div class="vw__video-head">
+          <span class="vw__video-avatar">
+            <app-icon name="sparkles" [size]="13"></app-icon>
+          </span>
+          <div class="vw__video-headtext">
+            <strong>{{ vt.title }}</strong>
+            <span>LUMÉA</span>
+          </div>
+          <button type="button" class="vw__share" (click)="shareViewer($event)">
+            <app-icon name="share-2" [size]="16"></app-icon>
+            <span>Chia sẻ</span>
+          </button>
+        </div>
+
+        <iframe
+          *ngIf="viewerEmbedUrl"
+          [src]="viewerEmbedUrl"
+          allow="autoplay; encrypted-media; fullscreen"
+          allowfullscreen
+          frameborder="0">
+        </iframe>
+        <img *ngIf="!viewerEmbedUrl" [src]="vt.poster" [alt]="vt.title" class="vw__poster">
+
+        <a *ngIf="vt.link" [routerLink]="vt.link" (click)="closeViewer()" class="vw__cta">
+          <app-icon name="chevron-right" [size]="12"></app-icon>
+          {{ vt.ctaLabel }}
         </a>
       </div>
-    </article>
+
+      <div class="vw__info">
+        <span class="vw__info-label">Mô tả</span>
+        <p class="vw__info-desc" [class.vw__info-desc--collapsed]="infoCollapsed">{{ vt.description }}</p>
+        <button type="button" class="vw__info-toggle" (click)="infoCollapsed = !infoCollapsed">
+          <app-icon [name]="infoCollapsed ? 'chevron-down' : 'chevron-up'" [size]="12"></app-icon>
+          {{ infoCollapsed ? 'Mở rộng' : 'Thu gọn' }}
+        </button>
+      </div>
+
+      <div class="vw__side-nav">
+        <button type="button" class="vw__nav" [disabled]="!canViewerPrev" (click)="viewerStep(-1)" aria-label="Video trước">
+          <app-icon name="chevron-up" [size]="18"></app-icon>
+        </button>
+        <button type="button" class="vw__nav" [disabled]="!canViewerNext" (click)="viewerStep(1)" aria-label="Video tiếp theo">
+          <app-icon name="chevron-down" [size]="18"></app-icon>
+        </button>
+      </div>
+    </div>
   </div>
 </section>

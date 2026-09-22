@@ -6,10 +6,12 @@ function sign(rawSignature, secretKey) {
 }
 
 /**
- * Tạo yêu cầu thanh toán MoMo (captureWallet) trên môi trường sandbox.
+ * Tạo yêu cầu thanh toán MoMo trên môi trường sandbox — hỗ trợ cả ví MoMo (captureWallet) lẫn
+ * thẻ ATM nội địa qua cổng MoMo (payWithATM, tham khảo AuraPC-main). Cùng 1 cổng thanh toán,
+ * chỉ khác requestType gửi sang MoMo.
  * Tài liệu: https://developers.momo.vn/v3/docs/payment/api/wallet/onetime
  */
-async function createMomoPayment({ orderId, amount, orderInfo }) {
+async function createMomoPayment({ orderId, amount, orderInfo, requestType = 'captureWallet' }) {
   const partnerCode = process.env.MOMO_PARTNER_CODE;
   const accessKey = process.env.MOMO_ACCESS_KEY;
   const secretKey = process.env.MOMO_SECRET_KEY;
@@ -17,7 +19,6 @@ async function createMomoPayment({ orderId, amount, orderInfo }) {
   const ipnUrl = process.env.MOMO_IPN_URL;
 
   const requestId = `${orderId}-${Date.now()}`;
-  const requestType = 'captureWallet';
   const extraData = '';
 
   const rawSignature =

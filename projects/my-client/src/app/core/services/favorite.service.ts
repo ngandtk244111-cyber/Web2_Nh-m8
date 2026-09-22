@@ -34,4 +34,17 @@ export class FavoriteService {
     this.idsSignal.set(next);
     this.persist(next);
   }
+
+  remove(productId: string): void {
+    if (!this.idsSignal().has(productId)) return;
+    const next = new Set(this.idsSignal());
+    next.delete(productId);
+    this.idsSignal.set(next);
+    this.persist(next);
+  }
+
+  clear(): void {
+    this.idsSignal.set(new Set());
+    this.persist(new Set());
+  }
 }

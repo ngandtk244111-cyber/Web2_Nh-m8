@@ -72,11 +72,15 @@ export class OrderService {
   createOrder(orderData: {
     items: CartItem[];
     shippingAddress: ShippingAddress;
-    paymentMethod: 'COD' | 'BANK_TRANSFER' | 'MOMO' | 'ZALOPAY';
+    paymentMethod: 'COD' | 'BANK_TRANSFER' | 'MOMO' | 'ZALOPAY' | 'ATM';
+    // subtotal/discount/shippingFee/total: chỉ để hiển thị optimistic ở FE — backend tự tính lại
+    // từ giá sản phẩm THẬT trong DB + couponCode, không tin các số này từ client (xem
+    // server/utils/pricing.js). couponCode dùng để backend verify lại giảm giá.
     subtotal: number;
     discount: number;
     shippingFee: number;
     total: number;
+    couponCode?: string;
     notes?: string;
   }): Observable<Order> {
     const userId = this.authService.currentUser()?._id;

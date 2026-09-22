@@ -65,13 +65,13 @@
 }
 
 .at_item:hover {
-  border-color: rgba(255, 109, 45, 0.4);
-  color: #E0641F;
+  border-color: rgba(46, 99, 184, 0.4);
+  color: #2E63B8;
 }
 
 .at_item--active {
-  background: rgba(255, 109, 45, 0.14);
-  border-color: rgba(255, 109, 45, 0.5);
-  color: #E0641F;
+  background: rgba(46, 99, 184, 0.14);
+  border-color: rgba(46, 99, 184, 0.5);
+  color: #2E63B8;
   font-weight: 700;
 }

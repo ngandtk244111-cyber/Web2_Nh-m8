@@ -12,7 +12,7 @@
         <!-- Modal Header -->
         <div class="px-6 py-4 bg-[#FBF7EE] border-b border-neutral-200 flex items-center justify-between">
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 via-amber-400 to-amber-600 flex items-center justify-center text-neutral-950 shadow-[0_0_15px_rgba(212,175,55,0.4)]">
+            <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 via-amber-400 to-amber-600 flex items-center justify-center text-neutral-950 shadow-[0_0_15px_rgba(169,198,234,0.4)]">
               <app-icon name="sparkles" [size]="22" class="text-neutral-950"></app-icon>
             </div>
             <div>
@@ -72,12 +72,27 @@
 
             <!-- Quick replies -->
             <div *ngIf="msg.quickReplies && msg.quickReplies.length > 0 && !aiService.isThinking()" class="mt-2.5 ml-9 flex flex-wrap gap-1.5">
-              <button 
+              <button
                 *ngFor="let qr of msg.quickReplies"
                 (click)="sendQuickReply(qr)"
                 class="text-xs bg-neutral-200 hover:bg-neutral-300 text-amber-700 hover:text-amber-800 px-3 py-1.5 rounded-full border border-neutral-300 hover:border-amber-500/40 transition shadow-sm active:scale-95">
                 {{ qr }}
               </button>
+            </div>
+
+            <!-- Suggested products (sản phẩm có sẵn trong shop, do AI chọn từ catalog thật) -->
+            <div *ngIf="msg.suggestedProducts && msg.suggestedProducts.length > 0" class="mt-2.5 ml-9 grid grid-cols-2 gap-2 max-w-[85%]">
+              <a
+                *ngFor="let p of msg.suggestedProducts"
+                [routerLink]="['/product', p.slug]"
+                (click)="aiService.closeModal()"
+                class="flex items-center gap-2 bg-neutral-100 hover:bg-neutral-200 border border-neutral-300 rounded-xl p-2 transition group">
+                <img [src]="p.images[0]" [alt]="p.name" class="w-10 h-10 rounded-lg object-cover flex-shrink-0">
+                <div class="min-w-0">
+                  <div class="text-xs font-semibold text-neutral-800 truncate group-hover:text-amber-700">{{ p.name }}</div>
+                  <div class="text-[11px] text-amber-700 font-bold">{{ p.basePrice | vnd }}</div>
+                </div>
+              </a>
             </div>
 
           </div>
@@ -95,7 +110,7 @@
             
             <div class="flex items-center justify-between border-b border-neutral-200 pb-3">
               <div class="flex items-center gap-2">
-                <span class="w-3 h-3 rounded-full bg-amber-400 shadow-[0_0_8px_#d4af37]"></span>
+                <span class="w-3 h-3 rounded-full bg-amber-400 shadow-[0_0_8px_#A9C6EA]"></span>
                 <h4 class="font-serif text-base font-bold text-neutral-900">Bản Tổng Hợp Ý Tưởng (Design Brief)</h4>
               </div>
               <span class="text-[11px] font-semibold text-amber-700 bg-amber-500/20 border border-amber-500/30 px-2 py-1 rounded-lg">
@@ -162,7 +177,7 @@
             <div class="pt-2 flex flex-col sm:flex-row gap-2.5">
               <button 
                 (click)="aiService.useThisIdea()"
-                class="flex-1 py-3 px-5 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-neutral-950 font-extrabold text-xs sm:text-sm shadow-[0_4px_25px_rgba(212,175,55,0.3)] transition flex items-center justify-center gap-2">
+                class="flex-1 py-3 px-5 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-neutral-950 font-extrabold text-xs sm:text-sm shadow-[0_4px_25px_rgba(169,198,234,0.3)] transition flex items-center justify-center gap-2">
                 <app-icon name="check" [size]="16"></app-icon>
                 <span>Sử Dụng Ý Tưởng Này (Use This Idea) →</span>
               </button>

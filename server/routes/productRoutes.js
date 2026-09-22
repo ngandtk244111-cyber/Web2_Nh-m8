@@ -1,6 +1,7 @@
 const express = require('express');
 const Product = require('../models/Product');
 const { awardCoins } = require('../utils/coins');
+const { requireAdminId } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -25,7 +26,7 @@ router.get('/slug/:slug', async (req, res) => {
   }
 });
 
-router.post('/', async (req, res) => {
+router.post('/', requireAdminId, async (req, res) => {
   try {
     const id = req.body.id || 'prod-' + Date.now();
     const product = await Product.create({ ...req.body, id });
@@ -36,7 +37,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', requireAdminId, async (req, res) => {
   try {
     const product = await Product.findOneAndUpdate({ id: req.params.id }, req.body, { new: true });
     if (!product) return res.status(404).json({ success: false, error: 'Không tìm thấy sản phẩm' });
@@ -89,7 +90,7 @@ router.post('/:id/reviews', async (req, res) => {
   }
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', requireAdminId, async (req, res) => {
   try {
     await Product.deleteOne({ id: req.params.id });
     res.json({ success: true });

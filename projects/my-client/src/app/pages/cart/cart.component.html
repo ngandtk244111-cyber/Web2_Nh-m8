@@ -1,5 +1,8 @@
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
 
+  <!-- Step navigation -->
+  <app-checkout-steps></app-checkout-steps>
+
   <!-- Header -->
   <div class="border-b border-neutral-200 pb-6">
     <a routerLink="/catalog" class="text-xs font-semibold text-neutral-600 hover:text-amber-600 flex items-center gap-1 mb-2 transition">
@@ -171,9 +174,9 @@
 
       <button
         type="button"
-        [disabled]="selectedItemCount() === 0"
-        (click)="proceedToCheckout()"
-        class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 disabled:opacity-40 disabled:pointer-events-none text-neutral-950 font-extrabold text-sm shadow-[0_4px_25px_rgba(212,175,55,0.3)] transition flex items-center justify-center gap-1.5">
+        [disabled]="selectedItemCount() === 0 || selectedSubtotal() === 0"
+        (click)="goToStep(2)"
+        class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 disabled:opacity-40 disabled:pointer-events-none text-neutral-950 font-extrabold text-sm shadow-[0_4px_25px_rgba(169,198,234,0.3)] transition flex items-center justify-center gap-1.5">
         <span>Tiến hành thanh toán</span>
         <app-icon name="chevron-right" [size]="14"></app-icon>
       </button>

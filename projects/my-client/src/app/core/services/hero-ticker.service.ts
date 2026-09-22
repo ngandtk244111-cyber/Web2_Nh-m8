@@ -11,6 +11,7 @@ export interface HeroTickerItem {
   ctaLink: string;
   icon: string;
   gradient: string;
+  image: string;
 }
 
 const AUTOPLAY_INTERVAL_MS = 4500;
@@ -26,53 +27,58 @@ export class HeroTickerService {
   readonly items: HeroTickerItem[] = [
     {
       id: 'room-3d',
-      tickerLabel: '✦ Khám phá Phòng 3D',
+      tickerLabel: 'Khám phá Phòng 3D',
       title: 'Khám Phá Phòng 3D Trực Quan',
       subtitle: 'Dạo quanh không gian sống 360° trước khi quyết định mua — xem đúng món đồ decor nằm ở đâu trong căn phòng thật.',
       ctaLabel: 'Khám phá ngay',
       ctaLink: '/shop-the-room',
       icon: 'room',
-      gradient: 'linear-gradient(135deg, #1a1a1a 0%, #2055AF 140%)',
+      gradient: 'linear-gradient(135deg, rgba(26,26,26,0.75) 0%, rgba(46,99,184,0.55) 140%)',
+      image: 'assets/hero-banner/hero-room-3d.png',
     },
     {
       id: 'print-3d',
-      tickerLabel: '🖨️ In 3D theo yêu cầu',
+      tickerLabel: 'In 3D theo yêu cầu',
       title: 'In 3D Theo Yêu Cầu — Độc Bản Của Riêng Bạn',
       subtitle: 'Từ ý tưởng tới sản phẩm hoàn thiện, tùy biến màu sắc, chất liệu và khắc tên cá nhân hóa 100%.',
       ctaLabel: 'Tùy biến ngay',
       ctaLink: '/customizer-3d',
       icon: 'cube',
-      gradient: 'linear-gradient(135deg, #1a1a1a 0%, #B34213 140%)',
+      gradient: 'linear-gradient(135deg, rgba(26,26,26,0.75) 0%, rgba(32,85,175,0.55) 140%)',
+      image: 'assets/hero-banner/hero-print-3d.png',
     },
     {
       id: 'freeship',
-      tickerLabel: '🚚 Freeship từ 500K',
+      tickerLabel: 'Freeship từ 500K',
       title: 'Miễn Phí Vận Chuyển Từ 500.000đ',
       subtitle: 'Giao hàng nhanh toàn quốc cho mọi đơn hàng nội thất & decor, đóng gói chống va đập cẩn thận.',
       ctaLabel: 'Mua sắm ngay',
       ctaLink: '/catalog',
       icon: 'truck',
-      gradient: 'linear-gradient(135deg, #1a1a1a 0%, #1f7a4d 140%)',
+      gradient: 'linear-gradient(135deg, rgba(26,26,26,0.75) 0%, rgba(31,122,77,0.55) 140%)',
+      image: 'assets/hero-banner/hero-freeship.png',
     },
     {
       id: 'ai-assistant',
-      tickerLabel: '✨ AI Gợi Ý Decor',
+      tickerLabel: 'AI Gợi Ý Decor',
       title: 'Trợ Lý AI Gợi Ý Ý Tưởng Decor',
       subtitle: 'Mô tả không gian mơ ước của bạn, AI giúp gợi ý sản phẩm và phong cách phù hợp trong vài giây.',
       ctaLabel: 'Thử ngay',
       ctaLink: '/style-quiz',
       icon: 'sparkles',
-      gradient: 'linear-gradient(135deg, #1a1a1a 0%, #FF6D2D 140%)',
+      gradient: 'linear-gradient(135deg, rgba(26,26,26,0.75) 0%, rgba(46,99,184,0.55) 140%)',
+      image: 'assets/hero-banner/hero-ai-assistant.png',
     },
     {
       id: 'deal-today',
-      tickerLabel: '🎁 Ưu đãi hôm nay',
+      tickerLabel: 'Ưu đãi hôm nay',
       title: 'Ưu Đãi Hôm Nay Dành Cho Bạn',
       subtitle: 'Khám phá các sản phẩm nổi bật với mức giá tốt nhất, cập nhật mỗi ngày.',
       ctaLabel: 'Xem ưu đãi',
       ctaLink: '/catalog',
       icon: 'tag',
-      gradient: 'linear-gradient(135deg, #1a1a1a 0%, #8a5a2e 140%)',
+      gradient: 'linear-gradient(135deg, rgba(26,26,26,0.75) 0%, rgba(169,198,234,0.55) 140%)',
+      image: 'assets/hero-banner/hero-deal-today.png',
     },
   ];
 

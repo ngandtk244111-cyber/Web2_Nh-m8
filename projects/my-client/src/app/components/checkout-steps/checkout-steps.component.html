@@ -1,0 +1,43 @@
+<nav class="bg-white rounded-3xl border border-neutral-200 shadow-xl px-4 sm:px-8 py-5 overflow-x-auto">
+  <ol class="flex items-start min-w-max sm:min-w-0 sm:justify-center gap-1 sm:gap-3">
+    <ng-container *ngFor="let step of steps; let last = last">
+      <li class="flex flex-col items-center gap-2 w-20 sm:w-28 flex-shrink-0">
+        <button
+          type="button"
+          (click)="onStepClick(step)"
+          [attr.aria-current]="statusOf(step.step) === 'active' ? 'step' : null"
+          [attr.aria-label]="step.label"
+          [class.bg-neutral-900]="statusOf(step.step) === 'active'"
+          [class.border-neutral-900]="statusOf(step.step) === 'active'"
+          [class.text-white]="statusOf(step.step) === 'active'"
+          [class.bg-emerald-50]="statusOf(step.step) === 'completed'"
+          [class.border-emerald-400]="statusOf(step.step) === 'completed'"
+          [class.text-emerald-600]="statusOf(step.step) === 'completed'"
+          [class.bg-white]="statusOf(step.step) === 'disabled'"
+          [class.border-neutral-300]="statusOf(step.step) === 'disabled'"
+          [class.text-neutral-400]="statusOf(step.step) === 'disabled'"
+          [class.cursor-pointer]="statusOf(step.step) === 'completed'"
+          [class.cursor-not-allowed]="statusOf(step.step) !== 'completed'"
+          [class.opacity-50]="statusOf(step.step) === 'disabled'"
+          class="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 flex items-center justify-center transition">
+          <app-icon [name]="iconFor(step)" [size]="18"></app-icon>
+        </button>
+        <span
+          [class.text-neutral-900]="statusOf(step.step) === 'active'"
+          [class.font-bold]="statusOf(step.step) === 'active'"
+          [class.text-emerald-600]="statusOf(step.step) === 'completed'"
+          [class.text-neutral-400]="statusOf(step.step) === 'disabled'"
+          class="text-[10px] sm:text-xs font-medium text-center leading-tight">
+          {{ step.label }}
+        </span>
+      </li>
+      <li
+        *ngIf="!last"
+        class="flex-1 mt-5 sm:mt-6 min-w-[16px] sm:min-w-[24px] border-t"
+        [class.border-emerald-400]="statusOf(step.step) === 'completed'"
+        [class.border-neutral-300]="statusOf(step.step) !== 'completed'"
+        [class.border-dashed]="statusOf(step.step) !== 'completed'">
+      </li>
+    </ng-container>
+  </ol>
+</nav>

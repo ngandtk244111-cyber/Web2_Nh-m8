@@ -16,6 +16,7 @@ app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/admin/auth', require('./routes/adminAuthRoutes'));
 app.use('/api/orders', require('./routes/orderRoutes'));
 app.use('/api/warranty', require('./routes/warrantyRoutes'));
 app.use('/api/payments', require('./routes/paymentRoutes'));
@@ -28,6 +29,7 @@ app.use('/api/community', require('./routes/communityRoutes'));
 app.use('/api/news', require('./routes/newsRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/newsletter', require('./routes/newsletterRoutes'));
+app.use('/api/ai', require('./routes/aiRoutes'));
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
 

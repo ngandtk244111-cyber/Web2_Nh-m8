@@ -21,7 +21,7 @@
           <button 
             type="button" 
             (click)="selectHotspot(item)"
-            class="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-400 via-amber-500 to-amber-600 text-neutral-950 shadow-[0_0_12px_rgba(212,175,55,0.6)] flex items-center justify-center border-2 border-neutral-100 hover:scale-110 active:scale-95 transition-transform font-bold"
+            class="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-400 via-amber-500 to-amber-600 text-neutral-950 shadow-[0_0_12px_rgba(169,198,234,0.6)] flex items-center justify-center border-2 border-neutral-100 hover:scale-110 active:scale-95 transition-transform font-bold"
             [class.hotspot-pulse]="selectedHotspot?.hotspot?.id === item.hotspot.id"
             [class.ring-4]="selectedHotspot?.hotspot?.id === item.hotspot.id"
             [class.ring-amber-400]="selectedHotspot?.hotspot?.id === item.hotspot.id">

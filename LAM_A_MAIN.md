@@ -2,7 +2,7 @@
 
 > Bản đồ kiến trúc của **Lam-a-main** (project CHÍNH — Deco3D, nền tảng TMĐT nội thất decor nhỏ gọn & in 3D theo yêu cầu).
 > Khác với `REFERENCE_ARCHITECTURE.md` (khảo sát AuraPC-main) và `vita.md` (khảo sát VitaCare-main) — hai file đó mô tả project THAM KHẢO, còn file này mô tả chính Lam-a-main tại thời điểm viết.
-> Ngày cập nhật: 2026-09-20.
+> Ngày cập nhật: 2026-09-22 (đính chính mục Auth — bản trước ghi nhầm JWT; bổ sung admin auth, ATM payment, verify giá server-side, AI chatbot dùng Gemini thật).
 
 ---
 
@@ -13,11 +13,11 @@
 | Frontend framework | Angular 19 (standalone components, `*ngIf`/`*ngFor` — chưa dùng control-flow `@if`/`@for` mới) |
 | Frontend apps | 2 project Angular **độc lập** trong cùng workspace: `my-client` (khách hàng, port 4200) + `my-admin` (quản trị, port 4201) |
 | State management | Angular `signal()`/`computed()`/`effect()` là chính; RxJS `Observable` cho gọi HTTP |
-| HTTP | `HttpClient` (`provideHttpClient(withInterceptors([authInterceptor]))`) — có functional interceptor tự gắn `Authorization: Bearer <token>` vào mọi request tới `environment.apiUrl` |
+| HTTP | `HttpClient` (`provideHttpClient()`, **không có interceptor nào** — mỗi service tự gắn `userId`/`adminId` vào request cần xác thực) |
 | Routing | `provideRouter` + `loadComponent()` cho mọi route (không route nào eager ngoài `AppComponent`) |
 | Backend | Node.js, Express 5, 1 backend duy nhất (`server/`, port 4300) phục vụ cả `my-client` lẫn `my-admin` |
 | Database | MongoDB (`mongodb://127.0.0.1:27017/deco3d`) qua Mongoose 8 |
-| Auth | JWT (7 ngày) + OTP qua số điện thoại (chế độ dev trả thẳng mã OTP, chưa gắn SMS provider thật) |
+| Auth | Số điện thoại + mật khẩu (bcrypt), **không dùng JWT/token** — server tin thẳng `userId`/`adminId` client gửi lên (tham khảo VitaCare-main). OTP chỉ dùng xác thực SĐT lúc đăng ký/quên mật khẩu (dev mode trả thẳng mã OTP, chưa gắn SMS provider thật) |
 | Realtime | Socket.IO (`socket.io-client` FE, `server/socket.js` BE) — dùng cho chat hỗ trợ trực tiếp |
 | Thanh toán | MoMo + ZaloPay (sandbox), verify giao dịch qua IPN/return URL |
 | 3D | Three.js (`GLTFLoader`, `OrbitControls`) — customizer sản phẩm + phòng 3D "Shop The Room", hỗ trợ cả model thật (`.glb`) lẫn fallback procedural geometry |
@@ -182,18 +182,21 @@ Chỉ 1 route thật: `'' → AdminComponent`. Toàn bộ điều hướng nội
 
 ## 8. Authentication / Authorization Flow
 
+> **Đính chính (2026-09-22)**: mục này trước đây mô tả sai — ghi là dùng JWT nhưng code thật KHÔNG dùng JWT/token nào cả. Đã sửa lại theo đúng code hiện tại.
+
 **Client (`my-client`):**
-1. Nhập số điện thoại → `AuthService.requestOtp()` → backend gửi OTP (dev mode trả `devOtp` trong response, chưa gắn SMS thật).
-2. Xác thực → `AuthService.verifyOtp()` → backend trả `{ user, token }` → lưu `user` vào `localStorage['deco3d_user']`, token vào `localStorage['deco3d_token']`, set signal `currentUser`.
-3. **Có functional interceptor tự động gắn JWT** (`core/interceptors/auth.interceptor.ts`, tham khảo AuraPC-main) — mọi request tới `environment.apiUrl` tự động kèm `Authorization: Bearer <token>` nếu đã đăng nhập, không cần gắn thủ công ở từng service.
+1. Đăng nhập bằng **số điện thoại + mật khẩu** (bcrypt), KHÔNG dùng JWT/token — tham khảo đúng cơ chế của VitaCare-main: backend trả thẳng object `user` (đã bỏ `password`) sau khi login/register thành công.
+2. OTP chỉ dùng để **xác thực số điện thoại lúc đăng ký / quên mật khẩu** (`OTP_DEV_MODE=true` trả thẳng mã trong response, chưa gắn SMS thật) — không phải cơ chế đăng nhập chính.
+3. `AuthService` lưu nguyên `user` vào `localStorage['deco3d_user']`, giữ trong 1 signal `currentUser`. **Không có interceptor** (`core/interceptors/` không tồn tại) — các request cần xác thực tự gửi kèm `userId` trong body/query, server tin thẳng giá trị này (`middleware/auth.js`: `attachUserId`/`requireUserId`).
 4. Không có route guard — trang `account` tự kiểm tra `authService.currentUser()`.
 
 **Backend:**
-- JWT ký bằng `JWT_SECRET` (bắt buộc trong `.env`, server crash nếu thiếu).
-- `server/middleware/auth.js`: `requireAuth`, `optionalAuth` (2 loại, **không có `requireAdmin`** — khác AuraPC-main có 4 loại middleware bao gồm phân quyền admin).
-- **Toàn bộ endpoint ghi dữ liệu của `my-admin` (product/room/custom-request/community/news CRUD) hiện KHÔNG có middleware bảo vệ nào** — bất kỳ ai gọi đúng API đều sửa được. Chấp nhận được ở giai đoạn hiện tại (chưa có yêu cầu xây admin auth), nhưng là rủi ro cần lưu ý nếu deploy thật.
+- `server/middleware/auth.js`: `requireUserId`/`attachUserId` (đọc `userId` client gửi lên, không verify gì cả — mô hình "tin client" có chủ đích, đánh đổi lấy sự đơn giản) + `requireAdminId` (mới thêm, cùng mô hình, dùng cho admin).
+- **Admin (`my-admin`) giờ đã có đăng nhập**: `server/models/Admin.js` (username + password bcrypt), `POST /api/admin/auth/login`. Các route ghi dữ liệu admin-only (`product`/`room` CRUD, `custom-request` đổi trạng thái, `order` list-all + cập nhật tiến độ, `news` CRUD) đã gắn `requireAdminId`. **Vẫn không phải bảo mật thật** (không token, ai tự chế `adminId` trong request vẫn qua được nếu gọi thẳng API bằng Postman/curl) — chấp nhận đánh đổi để nhất quán với toàn bộ auth hiện có của Lam-a-main, xem quyết định ở mục 15.
+- **Bảo mật giá đã được vá**: `POST /api/orders` giờ tính lại `unitPrice`/`subtotal`/`discount`/`shippingFee`/`total` từ sản phẩm THẬT trong DB (`server/utils/pricing.js`), không tin số tiền client gửi lên nữa.
+- Route ghi dữ liệu của `community`/`custom-request` (POST `/:id/messages`) vẫn dùng chung giữa khách hàng và shop nên KHÔNG protect bằng `requireAdminId` — cần tách endpoint riêng nếu muốn siết chặt hơn.
 
-**Admin (`my-admin`):** không có đăng nhập, không có interceptor riêng — khác hẳn AuraPC-main/VitaCare-main (cả 2 đều có tài khoản/role riêng cho admin).
+**Admin (`my-admin`):** đã có màn hình đăng nhập (`pages/login/`) + `adminAuthGuard` (route `''` yêu cầu đăng nhập, chưa đăng nhập redirect `/login`) + `AdminAuthService` (signal `currentAdmin`, lưu `localStorage['deco3d_admin']`). Tài khoản mặc định do `server/seed/seed.js` tạo (`ADMIN_DEFAULT_USERNAME`/`ADMIN_DEFAULT_PASSWORD` trong `.env`, mặc định `admin`/`admin123` — **phải đổi trước khi deploy thật**).
 
 ---
 
@@ -294,12 +297,15 @@ Component → service (signal cục bộ) → HttpClient → server/routes/*.js 
 - Hạ tầng hiệu ứng UX: toast, cart-fly animation, product quick-view, scroll-reveal, page transition.
 - Tính năng mới: Trắc Nghiệm Phong Cách Decor (`/style-quiz`), hệ thống coin/rewards (idempotent).
 - 3D: customizer sản phẩm + phòng "Shop The Room" hỗ trợ model `.glb` thật lẫn procedural fallback.
-- Thanh toán MoMo/ZaloPay sandbox, tra cứu đơn hàng/bảo hành không cần đăng nhập.
+- Thanh toán MoMo/ZaloPay/ATM (qua cổng MoMo, `requestType: payWithATM`) sandbox + VietQR (ảnh QR tĩnh qua vietqr.io), tra cứu đơn hàng/bảo hành không cần đăng nhập.
 - Feature Tài khoản đầy đủ (tách shell + 4 sub-component: Hồ sơ, Đơn hàng, Sổ địa chỉ, Xu thưởng) — hồ sơ mở rộng (giới tính/ngày sinh/avatar upload), sổ địa chỉ CRUD với cascading tỉnh/huyện/xã (API hành chính VN công khai), đơn hàng có filter theo trạng thái + tìm kiếm. Tham khảo AuraPC-main (`account-page.component.ts`, `address.service.ts`, route `/profile`/`/avatar`/`/addresses`).
+- **AI Idea Assistant dùng LLM thật** (Google Gemini free tier, `server/routes/aiRoutes.js`) thay cho keyword-matching giả trước đây — có catalog-injection (gợi ý sản phẩm READY_STOCK có thật kèm link) tham khảo pattern AruBot của AuraPC-main.
+- **Bảo mật giá đơn hàng**: `POST /api/orders` tính lại giá từ sản phẩm thật trong DB (`server/utils/pricing.js`), không tin số tiền client gửi lên.
+- **Admin có đăng nhập** (username/password, `pages/login/` + `adminAuthGuard`), các route ghi dữ liệu admin-only đã gắn `requireAdminId`. Xem mục 8 để biết giới hạn (không phải bảo mật thật, chỉ tin id client gửi lên — quyết định có chủ đích để nhất quán với auth hiện có).
 
 **Còn thiếu / nợ kỹ thuật đã biết (chưa được yêu cầu xử lý):**
 - Giỏ hàng vẫn thuần localStorage, chưa đồng bộ server theo user đăng nhập.
-- `my-admin` không có đăng nhập/role/route guard — ai có link đều vào được.
-- Giá đơn hàng không được verify lại server-side khi tạo order/thanh toán.
+- Admin auth chỉ tin `adminId` client gửi lên, không có token thật — gọi thẳng API bằng Postman/curl với `adminId` bất kỳ vẫn qua được. Đã được người dùng xác nhận chấp nhận đánh đổi này (ưu tiên nhất quán với auth hiện có hơn bảo mật tuyệt đối).
 - Modal "Thêm sản phẩm mới" trong admin chưa có form thật (mới set cờ hiển thị, chưa render UI).
+- Coupon vẫn là `MOCK_COUPONS` tĩnh (không có collection Promotion riêng), dùng chung file `mock-data.generated.js` cho cả seed lẫn verify giá.
 - Chưa có test case cụ thể (chỉ có scaffold Karma/Jasmine mặc định).

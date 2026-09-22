@@ -13,4 +13,6 @@ export class AppIconComponent {
   @Input() size: number | string = 20;
   @Input() strokeWidth: number = 2;
   @Input() class: string = '';
+  /** Tô đặc icon (vd: trái tim khi đã yêu thích) thay vì chỉ viền. */
+  @Input() filled: boolean = false;
 }

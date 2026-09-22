@@ -33,7 +33,7 @@
   border-radius: 22px;
   overflow: hidden;
   background: #ffffff;
-  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.38), 0 0 0 1px rgba(37, 82, 184, 0.08);
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.38), 0 0 0 1px rgba(46, 99, 184, 0.08);
   animation: tp-popup-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
   transition: box-shadow 0.35s ease;
 }
@@ -41,7 +41,7 @@
 /* Đụng vào (hover/touch) -> phát sáng nhẹ quanh popup */
 .tp_popup:hover,
 .tp_popup:active {
-  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.38), 0 0 0 1px rgba(37, 82, 184, 0.15), 0 0 46px rgba(37, 82, 184, 0.35);
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.38), 0 0 0 1px rgba(46, 99, 184, 0.15), 0 0 46px rgba(46, 99, 184, 0.35);
 }
 
 .tp_popup--closing {
@@ -74,7 +74,7 @@
 .tp_sparkle {
   position: absolute;
   z-index: 4;
-  color: #FF9561;
+  color: #A9C6EA;
   font-size: 12px;
   pointer-events: none;
   animation: tp-twinkle 2.2s ease-in-out infinite;
@@ -136,7 +136,7 @@
 
 .tp_icon-badge:hover {
   transform: scale(1.1) rotate(-6deg);
-  box-shadow: 0 0 18px rgba(255, 149, 97, 0.65);
+  box-shadow: 0 0 18px rgba(169, 198, 234, 0.65);
 }
 
 .tp_close {
@@ -254,7 +254,7 @@
 
 .tp_cta:hover {
   transform: translateY(-2px);
-  box-shadow: 0 0 22px rgba(37, 82, 184, 0.6), 0 12px 26px rgba(22, 35, 79, 0.4);
+  box-shadow: 0 0 22px rgba(46, 99, 184, 0.6), 0 12px 26px rgba(15, 44, 87, 0.4);
 }
 
 /* ---------- Responsive ---------- */

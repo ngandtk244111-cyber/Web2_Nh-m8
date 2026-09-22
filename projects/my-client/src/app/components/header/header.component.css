@@ -42,7 +42,7 @@
 
 .hd_top {
   background: #ffffff;
-  border-bottom: 1px solid rgba(255, 109, 45, 0.2);
+  border-bottom: 1px solid rgba(46, 99, 184, 0.2);
   max-height: 34px;
   overflow: hidden;
   transition: max-height 0.28s ease, opacity 0.22s ease, border-color 0.28s ease;
@@ -74,11 +74,11 @@
 
 .hd_top__left:hover,
 .hd_top__right:hover {
-  color: #FF6D2D;
+  color: #2E63B8;
 }
 
 .hd_top__right {
-  color: #E0641F;
+  color: #2E63B8;
 }
 
 /* ================= TẦNG 2: MAIN BAR ================= */
@@ -114,8 +114,8 @@
   width: 26px;
   height: 26px;
   border-radius: 999px;
-  background: rgba(255, 109, 45, 0.12);
-  color: #E0641F;
+  background: rgba(46, 99, 184, 0.12);
+  color: #2E63B8;
   flex-shrink: 0;
   animation: hd-mascot-bounce 2.4s ease-in-out infinite;
 }
@@ -144,7 +144,7 @@
   font-size: 20px;
   font-weight: 700;
   letter-spacing: 0.02em;
-  color: #A8791E;
+  color: #2055AF;
 }
 
 .hd_logo__tagline {
@@ -152,7 +152,7 @@
   font-weight: 600;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: rgba(168, 121, 30, 0.7);
+  color: rgba(32, 85, 175, 0.7);
   margin-top: 3px;
 }
 
@@ -208,7 +208,7 @@
 }
 
 .hd_search__input:focus {
-  border-color: #FF6D2D;
+  border-color: #2E63B8;
 }
 
 /* actions: đăng nhập | chuông | giỏ hàng */
@@ -242,8 +242,8 @@
 }
 
 .hd_action--login:hover {
-  border-color: #FF6D2D;
-  color: #E0641F;
+  border-color: #2E63B8;
+  color: #2E63B8;
 }
 
 .hd_action--login .hd_action__text {
@@ -258,7 +258,7 @@
 }
 
 .hd_action--icon:hover {
-  color: #FF6D2D;
+  color: #2E63B8;
   background: rgba(0, 0, 0, 0.05);
 }
 
@@ -267,12 +267,12 @@
   padding: 9px;
   border-radius: 999px;
   background: #F5F4F0;
-  border-color: rgba(255, 109, 45, 0.3);
-  color: #E0641F;
+  border-color: rgba(46, 99, 184, 0.3);
+  color: #2E63B8;
 }
 
 .hd_action--cart:hover {
-  border-color: #FF6D2D;
+  border-color: #2E63B8;
 }
 
 .hd_badge {
@@ -283,7 +283,7 @@
   height: 18px;
   padding: 0 4px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #FF9561, #FF6D2D);
+  background: linear-gradient(135deg, #A9C6EA, #2E63B8);
   color: #ffffff;
   font-size: 10px;
   font-weight: 800;
@@ -374,7 +374,7 @@
 .hd_cart-item__price {
   font-size: 12.5px;
   font-weight: 700;
-  color: #E0483F;
+  color: #9C4A42;
 }
 
 .hd_cart-item__qty {
@@ -392,7 +392,7 @@
 }
 
 .hd_cart-item__remove:hover {
-  color: #E0483F;
+  color: #2055AF;
 }
 
 .hd_cart-dropdown__more {
@@ -421,7 +421,7 @@
 .hd_cart-dropdown__view-btn {
   padding: 9px 16px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #FF9561, #FF6D2D);
+  background: linear-gradient(135deg, #A9C6EA, #2E63B8);
   color: #ffffff;
   font-size: 12.5px;
   font-weight: 700;
@@ -478,7 +478,7 @@
 .hd_notify-dropdown__mark-all {
   border: none;
   background: transparent;
-  color: #E0641F;
+  color: #2E63B8;
   font-size: 10.5px;
   font-weight: 700;
   cursor: pointer;
@@ -486,7 +486,7 @@
 }
 
 .hd_notify-dropdown__mark-all:hover {
-  color: #FF6D2D;
+  color: #2E63B8;
 }
 
 .hd_notify-dropdown__empty {
@@ -519,7 +519,7 @@
 }
 
 .hd_notify-item--unread {
-  background: rgba(255, 109, 45, 0.06);
+  background: rgba(46, 99, 184, 0.06);
 }
 
 .hd_notify-item__dot {
@@ -527,7 +527,7 @@
   width: 7px;
   height: 7px;
   border-radius: 999px;
-  background: #FF6D2D;
+  background: #2E63B8;
   margin-top: 5px;
 }
 
@@ -559,9 +559,9 @@
   margin-top: 10px;
   padding: 9px;
   border-radius: 10px;
-  border: 1px solid rgba(255, 109, 45, 0.3);
+  border: 1px solid rgba(46, 99, 184, 0.3);
   background: transparent;
-  color: #E0641F;
+  color: #2E63B8;
   font-size: 11.5px;
   font-weight: 700;
   cursor: pointer;
@@ -569,7 +569,7 @@
 }
 
 .hd_notify-dropdown__view-all:hover {
-  background: rgba(255, 109, 45, 0.08);
+  background: rgba(46, 99, 184, 0.08);
 }
 
 /* ---------- Search suggestions ---------- */
@@ -622,9 +622,9 @@
 }
 
 .hd_search-suggest__chip:hover {
-  border-color: #FF6D2D;
-  color: #E0641F;
-  background: rgba(255, 109, 45, 0.08);
+  border-color: #2E63B8;
+  color: #2E63B8;
+  background: rgba(46, 99, 184, 0.08);
 }
 
 /* ================= TẦNG 3: UTILITY BAR + MEGA MENU ================= */
@@ -683,12 +683,12 @@
 
 .hd_menu-btn:hover,
 .hd_menu-btn--active {
-  border-color: #FF6D2D;
-  color: #E0641F;
+  border-color: #2E63B8;
+  color: #2E63B8;
 }
 
 .hd_menu-btn--active {
-  background: rgba(255, 109, 45, 0.12);
+  background: rgba(46, 99, 184, 0.12);
 }
 
 .hd_location-btn {
@@ -715,7 +715,7 @@
 }
 
 .hd_location-btn:hover {
-  color: #E0641F;
+  color: #2E63B8;
 }
 
 /* mega menu panel */
@@ -827,7 +827,7 @@
   color: #111111;
   margin-bottom: 8px;
   padding-bottom: 6px;
-  border-bottom: 2px solid #FF6D2D;
+  border-bottom: 2px solid #2E63B8;
 }
 
 .hd_megamenu__link {
@@ -842,8 +842,8 @@
 }
 
 .hd_megamenu__link:hover {
-  background: rgba(255, 109, 45, 0.1);
-  color: #B34213;
+  background: rgba(46, 99, 184, 0.1);
+  color: #1B3F73;
   padding-left: 14px;
 }
 
@@ -935,7 +935,7 @@
   .hd_m {
     display: block;
     background: #ffffff;
-    border-bottom: 1px solid rgba(255, 109, 45, 0.2);
+    border-bottom: 1px solid rgba(46, 99, 184, 0.2);
     padding: 10px 16px 12px;
   }
 
@@ -968,7 +968,7 @@
     height: 16px;
     padding: 0 3px;
     border-radius: 999px;
-    background: linear-gradient(135deg, #FF9561, #FF6D2D);
+    background: linear-gradient(135deg, #A9C6EA, #2E63B8);
     color: #ffffff;
     font-size: 9px;
     font-weight: 800;
@@ -1093,7 +1093,7 @@
     font-size: 8px;
     font-weight: 700;
     letter-spacing: 0.14em;
-    color: rgba(224, 100, 31, 0.75);
+    color: rgba(46, 99, 184, 0.75);
   }
 
   .hd_drawer__brand-main {
@@ -1120,14 +1120,14 @@
     margin: 14px 16px;
     padding: 14px;
     border-radius: 16px;
-    background: rgba(255, 109, 45, 0.1);
-    border: 1px solid rgba(255, 109, 45, 0.25);
+    background: rgba(46, 99, 184, 0.1);
+    border: 1px solid rgba(46, 99, 184, 0.25);
   }
 
   .hd_drawer__login-title {
     font-size: 12px;
     font-weight: 600;
-    color: #E0641F;
+    color: #2E63B8;
     margin-bottom: 10px;
   }
 
@@ -1136,7 +1136,7 @@
     padding: 10px;
     border-radius: 12px;
     border: none;
-    background: linear-gradient(135deg, #FF9561, #FF6D2D 60%, #E05418);
+    background: linear-gradient(135deg, #A9C6EA, #2E63B8 60%, #2055AF);
     color: #ffffff;
     font-size: 13px;
     font-weight: 700;
@@ -1160,8 +1160,8 @@
   }
 
   .hd_drawer__location:hover {
-    color: #E0641F;
-    border-color: rgba(255, 109, 45, 0.3);
+    color: #2E63B8;
+    border-color: rgba(46, 99, 184, 0.3);
   }
 
   .hd_drawer__nav {
@@ -1177,7 +1177,7 @@
     font-weight: 800;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: #E0641F;
+    color: #2E63B8;
   }
 
   .hd_drawer__item {
@@ -1191,8 +1191,8 @@
   }
 
   .hd_drawer__item:hover {
-    background: rgba(255, 109, 45, 0.1);
-    color: #E0641F;
+    background: rgba(46, 99, 184, 0.1);
+    color: #2E63B8;
   }
 
   .hd_drawer__accordion {
@@ -1223,11 +1223,11 @@
 
   .hd_drawer__accordion-head--open app-icon {
     transform: rotate(180deg);
-    color: #E0641F;
+    color: #2E63B8;
   }
 
   .hd_drawer__accordion-head--open {
-    color: #E0641F;
+    color: #2E63B8;
   }
 
   .hd_drawer__accordion-body {
@@ -1251,9 +1251,9 @@
     gap: 8px;
     padding: 11px;
     border-radius: 12px;
-    border: 1px solid rgba(255, 109, 45, 0.3);
-    background: rgba(255, 109, 45, 0.1);
-    color: #E0641F;
+    border: 1px solid rgba(46, 99, 184, 0.3);
+    background: rgba(46, 99, 184, 0.1);
+    color: #2E63B8;
     font-size: 13px;
     font-weight: 700;
     text-decoration: none;

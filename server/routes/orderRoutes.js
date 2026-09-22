@@ -1,7 +1,9 @@
 const express = require('express');
 const Order = require('../models/Order');
-const { attachUserId, requireUserId } = require('../middleware/auth');
+const Product = require('../models/Product');
+const { attachUserId, requireUserId, requireAdminId } = require('../middleware/auth');
 const { awardCoins } = require('../utils/coins');
+const { verifyAndPriceOrderItems, resolveDiscount, resolveShippingFee } = require('../utils/pricing');
 
 const DELIVERY_REWARD_RATE = 0.01; // 1% giá trị đơn hàng, quy đổi thẳng sang Xu (1 xu = 1đ khi giảm giá)
 
@@ -16,7 +18,9 @@ function nowLabel() {
   return now.toLocaleDateString('vi-VN') + ' ' + now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
 }
 
-router.get('/', async (_req, res) => {
+// Admin: danh sách toàn bộ đơn hàng của mọi khách — chỉ my-admin (dashboard tab "Đơn Hàng") gọi,
+// không phải endpoint công khai (khách tự tra đơn dùng /mine hoặc /by-number/:orderNumber).
+router.get('/', requireAdminId, async (_req, res) => {
   try {
     const orders = await Order.find().sort({ createdAt: -1 });
     res.json({ success: true, orders });
@@ -27,13 +31,26 @@ router.get('/', async (_req, res) => {
 
 router.post('/', attachUserId, async (req, res) => {
   try {
-    const { items, shippingAddress, paymentMethod, subtotal, discount, shippingFee, total, notes } = req.body;
+    const { items, shippingAddress, paymentMethod, couponCode, notes } = req.body;
 
     if (!Array.isArray(items) || items.length === 0 || !shippingAddress || !paymentMethod) {
       return res.status(400).json({ success: false, error: 'Thiếu thông tin đơn hàng' });
     }
 
-    const hasPOD = items.some(i => i.product?.productionType === 'PRINT_ON_DEMAND');
+    // Bảo mật giá: tính lại toàn bộ đơn từ sản phẩm THẬT trong DB, không tin subtotal/discount/
+    // shippingFee/total mà client gửi lên (trước đây tin thẳng, có thể sửa qua DevTools).
+    let pricedItems, subtotal;
+    try {
+      ({ pricedItems, subtotal } = await verifyAndPriceOrderItems(items, Product));
+    } catch (priceErr) {
+      return res.status(400).json({ success: false, error: priceErr.message });
+    }
+
+    const discount = resolveDiscount(subtotal, couponCode);
+    const shippingFee = resolveShippingFee(subtotal);
+    const total = Math.max(0, subtotal - discount + shippingFee);
+
+    const hasPOD = pricedItems.some(i => i.product?.productionType === 'PRINT_ON_DEMAND');
     let productionProgress = null;
     if (hasPOD) {
       productionProgress = {
@@ -52,13 +69,13 @@ router.post('/', attachUserId, async (req, res) => {
       status: hasPOD ? 'IN_PRODUCTION' : 'CONFIRMED',
       hasPrintOnDemandItems: hasPOD,
       productionProgress,
-      items,
+      items: pricedItems,
       shippingAddress,
       paymentMethod,
       paymentStatus: 'UNPAID',
       subtotal,
-      discount: discount || 0,
-      shippingFee: shippingFee || 0,
+      discount,
+      shippingFee,
       total,
       notes: notes || '',
     });
@@ -120,7 +137,7 @@ router.patch('/:orderNumber/payment-status', async (req, res) => {
 });
 
 // Admin: advance production step / update overall status.
-router.patch('/:orderNumber/production', async (req, res) => {
+router.patch('/:orderNumber/production', requireAdminId, async (req, res) => {
   try {
     const { status, productionProgress } = req.body;
     const update = {};

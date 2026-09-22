@@ -4,6 +4,7 @@ import { Observable, map, tap } from 'rxjs';
 import { CustomRequest, CustomRequestStatus } from '../models/custom-request.model';
 import { CartService } from './cart.service';
 import { Product } from '../models/product.model';
+import { AdminAuthService } from './admin-auth.service';
 import { environment } from '../../../environments/environment';
 
 const BASE = `${environment.apiUrl}/custom-requests`;
@@ -13,6 +14,7 @@ const BASE = `${environment.apiUrl}/custom-requests`;
 })
 export class CustomRequestService {
   private http = inject(HttpClient);
+  private adminAuth = inject(AdminAuthService);
 
   private requestsSignal = signal<CustomRequest[]>([]);
   readonly requests = this.requestsSignal.asReadonly();
@@ -51,7 +53,7 @@ export class CustomRequestService {
 
   updateStatus(requestId: string, status: CustomRequestStatus, quotationPrice?: number, estimatedDays?: number, preview3dModelType?: any): void {
     this.http.patch<{ success: boolean; request: CustomRequest }>(`${BASE}/${requestId}/status`, {
-      status, quotationPrice, estimatedDays, preview3dModelType,
+      status, quotationPrice, estimatedDays, preview3dModelType, adminId: this.adminAuth.adminId,
     }).subscribe({
       next: (res) => {
         if (res.success) this.requestsSignal.update(list => list.map(r => r.id === requestId ? res.request : r));

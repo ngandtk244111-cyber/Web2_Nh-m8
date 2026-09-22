@@ -7,6 +7,7 @@ import { CartService } from '../../core/services/cart.service';
 import { AuthService } from '../../core/services/auth.service';
 import { LoginModalService } from '../../core/services/login-modal.service';
 import { NotificationService } from '../../core/services/notification.service';
+import { FavoriteService } from '../../core/services/favorite.service';
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
 
 
@@ -189,7 +190,7 @@ export class HeaderComponent implements OnDestroy {
     title: 'Thiết Kế Không Gian Theo Cách Của Bạn',
     description: 'Khám phá bộ sưu tập phòng mẫu 360° và tự tay phối decor theo phong cách riêng của bạn.',
     ctaLabel: 'Khám phá ngay',
-    gradient: 'linear-gradient(160deg, #1a0f05 0%, #B34213 55%, #FF6D2D 100%)',
+    gradient: 'linear-gradient(160deg, #0a1220 0%, #1B3F73 55%, #2E63B8 100%)',
     link: '/shop-the-room',
   };
 
@@ -199,6 +200,7 @@ export class HeaderComponent implements OnDestroy {
     public authService: AuthService,
     public loginModalService: LoginModalService,
     public notificationService: NotificationService,
+    public favoriteService: FavoriteService,
     private elementRef: ElementRef<HTMLElement>
   ) {}
 

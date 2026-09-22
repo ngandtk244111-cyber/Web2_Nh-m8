@@ -17,7 +17,7 @@
       *ngFor="let tab of statusTabs"
       (click)="setStatusTab(tab.id)"
       [class]="statusTab === tab.id
-        ? 'bg-gradient-to-r from-amber-400 to-amber-600 text-white font-extrabold shadow-[0_0_12px_rgba(255,109,45,0.3)]'
+        ? 'bg-gradient-to-r from-amber-400 to-amber-600 text-white font-extrabold shadow-[0_0_12px_rgba(46,99,184,0.3)]'
         : 'bg-neutral-100 border border-neutral-300 text-neutral-700 hover:text-amber-700'"
       class="px-3.5 py-1.5 rounded-full text-xs whitespace-nowrap transition">
       {{ tab.label }}

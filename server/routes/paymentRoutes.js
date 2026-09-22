@@ -7,7 +7,11 @@ const router = express.Router();
 
 router.post('/momo/create', async (req, res) => {
   try {
-    const { orderNumber } = req.body;
+    const { orderNumber, paymentMethod = 'momo' } = req.body;
+    if (!['momo', 'atm'].includes(paymentMethod)) {
+      return res.status(400).json({ success: false, error: 'Phương thức thanh toán không hợp lệ' });
+    }
+
     const order = await Order.findOne({ orderNumber });
     if (!order) return res.status(404).json({ success: false, error: 'Không tìm thấy đơn hàng' });
 
@@ -16,6 +20,7 @@ router.post('/momo/create', async (req, res) => {
       orderId: order.orderNumber,
       amount: order.total,
       orderInfo: `Thanh toan don hang Luméa ${order.orderNumber}`,
+      requestType: paymentMethod === 'atm' ? 'payWithATM' : 'captureWallet',
     });
 
     res.json({ success: true, payUrl: result.payUrl, raw: result });

@@ -32,6 +32,9 @@
   transform: scale(1.03);
   transition: opacity 0.7s ease, transform 1.2s ease;
   pointer-events: none;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .hb_slide--active {
@@ -133,8 +136,8 @@
 }
 
 .hb_arrow:hover {
-  background: rgba(255, 109, 45, 0.5);
-  border-color: #FF6D2D;
+  background: rgba(46, 99, 184, 0.5);
+  border-color: #2E63B8;
 }
 
 .hb_arrow--prev {

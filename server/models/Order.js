@@ -45,7 +45,7 @@ const orderSchema = new mongoose.Schema({
   productionProgress: { type: productionProgressSchema, default: null },
   items: { type: [orderItemSchema], required: true },
   shippingAddress: { type: shippingAddressSchema, required: true },
-  paymentMethod: { type: String, enum: ['COD', 'BANK_TRANSFER', 'MOMO', 'ZALOPAY'], required: true },
+  paymentMethod: { type: String, enum: ['COD', 'BANK_TRANSFER', 'MOMO', 'ZALOPAY', 'ATM'], required: true },
   paymentStatus: { type: String, enum: ['UNPAID', 'PAID'], default: 'UNPAID' },
   subtotal: { type: Number, required: true },
   discount: { type: Number, default: 0 },

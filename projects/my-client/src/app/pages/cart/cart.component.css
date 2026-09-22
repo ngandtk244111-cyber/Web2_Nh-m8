@@ -26,7 +26,7 @@
 .cd_item-check input {
   width: 16px;
   height: 16px;
-  accent-color: #FF6D2D;
+  accent-color: #2E63B8;
   cursor: pointer;
 }
 
@@ -118,14 +118,14 @@
   gap: 3px;
   font-size: 10px;
   font-weight: 600;
-  color: #E05418;
+  color: #2055AF;
   width: fit-content;
 }
 
 .cd_item-price {
   font-size: 13px;
   font-weight: 700;
-  color: #E0641F;
+  color: #2E63B8;
   min-width: 90px;
   text-align: right;
   white-space: nowrap;
@@ -156,7 +156,7 @@
 }
 
 .cd_qty button:hover {
-  color: #FF6D2D;
+  color: #2E63B8;
 }
 
 .cd_qty span {
@@ -177,7 +177,7 @@
 }
 
 .cd_remove:hover {
-  color: #E0483F;
+  color: #2055AF;
 }
 
 /* ---------- Promo button ---------- */
@@ -197,12 +197,12 @@
 }
 
 .cd_promo-btn:hover {
-  border-color: #FF6D2D;
+  border-color: #2E63B8;
 }
 
 .cd_promo-btn--active {
-  border-color: rgba(255, 109, 45, 0.4);
-  background: rgba(255, 109, 45, 0.06);
+  border-color: rgba(46, 99, 184, 0.4);
+  background: rgba(46, 99, 184, 0.06);
 }
 
 .cd_promo-btn__text {
@@ -232,7 +232,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #E0641F;
+  color: #2E63B8;
 }
 
 .cd_coin-row__meta {
@@ -297,7 +297,7 @@
 }
 
 .cd_switch input:checked + .cd_switch__track {
-  background: #FF6D2D;
+  background: #2E63B8;
 }
 
 .cd_switch input:checked + .cd_switch__track::before {

@@ -13,6 +13,8 @@ export interface FloatingSideBanner {
   ctaLabel: string;
   gradient: string;
   link: string;
+  image?: string;
+  imageMode?: 'accent' | 'cover';
 }
 
 const FLOATING_SIDE_BANNERS: FloatingSideBanner[] = [
@@ -22,8 +24,10 @@ const FLOATING_SIDE_BANNERS: FloatingSideBanner[] = [
     eyebrow: 'AI Thiết Kế Riêng',
     title: 'Biến Ý Tưởng Thành Concept 3D',
     ctaLabel: 'Thử ngay',
-    gradient: 'linear-gradient(160deg, #1a0f05 0%, #B34213 55%, #FF6D2D 100%)',
+    gradient: 'linear-gradient(160deg, #0a1220 0%, #1B3F73 55%, #2E63B8 100%)',
     link: '/custom-request/new',
+    image: 'assets/floating-banners/ai-room-3d.png',
+    imageMode: 'accent',
   },
   {
     side: 'right',
@@ -31,8 +35,10 @@ const FLOATING_SIDE_BANNERS: FloatingSideBanner[] = [
     eyebrow: 'Ưu Đãi Vận Chuyển',
     title: 'Miễn Phí Ship Từ 300.000đ',
     ctaLabel: 'Mua sắm ngay',
-    gradient: 'linear-gradient(160deg, #051a12 0%, #1f7a4d 55%, #34b374 100%)',
+    gradient: 'linear-gradient(180deg, rgba(5,26,18,0.45) 0%, rgba(5,26,18,0.8) 100%)',
     link: '/catalog',
+    image: 'assets/floating-banners/rocket-freeship.png',
+    imageMode: 'cover',
   },
 ];
 
@@ -55,5 +61,12 @@ export class FloatingSideBannersComponent {
     event.preventDefault();
     event.stopPropagation();
     this.dismissedSides.update(set => new Set(set).add(side));
+  }
+
+  background(banner: FloatingSideBanner): string {
+    if (banner.imageMode === 'cover' && banner.image) {
+      return `${banner.gradient}, url(${banner.image})`;
+    }
+    return banner.gradient;
   }
 }

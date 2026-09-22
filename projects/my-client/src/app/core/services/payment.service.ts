@@ -15,8 +15,8 @@ export class PaymentService {
   private http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/payments`;
 
-  createMomoPayment(orderNumber: string): Observable<CreatePaymentResponse> {
-    return this.http.post<CreatePaymentResponse>(`${this.baseUrl}/momo/create`, { orderNumber });
+  createMomoPayment(orderNumber: string, paymentMethod: 'momo' | 'atm' = 'momo'): Observable<CreatePaymentResponse> {
+    return this.http.post<CreatePaymentResponse>(`${this.baseUrl}/momo/create`, { orderNumber, paymentMethod });
   }
 
   createZaloPayPayment(orderNumber: string): Observable<CreatePaymentResponse> {

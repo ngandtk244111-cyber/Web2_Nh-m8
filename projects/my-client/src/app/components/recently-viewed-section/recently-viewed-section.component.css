@@ -1,0 +1,67 @@
+.rv_wrap {
+  position: relative;
+  padding: 0 40px;
+}
+
+.rv_track {
+  display: flex;
+  gap: 24px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  padding-bottom: 4px;
+}
+
+.rv_track::-webkit-scrollbar {
+  display: none;
+}
+
+/* Bề rộng cố định cho mỗi thẻ -> cuộn ngang mượt, không còn ô lẻ dòng dưới khi thiếu sản phẩm. */
+.rv_item {
+  flex: 0 0 260px;
+  width: 260px;
+}
+
+.rv_nav {
+  position: absolute;
+  top: 40%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+  color: #333333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 3;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.rv_nav:hover {
+  background: #2E63B8;
+  border-color: #2E63B8;
+  color: #ffffff;
+}
+
+.rv_nav--prev {
+  left: 0;
+}
+
+.rv_nav--next {
+  right: 0;
+}
+
+@media (max-width: 640px) {
+  .rv_wrap {
+    padding: 0 32px;
+  }
+
+  .rv_item {
+    flex-basis: 220px;
+    width: 220px;
+  }
+}

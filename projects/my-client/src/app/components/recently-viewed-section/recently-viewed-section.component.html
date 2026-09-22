@@ -1,13 +1,30 @@
 <section *ngIf="displayProducts.length > 0" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
   <div class="flex items-center gap-2 mb-6">
-    <span class="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_6px_#d4af37]"></span>
+    <span class="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_6px_#A9C6EA]"></span>
     <h2 class="font-serif text-xl sm:text-2xl font-bold text-neutral-900">Đã Xem Gần Đây</h2>
   </div>
 
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-    <app-product-card
-      *ngFor="let prod of displayProducts"
-      [product]="prod">
-    </app-product-card>
+  <div class="rv_wrap">
+    <button
+      type="button"
+      class="rv_nav rv_nav--prev"
+      (click)="scrollPrev()"
+      aria-label="Xem sản phẩm trước">
+      <app-icon name="chevron-left" [size]="16"></app-icon>
+    </button>
+
+    <div class="rv_track" #track>
+      <div class="rv_item" *ngFor="let prod of displayProducts">
+        <app-product-card [product]="prod"></app-product-card>
+      </div>
+    </div>
+
+    <button
+      type="button"
+      class="rv_nav rv_nav--next"
+      (click)="scrollNext()"
+      aria-label="Xem sản phẩm tiếp theo">
+      <app-icon name="chevron-right" [size]="16"></app-icon>
+    </button>
   </div>
 </section>

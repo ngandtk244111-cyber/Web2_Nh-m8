@@ -1,5 +1,6 @@
 const express = require('express');
 const NewsArticle = require('../models/NewsArticle');
+const { requireAdminId } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -26,7 +27,7 @@ router.get('/slug/:slug', async (req, res) => {
   }
 });
 
-router.post('/', async (req, res) => {
+router.post('/', requireAdminId, async (req, res) => {
   try {
     const article = await NewsArticle.create({
       ...req.body,
@@ -41,7 +42,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', requireAdminId, async (req, res) => {
   try {
     const article = await NewsArticle.findOneAndUpdate({ id: req.params.id }, req.body, { new: true });
     if (!article) return res.status(404).json({ success: false, error: 'Không tìm thấy bài viết' });
@@ -51,7 +52,7 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', requireAdminId, async (req, res) => {
   try {
     await NewsArticle.deleteOne({ id: req.params.id });
     res.json({ success: true });

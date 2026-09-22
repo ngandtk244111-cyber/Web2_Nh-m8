@@ -1,5 +1,5 @@
     <div
-      class="group relative bg-[#FFFFFF] rounded-3xl overflow-hidden border border-neutral-200 hover:border-amber-500/50 shadow-soft hover:shadow-[0_8px_30px_rgba(212,175,55,0.15)] hover:-translate-y-1 transition-all duration-300 flex h-full"
+      class="group relative bg-[#FFFFFF] rounded-3xl overflow-hidden border border-neutral-200 hover:border-amber-500/50 shadow-soft hover:shadow-[0_8px_30px_rgba(169,198,234,0.15)] hover:-translate-y-1 transition-all duration-300 flex h-full"
       [class.flex-col]="layout === 'grid'"
       [class.flex-row]="layout === 'list'">
 
@@ -38,13 +38,30 @@
           </span>
         </div>
 
+        <!-- Favorite Button -->
+        <button
+          type="button"
+          (click)="toggleFavorite($event)"
+          class="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm border border-neutral-200 shadow-sm flex items-center justify-center transition hover:scale-110"
+          [class.text-neutral-500]="!favoriteService.isFavorite(product.id)"
+          [class.text-rose-500]="favoriteService.isFavorite(product.id)"
+          [class.border-rose-300]="favoriteService.isFavorite(product.id)"
+          [attr.aria-label]="favoriteService.isFavorite(product.id) ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'"
+          [attr.aria-pressed]="favoriteService.isFavorite(product.id)">
+          <app-icon
+            name="heart"
+            [size]="16"
+            [filled]="favoriteService.isFavorite(product.id)">
+          </app-icon>
+        </button>
+
         <!-- Quick 3D Customizer Link overlay on hover -->
         <div class="absolute inset-0 bg-black/60 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 p-4">
           <a
             *ngIf="product.customizable"
             [routerLink]="['/customizer-3d']"
             [queryParams]="{ productId: product.id }"
-            class="px-4 py-2 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-neutral-950 text-xs font-extrabold shadow-[0_0_15px_rgba(212,175,55,0.4)] hover:scale-105 transition flex items-center gap-1.5">
+            class="px-4 py-2 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-neutral-950 text-xs font-extrabold shadow-[0_0_15px_rgba(169,198,234,0.4)] hover:scale-105 transition flex items-center gap-1.5">
             <app-icon name="sliders" [size]="14"></app-icon>
             <span>Tùy biến 3D</span>
           </a>
@@ -66,7 +83,7 @@
           <!-- Category & Rating -->
           <div class="flex items-center justify-between text-[11px] text-neutral-600 mb-1.5">
             <span class="font-medium text-neutral-600 uppercase tracking-wider">{{ product.categoryName }}</span>
-            <div class="flex items-center gap-1 text-amber-400 font-semibold">
+            <div class="pc-rating flex items-center gap-1 font-semibold">
               <app-icon name="star" [size]="12"></app-icon>
               <span>{{ product.rating }}</span>
               <span class="text-neutral-500 font-normal">({{ product.reviewCount }})</span>

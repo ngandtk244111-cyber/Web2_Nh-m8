@@ -2,123 +2,559 @@
   display: block;
 }
 
+.vt_slider {
+  position: relative;
+  /* Chừa chỗ cho nút mũi tên 2 bên (xem .vt_nav) để chúng không bao giờ đè lên nội dung thẻ. */
+  padding: 0 48px;
+}
+
+/* Floating side banner (position: fixed, luôn nổi giữa màn hình 2 bên, xem
+   floating-side-banners.component.css) chỉ xuất hiện ở >1200px — chừa thêm khoảng trống để
+   carousel (kể cả mũi tên) không bao giờ chạm/đè lên banner. */
+@media (min-width: 1201px) {
+  .vt_slider {
+    padding: 0 170px;
+  }
+}
+
+.vt_viewport {
+  overflow: hidden;
+}
+
 .vt_track {
   display: flex;
   gap: 16px;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  padding: 4px 16px 12px;
-  scrollbar-width: none;
+  padding: 4px 0;
+  /* Chuyển nhóm thẻ bằng transform (đặt trong .ts, applyCarouselPosition) — chỉ đổi khi bấm
+     mũi tên, không auto-scroll, không kéo tự do. */
+  transition: transform 0.4s ease;
+  will-change: transform;
 }
 
-.vt_track::-webkit-scrollbar {
-  display: none;
+.vt_nav {
+  display: flex;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 3;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: #ffffff;
+  color: #171717;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.14);
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease, opacity 0.15s ease;
+}
+
+.vt_nav:hover:not(:disabled) {
+  background: #f2f2f2;
+  transform: translateY(-50%) scale(1.06);
+}
+
+.vt_nav:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.vt_nav--prev {
+  left: 0;
+}
+
+.vt_nav--next {
+  right: 0;
 }
 
 .vt_card {
   position: relative;
-  flex: 0 0 260px;
-  scroll-snap-align: start;
+  /* Desktop (≥1024px): hiện đúng 4 thẻ full — flex-basis tính theo (100% - số khoảng cách * gap) / số thẻ. */
+  flex: 0 0 calc((100% - 3 * 16px) / 4);
   border-radius: 20px;
   overflow: hidden;
-  background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  display: flex;
-  flex-direction: column;
-  transition: transform 0.3s ease, border-color 0.3s ease;
-  opacity: 0.75;
-  transform: scale(0.97);
-}
-
-.vt_card--active {
-  opacity: 1;
-  transform: scale(1);
-  border-color: rgba(255, 109, 45, 0.4);
 }
 
 .vt_card__media {
   position: relative;
   width: 100%;
-  height: 160px;
-  background: #F5F3EE;
+  height: 340px;
+  background: #1a1a1a;
   overflow: hidden;
+  cursor: pointer;
 }
 
-.vt_card__video,
-.vt_card__poster {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.vt_card__fade {
+.vt_card__ctrl {
   position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, #ffffff 0%, rgba(255, 255, 255, 0.15) 55%, transparent 100%);
-}
-
-.vt_card__icon {
-  position: absolute;
-  top: 128px;
-  left: 16px;
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background: #FF6D2D;
+  top: 10px;
+  z-index: 3;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(0, 0, 0, 0.45);
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 18px rgba(255, 109, 45, 0.4);
-  z-index: 2;
+  cursor: pointer;
+  transition: background 0.15s ease;
 }
 
-.vt_card__body {
-  padding: 24px 16px 18px;
+.vt_card__ctrl:hover {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.vt_card__ctrl--mute {
+  right: 10px;
+}
+
+.vt_card__ctrl--expand {
+  right: 44px;
+}
+
+.vt_card__badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #E0641F;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+}
+
+.vt_card__yt {
+  position: absolute;
+  inset: 0;
+}
+
+/* YouTube IFrame API thay thế hẳn div#ytTarget bằng 1 <iframe> mới (không giữ lại class gốc)
+   nên phải style theo thẻ, không theo class. */
+.vt_card__media iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  pointer-events: none; /* click để mute/fullscreen xử lý ở div cha .vt_card__media, không cho iframe nuốt mất click */
+  /* Phóng to nhẹ để che viền chrome mặc định của player YouTube (controls=0 vẫn còn khung ngoài cùng). */
+  transform: scale(1.35);
+}
+
+.vt_card__poster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: opacity 0.2s ease;
+}
+
+.vt_card__poster--hidden {
+  opacity: 0;
+}
+
+/* Caption đè trực tiếp lên ảnh (kiểu reels) -> nền tối dần từ dưới lên để chữ trắng luôn rõ,
+   thay cho khối thân thẻ nền trắng tách riêng như bản cũ. */
+.vt_card__fade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.45) 40%, rgba(0, 0, 0, 0) 72%);
+  z-index: 1;
+}
+
+.vt_card__caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  flex: 1;
+  gap: 4px;
 }
 
 .vt_card__title {
-  font-size: 14.5px;
+  font-size: 15px;
   font-weight: 800;
-  color: #111111;
+  color: #ffffff;
   margin: 0;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.35);
 }
 
 .vt_card__desc {
   font-size: 12px;
-  color: #888888;
+  color: rgba(255, 255, 255, 0.82);
   line-height: 1.5;
   margin: 0;
-  flex: 1;
 }
 
 .vt_card__cta {
-  margin-top: 8px;
+  margin-top: 6px;
   display: inline-flex;
   align-items: center;
   gap: 4px;
   font-size: 12px;
   font-weight: 700;
-  color: #D97706;
-  text-decoration: none;
+  color: #ffffff;
+  text-decoration: underline;
+  text-underline-offset: 2px;
   width: fit-content;
 }
 
+/* Thanh tiến trình cuộn — cập nhật vị trí/độ rộng bằng JS (xem onTrackScroll trong .ts),
+   thay cho scrollbar mặc định của trình duyệt đã bị ẩn ở .vt_track. */
+.vt_progress {
+  position: relative;
+  margin-top: 14px;
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.vt_progress__thumb {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  border-radius: 999px;
+  background: #2E63B8;
+  transition: left 0.1s linear;
+}
+
+/* Tablet: hiện 2 thẻ full. */
+@media (max-width: 1023px) {
+  .vt_card {
+    flex-basis: calc((100% - 16px) / 2);
+  }
+}
+
+/* Mobile: hiện đúng 1 thẻ full, không hở nửa thẻ kế bên. */
 @media (max-width: 640px) {
   .vt_card {
-    flex-basis: 220px;
+    flex-basis: 100%;
   }
 
   .vt_card__media {
-    height: 130px;
+    height: 280px;
   }
 
-  .vt_card__icon {
-    top: 98px;
+  .vt_slider {
+    padding: 0 42px;
+  }
+
+  .vt_nav {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+/* ============ VIEWER DỌC KIỂU REELS/TIKTOK ============ */
+
+.vw {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: #F3F4F6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  overflow-y: auto;
+  animation: vw-fade-in 0.18s ease both;
+}
+
+/* Banner quảng cáo 2 bên (floating-side-banners) chỉ hiện ở >1200px, chiếm left/right:18px +
+   width:112px = 130px mỗi bên (xem floating-side-banners.component.css). Chừa thêm khoảng đệm
+   ~40px để có "khoảng cách rõ ràng" giữa viewer và banner như yêu cầu, không đè/chạm banner. */
+@media (min-width: 1201px) {
+  .vw {
+    padding-left: 170px;
+    padding-right: 170px;
+  }
+}
+
+@keyframes vw-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.vw__close {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 3;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  border: none;
+  background: #ffffff;
+  color: #171717;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  transition: background 0.15s ease;
+}
+
+.vw__close:hover {
+  background: #f0f0f0;
+}
+
+.vw__stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  max-width: 720px;
+  width: 100%;
+}
+
+.vw__video {
+  position: relative;
+  flex: 0 0 auto;
+  width: min(90vw, 380px);
+  aspect-ratio: 9 / 16;
+  max-height: min(85vh, calc(100vh - 48px));
+  border-radius: 14px;
+  overflow: hidden;
+  background: #000000;
+  touch-action: none;
+  cursor: grab;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+}
+
+/* Banner 2 bên chỉ hiện ở >1200px (xem media query trên .vw) — thu nhỏ video hơn đúng ở
+   ngưỡng này để luôn nằm gọn giữa 2 banner, không đè/chạm, vẫn giữ tỷ lệ dọc 9:16. */
+@media (min-width: 1201px) {
+  .vw__video {
+    width: min(380px, 25vw);
+    max-height: min(675px, 82vh);
+  }
+}
+
+.vw__video iframe,
+.vw__video .vw__poster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border: 0;
+}
+
+/* Thanh đầu video (avatar + tên + tiêu đề + nút chia sẻ) — đè lên trên video, nền gradient tối
+   dần để chữ trắng luôn đọc được, giống thanh tiêu đề của ảnh mẫu. */
+.vw__video-head {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.65) 0%, rgba(0, 0, 0, 0) 100%);
+}
+
+.vw__video-avatar {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background: #2E63B8;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vw__video-headtext {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.vw__video-headtext strong {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #ffffff;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vw__video-headtext span {
+  font-size: 10.5px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Chuyển cảnh dọc khi đổi video (kéo/lăn chuột/bấm mũi tên) — mô phỏng cảm giác trượt của Reels/TikTok. */
+@keyframes vw-slide-next {
+  from { transform: translateY(32px); opacity: 0.35; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes vw-slide-prev {
+  from { transform: translateY(-32px); opacity: 0.35; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.vw__video--slide-next {
+  animation: vw-slide-next 0.22s ease-out both;
+}
+
+.vw__video--slide-prev {
+  animation: vw-slide-prev 0.22s ease-out both;
+}
+
+.vw__share {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+}
+
+.vw__cta {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(46, 99, 184, 0.9);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.vw__info {
+  display: none;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  width: 260px;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+}
+
+.vw__info-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: #171717;
+}
+
+.vw__info-desc {
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: #333333;
+  margin: 0;
+}
+
+.vw__info-desc--collapsed {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.vw__info-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  background: transparent;
+  color: #2055AF;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 0;
+  cursor: pointer;
+}
+
+.vw__side-nav {
+  /* Trước đây position:fixed theo mép viewport — dễ đè lên banner phải khi banner xuất hiện.
+     Giờ là 1 flex-item bình thường trong .vw__stage nên luôn nằm trong vùng an toàn giữa 2 banner. */
+  display: none;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-self: center;
+  gap: 10px;
+}
+
+.vw__nav {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(255, 255, 255, 0.92);
+  color: #171717;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.vw__nav:hover:not(:disabled) {
+  transform: scale(1.08);
+}
+
+.vw__nav:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+@media (min-width: 641px) {
+  .vw__info {
+    display: flex;
+  }
+
+  .vw__side-nav {
+    display: flex;
+  }
+}
+
+@media (max-width: 640px) {
+  .vw {
+    padding: 0;
+  }
+
+  .vw__video {
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    aspect-ratio: auto;
   }
 }

@@ -50,8 +50,8 @@
 
             <!-- Favorite + Share -->
             <div class="pd_stage__actions">
-              <button type="button" class="pd_icon-btn" (click)="toggleFavorite()" [class.pd_icon-btn--active]="favoriteService.isFavorite(product.id)" aria-label="Yêu thích">
-                <app-icon name="heart" [size]="17"></app-icon>
+              <button type="button" class="pd_icon-btn" (click)="toggleFavorite()" [class.pd_icon-btn--active]="favoriteService.isFavorite(product.id)" [attr.aria-pressed]="favoriteService.isFavorite(product.id)" aria-label="Yêu thích">
+                <app-icon name="heart" [size]="17" [filled]="favoriteService.isFavorite(product.id)"></app-icon>
               </button>
               <button type="button" class="pd_icon-btn" (click)="share()" aria-label="Chia sẻ">
                 <app-icon name="send" [size]="16"></app-icon>

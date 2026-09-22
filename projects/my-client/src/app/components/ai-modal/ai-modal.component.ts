@@ -1,13 +1,15 @@
 import { Component, effect, HostListener, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { AiAssistantService } from '../../core/services/ai-assistant.service';
 import { AppIconComponent } from '../icon/icon.component';
+import { VndPipe } from '../../shared/pipes/vnd.pipe';
 
 @Component({
   selector: 'app-ai-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, AppIconComponent],
+  imports: [CommonModule, FormsModule, RouterLink, AppIconComponent, VndPipe],
   templateUrl: './ai-modal.component.html',
   styleUrl: './ai-modal.component.css'
 })

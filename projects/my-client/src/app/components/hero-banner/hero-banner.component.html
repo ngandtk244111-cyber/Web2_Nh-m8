@@ -4,7 +4,7 @@
       *ngFor="let item of tickerService.items; let i = index"
       class="hb_slide"
       [class.hb_slide--active]="i === tickerService.activeIndex()"
-      [style.background]="item.gradient">
+      [style.background-image]="item.gradient + ', url(' + item.image + ')'">
 
       <div class="hb_slide__inner">
         <div class="hb_slide__icon">

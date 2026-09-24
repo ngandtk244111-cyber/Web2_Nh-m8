@@ -7,6 +7,7 @@ import { CartFlyService } from '../../core/services/cart-fly.service';
 import { ToastService } from '../../core/services/toast.service';
 import { QuickViewService } from '../../core/services/quick-view.service';
 import { FavoriteService } from '../../core/services/favorite.service';
+import { MascotService } from '../../core/services/mascot.service';
 import { AppIconComponent } from '../icon/icon.component';
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
 
@@ -28,7 +29,8 @@ export class ProductCardComponent {
     private cartFlyService: CartFlyService,
     private toastService: ToastService,
     public quickViewService: QuickViewService,
-    public favoriteService: FavoriteService
+    public favoriteService: FavoriteService,
+    private mascotService: MascotService
   ) {}
 
   quickAddToCart(): void {
@@ -37,6 +39,7 @@ export class ProductCardComponent {
       this.cartFlyService.flyToCart(this.product.images[0], this.cardImg.nativeElement);
     }
     this.toastService.success(`Đã thêm "${this.product.name}" vào giỏ hàng`);
+    this.mascotService.react('happy');
   }
 
   toggleFavorite(event: Event): void {

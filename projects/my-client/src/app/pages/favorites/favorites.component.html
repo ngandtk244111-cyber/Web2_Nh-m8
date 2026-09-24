@@ -1,7 +1,7 @@
 <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
   <div class="mb-6">
-    <h1 class="font-serif text-xl sm:text-2xl font-bold text-neutral-900 flex items-center gap-2">
+    <h1 class="font-serif text-xl sm:text-2xl font-bold text-amber-800 flex items-center gap-2">
       <app-icon name="heart" [size]="20" [filled]="true" class="text-rose-500"></app-icon>
       <span>Sản Phẩm Yêu Thích</span>
     </h1>
@@ -16,7 +16,7 @@
     <p class="text-sm text-neutral-600">Bạn chưa lưu sản phẩm yêu thích nào.</p>
     <a
       routerLink="/catalog"
-      class="inline-block px-5 py-2 rounded-full border border-amber-400 text-amber-500 text-xs font-bold hover:bg-amber-400 hover:text-neutral-950 transition">
+      class="inline-block px-5 py-2 rounded-full border border-amber-400 text-amber-500 text-xs font-bold hover:bg-amber-400 hover:text-white transition">
       Khám phá sản phẩm
     </a>
   </div>
@@ -67,7 +67,7 @@
         <button
           type="button"
           (click)="addToCart(p)"
-          class="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl bg-neutral-100 hover:bg-amber-400 text-neutral-700 hover:text-neutral-950 border border-neutral-300 hover:border-amber-400 text-xs font-bold transition flex-shrink-0"
+          class="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl bg-neutral-100 hover:bg-amber-400 text-neutral-700 hover:text-white border border-neutral-300 hover:border-amber-400 text-xs font-bold transition flex-shrink-0"
           title="Thêm vào giỏ hàng">
           <app-icon name="cart" [size]="14"></app-icon>
           <span>Thêm vào giỏ</span>
@@ -76,7 +76,7 @@
         <button
           type="button"
           (click)="addToCart(p)"
-          class="sm:hidden w-9 h-9 flex items-center justify-center rounded-xl bg-neutral-100 hover:bg-amber-400 text-neutral-700 hover:text-neutral-950 border border-neutral-300 hover:border-amber-400 transition flex-shrink-0"
+          class="sm:hidden w-9 h-9 flex items-center justify-center rounded-xl bg-neutral-100 hover:bg-amber-400 text-neutral-700 hover:text-white border border-neutral-300 hover:border-amber-400 transition flex-shrink-0"
           aria-label="Thêm vào giỏ hàng">
           <app-icon name="cart" [size]="14"></app-icon>
         </button>
@@ -106,7 +106,7 @@
           type="button"
           [disabled]="selectedIds().size === 0"
           (click)="buyNowSelected()"
-          class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 disabled:opacity-40 disabled:pointer-events-none text-neutral-950 text-xs font-extrabold shadow-md transition">
+          class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 disabled:opacity-40 disabled:pointer-events-none text-white text-xs font-extrabold shadow-md transition">
           Mua ngay
         </button>
       </div>
@@ -118,7 +118,7 @@
 <!-- Confirm Remove Selected -->
 <div *ngIf="showRemoveSelectedConfirm" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4" (click)="cancelRemoveSelected()">
   <div class="bg-white rounded-3xl p-6 max-w-sm w-full space-y-4 text-center" (click)="$event.stopPropagation()">
-    <h3 class="font-serif text-lg font-bold text-neutral-900">Xóa {{ selectedIds().size }} sản phẩm đã chọn khỏi yêu thích?</h3>
+    <h3 class="font-serif text-lg font-bold text-amber-800">Xóa {{ selectedIds().size }} sản phẩm đã chọn khỏi yêu thích?</h3>
     <p class="text-xs text-neutral-500">Bạn sẽ không thể hoàn tác sau khi xóa.</p>
     <div class="flex items-center justify-center gap-3 pt-2">
       <button (click)="cancelRemoveSelected()" class="px-4 py-2 rounded-xl text-xs font-bold text-neutral-600 hover:text-neutral-900 transition">Hủy</button>

@@ -6,14 +6,14 @@
 
   <ng-container *ngIf="page; else notFound">
     <div class="border-b border-neutral-200 pb-6 mb-8">
-      <h1 class="font-serif text-3xl font-extrabold text-neutral-900">{{ page.title }}</h1>
+      <h1 class="font-serif text-3xl font-extrabold text-amber-800">{{ page.title }}</h1>
       <p class="text-xs text-neutral-500 mt-2">Cập nhật lần cuối: {{ page.updatedAt }}</p>
       <p class="text-sm text-neutral-600 mt-4 leading-relaxed">{{ page.intro }}</p>
     </div>
 
     <div class="space-y-8">
       <section *ngFor="let section of page.sections">
-        <h2 class="font-serif text-lg font-bold text-neutral-900 mb-2">{{ section.heading }}</h2>
+        <h2 class="font-serif text-lg font-bold text-amber-800 mb-2">{{ section.heading }}</h2>
         <ul class="space-y-2">
           <li *ngFor="let line of section.body" class="text-sm text-neutral-700 leading-relaxed flex gap-2">
             <span class="text-amber-500 mt-1">•</span>
@@ -30,7 +30,7 @@
 
   <ng-template #notFound>
     <div class="text-center py-20">
-      <h1 class="font-serif text-2xl font-bold text-neutral-900">Không tìm thấy trang</h1>
+      <h1 class="font-serif text-2xl font-bold text-amber-800">Không tìm thấy trang</h1>
       <p class="text-sm text-neutral-600 mt-2">Nội dung chính sách bạn tìm không tồn tại.</p>
     </div>
   </ng-template>

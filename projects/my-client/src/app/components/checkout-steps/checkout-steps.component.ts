@@ -18,11 +18,7 @@ const STEPS: StepDef[] = [
   { step: 4, label: 'Hoàn tất', icon: 'shield', path: '/checkout' },
 ];
 
-/**
- * Thanh Stepper Giỏ hàng → Thông tin đặt hàng → Thanh toán → Hoàn tất.
- * Chỉ ĐỌC trạng thái từ CheckoutFlowService (nguồn sự thật duy nhất) và gọi
- * flow.goToStep() khi bấm — không tự giữ state riêng để tránh lệch pha giữa 2 trang /cart, /checkout.
- */
+
 @Component({
   selector: 'app-checkout-steps',
   standalone: true,

@@ -2,7 +2,7 @@
       
       <!-- Page Title -->
       <div class="text-center space-y-2">
-        <h1 class="font-serif text-3xl font-extrabold text-neutral-900">
+        <h1 class="font-serif text-3xl font-extrabold text-amber-800">
           Tra Cứu Tiến Độ Đơn Hàng In 3D
         </h1>
         <p class="text-xs sm:text-sm text-neutral-600 max-w-md mx-auto">
@@ -20,7 +20,7 @@
           class="flex-1 text-xs sm:text-sm p-2 outline-none uppercase placeholder:normal-case font-mono bg-transparent text-neutral-900 placeholder:text-neutral-500">
         <button 
           (click)="searchOrder()"
-          class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-neutral-950 font-extrabold text-xs shadow-md transition">
+          class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-white font-extrabold text-xs shadow-md transition">
           Tra cứu
         </button>
       </div>
@@ -38,7 +38,7 @@
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-neutral-200 pb-4">
             <div>
               <span class="text-xs font-mono font-bold text-neutral-600">MÃ ĐƠN HÀNG</span>
-              <h2 class="font-serif text-xl sm:text-2xl font-bold text-neutral-900">{{ currentOrder.orderNumber }}</h2>
+              <h2 class="font-serif text-xl sm:text-2xl font-bold text-amber-800">{{ currentOrder.orderNumber }}</h2>
               <span class="text-[11px] text-neutral-500">Khởi tạo lúc: {{ currentOrder.createdAtLabel || currentOrder.createdAt }}</span>
             </div>
 
@@ -77,7 +77,7 @@
             <div class="grid grid-cols-2 sm:grid-cols-6 gap-2 pt-2 text-[10px]">
               <div 
                 *ngFor="let step of pipelineSteps"
-                [class.text-amber-400]="isStepReached(step.key)"
+                [class.text-white]="isStepReached(step.key)"
                 [class.font-bold]="isStepReached(step.key)"
                 [class.text-neutral-500]="!isStepReached(step.key)"
                 class="p-2 rounded-xl text-center border"
@@ -106,7 +106,7 @@
 
         <!-- Items Ordered Card -->
         <div class="bg-[#FFFFFF] rounded-3xl p-6 sm:p-8 border border-neutral-200 shadow-xl space-y-4">
-          <h3 class="font-serif text-lg font-bold text-neutral-900 border-b border-neutral-200 pb-3">
+          <h3 class="font-serif text-lg font-bold text-amber-800 border-b border-neutral-200 pb-3">
             Sản Phẩm Trong Đơn Hàng
           </h3>
 

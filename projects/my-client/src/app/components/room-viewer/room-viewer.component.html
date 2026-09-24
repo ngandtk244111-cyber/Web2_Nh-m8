@@ -21,7 +21,7 @@
           <button 
             type="button" 
             (click)="selectHotspot(item)"
-            class="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-400 via-amber-500 to-amber-600 text-neutral-950 shadow-[0_0_12px_rgba(169,198,234,0.6)] flex items-center justify-center border-2 border-neutral-100 hover:scale-110 active:scale-95 transition-transform font-bold"
+            class="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-400 via-amber-500 to-amber-600 text-white shadow-[0_0_12px_rgba(205, 129, 142,0.6)] flex items-center justify-center border-2 border-neutral-100 hover:scale-110 active:scale-95 transition-transform font-bold"
             [class.hotspot-pulse]="selectedHotspot?.hotspot?.id === item.hotspot.id"
             [class.ring-4]="selectedHotspot?.hotspot?.id === item.hotspot.id"
             [class.ring-amber-400]="selectedHotspot?.hotspot?.id === item.hotspot.id">
@@ -54,7 +54,7 @@
             *ngFor="let opt of qualityOptions"
             (click)="setQuality(opt.mode)"
             [class]="qualityMode === opt.mode 
-              ? 'bg-gradient-to-r from-amber-400 to-amber-600 text-neutral-950 font-bold shadow-xs' 
+              ? 'bg-gradient-to-r from-amber-400 to-amber-600 text-white font-bold shadow-xs' 
               : 'text-neutral-600 hover:text-amber-700 hover:bg-neutral-200'"
             class="px-2 py-0.5 rounded-lg transition"
             [title]="opt.description">
@@ -114,7 +114,7 @@
           </button>
           <button 
             (click)="addToCart(selectedHotspot.product)"
-            class="py-2 px-3 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-neutral-950 font-extrabold text-xs shadow-sm transition text-center flex items-center justify-center gap-1">
+            class="py-2 px-3 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-white font-extrabold text-xs shadow-sm transition text-center flex items-center justify-center gap-1">
             <app-icon name="cart" [size]="13"></app-icon>
             <span>Thêm giỏ</span>
           </button>
@@ -137,17 +137,17 @@
       <div 
         *ngIf="hasError" 
         class="absolute inset-0 bg-[#FFFFFF]/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center z-20 space-y-3">
-        <div class="w-12 h-12 rounded-2xl bg-amber-950/50 text-amber-400 border border-amber-500/30 flex items-center justify-center">
+        <div class="w-12 h-12 rounded-2xl bg-amber-950/50 text-white border border-amber-500/30 flex items-center justify-center">
           <app-icon name="room" [size]="24"></app-icon>
         </div>
-        <h4 class="font-serif text-sm font-bold text-neutral-900">Không thể tải không gian phòng 3D</h4>
+        <h4 class="font-serif text-sm font-bold text-amber-800">Không thể tải không gian phòng 3D</h4>
         <p class="text-xs text-neutral-600 max-w-xs leading-relaxed">
           WebGL bị ngắt kết nối trên thiết bị. Bạn vẫn có thể mua các sản phẩm trong phòng bằng danh sách bên cạnh.
         </p>
         <button 
           type="button"
           (click)="retryInit()"
-          class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-amber-600 text-neutral-950 text-xs font-bold shadow-md transition active:scale-95 flex items-center gap-1.5">
+          class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-amber-600 text-white text-xs font-bold shadow-md transition active:scale-95 flex items-center gap-1.5">
           <app-icon name="rotate" [size]="14"></app-icon>
           <span>Thử lại tải phòng 3D</span>
         </button>

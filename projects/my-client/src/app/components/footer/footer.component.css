@@ -1,19 +1,19 @@
 /*
- * Footer ecommerce cho Mini 3D Studio: nền trắng đồng bộ toàn site, không gradient,
- * accent xanh dương thương hiệu cho CTA, accent xanh dương đậm cho hover link.
+ * Footer ecommerce cho Mini 3D Studio: nền be kraft (theo tinh thần MUJI — bề mặt luôn be/kem,
+ * đỏ chỉ đóng vai trò accent nhỏ cho CTA/hover link), chữ nâu đậm.
  */
 :host {
   display: block;
-  font-family: var(--font-family-content, 'Montserrat', sans-serif);
+  font-family: var(--font-family-content, 'Inter', sans-serif);
 
-  --ft-bg: #ffffff;
-  --ft-text: #171717;
-  --ft-text-secondary: #4a4a4a;
-  --ft-text-muted: #767676;
-  --ft-accent-primary: #2E63B8;
-  --ft-accent-blue: #2055AF;
-  --ft-divider: rgba(0, 0, 0, 0.08);
-  --ft-surface: #F5F4F0;
+  --ft-bg: #E3D5BA;
+  --ft-text: #1F1712;
+  --ft-text-secondary: #3C332D;
+  --ft-text-muted: rgba(31, 23, 18, 0.6);
+  --ft-accent-primary: #A3152D;
+  --ft-accent-blue: #891226;
+  --ft-divider: rgba(0, 0, 0, 0.12);
+  --ft-surface: rgba(0, 0, 0, 0.045);
 }
 
 .ft {
@@ -56,7 +56,7 @@
 }
 
 .ft_brand__name {
-  font-family: var(--font-family-heading, 'Cormorant Garamond', serif);
+  font-family: var(--font-family-heading, 'Inter', sans-serif);
   font-size: 20px;
   font-weight: 700;
   letter-spacing: 0.03em;
@@ -164,7 +164,7 @@
   place-items: center;
   text-decoration: none;
   background: var(--ft-surface);
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.12);
   color: var(--ft-text-secondary);
   transition: transform 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
@@ -224,8 +224,8 @@
   height: 44px;
   padding: 0 16px;
   border-radius: 10px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  background: var(--ft-surface);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: #ffffff;
   color: var(--ft-text);
   font-size: 13.5px;
   outline: none;
@@ -255,7 +255,7 @@
 }
 
 .ft_newsletter__btn:hover {
-  background: #2055AF;
+  background: #891226;
   transform: translateY(-1px);
 }
 

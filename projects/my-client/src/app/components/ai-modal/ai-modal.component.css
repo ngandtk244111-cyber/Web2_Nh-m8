@@ -1,0 +1,42 @@
+/* Mascot trong header modal chat — thay cho mascot nổi (bị backdrop của modal che khi chat mở). */
+.ai_mascot {
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  background: linear-gradient(160deg, #F3EADB 0%, #EFD3D8 100%);
+  box-shadow: inset 0 0 0 1px rgba(163, 21, 45, 0.12);
+}
+
+.ai_mascot__img {
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+  transition: transform 0.25s ease;
+}
+
+/* Nảy nhẹ khi đang suy nghĩ — chậm, không nhấp nháy. */
+.ai_mascot[data-expression='thinking'] .ai_mascot__img {
+  animation: ai-mascot-think 1.6s ease-in-out infinite;
+}
+
+@keyframes ai-mascot-think {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-2px) rotate(-3deg); }
+}
+
+.ai_thinking-mascot {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ai_mascot[data-expression='thinking'] .ai_mascot__img {
+    animation: none;
+  }
+}

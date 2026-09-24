@@ -7,7 +7,7 @@
             <app-icon name="cube" [size]="14"></app-icon>
             <span>Dịch Vụ Thiết Kế Riêng (Create Your Own)</span>
           </div>
-          <h1 class="font-serif text-3xl font-extrabold text-neutral-900">
+          <h1 class="font-serif text-3xl font-extrabold text-amber-800">
             Đặt Thiết Kế Sản Phẩm Độc Bản
           </h1>
           <p class="text-xs sm:text-sm text-neutral-600 mt-1 max-w-2xl">
@@ -19,14 +19,14 @@
           <button 
             type="button" 
             (click)="openAiAssistant()"
-            class="px-4 py-2.5 rounded-2xl bg-amber-950/40 hover:bg-amber-950/70 text-amber-400 font-bold text-xs border border-amber-500/30 transition flex items-center gap-1.5">
-            <app-icon name="sparkles" [size]="14" class="text-amber-400"></app-icon>
+            class="group px-4 py-2.5 rounded-2xl bg-amber-950/40 hover:bg-amber-950/70 text-amber-400 hover:text-white font-bold text-xs border border-amber-500/30 transition flex items-center gap-1.5">
+            <app-icon name="sparkles" [size]="14" class="text-amber-400 group-hover:text-white"></app-icon>
             <span>AI Giúp Lên Ý Tưởng</span>
           </button>
 
           <a 
             routerLink="/custom-request/new"
-            class="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-neutral-950 font-extrabold text-xs shadow-md transition flex items-center gap-1.5">
+            class="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-white font-extrabold text-xs shadow-md transition flex items-center gap-1.5">
             <app-icon name="plus" [size]="14"></app-icon>
             <span>Gửi Yêu Cầu Mới</span>
           </a>
@@ -41,25 +41,25 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-5 gap-3 text-xs">
           <div class="p-3 bg-[#F6F5F2] rounded-2xl border border-neutral-200">
-            <span class="w-6 h-6 rounded-full bg-gradient-to-r from-amber-400 to-amber-600 text-neutral-950 text-[11px] font-extrabold flex items-center justify-center mb-2">1</span>
+            <span class="w-6 h-6 rounded-full bg-gradient-to-r from-amber-400 to-amber-600 text-white text-[11px] font-extrabold flex items-center justify-center mb-2">1</span>
             <div class="font-bold text-neutral-800">Gửi Ý Tưởng</div>
             <p class="text-[11px] text-neutral-600 mt-1">Mô tả kiểu dáng, ảnh tham khảo hoặc brief từ AI.</p>
           </div>
 
           <div class="p-3 bg-[#F6F5F2] rounded-2xl border border-neutral-200">
-            <span class="w-6 h-6 rounded-full bg-gradient-to-r from-amber-400 to-amber-600 text-neutral-950 text-[11px] font-extrabold flex items-center justify-center mb-2">2</span>
+            <span class="w-6 h-6 rounded-full bg-gradient-to-r from-amber-400 to-amber-600 text-white text-[11px] font-extrabold flex items-center justify-center mb-2">2</span>
             <div class="font-bold text-neutral-800">Shop Báo Giá</div>
             <p class="text-[11px] text-neutral-600 mt-1">Đánh giá tính khả thi kỹ thuật và gửi báo giá chi tiết.</p>
           </div>
 
           <div class="p-3 bg-[#F6F5F2] rounded-2xl border border-neutral-200">
-            <span class="w-6 h-6 rounded-full bg-gradient-to-r from-amber-400 to-amber-600 text-neutral-950 text-[11px] font-extrabold flex items-center justify-center mb-2">3</span>
+            <span class="w-6 h-6 rounded-full bg-gradient-to-r from-amber-400 to-amber-600 text-white text-[11px] font-extrabold flex items-center justify-center mb-2">3</span>
             <div class="font-bold text-neutral-800">Xem Preview 3D</div>
             <p class="text-[11px] text-neutral-600 mt-1">Shop gửi bản vẽ / mô hình preview để khách duyệt trước.</p>
           </div>
 
           <div class="p-3 bg-[#F6F5F2] rounded-2xl border border-neutral-200">
-            <span class="w-6 h-6 rounded-full bg-gradient-to-r from-amber-400 to-amber-600 text-neutral-950 text-[11px] font-extrabold flex items-center justify-center mb-2">4</span>
+            <span class="w-6 h-6 rounded-full bg-gradient-to-r from-amber-400 to-amber-600 text-white text-[11px] font-extrabold flex items-center justify-center mb-2">4</span>
             <div class="font-bold text-neutral-800">Đặt Hàng</div>
             <p class="text-[11px] text-neutral-600 mt-1">Khách duyệt thiết kế và chuyển thành đơn hàng chính thức.</p>
           </div>
@@ -74,7 +74,7 @@
 
       <!-- Requests List -->
       <div class="space-y-4">
-        <h2 class="font-serif text-xl font-bold text-neutral-900">
+        <h2 class="font-serif text-xl font-bold text-amber-800">
           Danh Sách Yêu Cầu Thiết Kế Của Bạn
         </h2>
 
@@ -98,7 +98,7 @@
                 </span>
               </div>
 
-              <h3 class="font-serif text-base font-bold text-neutral-900 mt-2">
+              <h3 class="font-serif text-base font-bold text-amber-800 mt-2">
                 <a [routerLink]="['/custom-request', req.id]" class="hover:text-amber-400 transition">
                   {{ req.title }}
                 </a>
@@ -118,7 +118,7 @@
               <span class="text-[10px] text-neutral-500">{{ req.createdAt }}</span>
               <a 
                 [routerLink]="['/custom-request', req.id]"
-                class="px-4 py-2 rounded-xl bg-[#F0EEE8] hover:bg-[#252636] border border-neutral-300 text-neutral-800 font-bold text-xs transition flex items-center gap-1">
+                class="px-4 py-2 rounded-xl bg-[#F0EEE8] hover:bg-[#1F1712] border border-neutral-300 text-neutral-800 font-bold text-xs transition flex items-center gap-1">
                 <span>Xem chi tiết & Trao đổi</span>
                 <app-icon name="chevron-right" [size]="14"></app-icon>
               </a>

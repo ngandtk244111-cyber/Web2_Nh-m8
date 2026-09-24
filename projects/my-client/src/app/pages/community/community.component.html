@@ -1,269 +1,438 @@
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-      
-      <!-- Community Header -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-200 pb-6">
-        <div>
-          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-950/40 text-amber-400 border border-amber-500/30 text-xs font-bold uppercase tracking-wider mb-2">
-            <app-icon name="heart" [size]="14"></app-icon>
-            <span>Cộng Đồng Decor & Setup Bàn Học (C2C)</span>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+      <div class="cm-layout">
+
+        <!-- ============ SIDEBAR TRÁI: điều hướng feed (lg+) ============ -->
+        <aside class="cm-left hidden lg:block">
+          <div class="cm-sticky space-y-6">
+            <div>
+              <h1 class="text-xl font-extrabold text-neutral-900 tracking-tight">Cộng đồng Decor</h1>
+              <p class="text-xs text-neutral-500 mt-1 leading-relaxed">Góc nhỏ & ý tưởng trang trí từ cộng đồng LUMÉA.</p>
+            </div>
+
+            <nav class="space-y-1">
+              <button
+                *ngFor="let m of feedModes"
+                type="button"
+                (click)="setFeedMode(m.key)"
+                class="cm-nav"
+                [class.cm-nav--active]="feedMode === m.key">
+                <app-icon [name]="m.icon" [size]="18" [filled]="feedMode === m.key && m.icon !== 'home'"></app-icon>
+                <span>{{ m.label }}</span>
+              </button>
+              <button type="button" (click)="openCreateModal()" class="cm-nav">
+                <app-icon name="plus" [size]="18"></app-icon>
+                <span>Bài viết mới</span>
+              </button>
+            </nav>
+
+            <div class="relative">
+              <app-icon name="search" [size]="15" class="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400"></app-icon>
+              <input
+                type="text"
+                [(ngModel)]="searchQuery"
+                (ngModelChange)="onSearchChange()"
+                placeholder="Tìm kiếm"
+                class="cm-search">
+            </div>
           </div>
-          <h1 class="font-serif text-3xl font-extrabold text-neutral-900">
-            Góc Phòng & Cảm Hứng Bài Trí
-          </h1>
-          <p class="text-xs sm:text-sm text-neutral-600 mt-1">
-            Không gian người dùng chia sẻ setup thực tế. Chạm vào các chấm tag trên ảnh để mua ngay món đồ bạn thích!
-          </p>
-        </div>
+        </aside>
 
-        <button
-          type="button"
-          (click)="openCreateModal()"
-          class="px-5 py-3 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-neutral-950 font-extrabold text-xs shadow-[0_4px_20px_rgba(169,198,234,0.3)] transition flex items-center justify-center gap-2 self-start sm:self-auto">
-          <app-icon name="plus" [size]="16"></app-icon>
-          <span>Chia sẻ góc decor của bạn</span>
-        </button>
-      </div>
+        <!-- ============ CỘT GIỮA: feed / thread ============ -->
+        <main class="min-w-0">
 
-      <!-- Post Creation Modal -->
-      <div 
-        *ngIf="showCreateModal"
-        (click)="showCreateModal = false"
-        class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-        
-        <div 
-          (click)="$event.stopPropagation()"
-          class="bg-[#FFFFFF] w-full max-w-lg rounded-3xl p-6 border border-neutral-200 shadow-2xl space-y-4">
-          
-          <div class="flex items-center justify-between border-b border-neutral-200 pb-3">
-            <h3 class="font-serif text-lg font-bold text-neutral-900">Đăng Bài Lên Cộng Đồng</h3>
-            <button (click)="showCreateModal = false" class="text-neutral-600 hover:text-white">
-              <app-icon name="x" [size]="18"></app-icon>
+          <!-- Tiêu đề cột giữa -->
+          <div class="flex items-center justify-center relative h-10 mb-3">
+            <button
+              *ngIf="activePost"
+              type="button"
+              (click)="closePost()"
+              class="absolute left-0 w-9 h-9 rounded-full hover:bg-white flex items-center justify-center text-neutral-700 transition"
+              aria-label="Quay lại">
+              <app-icon name="chevron-left" [size]="20"></app-icon>
             </button>
+            <h2 class="text-[15px] font-bold text-neutral-900">{{ activePost ? 'Thread' : currentFeedLabel }}</h2>
           </div>
 
-          <div class="space-y-3">
-            <div>
-              <label class="block text-xs font-semibold text-neutral-700 mb-1">Tiêu đề bài viết *</label>
-              <input 
-                type="text" 
-                [(ngModel)]="newPostTitle" 
-                placeholder="Ví dụ: Góc làm việc buổi tối phong cách Japandi..." 
-                class="w-full text-xs rounded-xl border border-neutral-300 p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500">
+          <!-- Tìm kiếm + danh mục cho màn nhỏ -->
+          <div *ngIf="!activePost" class="xl:hidden space-y-3 mb-3">
+            <div class="relative lg:hidden">
+              <app-icon name="search" [size]="15" class="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400"></app-icon>
+              <input
+                type="text"
+                [(ngModel)]="searchQuery"
+                (ngModelChange)="onSearchChange()"
+                placeholder="Tìm trong cộng đồng..."
+                class="cm-search">
             </div>
-
-            <div>
-              <label class="block text-xs font-semibold text-neutral-700 mb-1">Mô tả & Chia sẻ trải nghiệm</label>
-              <textarea 
-                [(ngModel)]="newPostCaption" 
-                rows="3" 
-                placeholder="Chia sẻ cách phối màu, mẫu đèn bạn đã in 3D..." 
-                class="w-full text-xs rounded-xl border border-neutral-300 p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500"></textarea>
-            </div>
-
-            <div>
-              <label class="block text-xs font-semibold text-neutral-700 mb-1">URL Ảnh góc phòng *</label>
-              <input 
-                type="text" 
-                [(ngModel)]="newPostImageUrl" 
-                placeholder="https://images.unsplash.com/photo-..." 
-                class="w-full text-xs rounded-xl border border-neutral-300 p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500">
-            </div>
-
-            <div>
-              <label class="block text-xs font-semibold text-neutral-700 mb-1">Gắn tag sản phẩm Luméa có trong ảnh:</label>
-              <select 
-                [(ngModel)]="selectedTagProductId"
-                class="w-full text-xs rounded-xl border border-neutral-300 p-2.5 bg-[#F6F5F2] text-neutral-800">
-                <option value="">-- Chọn sản phẩm để gắn tag --</option>
-                <option *ngFor="let p of availableProducts" [value]="p.id">{{ p.name }}</option>
-              </select>
+            <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+              <button
+                *ngFor="let f of topicFilters"
+                type="button"
+                (click)="setFilter(f.key)"
+                class="cm-chip flex-shrink-0"
+                [class.cm-chip--active]="activeFilter === f.key">
+                {{ f.label }}
+              </button>
             </div>
           </div>
 
-          <div class="pt-2 flex justify-end gap-2">
-            <button 
-              (click)="showCreateModal = false"
-              class="px-4 py-2 rounded-xl text-neutral-600 hover:text-white text-xs font-semibold">
-              Hủy
-            </button>
-            <button 
-              (click)="publishPost()"
-              [disabled]="!newPostTitle || !newPostImageUrl"
-              class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-300 hover:to-amber-500 disabled:opacity-50 text-neutral-950 text-xs font-extrabold shadow-md">
-              Đăng bài
-            </button>
-          </div>
+          <div class="cm-panel">
 
-        </div>
-      </div>
-
-      <!-- Feed List -->
-      <div class="space-y-8">
-        <div *ngFor="let post of posts" class="bg-[#FFFFFF] rounded-3xl border border-neutral-200 shadow-xl overflow-hidden">
-          
-          <!-- Post Author Header -->
-          <div class="p-5 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <img [src]="post.author.avatar" [alt]="post.author.name" class="w-10 h-10 rounded-full object-cover border border-amber-500/20">
-              <div>
-                <div class="flex items-center gap-2">
-                  <h4 class="font-bold text-xs sm:text-sm text-neutral-900">{{ post.author.name }}</h4>
-                  <span *ngIf="post.author.badge" class="text-[10px] font-bold text-amber-400 bg-amber-950/40 border border-amber-500/30 px-2 py-0.5 rounded-full">
-                    {{ post.author.badge }}
-                  </span>
-                </div>
-                <div class="text-[11px] text-neutral-600">{{ post.author.handle }} • {{ post.createdAt }}</div>
+            <!-- ---------- FEED ---------- -->
+            <ng-container *ngIf="!activePost">
+              <!-- Composer "Có gì mới?" -->
+              <div class="flex items-center gap-3 px-5 sm:px-6 py-4 border-b border-neutral-100">
+                <img [src]="currentAvatar" alt="" class="w-10 h-10 rounded-full object-cover border border-neutral-200 flex-shrink-0">
+                <button type="button" (click)="openCreateModal()" class="flex-1 text-left text-[15px] text-neutral-400 py-2">
+                  Có gì mới?
+                </button>
+                <button type="button" (click)="openCreateModal()" class="cm-btn-outline">Đăng</button>
               </div>
-            </div>
 
-            <button 
-              (click)="toggleSave(post.id)"
-              [class.text-amber-400]="post.isSaved"
-              [class.text-neutral-500]="!post.isSaved"
-              class="p-2 hover:bg-neutral-200 rounded-full transition"
-              title="Lưu bài viết">
-              <app-icon name="heart" [size]="18"></app-icon>
-            </button>
-          </div>
+              <!-- Tabs -->
+              <div class="grid grid-cols-2 border-b border-neutral-100">
+                <button
+                  *ngFor="let t of feedTabs"
+                  type="button"
+                  (click)="setSort(t.key)"
+                  class="cm-tab"
+                  [class.cm-tab--active]="sortBy === t.key">
+                  {{ t.label }}
+                </button>
+              </div>
 
-          <!-- Post Main Image with Interactive Tags -->
-          <div class="relative w-full aspect-[4/3] sm:aspect-[16/10] bg-[#F6F5F2] overflow-hidden group">
-            <img [src]="post.imageUrl" [alt]="post.title" class="w-full h-full object-cover">
+              <!-- Empty state -->
+              <div *ngIf="filteredPosts.length === 0" class="py-20 px-6 text-center">
+                <div class="w-14 h-14 rounded-full bg-neutral-50 flex items-center justify-center mx-auto mb-3">
+                  <app-icon [name]="feedMode === 'saved' ? 'bookmark' : feedMode === 'liked' ? 'heart' : 'search'" [size]="22" class="text-neutral-400"></app-icon>
+                </div>
+                <p class="text-sm font-semibold text-neutral-700">{{ emptyTitle }}</p>
+                <p class="text-xs text-neutral-500 mt-1">Thử đổi bộ lọc hoặc từ khoá tìm kiếm khác nhé.</p>
+              </div>
 
-            <!-- Tag Pins positioned by percent on the image -->
-            <ng-container *ngFor="let tag of post.productTags">
-              <div 
-                class="absolute -translate-x-1/2 -translate-y-1/2 z-10"
-                [style.left.%]="tag.xPercent"
-                [style.top.%]="tag.yPercent">
-                
-                <div class="relative group/tag">
-                  <!-- Tag Pin -->
-                  <button 
-                    (click)="openTagPopover(tag)"
-                    class="w-7 h-7 rounded-full bg-[#FFFFFF]/90 text-amber-400 shadow-[0_0_15px_rgba(169,198,234,0.4)] flex items-center justify-center border-2 border-amber-400 hover:scale-125 transition-transform">
-                    <app-icon name="tag" [size]="12"></app-icon>
-                  </button>
+              <!-- Danh sách bài dạng thread -->
+              <article
+                *ngFor="let post of visiblePosts"
+                (click)="openPost(post)"
+                class="cm-post cursor-pointer hover:bg-neutral-50/60 transition">
+                <img [src]="post.author.avatar" [alt]="post.author.name" class="cm-avatar">
 
-                  <!-- Hover tag popup -->
-                  <div class="absolute left-8 top-1/2 -translate-y-1/2 hidden group-hover/tag:flex items-center gap-2 bg-black/90 border border-amber-500/30 text-white p-2.5 rounded-xl shadow-2xl whitespace-nowrap text-xs z-30 pointer-events-auto">
-                    <span class="font-semibold text-neutral-800">{{ getProduct(tag.productId)?.name }}</span>
-                    <span class="text-amber-400 font-bold">• {{ getProduct(tag.productId)?.basePrice | vnd }}</span>
-                    <a 
-                      [routerLink]="['/product', getProduct(tag.productId)?.slug]"
-                      class="ml-1 px-2.5 py-0.5 bg-gradient-to-r from-amber-400 to-amber-600 text-neutral-950 rounded text-[10px] font-extrabold shadow-sm">
-                      Mua
-                    </a>
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-1.5 min-w-0">
+                    <span class="text-[15px] font-semibold text-neutral-900 truncate">{{ post.author.name }}</span>
+                    <ng-container *ngIf="post.author.badge">
+                      <app-icon name="chevron-right" [size]="12" class="text-neutral-400 flex-shrink-0"></app-icon>
+                      <span class="text-[15px] font-semibold text-neutral-900 truncate">{{ post.author.badge }}</span>
+                    </ng-container>
+                    <span class="text-[14px] text-neutral-400 flex-shrink-0">{{ post.createdAt }}</span>
+                    <button
+                      type="button"
+                      (click)="toggleSave(post.id, $event)"
+                      class="ml-auto w-8 h-8 -mr-2 rounded-full hover:bg-neutral-100 flex items-center justify-center flex-shrink-0 transition"
+                      [class.text-amber-600]="post.isSaved"
+                      [class.text-neutral-400]="!post.isSaved"
+                      [attr.aria-label]="post.isSaved ? 'Bỏ lưu' : 'Lưu bài viết'"
+                      [title]="post.isSaved ? 'Bỏ lưu' : 'Lưu'">
+                      <app-icon name="bookmark" [size]="16" [filled]="!!post.isSaved"></app-icon>
+                    </button>
+                  </div>
+
+                  <p class="cm-text">
+                    <span class="font-semibold">{{ post.title }}</span>
+                    <ng-container *ngIf="post.caption"><br>{{ post.caption }}</ng-container>
+                  </p>
+
+                  <div *ngIf="post.tags.length" class="flex flex-wrap gap-x-2 mt-1">
+                    <span *ngFor="let t of post.tags.slice(0, 4)" class="text-[14px] text-amber-600">{{ t }}</span>
+                  </div>
+
+                  <div *ngIf="post.imageUrl" class="cm-media mt-3">
+                    <img [src]="post.imageUrl" [alt]="post.title" loading="lazy">
+                    <span *ngIf="post.productTags.length" class="cm-media__badge">
+                      <app-icon name="tag" [size]="12"></app-icon> {{ post.productTags.length }} sản phẩm
+                    </span>
+                  </div>
+
+                  <div class="flex items-center gap-1 mt-2 -ml-2.5 text-neutral-600">
+                    <button
+                      type="button"
+                      (click)="toggleLike(post.id, $event)"
+                      class="cm-action"
+                      [class.text-rose-500]="post.isLiked"
+                      [class.community-like--pulse]="pulsingLikeId === post.id"
+                      [attr.aria-label]="post.isLiked ? 'Bỏ thích' : 'Thích'">
+                      <app-icon name="heart" [size]="18" [filled]="!!post.isLiked"></app-icon>
+                      <span>{{ post.likesCount }}</span>
+                    </button>
+                    <button type="button" (click)="openPost(post, $event)" class="cm-action" aria-label="Bình luận">
+                      <app-icon name="message" [size]="18"></app-icon>
+                      <span>{{ post.commentsCount }}</span>
+                    </button>
                   </div>
                 </div>
+              </article>
 
+              <!-- Load more -->
+              <div *ngIf="filteredPosts.length > 0" class="flex justify-center py-5">
+                <button
+                  *ngIf="hasMorePosts"
+                  type="button"
+                  (click)="loadMore()"
+                  class="cm-btn-outline flex items-center gap-1.5">
+                  <span>Xem thêm</span>
+                  <app-icon name="chevron-down" [size]="14"></app-icon>
+                </button>
+                <span *ngIf="!hasMorePosts" class="text-xs text-neutral-400">Bạn đã xem hết bài viết</span>
               </div>
             </ng-container>
 
-            <!-- Bottom count pill -->
-            <div class="absolute bottom-3 left-3 bg-black/75 backdrop-blur-md text-amber-700 border border-amber-500/20 px-3 py-1 rounded-full text-[11px] font-medium pointer-events-none">
-              🏷️ Chạm vào biểu tượng thẻ trên ảnh để xem sản phẩm
-            </div>
-
-          </div>
-
-          <!-- Post Content -->
-          <div class="p-6 space-y-4">
-            <div>
-              <h3 class="font-serif text-lg font-bold text-neutral-900">{{ post.title }}</h3>
-              <p class="text-xs sm:text-sm text-neutral-700 mt-1 leading-relaxed">{{ post.caption }}</p>
-              
-              <!-- Tags -->
-              <div class="flex flex-wrap gap-1.5 mt-3">
-                <span *ngFor="let t of post.tags" class="text-xs text-amber-400 font-medium hover:underline cursor-pointer">
-                  {{ t }}
-                </span>
-              </div>
-            </div>
-
-            <!-- Tagged Products Mini Carousel In Card -->
-            <div *ngIf="post.productTags.length > 0" class="p-3 bg-[#F6F5F2] rounded-2xl border border-neutral-200 space-y-2">
-              <span class="text-[11px] font-bold text-amber-400 uppercase tracking-wider block">
-                Sản phẩm Luméa xuất hiện trong bài viết:
-              </span>
-
-              <div class="flex flex-wrap gap-2">
-                <div 
-                  *ngFor="let tag of post.productTags" 
-                  class="bg-[#FBF7EE] p-2 rounded-xl border border-neutral-300/60 flex items-center gap-2.5 shadow-sm">
-                  <img 
-                    [src]="getProduct(tag.productId)?.images?.[0]" 
-                    class="w-10 h-10 rounded-lg object-cover bg-[#F6F5F2]">
-                  <div>
-                    <div class="text-xs font-bold text-neutral-800 truncate max-w-[160px]">
-                      {{ getProduct(tag.productId)?.name }}
+            <!-- ---------- THREAD CHI TIẾT ---------- -->
+            <ng-container *ngIf="activePost as post">
+              <article class="px-5 sm:px-6 pt-5 pb-4 border-b border-neutral-100">
+                <div class="flex items-center gap-3">
+                  <img [src]="post.author.avatar" [alt]="post.author.name" class="cm-avatar">
+                  <div class="min-w-0 flex-1">
+                    <div class="flex items-center gap-1.5">
+                      <span class="text-[15px] font-semibold text-neutral-900 truncate">{{ post.author.name }}</span>
+                      <span *ngIf="post.author.badge" class="text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full flex-shrink-0">
+                        {{ post.author.badge }}
+                      </span>
                     </div>
-                    <div class="text-[11px] font-bold text-amber-400">
-                      {{ getProduct(tag.productId)?.basePrice | vnd }}
-                    </div>
+                    <div class="text-[13px] text-neutral-400">{{ post.author.handle }} · {{ post.createdAt }}</div>
                   </div>
-                  <a 
-                    [routerLink]="['/product', getProduct(tag.productId)?.slug]"
-                    class="ml-1 p-1.5 bg-[#202232] hover:bg-gradient-to-r hover:from-amber-400 hover:to-amber-600 hover:text-neutral-950 rounded-lg transition text-neutral-700">
-                    <app-icon name="cart" [size]="14"></app-icon>
-                  </a>
+                  <button
+                    type="button"
+                    (click)="toggleSave(post.id)"
+                    class="w-9 h-9 rounded-full hover:bg-neutral-100 flex items-center justify-center flex-shrink-0 transition"
+                    [class.text-amber-600]="post.isSaved"
+                    [class.text-neutral-400]="!post.isSaved"
+                    [attr.aria-label]="post.isSaved ? 'Bỏ lưu' : 'Lưu bài viết'">
+                    <app-icon name="bookmark" [size]="18" [filled]="!!post.isSaved"></app-icon>
+                  </button>
                 </div>
-              </div>
-            </div>
 
-            <!-- Actions Row: Like & Comment -->
-            <div class="border-t border-neutral-200 pt-3 flex items-center justify-between text-xs text-neutral-600">
-              <div class="flex items-center gap-4">
-                <button 
-                  (click)="toggleLike(post.id)"
-                  [class.text-rose-400]="post.isLiked"
-                  class="flex items-center gap-1.5 hover:text-rose-400 transition font-medium">
-                  <app-icon name="heart" [size]="16" [class]="post.isLiked ? 'fill-current text-rose-400' : ''"></app-icon>
-                  <span>{{ post.likesCount }} yêu thích</span>
-                </button>
+                <p class="cm-text mt-3">
+                  <span class="font-semibold">{{ post.title }}</span>
+                  <ng-container *ngIf="post.caption"><br>{{ post.caption }}</ng-container>
+                </p>
+                <div *ngIf="post.tags.length" class="flex flex-wrap gap-x-2 mt-1">
+                  <span *ngFor="let t of post.tags" class="text-[14px] text-amber-600">{{ t }}</span>
+                </div>
 
-                <button 
-                  (click)="toggleComments(post.id)"
-                  class="flex items-center gap-1.5 hover:text-amber-400 transition font-medium">
-                  <app-icon name="message" [size]="16"></app-icon>
-                  <span>{{ post.commentsCount }} bình luận</span>
-                </button>
-              </div>
-            </div>
-
-            <!-- Comments Thread (Collapsible) -->
-            <div *ngIf="expandedPostComments[post.id]" class="border-t border-neutral-200 pt-3 space-y-3">
-              <div class="space-y-2 max-h-48 overflow-y-auto pr-1 text-xs">
-                <div *ngFor="let c of post.comments" class="flex items-start gap-2 bg-[#F6F5F2] p-2.5 rounded-xl border border-neutral-200">
-                  <img [src]="c.authorAvatar" class="w-6 h-6 rounded-full object-cover mt-0.5 border border-neutral-300">
-                  <div class="flex-1">
-                    <div class="flex items-baseline justify-between">
-                      <span class="font-bold text-neutral-800">{{ c.authorName }}</span>
-                      <span class="text-[10px] text-neutral-500">{{ c.createdAt }}</span>
+                <!-- Ảnh + chấm gắn thẻ sản phẩm -->
+                <div class="cm-media cm-media--detail mt-3">
+                  <img [src]="post.imageUrl" [alt]="post.title">
+                  <ng-container *ngFor="let tag of post.productTags">
+                    <div class="absolute -translate-x-1/2 -translate-y-1/2 z-10" [style.left.%]="tag.xPercent" [style.top.%]="tag.yPercent">
+                      <div class="relative group/tag">
+                        <span class="w-7 h-7 rounded-full bg-white/90 text-amber-600 flex items-center justify-center border-2 border-amber-400 shadow-md">
+                          <app-icon name="tag" [size]="12"></app-icon>
+                        </span>
+                        <div class="absolute left-8 top-1/2 -translate-y-1/2 hidden group-hover/tag:flex items-center gap-2 bg-black/90 text-white p-2.5 rounded-xl shadow-2xl whitespace-nowrap text-xs z-30">
+                          <span class="font-semibold">{{ getProduct(tag.productId)?.name }}</span>
+                          <span class="text-amber-300 font-bold">• {{ getProduct(tag.productId)?.basePrice | vnd }}</span>
+                        </div>
+                      </div>
                     </div>
-                    <p class="text-neutral-700 mt-0.5">{{ c.text }}</p>
+                  </ng-container>
+                </div>
+
+                <div class="flex items-center gap-1 mt-2 -ml-2.5 text-neutral-600">
+                  <button
+                    type="button"
+                    (click)="toggleLike(post.id)"
+                    class="cm-action"
+                    [class.text-rose-500]="post.isLiked"
+                    [class.community-like--pulse]="pulsingLikeId === post.id">
+                    <app-icon name="heart" [size]="18" [filled]="!!post.isLiked"></app-icon>
+                    <span>{{ post.likesCount }}</span>
+                  </button>
+                  <span class="cm-action">
+                    <app-icon name="message" [size]="18"></app-icon>
+                    <span>{{ post.commentsCount }}</span>
+                  </span>
+                </div>
+
+                <!-- Sản phẩm trong không gian -->
+                <div *ngIf="post.productTags.length > 0" class="mt-4 space-y-2">
+                  <span class="text-[12px] font-semibold text-neutral-500 block">Sản phẩm trong không gian</span>
+                  <div
+                    *ngFor="let tag of post.productTags"
+                    class="p-2.5 rounded-2xl border border-neutral-200 flex items-center gap-3">
+                    <img [src]="getProduct(tag.productId)?.images?.[0]" alt="" class="w-11 h-11 rounded-xl object-cover bg-neutral-50 flex-shrink-0">
+                    <div class="min-w-0 flex-1">
+                      <div class="text-[13px] font-semibold text-neutral-800 truncate">{{ getProduct(tag.productId)?.name }}</div>
+                      <div class="text-[12px] font-semibold text-amber-600">{{ getProduct(tag.productId)?.basePrice | vnd }}</div>
+                    </div>
+                    <a
+                      *ngIf="getProduct(tag.productId)?.customizable"
+                      [routerLink]="['/customizer-3d']"
+                      [queryParams]="{ productId: tag.productId }"
+                      class="cm-btn-outline !px-3 !py-1.5 !text-[12px] flex-shrink-0">
+                      Xem 3D
+                    </a>
+                    <a
+                      [routerLink]="['/product', getProduct(tag.productId)?.slug]"
+                      class="px-3 py-1.5 rounded-xl bg-neutral-900 hover:bg-amber-600 text-white text-[12px] font-semibold transition flex-shrink-0">
+                      Xem
+                    </a>
                   </div>
                 </div>
-              </div>
+              </article>
 
-              <!-- Comment input -->
-              <div class="flex items-center gap-2">
-                <input 
-                  type="text" 
+              <!-- Ô trả lời -->
+              <div class="flex items-center gap-3 px-5 sm:px-6 py-4 border-b border-neutral-100">
+                <img [src]="currentAvatar" alt="" class="w-9 h-9 rounded-full object-cover border border-neutral-200 flex-shrink-0">
+                <input
+                  type="text"
                   [(ngModel)]="commentInputs[post.id]"
                   (keyup.enter)="addComment(post.id)"
-                  placeholder="Viết bình luận của bạn..." 
-                  class="flex-1 text-xs rounded-xl border border-neutral-300 p-2 bg-[#F6F5F2] text-neutral-800 focus:outline-none focus:border-amber-500">
-                <button 
+                  [placeholder]="'Trả lời ' + post.author.name + '...'"
+                  class="flex-1 min-w-0 text-[15px] bg-transparent text-neutral-800 placeholder:text-neutral-400 focus:outline-none">
+                <button
+                  type="button"
                   (click)="addComment(post.id)"
-                  class="px-4 py-2 bg-gradient-to-r from-amber-400 to-amber-600 text-neutral-950 rounded-xl text-xs font-bold transition">
-                  Gửi
+                  [disabled]="!(commentInputs[post.id] || '').trim()"
+                  class="cm-btn-outline disabled:opacity-40 flex-shrink-0">
+                  Đăng
                 </button>
               </div>
-            </div>
 
+              <!-- Câu trả lời -->
+              <div class="px-5 sm:px-6 py-3 flex items-center justify-between border-b border-neutral-100">
+                <span class="text-[14px] font-semibold text-neutral-900">Câu trả lời</span>
+                <span class="text-[13px] text-neutral-400">{{ post.commentsCount }}</span>
+              </div>
+
+              <div *ngFor="let c of post.comments" class="cm-post">
+                <img [src]="c.authorAvatar" [alt]="c.authorName" class="cm-avatar">
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-[15px] font-semibold text-neutral-900 truncate">{{ c.authorName }}</span>
+                    <span class="text-[14px] text-neutral-400 flex-shrink-0">{{ c.createdAt }}</span>
+                  </div>
+                  <p class="cm-text">{{ c.text }}</p>
+                </div>
+              </div>
+
+              <p *ngIf="post.comments.length === 0" class="text-sm text-neutral-400 text-center py-10">
+                Chưa có câu trả lời nào. Hãy là người đầu tiên!
+              </p>
+            </ng-container>
+          </div>
+        </main>
+
+        <!-- ============ SIDEBAR PHẢI: Trending + Danh mục (xl+) ============ -->
+        <aside class="hidden xl:block">
+          <div class="cm-sticky space-y-5">
+            <section class="cm-panel p-5">
+              <h3 class="flex items-center gap-2 text-[15px] font-bold text-neutral-900 pb-3 border-b border-neutral-100">
+                <app-icon name="star" [size]="16" class="text-amber-600"></app-icon> Trending
+              </h3>
+              <button
+                *ngFor="let p of trendingPosts"
+                type="button"
+                (click)="openPost(p)"
+                class="w-full text-left py-3 border-b border-neutral-100 last:border-b-0 group">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-[12px] text-neutral-500 truncate">{{ p.author.name }}</span>
+                  <span class="flex items-center gap-1 text-[12px] text-rose-500 flex-shrink-0">
+                    <app-icon name="heart" [size]="12" [filled]="true"></app-icon> {{ p.likesCount }}
+                  </span>
+                </div>
+                <p class="text-[14px] text-neutral-800 truncate mt-0.5 group-hover:text-amber-700 transition">{{ p.title }}</p>
+              </button>
+            </section>
+
+            <section class="cm-panel p-5">
+              <h3 class="flex items-center gap-2 text-[15px] font-bold text-neutral-900 pb-3 mb-3 border-b border-neutral-100">
+                <app-icon name="tag" [size]="16" class="text-amber-600"></app-icon> Danh mục
+              </h3>
+              <div class="flex flex-wrap gap-2">
+                <button
+                  *ngFor="let f of topicFilters"
+                  type="button"
+                  (click)="setFilter(f.key)"
+                  class="cm-chip"
+                  [class.cm-chip--active]="activeFilter === f.key">
+                  {{ f.label }}
+                </button>
+              </div>
+            </section>
+          </div>
+        </aside>
+      </div>
+
+      <!-- Nút tạo bài nổi (màn nhỏ, giống nút + của Threads) -->
+      <button
+        type="button"
+        (click)="openCreateModal()"
+        class="lg:hidden fixed left-5 bottom-24 z-30 w-14 h-14 rounded-2xl bg-white border border-neutral-200 shadow-lg flex items-center justify-center text-neutral-900"
+        aria-label="Bài viết mới">
+        <app-icon name="plus" [size]="22"></app-icon>
+      </button>
+
+      <!-- ============ CREATE POST MODAL ============ -->
+      <div
+        *ngIf="showCreateModal"
+        (click)="closeCreateModal()"
+        class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+
+        <div
+          (click)="$event.stopPropagation()"
+          class="bg-white w-full max-w-lg rounded-3xl border border-neutral-200 shadow-2xl max-h-[90vh] overflow-y-auto">
+
+          <div class="flex items-center justify-between px-5 py-4 border-b border-neutral-100">
+            <button (click)="closeCreateModal()" class="text-[15px] text-neutral-600 hover:text-neutral-900">Hủy</button>
+            <h3 class="text-[15px] font-bold text-neutral-900">Thread mới</h3>
+            <span class="w-8"></span>
           </div>
 
+          <div class="p-5 flex gap-3">
+            <img [src]="currentAvatar" alt="" class="w-10 h-10 rounded-full object-cover border border-neutral-200 flex-shrink-0">
+            <div class="flex-1 min-w-0 space-y-3">
+              <div class="text-[15px] font-semibold text-neutral-900">{{ currentUserName }}</div>
+              <input
+                type="text"
+                [(ngModel)]="newPostTitle"
+                placeholder="Tiêu đề — ví dụ: Góc làm việc buổi tối phong cách Japandi"
+                class="w-full text-[15px] font-semibold bg-transparent text-neutral-900 placeholder:text-neutral-400 placeholder:font-normal focus:outline-none">
+              <textarea
+                [(ngModel)]="newPostCaption"
+                rows="3"
+                placeholder="Có gì mới? Chia sẻ cách phối màu, mẫu đèn bạn đã in 3D..."
+                class="w-full text-[15px] bg-transparent text-neutral-800 placeholder:text-neutral-400 focus:outline-none resize-none"></textarea>
+
+              <div>
+                <label class="block text-[12px] font-semibold text-neutral-500 mb-1">URL ảnh góc phòng *</label>
+                <input
+                  type="text"
+                  [(ngModel)]="newPostImageUrl"
+                  placeholder="https://images.unsplash.com/photo-..."
+                  class="w-full text-[13px] rounded-xl border border-neutral-200 px-3 py-2.5 bg-neutral-50 text-neutral-900 focus:outline-none focus:border-amber-500">
+              </div>
+              <img *ngIf="newPostImageUrl" [src]="newPostImageUrl" alt="" class="w-full max-h-56 object-cover rounded-2xl border border-neutral-200">
+
+              <div>
+                <label class="block text-[12px] font-semibold text-neutral-500 mb-1">Gắn tag sản phẩm Luméa có trong ảnh</label>
+                <select
+                  [(ngModel)]="selectedTagProductId"
+                  class="w-full text-[13px] rounded-xl border border-neutral-200 px-3 py-2.5 bg-neutral-50 text-neutral-800">
+                  <option value="">-- Chọn sản phẩm để gắn tag --</option>
+                  <option *ngFor="let p of availableProducts" [value]="p.id">{{ p.name }}</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="px-5 pb-5 flex justify-end">
+            <button
+              (click)="publishPost()"
+              [disabled]="!newPostTitle || !newPostImageUrl"
+              class="px-5 py-2.5 rounded-full bg-neutral-900 hover:bg-amber-600 disabled:opacity-40 text-white text-[14px] font-semibold transition">
+              Đăng
+            </button>
+          </div>
         </div>
       </div>
 

@@ -5,7 +5,7 @@
 
 .rv_track {
   display: flex;
-  gap: 24px;
+  gap: 20px;
   overflow-x: auto;
   scroll-behavior: smooth;
   scrollbar-width: none;
@@ -24,7 +24,7 @@
 
 .rv_nav {
   position: absolute;
-  top: 40%;
+  top: 38%;
   transform: translateY(-50%);
   width: 36px;
   height: 36px;
@@ -42,8 +42,8 @@
 }
 
 .rv_nav:hover {
-  background: #2E63B8;
-  border-color: #2E63B8;
+  background: #A3152D;
+  border-color: #A3152D;
   color: #ffffff;
 }
 
@@ -65,3 +65,7 @@
     width: 220px;
   }
 }
+
+.rv_head { margin-bottom: 28px; }
+.rv_eyebrow { margin: 0 0 8px; font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #7A6558; }
+.rv_title { margin: 0; font-family: 'Cormorant Garamond', serif; font-size: clamp(28px, 3.6vw, 40px); font-weight: 700; line-height: 1.1; color: #3B2418; }

@@ -7,7 +7,7 @@ import { RoomService } from '../../core/services/room.service';
 import { AiAssistantService } from '../../core/services/ai-assistant.service';
 import { CommunityService } from '../../core/services/community.service';
 import { NewsService } from '../../core/services/news.service';
-import { ProductCardComponent } from '../../components/product-card/product-card.component';
+import { ProductCarouselComponent } from '../../components/product-carousel/product-carousel.component';
 import { RoomViewerComponent } from '../../components/room-viewer/room-viewer.component';
 import { RecentlyViewedSectionComponent } from '../../components/recently-viewed-section/recently-viewed-section.component';
 import { HeroBannerComponent } from '../../components/hero-banner/hero-banner.component';
@@ -20,6 +20,7 @@ import { VideoTopicsComponent } from '../../components/video-topics/video-topics
 import { AppIconComponent } from '../../components/icon/icon.component';
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
 import { ScrollRevealDirective } from '../../shared/directives/scroll-reveal.directive';
+import { ParallaxDirective } from '../../shared/directives/parallax.directive';
 
 @Component({
   selector: 'app-home',
@@ -27,7 +28,7 @@ import { ScrollRevealDirective } from '../../shared/directives/scroll-reveal.dir
   imports: [
     CommonModule,
     RouterLink,
-    ProductCardComponent,
+    ProductCarouselComponent,
     RoomViewerComponent,
     RecentlyViewedSectionComponent,
     HeroBannerComponent,
@@ -38,7 +39,8 @@ import { ScrollRevealDirective } from '../../shared/directives/scroll-reveal.dir
     FavoriteStylesComponent,
     VideoTopicsComponent,
     AppIconComponent,
-    ScrollRevealDirective
+    ScrollRevealDirective,
+    ParallaxDirective
   ],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css'
@@ -52,20 +54,36 @@ export class HomeComponent implements OnInit {
   /** "Mẹo Sống": bài viết thật thuộc chuyên mục Xu hướng Decor (tips sắp xếp/chăm sóc không gian sống). */
   lifeTipsArticles: any[] = [];
 
-  /** Đồng bộ 100% với các nhóm chính của Mega Menu (xem header.component.ts). */
-  private readonly categoryDefs: { label: string; categoryId?: ProductCategory; link?: string; queryParams?: Record<string, string> }[] = [
-    { label: 'Decor Bàn', categoryId: 'tray', queryParams: { category: 'tray' } },
-    { label: 'Tượng & Mô Hình', categoryId: 'sculpture', queryParams: { category: 'sculpture' } },
-    { label: 'Đèn & Chiếu Sáng', categoryId: 'lamp', queryParams: { category: 'lamp' } },
-    { label: 'Chậu & Cây Decor', categoryId: 'plant_pot', queryParams: { category: 'plant_pot' } },
-    { label: 'Phụ Kiện', categoryId: 'organizer', queryParams: { category: 'organizer' } },
-    { label: 'Decor Theo Phong Cách', link: '/catalog' },
-    { label: 'Decor Theo Không Gian', link: '/shop-the-room' },
-    { label: '3D & Custom', link: '/customizer-3d' },
+  /** Dải chữ chạy ngang giữa trang — không ghi số tiền/mốc freeship để tránh lệch với trang chính sách. */
+  readonly marqueeItems = [
+    'Mini 3D Printed Decor',
+    'In theo yêu cầu',
+    'Tuỳ biến màu sắc & kích thước',
+    'Xem trước mô hình 3D',
+    'Thiết kế cùng trợ lý AI',
+    'Giao hàng toàn quốc',
   ];
 
-  /** Ảnh lấy từ sản phẩm thật (ảnh đầu tiên của 1 sản phẩm đại diện cho danh mục) — không dùng ảnh giả. */
-  categories: { label: string; image: string; link?: string; queryParams?: Record<string, string> }[] = [];
+  /** Đồng bộ 100% với các nhóm chính của Mega Menu (xem header.component.ts). */
+  private readonly categoryDefs: { label: string; illustration: string; categoryId?: ProductCategory; link?: string; queryParams?: Record<string, string> }[] = [
+    { label: 'Decor Bàn', illustration: 'decor-ban', categoryId: 'tray', queryParams: { category: 'tray' } },
+    { label: 'Tượng & Mô Hình', illustration: 'tuong-mo-hinh', categoryId: 'sculpture', queryParams: { category: 'sculpture' } },
+    { label: 'Đèn & Chiếu Sáng', illustration: 'den-chieu-sang', categoryId: 'lamp', queryParams: { category: 'lamp' } },
+    { label: 'Chậu & Cây Decor', illustration: 'chau-cay', categoryId: 'plant_pot', queryParams: { category: 'plant_pot' } },
+    { label: 'Phụ Kiện', illustration: 'phu-kien', categoryId: 'organizer', queryParams: { category: 'organizer' } },
+    { label: 'Decor Theo Phong Cách', illustration: 'phong-cach', link: '/catalog' },
+    { label: 'Decor Theo Không Gian', illustration: 'khong-gian', link: '/shop-the-room' },
+    { label: '3D & Custom', illustration: '3d-custom', link: '/customizer-3d' },
+  ];
+
+  /** Thẻ danh mục dùng minh họa 3D đồng nhất (assets/categories) — điều hướng vẫn theo link/queryParams của categoryDefs. */
+  readonly categories: { label: string; image: string; link?: string; queryParams?: Record<string, string> }[] =
+    this.categoryDefs.map(def => ({
+      label: def.label,
+      image: `assets/categories/${def.illustration}.png`,
+      link: def.link,
+      queryParams: def.queryParams,
+    }));
 
   constructor(
     private productService: ProductService,
@@ -78,39 +96,19 @@ export class HomeComponent implements OnInit {
     // thay vì chỉ đọc 1 lần lúc ngOnInit (lúc đó dữ liệu có thể chưa kịp tải về).
     effect(() => {
       const products = this.productService.products();
-      this.customizableProducts = this.productService.customizableProducts().slice(0, 4);
-      this.readyStockProducts = this.productService.readyStockProducts().slice(0, 4);
-
-      if (products.length > 0) {
-        const customizableSample = products.find(p => p.customizable) || products[0];
-        this.categories = this.categoryDefs.map(def => {
-          const sample = def.categoryId
-            ? (products.find(p => p.category === def.categoryId) || products[0])
-            : (def.link === '/customizer-3d' ? customizableSample : products[0]);
-          return {
-            label: def.label,
-            image: sample.images[0],
-            link: def.link,
-            queryParams: def.queryParams,
-          };
-        });
-      }
+      this.customizableProducts = this.productService.customizableProducts().slice(0, 10);
+      this.readyStockProducts = this.productService.readyStockProducts().slice(0, 10);
     });
     effect(() => {
       this.activeRoom = this.roomService.getActiveRoom();
     });
     effect(() => {
-      this.communityPosts = this.communityService.posts().slice(0, 4);
+      this.communityPosts = this.communityService.posts().slice(0, 5);
     });
     effect(() => {
-      this.newsArticles = this.newsService.articles().slice(0, 3);
+      this.newsArticles = this.newsService.articles().slice(0, 5);
       this.lifeTipsArticles = this.newsService.getArticlesByCategory('Xu hướng Decor').slice(0, 3);
     });
-  }
-
-  /** Ảnh danh mục (lấy từ ảnh sản phẩm thật) lỗi tải — ẩn đi để lộ nền gradient thay vì icon "ảnh vỡ". */
-  onCategoryImageError(event: Event): void {
-    (event.target as HTMLImageElement).classList.add('cat-icon__broken');
   }
 
   ngOnInit(): void {}

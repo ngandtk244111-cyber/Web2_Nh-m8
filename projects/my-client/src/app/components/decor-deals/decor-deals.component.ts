@@ -4,9 +4,18 @@ import { Router, RouterLink } from '@angular/router';
 import { ProductService } from '../../core/services/product.service';
 import { Product } from '../../core/models/product.model';
 import { AppIconComponent } from '../icon/icon.component';
+import { MascotService } from '../../core/services/mascot.service';
+import { NotificationService } from '../../core/services/notification.service';
 
 type SlotIndex = 0 | 1 | 2;
 type SlotStatus = 'Sắp diễn ra' | 'Đang diễn ra' | 'Đã kết thúc';
+type StockState = 'upcoming' | 'plenty' | 'hot' | 'low' | 'soldout';
+
+interface StockInfo {
+  left: number;
+  soldPct: number;
+  state: StockState;
+}
 
 interface CountdownState {
   label: string;
@@ -37,10 +46,26 @@ export class DecorDealsComponent implements OnInit, OnDestroy {
   readonly now = signal(new Date());
   private tickTimer: ReturnType<typeof setInterval> | null = null;
 
-  constructor(private productService: ProductService, private router: Router) {}
+  constructor(
+    private productService: ProductService,
+    private router: Router,
+    private mascotService: MascotService,
+    private notificationService: NotificationService
+  ) {}
+
+  /** Trạng thái lần tick trước theo khóa ngày — để bắt đúng thời điểm 1 khung chuyển Sắp diễn ra -> Đang diễn ra. */
+  private prevStatusByKey = new Map<string, SlotStatus>();
 
   ngOnInit(): void {
-    this.tickTimer = setInterval(() => this.now.set(new Date()), 1000);
+    this.prevStatusByKey = this.snapshotStatuses();
+    this.tickTimer = setInterval(() => {
+      this.now.set(new Date());
+      this.checkDealStarted();
+    }, 1000);
+    // Báo mascot 1 lần khi trang có Flash Sale đang diễn ra ngay lúc mount — không lặp lại mỗi giây.
+    if (this.activeSlotStatus() === 'Đang diễn ra') {
+      this.mascotService.react('surprised', 3200);
+    }
   }
 
   ngOnDestroy(): void {
@@ -90,6 +115,20 @@ export class DecorDealsComponent implements OnInit, OnDestroy {
   });
 
   readonly activeSlotStatus = computed<SlotStatus>(() => this.slotStatuses()[this.displaySlot()]);
+
+  /** Khóa YYYY-MM-DD (giờ địa phương) của từng khung — dùng làm khóa nhắc hẹn lưu trên server. */
+  readonly slotKeys = computed<[string, string, string]>(() =>
+    this.slotDates().map(d => this.notificationService.flashSaleKey(d)) as [string, string, string]
+  );
+
+  /** Chỉ khi deal đang diễn ra mới được xem/mua sản phẩm; chưa tới giờ thì chỉ được đặt nhắc. */
+  readonly canViewProducts = computed(() => this.activeSlotStatus() === 'Đang diễn ra');
+
+  readonly isReminded = computed(() =>
+    this.notificationService.isFlashSaleReminded(this.slotKeys()[this.displaySlot()])
+  );
+
+  get reminderBusy() { return this.notificationService.reminderBusy; }
 
   readonly countdown = computed<CountdownState>(() => {
     const now = this.now();
@@ -167,9 +206,56 @@ export class DecorDealsComponent implements OnInit, OnDestroy {
     return '';
   }
 
+  /**
+   * Suất còn lại + % đã bán (chỉ tính khi khung giờ đang diễn ra) — cùng công thức fallback với trang /flash-sale
+   * (đã bán ≈ reviewCount, tổng suất ≈ reviewCount + inStock) để 2 nơi hiển thị khớp nhau.
+   */
+  stockInfo(p: Product): StockInfo {
+    const left = Math.max(0, p.inStock);
+    // Chưa mở bán thì chưa ai mua được → luôn là "còn đủ suất", không có sắp hết / hết suất.
+    if (this.activeSlotStatus() === 'Sắp diễn ra') return { left, soldPct: 0, state: 'upcoming' };
+    if (left === 0) return { left, soldPct: 100, state: 'soldout' };
+    const soldPct = Math.min(99, Math.round((p.reviewCount / (p.reviewCount + left)) * 100));
+    if (left <= 10 || soldPct >= 88) return { left, soldPct, state: 'low' };
+    if (soldPct >= 60) return { left, soldPct, state: 'hot' };
+    return { left, soldPct, state: 'plenty' };
+  }
+
   goToProduct(p: Product, event: Event): void {
     event.stopPropagation();
+    if (!this.canViewProducts()) return;
     this.router.navigate(['/product', p.slug]);
+  }
+
+  /** Đặt/hủy nhắc "Flash Sale bắt đầu" cho khung đang hiển thị (logic dùng chung ở NotificationService). */
+  toggleReminder(event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    if (this.activeSlotStatus() !== 'Sắp diễn ra') return;
+    const d = this.slotDates()[this.displaySlot()];
+    this.notificationService.toggleFlashSaleReminder(
+      new Date(d.getFullYear(), d.getMonth(), d.getDate(), SLOT_START_HOUR),
+      new Date(d.getFullYear(), d.getMonth(), d.getDate(), SLOT_END_HOUR)
+    );
+  }
+
+  private snapshotStatuses(): Map<string, SlotStatus> {
+    const keys = this.slotKeys();
+    const statuses = this.slotStatuses();
+    return new Map(keys.map((k, i) => [k, statuses[i]] as [string, SlotStatus]));
+  }
+
+  /** Khi 1 khung đã đặt nhắc vừa chuyển sang "Đang diễn ra" lúc người dùng còn ở trang -> báo ngay + nạp lại thông báo. */
+  private checkDealStarted(): void {
+    const current = this.snapshotStatuses();
+    current.forEach((status, key) => {
+      if (this.prevStatusByKey.get(key) === 'Sắp diễn ra' && status === 'Đang diễn ra'
+          && this.notificationService.isFlashSaleReminded(key)) {
+        this.notificationService.announceFlashSaleStarted();
+        this.mascotService.react('surprised', 3200);
+      }
+    });
+    this.prevStatusByKey = current;
   }
 
   scrollPrev(): void {

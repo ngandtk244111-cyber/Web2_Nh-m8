@@ -5,6 +5,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { AuthApiService } from '../../core/services/auth-api.service';
 import { LoginModalService } from '../../core/services/login-modal.service';
 import { ToastService } from '../../core/services/toast.service';
+import { MascotService } from '../../core/services/mascot.service';
 import { AppIconComponent } from '../icon/icon.component';
 import { environment } from '../../../environments/environment';
 
@@ -34,7 +35,18 @@ export class LoginModalComponent implements AfterViewChecked {
   password = '';
   confirmPassword = '';
   otpCode = '';
-  isSubmitting = false;
+  private submitting = false;
+  /** Mọi luồng gửi form (đăng nhập/đăng ký/OTP/quên mật khẩu) đều đi qua cờ này -> đồng bộ luôn
+   *  trạng thái loading của mascot tại đây thay vì rải lời gọi ở từng luồng. */
+  get isSubmitting(): boolean {
+    return this.submitting;
+  }
+  set isSubmitting(value: boolean) {
+    if (value === this.submitting) return;
+    this.submitting = value;
+    if (value) this.mascotService.beginLoading({ immediate: true });
+    else this.mascotService.endLoading();
+  }
   showPassword = false;
   showConfirmPassword = false;
 
@@ -50,7 +62,8 @@ export class LoginModalComponent implements AfterViewChecked {
     public modalService: LoginModalService,
     private authService: AuthService,
     private authApi: AuthApiService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    public mascotService: MascotService
   ) {
     effect(() => {
       if (this.modalService.isOpen()) {
@@ -233,14 +246,17 @@ export class LoginModalComponent implements AfterViewChecked {
         if (res.success && res.user) {
           this.authService.setUser(res.user);
           this.toastService.success('Đăng nhập thành công!');
+          this.mascotService.react('happy');
           this.close();
         } else {
           this.errors.password = res.error || 'Thông tin đăng nhập sai, vui lòng thử lại.';
+          this.mascotService.react('sad');
         }
       },
       error: (err) => {
         this.isSubmitting = false;
         this.errors.password = err.error?.error || 'Thông tin đăng nhập sai, vui lòng thử lại.';
+        this.mascotService.react('sad');
       },
     });
   }
@@ -334,9 +350,11 @@ export class LoginModalComponent implements AfterViewChecked {
         if (res.success && res.user) {
           this.authService.setUser(res.user);
           this.toastService.success('Đăng ký tài khoản thành công!');
+          this.mascotService.react('happy');
           this.close();
         } else {
           this.errors.password = res.error || 'Đăng ký thất bại.';
+          this.mascotService.react('sad');
         }
       },
       error: (err) => {
@@ -431,9 +449,11 @@ export class LoginModalComponent implements AfterViewChecked {
         if (res.success && res.user) {
           this.authService.setUser(res.user);
           this.toastService.success('Đổi mật khẩu thành công, bạn đã đăng nhập.');
+          this.mascotService.react('happy');
           this.close();
         } else {
           this.errors.password = res.error || 'Không thể đổi mật khẩu.';
+          this.mascotService.react('sad');
         }
       },
       error: (err) => {
@@ -456,12 +476,17 @@ export class LoginModalComponent implements AfterViewChecked {
         } else if (res.success && res.user) {
           this.authService.setUser(res.user);
           this.toastService.success('Đăng nhập Google thành công!');
+          this.mascotService.react('happy');
           this.close();
         } else {
           this.toastService.error(res.error || 'Đăng nhập Google thất bại.');
+          this.mascotService.react('sad');
         }
       },
-      error: () => this.toastService.error('Không thể kết nối tới máy chủ.'),
+      error: () => {
+        this.toastService.error('Không thể kết nối tới máy chủ.');
+        this.mascotService.react('sad');
+      },
     });
   }
 
@@ -474,14 +499,17 @@ export class LoginModalComponent implements AfterViewChecked {
         if (res.success && res.user) {
           this.authService.setUser(res.user);
           this.toastService.success('Đăng nhập Google thành công!');
+          this.mascotService.react('happy');
           this.close();
         } else {
           this.errors.otp = res.error || 'Không thể hoàn tất đăng nhập.';
+          this.mascotService.react('sad');
         }
       },
       error: (err) => {
         this.isSubmitting = false;
         this.errors.otp = err.error?.error || 'Không thể kết nối tới máy chủ.';
+        this.mascotService.react('sad');
       },
     });
   }

@@ -4,6 +4,6 @@
   </button>
 
   <button type="button" class="fm__btn" aria-label="Mở trợ lý AI Luméa" (click)="open()">
-    <img src="assets/mascot/lumea-mascot.png" alt="Luméa mascot" class="fm__img">
+    <img [src]="mascotImg()" [alt]="mascotAlt()" class="fm__img" [class.fm__img--pulse]="pulsing()">
   </button>
 </div>

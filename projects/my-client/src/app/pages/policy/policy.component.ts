@@ -115,49 +115,6 @@ const POLICY_PAGES: Record<string, PolicyPage> = {
       },
     ],
   },
-  'faq': {
-    title: 'Câu Hỏi Thường Gặp',
-    updatedAt: '21/09/2026',
-    intro: 'Tổng hợp các câu hỏi khách hàng thường thắc mắc khi mua sắm tại Luméa.',
-    sections: [
-      {
-        heading: 'Sản phẩm nào tùy biến 3D được, sản phẩm nào không?',
-        body: [
-          'Không phải sản phẩm nào cũng tùy biến được — chỉ những sản phẩm được đánh dấu "Có thể tùy biến" (hiển thị nút Tuỳ biến 3D / khối "Tuỳ Chỉnh Sản Phẩm" trên trang chi tiết) mới hỗ trợ đổi màu, chất liệu, kích thước hoặc khắc tên. Thông tin này do đội ngũ Luméa cập nhật theo từng sản phẩm cụ thể.',
-        ],
-      },
-      {
-        heading: 'Tôi có xem trước mô hình 3D trước khi mua không?',
-        body: [
-          'Với các sản phẩm có gắn nhãn "Xem 3D", quý khách có thể xoay/phóng to mô hình 3D ngay trên trang chi tiết sản phẩm trước khi đặt hàng hoặc tuỳ biến.',
-        ],
-      },
-      {
-        heading: 'Thời gian sản xuất một sản phẩm in theo yêu cầu mất bao lâu?',
-        body: [
-          'Thời gian sản xuất phụ thuộc công nghệ in và kích thước sản phẩm, thường từ 2-5 ngày, được ghi rõ ở mục "Thời gian sản xuất" trong bảng thông số kỹ thuật của từng sản phẩm.',
-        ],
-      },
-      {
-        heading: 'Xu Luméa là gì và dùng để làm gì?',
-        body: [
-          'Xu Luméa là điểm thưởng tích luỹ khi mua sắm/tham gia hoạt động trên Luméa (ví dụ hoàn thành Trắc Nghiệm Phong Cách). Xu có thể dùng để giảm trừ trực tiếp vào giá trị đơn hàng khi thanh toán tại Giỏ hàng.',
-        ],
-      },
-      {
-        heading: 'Tôi muốn đặt một mẫu decor hoàn toàn riêng, chưa có sẵn trên web?',
-        body: [
-          'Quý khách có thể gửi yêu cầu thiết kế riêng tại mục "Thiết kế riêng", mô tả ý tưởng hoặc trò chuyện với Trợ Lý AI để tổng hợp thành bản mô tả (Design Brief) gửi cho đội ngũ Luméa báo giá sản xuất.',
-        ],
-      },
-      {
-        heading: 'Làm sao để theo dõi đơn hàng đã đặt?',
-        body: [
-          'Vào mục "Tra cứu đơn hàng" và nhập mã đơn hàng, hoặc xem trong "Tài khoản của tôi → Đơn Hàng Của Tôi" nếu quý khách đã đăng nhập khi đặt hàng.',
-        ],
-      },
-    ],
-  },
   'bao-mat': {
     title: 'Chính Sách Bảo Mật',
     updatedAt: '01/09/2026',

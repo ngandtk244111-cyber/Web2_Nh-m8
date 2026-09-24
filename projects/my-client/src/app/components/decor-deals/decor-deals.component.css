@@ -9,10 +9,10 @@
 
 
 .dd_hero {
-  --dd-gold: #FFD666;
-  --dd-orange: #FF8A3D;
-  --dd-red: #E5303D;
-  --dd-red-dark: #A81E28;
+  --dd-gold: #CD818E;
+  --dd-orange: #B7485B;
+  --dd-red: #B8202F;
+  --dd-red-dark: #7E1622;
   position: relative;
   overflow: hidden;
   display: flex;
@@ -21,10 +21,10 @@
   gap: 16px;
   padding: 22px 28px;
   min-height: 130px;
-  background: linear-gradient(180deg, #FFE9A8 0%, var(--dd-gold) 30%, var(--dd-orange) 75%, #F2622E 100%);
+  background: linear-gradient(180deg, #E2B4BC 0%, var(--dd-gold) 30%, var(--dd-orange) 75%, #891226 100%);
   border-radius: 20px 90px 20px 20px;
   border: 1px solid rgba(255, 255, 255, 0.35);
-  box-shadow: inset 0 -8px 24px rgba(168, 30, 40, 0.15);
+  box-shadow: inset 0 -8px 24px rgba(126, 22, 34, 0.15);
 }
 
 .dd_hero__rays {
@@ -82,7 +82,7 @@
 .dd_hero__title {
   flex: 1;
   text-align: center;
-  font-family: 'Anton', var(--font-family-heading, 'Cormorant Garamond', serif);
+  font-family: var(--font-family-heading, 'Inter', sans-serif);
   font-style: normal;
   color: #FFF6DD;
   font-weight: 400;
@@ -110,7 +110,7 @@
   flex-shrink: 0;
   padding: 11px 24px;
   border-radius: 999px;
-  background: linear-gradient(180deg, #FF9A4D, var(--dd-red));
+  background: linear-gradient(180deg, #B7485B, var(--dd-red));
   color: #ffffff;
   font-weight: 800;
   font-size: 13px;
@@ -125,7 +125,7 @@
 
 .dd_hero__cta:hover {
   transform: translateY(-2px);
-  background: linear-gradient(180deg, #FF8235, var(--dd-red-dark));
+  background: linear-gradient(180deg, #A3152D, var(--dd-red-dark));
 }
 
 @keyframes dd-shine-sweep {
@@ -144,8 +144,8 @@
 }
 
 @keyframes dd-cta-glow {
-  0%, 100% { box-shadow: 0 8px 18px rgba(168, 30, 40, 0.35), 0 0 0 0 rgba(255, 255, 255, 0.6); }
-  50% { box-shadow: 0 8px 18px rgba(168, 30, 40, 0.35), 0 0 0 7px rgba(255, 255, 255, 0); }
+  0%, 100% { box-shadow: 0 8px 18px rgba(126, 22, 34, 0.35), 0 0 0 0 rgba(255, 255, 255, 0.6); }
+  50% { box-shadow: 0 8px 18px rgba(126, 22, 34, 0.35), 0 0 0 7px rgba(255, 255, 255, 0); }
 }
 
 .dd_hero__blossoms {
@@ -204,8 +204,8 @@
   padding: 22px 24px 26px;
   border-radius: 20px;
   background:
-    radial-gradient(circle at 8% 10%, rgba(46, 99, 184, 0.06), transparent 45%),
-    radial-gradient(circle at 92% 15%, rgba(46, 99, 184, 0.05), transparent 45%),
+    radial-gradient(circle at 8% 10%, rgba(163, 21, 45, 0.06), transparent 45%),
+    radial-gradient(circle at 92% 15%, rgba(163, 21, 45, 0.05), transparent 45%),
     #F6EBE3;
   border: 1px solid rgba(0, 0, 0, 0.06);
 }
@@ -224,14 +224,14 @@
   left: calc(50% - 50px);
   top: 50%;
   transform: translate(-50%, -50%);
-  font-family: 'Anton', var(--font-family-heading, 'Cormorant Garamond', serif);
+  font-family: var(--font-family-heading, 'Inter', sans-serif);
   font-style: normal;
   font-size: 22px;
   font-weight: 400;
   letter-spacing: 0.03em;
   text-transform: uppercase;
-  color: #2E63B8;
-  text-shadow: 0 2px 0 rgba(15, 44, 87, 0.22);
+  color: #A3152D;
+  text-shadow: 0 2px 0 rgba(78, 10, 22, 0.22);
   white-space: nowrap;
 }
 
@@ -251,7 +251,7 @@
   height: 52px;
   border-radius: 16px;
   background: #ffffff;
-  border: 2px solid rgba(46, 99, 184, 0.4);
+  border: 2px solid rgba(163, 21, 45, 0.4);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
 }
 
@@ -264,7 +264,7 @@
 .dd_badge40 strong {
   font-size: 20px;
   font-weight: 900;
-  color: #9C4A42;
+  color: #A3152D;
   line-height: 1.1;
 }
 
@@ -303,9 +303,9 @@
 }
 
 .dd_tab--active {
-  background: rgba(46, 99, 184, 0.1);
-  color: #2055AF;
-  border-bottom-color: #2E63B8;
+  background: rgba(163, 21, 45, 0.1);
+  color: #891226;
+  border-bottom-color: #A3152D;
 }
 
 .dd_tab__time {
@@ -319,7 +319,7 @@
 }
 
 .dd_tab--active .dd_tab__status {
-  color: #2055AF;
+  color: #891226;
   font-weight: 600;
 }
 
@@ -351,9 +351,9 @@
   min-width: 30px;
   padding: 5px 7px;
   border-radius: 8px;
-  background: #2E63B8;
+  background: #A3152D;
   color: #ffffff;
-  font-family: ui-monospace, monospace;
+  font-family: var(--font-family-content, 'Inter', sans-serif);
   font-size: 15px;
   font-weight: 800;
 }
@@ -361,7 +361,7 @@
 .dd_countdown-sep {
   font-size: 15px;
   font-weight: 800;
-  color: #2E63B8;
+  color: #A3152D;
 }
 
 /* ---------- 5. Product carousel: chỉ vài card nhỏ, khoảng trắng lớn còn lại ---------- */
@@ -390,8 +390,8 @@
 }
 
 .dd_nav:hover {
-  background: #2E63B8;
-  border-color: #2E63B8;
+  background: #A3152D;
+  border-color: #A3152D;
   color: #ffffff;
 }
 
@@ -420,7 +420,7 @@
   flex: 0 0 176px;
   width: 176px;
   background: #ffffff;
-  border: 2px solid #FFD666;
+  border: 2px solid #CD818E;
   border-radius: 14px;
   padding: 12px;
   text-decoration: none;
@@ -431,7 +431,7 @@
 }
 
 .dd_card:hover {
-  border-color: #FF8A3D;
+  border-color: #B7485B;
   transform: translateY(-2px);
   box-shadow: 0 10px 22px rgba(255, 138, 61, 0.25);
 }
@@ -440,7 +440,7 @@
   position: relative;
   border-radius: 10px;
   overflow: hidden;
-  border: 2px solid #2E63B8;
+  border: 2px solid #A3152D;
   margin-bottom: 8px;
 }
 
@@ -455,13 +455,13 @@
   position: absolute;
   top: 0;
   right: 0;
-  background: linear-gradient(180deg, #FF5A5F, #E5303D);
+  background: linear-gradient(180deg, #CF3A4A, #B8202F);
   color: #ffffff;
   font-size: 11px;
   font-weight: 800;
   padding: 3px 8px;
   border-radius: 0 8px 0 8px;
-  box-shadow: 0 2px 4px rgba(168, 30, 40, 0.35);
+  box-shadow: 0 2px 4px rgba(126, 22, 34, 0.35);
 }
 
 .dd_card__name {
@@ -484,10 +484,10 @@
 }
 
 .dd_card__price {
-  font-family: ui-monospace, monospace;
+  font-family: var(--font-family-content, 'Inter', sans-serif);
   font-size: 14.5px;
   font-weight: 800;
-  color: #9C4A42;
+  color: #A3152D;
 }
 
 .dd_card__original {
@@ -504,7 +504,7 @@
   margin-top: 8px;
   padding: 4px 9px;
   border-radius: 999px;
-  background: linear-gradient(180deg, #FFA94D, #FF8A3D);
+  background: linear-gradient(180deg, #CD818E, #B7485B);
   color: #ffffff;
   font-size: 10.5px;
   font-weight: 800;
@@ -512,12 +512,87 @@
   box-shadow: 0 2px 6px rgba(255, 138, 61, 0.35);
 }
 
+.dd_stock {
+  position: relative;
+  margin-top: 8px;
+  height: 20px;
+  border-radius: 999px;
+  background: #F3E3E6;
+  overflow: hidden;
+}
+
+.dd_stock__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #E2B4BC, #CD818E);
+  transition: width 0.4s ease;
+}
+
+.dd_stock__label {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 0 8px;
+  color: #891226;
+  font-size: 10.5px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.dd_stock--hot .dd_stock__fill {
+  background: linear-gradient(90deg, #CD818E, #B7485B);
+}
+
+.dd_stock--hot .dd_stock__label {
+  color: #ffffff;
+}
+
+/* Sắp hết: đỏ rực + nhấp nháy nhẹ để gây chú ý. */
+.dd_stock--low {
+  background: #FFD6D6;
+  box-shadow: 0 0 0 1px #FF1F3D, 0 2px 8px rgba(255, 31, 61, 0.45);
+  animation: dd-stock-pulse 1.2s ease-in-out infinite;
+}
+
+.dd_stock--low .dd_stock__fill {
+  background: linear-gradient(90deg, #FF4D4D, #FF0022);
+}
+
+.dd_stock--low .dd_stock__label {
+  color: #ffffff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
+}
+
+.dd_stock--out {
+  background: #E5E5E5;
+}
+
+.dd_stock--out .dd_stock__fill {
+  background: #BDBDBD;
+}
+
+.dd_stock--out .dd_stock__label {
+  color: #ffffff;
+}
+
+@keyframes dd-stock-pulse {
+  0%, 100% { box-shadow: 0 0 0 1px #FF1F3D, 0 2px 8px rgba(255, 31, 61, 0.45); }
+  50% { box-shadow: 0 0 0 2px #FF1F3D, 0 2px 14px rgba(255, 31, 61, 0.7); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dd_stock--low { animation: none; }
+}
+
 .dd_card__cta {
   margin-top: 10px;
   padding: 8px;
   border-radius: 10px;
   border: none;
-  background: linear-gradient(180deg, #FF8A3D, #E5303D);
+  background: linear-gradient(180deg, #B7485B, #B8202F);
   color: #ffffff;
   font-size: 12.5px;
   font-weight: 800;
@@ -526,7 +601,44 @@
 }
 
 .dd_card__cta:hover {
-  background: linear-gradient(180deg, #FF7526, #A81E28);
+  background: linear-gradient(180deg, #A3152D, #7E1622);
+}
+
+/* Deal chưa diễn ra: thẻ không bấm xem được, chỉ có nút nhận thông báo. */
+.dd_card--locked {
+  cursor: default;
+}
+
+.dd_card--locked:hover {
+  border-color: #CD818E;
+  transform: none;
+  box-shadow: 0 4px 12px rgba(255, 138, 61, 0.12);
+}
+
+.dd_card__cta--notify {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  background: #ffffff;
+  color: #A3152D;
+  border: 1.5px solid #B7485B;
+  white-space: nowrap;
+}
+
+.dd_card__cta--notify:hover:not(:disabled) {
+  background: #FBEDEF;
+}
+
+.dd_card__cta--notify.dd_card__cta--on {
+  background: linear-gradient(180deg, #B7485B, #B8202F);
+  color: #ffffff;
+  border-color: transparent;
+}
+
+.dd_card__cta--notify:disabled {
+  opacity: 0.6;
+  cursor: default;
 }
 
 .dd_empty {

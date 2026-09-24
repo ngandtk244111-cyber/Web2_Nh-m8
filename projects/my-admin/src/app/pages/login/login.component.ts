@@ -40,4 +40,10 @@ export class LoginComponent {
       },
     });
   }
+
+  fillDemo(u: string, p: string): void {
+    this.username = u;
+    this.password = p;
+    this.error = '';
+  }
 }

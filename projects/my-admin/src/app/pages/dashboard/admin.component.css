@@ -1,0 +1,5 @@
+/* Style dùng chung (bảng, nav, card, modal, animation) nằm trong src/styles.css */
+:host {
+  display: block;
+  height: 100vh;
+}

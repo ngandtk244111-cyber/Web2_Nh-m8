@@ -9,40 +9,50 @@
       <app-promo-banner-grid appScrollReveal="up"></app-promo-banner-grid>
     </div>
 
+    <!-- DẢI CHỮ CHẠY: nhắc lại giá trị cốt lõi, ngăn cách phần promo với nội dung chính (track nhân đôi để lặp liền mạch) -->
+    <div class="hm-marquee" aria-label="Điểm nổi bật của Luméa">
+      <div class="hm-marquee__track">
+        <ng-container *ngFor="let copy of [0, 1]">
+          <span *ngFor="let text of marqueeItems" class="hm-marquee__item" [attr.aria-hidden]="copy === 1 ? 'true' : null">
+            {{ text }}<span class="hm-marquee__sep" aria-hidden="true">✦</span>
+          </span>
+        </ng-container>
+      </div>
+    </div>
+
     <div class="space-y-24 pb-20 pt-16">
 
       <!-- 1. DECOR DEALS -->
       <app-decor-deals appScrollReveal="up"></app-decor-deals>
 
-      <!-- 2. DANH MỤC SẢN PHẨM -->
+      <!-- 2. DANH MỤC SẢN PHẨM: 8 thẻ đồng nhất, minh họa 3D cùng phong cách (4 × 2 desktop) -->
       <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" appScrollReveal="up">
-        <div class="flex items-end justify-between mb-6 gap-4">
-          <div>
-            <p class="text-xs sm:text-sm font-bold uppercase tracking-wide text-amber-700 mb-1">
-              Khám Phá Theo Danh Mục
-            </p>
-            <h2 class="font-serif text-2xl sm:text-3xl font-bold text-neutral-900">
-              Danh Mục Sản Phẩm
-            </h2>
+        <div class="cat-panel">
+          <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-6 mb-6 sm:mb-8">
+            <div>
+              <p class="cat-eyebrow">Khám phá theo danh mục</p>
+              <h2 class="cat-title">Danh Mục Sản Phẩm</h2>
+              <p class="cat-sub">Khám phá các danh mục sản phẩm đa dạng, phù hợp với mọi phong cách và không gian sống.</p>
+            </div>
+            <a routerLink="/catalog" class="cat-viewall" aria-label="Xem toàn bộ danh mục sản phẩm">
+              <span>Xem toàn bộ danh mục</span>
+              <span aria-hidden="true">→</span>
+            </a>
           </div>
-          <a
-            routerLink="/catalog"
-            class="hidden sm:inline-flex text-xs font-semibold text-amber-400 hover:text-amber-700 items-center gap-1">
-            <span>Xem toàn bộ danh mục →</span>
-          </a>
-        </div>
 
-        <div class="grid grid-cols-4 sm:grid-cols-4 lg:grid-cols-8 gap-y-6 gap-x-2">
-          <a
-            *ngFor="let cat of categories"
-            [routerLink]="cat.link || '/catalog'"
-            [queryParams]="cat.queryParams"
-            class="flex flex-col items-center justify-center gap-2 text-center group">
-            <span class="cat-icon w-14 h-14 sm:w-20 sm:h-20 rounded-full overflow-hidden">
-              <img [src]="cat.image" [alt]="cat.label" class="w-full h-full object-cover" (error)="onCategoryImageError($event)">
-            </span>
-            <span class="text-[11px] sm:text-xs font-medium text-neutral-700 group-hover:text-amber-700 leading-tight">{{ cat.label }}</span>
-          </a>
+          <div class="cat-grid" appScrollReveal="stagger">
+            <a
+              *ngFor="let cat of categories"
+              [routerLink]="cat.link || '/catalog'"
+              [queryParams]="cat.queryParams"
+              class="cat-card"
+              [attr.aria-label]="'Xem danh mục ' + cat.label">
+              <span class="cat-card__art print-layer">
+                <img [src]="cat.image" [alt]="" aria-hidden="true" loading="lazy" draggable="false">
+              </span>
+              <span class="cat-card__name">{{ cat.label }}</span>
+            </a>
+          </div>
         </div>
       </section>
 
@@ -52,34 +62,18 @@
       <!-- 4. SẢN PHẨM NỔI BẬT -->
       <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" appScrollReveal="up">
 
-        <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
+        <div class="ps-head">
           <div>
-            <div class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-300 bg-emerald-500/20 border border-emerald-500/30 px-3 py-1 rounded-full mb-2">
-              <app-icon name="check" [size]="14"></app-icon>
-              <span>Giao Hỏa Tốc</span>
-            </div>
-            <h2 class="font-serif text-2xl sm:text-3xl font-bold text-neutral-900">
-              Sản Phẩm Nổi Bật
-            </h2>
-            <p class="text-xs sm:text-sm text-neutral-600 mt-1">
-              Bàn phụ gỗ sồi, kệ sách, đồng hồ xi măng và bình hoa gốm thủ công – đóng gói và giao ngay trong ngày.
-            </p>
+            <p class="ps-eyebrow">Giao hỏa tốc</p>
+            <h2 class="ps-title">Sản Phẩm Nổi Bật</h2>
+            <p class="ps-sub">Bàn phụ gỗ sồi, kệ sách, đồng hồ xi măng và bình hoa gốm thủ công – đóng gói và giao ngay trong ngày.</p>
           </div>
-
-          <a
-            routerLink="/catalog"
-            [queryParams]="{ productionType: 'READY_STOCK' }"
-            class="text-xs font-semibold text-amber-600 hover:text-amber-700 flex items-center gap-1">
-            <span>Xem tất cả sản phẩm nổi bật →</span>
+          <a routerLink="/catalog" [queryParams]="{ productionType: 'READY_STOCK' }" class="ps-link">
+            <span>Xem tất cả</span><span aria-hidden="true">→</span>
           </a>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <app-product-card
-            *ngFor="let prod of readyStockProducts"
-            [product]="prod">
-          </app-product-card>
-        </div>
+        <app-product-carousel appScrollReveal="stagger" [products]="readyStockProducts"></app-product-carousel>
 
       </section>
 
@@ -87,9 +81,7 @@
       <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" appScrollReveal="up">
         <div class="relative overflow-hidden bg-gradient-to-br from-[#FFFFFF] via-[#FBF7EE] to-[#FFFFFF] rounded-3xl p-6 sm:p-10 border border-amber-500/25 shadow-2xl sr-card">
 
-          <span class="sr-card__photo" aria-hidden="true"></span>
-          <span class="sr-card__shine" aria-hidden="true"></span>
-          <span class="sr-card__sparkles" aria-hidden="true"></span>
+          <span class="sr-card__photo" aria-hidden="true" [appParallax]="0.18" [parallaxMax]="60"></span>
 
           <div class="relative z-10 flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
             <div>
@@ -97,7 +89,7 @@
                 <app-icon name="room" [size]="14"></app-icon>
                 <span>Trải Nghiệm Độc Quyền</span>
               </div>
-              <h2 class="font-serif text-2xl sm:text-3xl font-bold text-neutral-900">
+              <h2 class="font-serif text-2xl sm:text-3xl font-bold text-amber-800">
                 Shop The Room: Khám Phá Không Gian 3D
               </h2>
               <p class="text-xs sm:text-sm text-neutral-600 mt-1 max-w-xl">
@@ -124,34 +116,18 @@
       <!-- 7. SẢN PHẨM IN 3D CÓ THỂ TÙY BIẾN -->
       <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" appScrollReveal="up">
 
-        <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
+        <div class="ps-head">
           <div>
-            <div class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-amber-700 bg-amber-500/20 border border-amber-500/30 px-3 py-1 rounded-full mb-2">
-              <app-icon name="sliders" [size]="14"></app-icon>
-              <span>Cá Nhân Hóa Trực Quan</span>
-            </div>
-            <h2 class="font-serif text-2xl sm:text-3xl font-bold text-neutral-900">
-              Sản Phẩm In 3D Có Thể Tùy Biến
-            </h2>
-            <p class="text-xs sm:text-sm text-neutral-600 mt-1">
-              Xem trước 3D ngay trên web: đổi màu sắc, chất liệu mờ/bóng, kích thước và khắc tên theo ý thích.
-            </p>
+            <p class="ps-eyebrow">Cá nhân hóa trực quan</p>
+            <h2 class="ps-title">Sản Phẩm In 3D Có Thể Tùy Biến</h2>
+            <p class="ps-sub">Xem trước 3D ngay trên web: đổi màu sắc, chất liệu mờ/bóng, kích thước và khắc tên theo ý thích.</p>
           </div>
-
-          <a
-            routerLink="/catalog"
-            [queryParams]="{ customizableOnly: true }"
-            class="text-xs font-semibold text-amber-600 hover:text-amber-700 flex items-center gap-1">
-            <span>Xem tất cả sản phẩm tùy biến →</span>
+          <a routerLink="/catalog" [queryParams]="{ customizableOnly: true }" class="ps-link">
+            <span>Xem tất cả</span><span aria-hidden="true">→</span>
           </a>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <app-product-card
-            *ngFor="let prod of customizableProducts"
-            [product]="prod">
-          </app-product-card>
-        </div>
+        <app-product-carousel appScrollReveal="stagger" [products]="customizableProducts"></app-product-carousel>
 
       </section>
 
@@ -165,7 +141,7 @@
               <span>AI Idea Assistant</span>
             </div>
 
-            <h3 class="font-serif text-3xl sm:text-4xl font-bold tracking-tight text-neutral-900">
+            <h3 class="font-serif text-3xl sm:text-4xl font-bold tracking-tight text-amber-800">
               Bạn Có Ý Tưởng Riêng Nhưng Chưa Biết Vẽ?
             </h3>
 
@@ -177,7 +153,7 @@
               <button
                 type="button"
                 (click)="openAiAssistant()"
-                class="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-neutral-950 font-extrabold text-sm shadow-[0_4px_25px_rgba(169,198,234,0.35)] hover:shadow-[0_4px_35px_rgba(169,198,234,0.5)] transition flex items-center gap-2">
+                class="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-white font-extrabold text-sm shadow-[0_4px_25px_rgba(205, 129, 142,0.35)] hover:shadow-[0_4px_35px_rgba(205, 129, 142,0.5)] transition flex items-center gap-2">
                 <app-icon name="sparkles" [size]="18"></app-icon>
                 <span>Trò Chuyện Với AI Ngay</span>
               </button>
@@ -190,50 +166,26 @@
             </div>
           </div>
 
-          <!-- Decorative right graphic: ảnh concept AI/3D thật, có hiệu ứng động (shine + sparkle + zoom nhẹ) -->
-          <div class="ai-banner__photo-panel" aria-hidden="true">
-            <span class="ai-banner__shine"></span>
-            <span class="ai-banner__sparkles"></span>
-          </div>
+          <!-- Decorative right graphic: ảnh concept AI/3D thật, trôi nhẹ theo cuộn trang (parallax) -->
+          <div class="ai-banner__photo-panel" aria-hidden="true" [appParallax]="0.1" [parallaxMax]="24"></div>
 
         </div>
       </section>
 
-      <!-- 8. TIN TỨC -->
+      <!-- 8. TIN TỨC (bố cục theo mục "暮らしのヒント" của Nitori: tiêu đề + "Xem tất cả", hàng ô vuông) -->
       <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" appScrollReveal="up">
-        <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-6 gap-4">
-          <div class="flex items-center gap-2">
-            <span class="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_6px_#A9C6EA]"></span>
-            <div>
-              <h2 class="font-serif text-2xl sm:text-3xl font-bold text-neutral-900">Tin Tức</h2>
-              <p class="text-xs sm:text-sm text-neutral-600 mt-1">
-                Kiến thức in 3D, chất liệu PLA/PETG và mẹo bài trí không gian sống
-              </p>
-            </div>
-          </div>
-          <a routerLink="/news" class="text-xs font-semibold text-amber-600 hover:text-amber-700 flex items-center gap-1 self-start sm:self-auto">
-            <span>Xem tất cả →</span>
-          </a>
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="font-sans text-xl sm:text-2xl font-bold text-neutral-900 leading-8">Tin Tức</h2>
+          <a routerLink="/news" class="text-sm text-neutral-700 hover:text-amber-600 transition">Xem tất cả &rsaquo;</a>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <div class="nt-row" appScrollReveal="stagger">
           <a
             *ngFor="let article of newsArticles"
             [routerLink]="['/news', article.slug]"
-            class="rounded-2xl overflow-hidden border border-neutral-200 hover:border-amber-500/30 bg-[#FFFFFF] shadow-soft transition group">
-            <div class="relative aspect-video overflow-hidden">
-              <img [src]="article.coverImage" [alt]="article.title" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-              <span class="absolute top-3 left-3 bg-white text-amber-700 text-[10px] font-extrabold px-2 py-0.5 rounded-md shadow">
-                {{ article.category }}
-              </span>
-            </div>
-            <div class="p-4">
-              <h4 class="font-bold text-sm text-neutral-900 line-clamp-2">{{ article.title }}</h4>
-              <p class="text-xs text-neutral-600 line-clamp-2 mt-1">{{ article.excerpt }}</p>
-              <div class="mt-3 text-xs text-neutral-500">
-                <span>{{ article.publishedAt }} • {{ article.readTime }}</span>
-              </div>
-            </div>
+            class="nt-tile nt-tile--square">
+            <img class="print-layer" [src]="article.coverImage" [alt]="article.title" loading="lazy">
+            <span class="nt-tile__cap line-clamp-2">{{ article.title }}</span>
           </a>
         </div>
       </section>
@@ -242,9 +194,9 @@
       <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" *ngIf="lifeTipsArticles.length > 0" appScrollReveal="up">
         <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-6 gap-4">
           <div class="flex items-center gap-2">
-            <span class="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_6px_#A9C6EA]"></span>
+            <span class="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_6px_#CD818E]"></span>
             <div>
-              <h2 class="font-serif text-2xl sm:text-3xl font-bold text-neutral-900">Mẹo Sống</h2>
+              <h2 class="font-serif text-2xl sm:text-3xl font-bold text-amber-800">Mẹo Sống</h2>
               <p class="text-xs sm:text-sm text-neutral-600 mt-1">
                 Mẹo sắp xếp không gian, chăm sóc góc học tập/làm việc và decor đời sống hằng ngày
               </p>
@@ -255,12 +207,12 @@
           </a>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6" appScrollReveal="stagger">
           <a
             *ngFor="let article of lifeTipsArticles"
             [routerLink]="['/news', article.slug]"
             class="rounded-2xl overflow-hidden border border-neutral-200 hover:border-amber-500/30 bg-[#FFFFFF] shadow-soft transition group">
-            <div class="relative aspect-video overflow-hidden">
+            <div class="relative aspect-video overflow-hidden print-layer">
               <img [src]="article.coverImage" [alt]="article.title" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
               <span class="absolute top-3 left-3 bg-white text-amber-700 text-[10px] font-extrabold px-2 py-0.5 rounded-md shadow">
                 {{ article.category }}
@@ -277,54 +229,20 @@
         </div>
       </section>
 
-      <!-- 10. Ý TƯỞNG PHỐI ĐỒ (Góc Cộng Đồng Decor thật — người dùng tự chia sẻ không gian) -->
+      <!-- 10. Ý TƯỞNG PHỐI ĐỒ (bố cục theo mục "コーディネートアイデア" của Nitori: hàng ô ngang, không chú thích rời) -->
       <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" appScrollReveal="up">
-        <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-6 gap-4">
-          <div class="flex items-center gap-2">
-            <span class="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_6px_#A9C6EA]"></span>
-            <div>
-              <h2 class="font-serif text-2xl sm:text-3xl font-bold text-neutral-900">Ý Tưởng Phối Đồ</h2>
-              <p class="text-xs sm:text-sm text-neutral-600 mt-1">
-                Không gian bàn học & phòng ngủ thật từ cộng đồng Luméa, bấm vào ảnh để xem món đồ được gắn tag
-              </p>
-            </div>
-          </div>
-          <a routerLink="/community" class="text-xs font-semibold text-amber-600 hover:text-amber-700 flex items-center gap-1 self-start sm:self-auto">
-            <span>Xem tất cả →</span>
-          </a>
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="font-sans text-xl sm:text-2xl font-bold text-neutral-900 leading-8">Ý Tưởng Phối Đồ</h2>
+          <a routerLink="/community" class="text-sm text-neutral-700 hover:text-amber-600 transition">Xem tất cả &rsaquo;</a>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6" *ngIf="communityPosts.length > 0">
+        <div class="nt-row" appScrollReveal="stagger">
           <a
-            *ngIf="communityPosts[0] as first"
+            *ngFor="let post of communityPosts"
             routerLink="/community"
-            class="relative rounded-2xl overflow-hidden border border-neutral-200 hover:border-amber-500/40 bg-neutral-100 aspect-[4/3] sm:aspect-auto sm:row-span-2 group">
-            <img [src]="first.imageUrl" [alt]="first.title" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent flex flex-col justify-end p-4">
-              <p class="text-sm font-bold text-white line-clamp-1">{{ first.title }}</p>
-              <p class="text-[11px] text-amber-300">❤️ {{ first.likesCount }} yêu thích</p>
-            </div>
-          </a>
-
-          <div class="grid grid-cols-2 gap-4 sm:gap-6">
-            <a
-              *ngFor="let post of communityPosts.slice(1)"
-              routerLink="/community"
-              class="relative rounded-2xl overflow-hidden border border-neutral-200 hover:border-amber-500/40 bg-neutral-100 aspect-square group">
-              <img [src]="post.imageUrl" [alt]="post.title" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-              <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition flex flex-col justify-end p-3">
-                <p class="text-xs font-bold text-neutral-900 line-clamp-1">{{ post.title }}</p>
-                <p class="text-[11px] text-amber-700">❤️ {{ post.likesCount }} yêu thích</p>
-              </div>
-            </a>
-          </div>
-        </div>
-
-        <div class="mt-6 text-center">
-          <a
-            routerLink="/community"
-            class="inline-flex px-6 py-2.5 rounded-xl bg-neutral-100 hover:bg-neutral-200 text-amber-700 border border-neutral-300 hover:border-amber-400/40 text-xs font-bold transition">
-            Chia sẻ góc phòng của bạn +
+            class="nt-tile nt-tile--wide">
+            <img class="print-layer" [src]="post.imageUrl" [alt]="post.title" loading="lazy">
+            <span class="nt-tile__cap line-clamp-2">{{ post.title }}</span>
           </a>
         </div>
       </section>
@@ -334,5 +252,5 @@
 
     </div>
 
-    <!-- POPUP "Có thể bạn chưa biết?" — tự mở sau 3s, dữ liệu từ bài viết Insights nổi bật -->
+    <!-- POPUP "Có thể bạn chưa biết?" — mở khi người dùng cuộn qua ~40% trang, dữ liệu từ bài viết Insights nổi bật -->
     <app-tip-popup></app-tip-popup>

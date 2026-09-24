@@ -3,14 +3,16 @@
     <div
       *ngFor="let item of tickerService.items; let i = index"
       class="hb_slide"
-      [class.hb_slide--active]="i === tickerService.activeIndex()"
-      [style.background-image]="item.gradient + ', url(' + item.image + ')'">
+      [class.hb_slide--active]="i === tickerService.activeIndex()">
+
+      <!-- Nền tách lớp riêng để zoom chậm (Ken Burns) mà không kéo theo chữ -->
+      <div class="hb_slide__bg" [style.background-image]="'url(' + item.image + ')'"></div>
 
       <div class="hb_slide__inner">
         <div class="hb_slide__icon">
           <app-icon [name]="item.icon" [size]="40"></app-icon>
         </div>
-        <h1 class="hb_slide__title">{{ item.title }}</h1>
+        <h1 class="hb_slide__title"><span class="hb_mask"><span>{{ item.title }}</span></span></h1>
         <p class="hb_slide__subtitle">{{ item.subtitle }}</p>
 
         <button
@@ -38,6 +40,15 @@
   <button type="button" class="hb_arrow hb_arrow--next" aria-label="Banner tiếp theo" (click)="goNext()">
     <app-icon name="chevron-right" [size]="20"></app-icon>
   </button>
+
+  <!-- Thanh tiến trình: phần tử được tạo lại mỗi chu kỳ autoplay (cycle) nên animation luôn chạy lại từ 0 -->
+  <div class="hb_progress" [class.hb_progress--paused]="tickerService.isPaused()" aria-hidden="true">
+    <span
+      *ngFor="let c of [tickerService.cycle()]"
+      class="hb_progress__bar"
+      [style.animation-duration.ms]="intervalMs">
+    </span>
+  </div>
 
   <!-- Indicators -->
   <div class="hb_dots">

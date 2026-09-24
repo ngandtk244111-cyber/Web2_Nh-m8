@@ -7,7 +7,7 @@
             <app-icon name="room" [size]="14"></app-icon>
             <span>Không Gian 3D Trực Quan (Shop The Room)</span>
           </div>
-          <h1 class="font-serif text-2xl sm:text-3xl font-extrabold text-neutral-900">
+          <h1 class="font-serif text-2xl sm:text-3xl font-extrabold text-amber-800">
             {{ currentRoom.name }}
           </h1>
           <p class="text-xs sm:text-sm text-neutral-600 mt-1">
@@ -22,7 +22,7 @@
             *ngFor="let r of rooms"
             (click)="selectRoom(r)"
             [class]="currentRoom.id === r.id 
-              ? 'bg-gradient-to-r from-amber-400 to-amber-600 text-neutral-950 font-extrabold shadow-[0_0_12px_rgba(169,198,234,0.3)]' 
+              ? 'bg-gradient-to-r from-amber-400 to-amber-600 text-white font-extrabold shadow-[0_0_12px_rgba(205, 129, 142,0.3)]' 
               : 'bg-neutral-100 border border-neutral-300 text-neutral-700 hover:text-amber-700 hover:border-amber-500/40 font-medium'"
             class="px-4 py-2 rounded-2xl text-xs whitespace-nowrap transition flex items-center gap-2">
             <app-icon name="room" [size]="14"></app-icon>
@@ -55,10 +55,10 @@
           
           <div class="border-b border-neutral-200 pb-4">
             <div class="flex items-center justify-between">
-              <h3 class="font-serif text-lg font-bold text-neutral-900">
+              <h3 class="font-serif text-lg font-bold text-amber-800">
                 Mua Trọn Bộ Phòng (Buy This Look)
               </h3>
-              <span class="text-xs font-extrabold text-neutral-950 bg-gradient-to-r from-amber-400 to-amber-500 px-2.5 py-0.5 rounded-full shadow-sm">
+              <span class="text-xs font-extrabold text-white bg-gradient-to-r from-amber-400 to-amber-500 px-2.5 py-0.5 rounded-full shadow-sm">
                 -15% Combo
               </span>
             </div>
@@ -104,11 +104,11 @@
                 class="w-14 h-14 rounded-xl object-cover border border-neutral-300 bg-neutral-200 flex-shrink-0">
 
               <div class="min-w-0 flex-1">
-                <h4 class="text-xs font-bold text-neutral-900 truncate">{{ p.name }}</h4>
-                <div class="text-[10px] text-neutral-600 mt-0.5">{{ p.categoryName }}</div>
+                <h4 class="text-xs font-bold text-neutral-900 truncate" [class.text-white]="selectedProductIds.has(p.id)">{{ p.name }}</h4>
+                <div class="text-[10px] text-neutral-600 mt-0.5" [class.text-amber-200]="selectedProductIds.has(p.id)">{{ p.categoryName }}</div>
                 <div class="mt-1 flex items-baseline gap-2">
-                  <span class="text-xs font-bold text-amber-400">{{ p.basePrice | vnd }}</span>
-                  <a [routerLink]="['/product', p.slug]" class="text-[10px] text-neutral-500 hover:text-amber-400 underline">
+                  <span class="text-xs font-bold text-amber-400" [class.text-white]="selectedProductIds.has(p.id)">{{ p.basePrice | vnd }}</span>
+                  <a [routerLink]="['/product', p.slug]" class="text-[10px] text-neutral-500 hover:text-amber-400 underline" [class.text-amber-200]="selectedProductIds.has(p.id)">
                     Xem
                   </a>
                 </div>
@@ -134,7 +134,7 @@
               type="button" 
               (click)="addSelectedToCart()"
               [disabled]="selectedProductIds.size === 0"
-              class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 disabled:opacity-50 text-neutral-950 font-extrabold text-xs sm:text-sm shadow-[0_4px_25px_rgba(169,198,234,0.35)] transition flex items-center justify-center gap-2">
+              class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 disabled:opacity-50 text-white font-extrabold text-xs sm:text-sm shadow-[0_4px_25px_rgba(205, 129, 142,0.35)] transition flex items-center justify-center gap-2">
               <app-icon name="cart" [size]="16"></app-icon>
               <span>Thêm {{ selectedProductIds.size }} món vào giỏ hàng</span>
             </button>

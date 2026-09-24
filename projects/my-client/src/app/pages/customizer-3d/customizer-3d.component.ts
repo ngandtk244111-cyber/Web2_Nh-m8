@@ -16,6 +16,7 @@ import { ThreeViewerComponent } from '../../components/three-viewer/three-viewer
 import { AppIconComponent } from '../../components/icon/icon.component';
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
 import { ToastService } from '../../core/services/toast.service';
+import { MascotService } from '../../core/services/mascot.service';
 
 @Component({
   selector: 'app-customizer-3d',
@@ -43,7 +44,8 @@ export class Customizer3dComponent implements OnInit {
     private cartService: CartService,
     private route: ActivatedRoute,
     private router: Router,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private mascotService: MascotService
   ) {
     // Danh sách sản phẩm tùy biến giờ nạp bất đồng bộ từ backend — dùng effect() để tự chọn
     // sản phẩm ngay khi dữ liệu về, thay vì trông chờ nó đã có sẵn lúc ngOnInit.
@@ -196,6 +198,9 @@ export class Customizer3dComponent implements OnInit {
     if (!this.selectedProduct || !this.selectedConfig) return;
     this.cartService.addToCart(this.selectedProduct, 1, this.selectedConfig);
     this.toastService.success(`Đã thêm "${this.selectedProduct.name}" (tùy biến) vào giỏ hàng`);
+    // Hoàn thành tùy biến 3D là một cột mốc lớn hơn "thêm giỏ hàng" thường —
+    // biểu cảm tự tin thay vì chỉ cười thường.
+    this.mascotService.react('confident');
   }
 
   private saveCurrentDraft(): void {

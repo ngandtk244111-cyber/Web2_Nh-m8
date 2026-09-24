@@ -34,6 +34,14 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/custom-request/custom-request-detail/custom-request-detail.component').then(m => m.CustomRequestDetailComponent),
   },
   {
+    path: 'flash-sale',
+    loadComponent: () => import('./pages/flash-sale/flash-sale.component').then(m => m.FlashSaleComponent),
+  },
+  {
+    path: 'thuong-hieu/:style',
+    loadComponent: () => import('./pages/brand/brand.component').then(m => m.BrandComponent),
+  },
+  {
     path: 'community',
     loadComponent: () => import('./pages/community/community.component').then(m => m.CommunityComponent),
   },
@@ -56,6 +64,10 @@ export const routes: Routes = [
   {
     path: 'favorites',
     loadComponent: () => import('./pages/favorites/favorites.component').then(m => m.FavoritesComponent),
+  },
+  {
+    path: 'chinh-sach/faq',
+    loadComponent: () => import('./pages/faq/faq.component').then(m => m.FaqComponent),
   },
   {
     path: 'chinh-sach/:slug',

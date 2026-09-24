@@ -190,7 +190,7 @@ export class HeaderComponent implements OnDestroy {
     title: 'Thiết Kế Không Gian Theo Cách Của Bạn',
     description: 'Khám phá bộ sưu tập phòng mẫu 360° và tự tay phối decor theo phong cách riêng của bạn.',
     ctaLabel: 'Khám phá ngay',
-    gradient: 'linear-gradient(160deg, #0a1220 0%, #1B3F73 55%, #2E63B8 100%)',
+    gradient: 'linear-gradient(160deg, #E3D5BA 0%, #E2B4BC 55%, #A3152D 100%)',
     link: '/shop-the-room',
   };
 

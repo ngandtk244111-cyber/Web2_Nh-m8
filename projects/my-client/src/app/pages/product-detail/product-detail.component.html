@@ -1,129 +1,218 @@
-    <div *ngIf="product" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-16">
+    <div *ngIf="product" class="pd_page">
 
-      <!-- Breadcrumb -->
-      <nav class="pd_breadcrumb">
-        <a routerLink="/" class="pd_breadcrumb__link">Trang chủ</a>
-        <span>/</span>
-        <a routerLink="/catalog" [queryParams]="{ category: product.category }" class="pd_breadcrumb__link">{{ product.categoryName }}</a>
-        <span>/</span>
-        <span class="pd_breadcrumb__current">{{ product.name }}</span>
-      </nav>
+      <!-- ===== Main: Gallery + Buy box ===== -->
+      <div class="pd_container pd_main">
 
-      <!-- Main Product View -->
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+        <!-- LEFT: Gallery grid + info accordion -->
+        <div class="pd_gallery-col">
 
-        <!-- LEFT: Gallery -->
-        <div class="lg:col-span-7 space-y-4">
+          <!-- PHẦN TRÊN: carousel lớn (ảnh sản phẩm, lifestyle, nhiều góc, cận chi tiết + model 3D nếu có) -->
+          <div
+            #carousel
+            class="pd_carousel"
+            role="region"
+            aria-roledescription="carousel"
+            [attr.aria-label]="'Ảnh sản phẩm ' + product.name"
+            (touchstart)="onCarouselTouchStart($event)"
+            (touchend)="onCarouselTouchEnd($event)">
 
-          <div class="flex items-center justify-between" *ngIf="has3D">
-            <div class="pd_view-switch">
-              <button type="button" (click)="activeView = 'photos'" [class.pd_view-switch__btn--active]="activeView === 'photos'" class="pd_view-switch__btn">
-                <app-icon name="eye" [size]="14"></app-icon>
-                <span>Ảnh sản phẩm</span>
+            <div class="pd_carousel__track" [style.transform]="'translateX(-' + slideIndex * 100 + '%)'">
+              <div
+                *ngFor="let i of slideIndexes"
+                class="pd_carousel__slide"
+                role="group"
+                [attr.aria-label]="(i + 1) + ' / ' + slideCount"
+                [attr.aria-hidden]="i !== slideIndex">
+                <ng-container *ngIf="is3DSlide(i); else photoSlide">
+                  <app-three-viewer
+                    *ngIf="i === slideIndex"
+                    [modelType]="product.threeModelType!"
+                    [colorHex]="previewColorHex"
+                    [roughness]="0.8"
+                    [metalness]="0.1">
+                  </app-three-viewer>
+                  <span *ngIf="i !== slideIndex" class="pd_carousel__3d-hint"><app-icon name="cube" [size]="28"></app-icon></span>
+                </ng-container>
+                <ng-template #photoSlide>
+                  <img
+                    [src]="galleryImages[i]"
+                    [alt]="product.name + ' - ảnh ' + (i + 1)"
+                    [attr.loading]="i === 0 ? null : 'lazy'"
+                    draggable="false">
+                </ng-template>
+              </div>
+            </div>
+
+            <ng-container *ngIf="slideCount > 1">
+              <button type="button" class="pd_carousel__nav pd_carousel__nav--prev" (click)="prevSlide()" aria-label="Ảnh trước">
+                <app-icon name="chevron-left" [size]="20"></app-icon>
               </button>
-              <button type="button" (click)="activeView = '3d'" [class.pd_view-switch__btn--active]="activeView === '3d'" class="pd_view-switch__btn">
-                <app-icon name="cube" [size]="14"></app-icon>
-                <span>Xem 3D</span>
+              <button type="button" class="pd_carousel__nav pd_carousel__nav--next" (click)="nextSlide()" aria-label="Ảnh tiếp theo">
+                <app-icon name="chevron-right" [size]="20"></app-icon>
+              </button>
+              <span class="pd_carousel__counter" aria-live="polite">{{ slideIndex + 1 }} / {{ slideCount }}</span>
+            </ng-container>
+
+            <div class="pd_gallery__tools">
+              <button type="button" class="pd_round-btn" (click)="share()" aria-label="Chia sẻ" title="Chia sẻ">
+                <app-icon name="send" [size]="15"></app-icon>
               </button>
             </div>
 
-            <a *ngIf="product.customizable" [routerLink]="['/customizer-3d']" [queryParams]="{ productId: product.id }" class="pd_link-accent">
-              <app-icon name="sliders" [size]="13"></app-icon>
-              <span>Mở trình tùy biến 3D</span>
-            </a>
+            <div *ngIf="slideCount > 1" class="pd_carousel__dots">
+              <button
+                *ngFor="let i of slideIndexes"
+                type="button"
+                class="pd_carousel__dot"
+                [class.pd_carousel__dot--active]="i === slideIndex"
+                (click)="goToSlide(i)"
+                [attr.aria-label]="'Đến ảnh ' + (i + 1)"
+                [attr.aria-current]="i === slideIndex">
+              </button>
+            </div>
           </div>
 
-          <!-- Main stage -->
-          <div class="pd_stage">
-            <div *ngIf="activeView === 'photos'" class="pd_stage__inner">
-              <img [src]="selectedImage || product.images[0]" [alt]="product.name" class="pd_stage__img">
-            </div>
-
-            <div *ngIf="activeView === '3d' && has3D" class="pd_stage__inner">
-              <app-three-viewer
-                [modelType]="product.threeModelType!"
-                [colorHex]="previewColorHex"
-                [roughness]="0.8"
-                [metalness]="0.1">
-              </app-three-viewer>
-            </div>
-
-            <!-- Favorite + Share -->
-            <div class="pd_stage__actions">
-              <button type="button" class="pd_icon-btn" (click)="toggleFavorite()" [class.pd_icon-btn--active]="favoriteService.isFavorite(product.id)" [attr.aria-pressed]="favoriteService.isFavorite(product.id)" aria-label="Yêu thích">
-                <app-icon name="heart" [size]="17" [filled]="favoriteService.isFavorite(product.id)"></app-icon>
-              </button>
-              <button type="button" class="pd_icon-btn" (click)="share()" aria-label="Chia sẻ">
-                <app-icon name="send" [size]="16"></app-icon>
-              </button>
-            </div>
-          </div>
-
-          <!-- Thumbnails -->
-          <div *ngIf="activeView === 'photos' && product.images.length > 1" class="pd_thumbs">
+          <!-- PHẦN DƯỚI: lưới ảnh thường (ảnh studio + lifestyle), cuộn xuống xem hết -->
+          <div *ngIf="galleryImages.length > 1" class="pd_gallery" aria-label="Tất cả ảnh sản phẩm">
             <button
-              *ngFor="let img of product.images"
+              *ngFor="let img of galleryImages; let i = index"
               type="button"
-              (click)="selectedImage = img"
-              [class.pd_thumb--active]="selectedImage === img"
-              class="pd_thumb">
-              <img [src]="img" [alt]="product.name">
+              class="pd_gallery__item"
+              (click)="openInCarousel(i, carousel)"
+              [attr.aria-label]="'Xem ảnh ' + (i + 1) + ' trong khung lớn'">
+              <img [src]="img" [alt]="product.name + ' - ảnh ' + (i + 1)" loading="lazy">
             </button>
           </div>
 
+          <!-- Accordion thông tin -->
+          <div class="pd_accordion">
+            <div class="pd_accordion__item">
+              <button type="button" class="pd_accordion__head" (click)="togglePanel('dimensions')" [attr.aria-expanded]="openPanel === 'dimensions'">
+                <span>Kích thước</span>
+                <app-icon [name]="openPanel === 'dimensions' ? 'chevron-down' : 'chevron-right'" [size]="16"></app-icon>
+              </button>
+              <div *ngIf="openPanel === 'dimensions'" class="pd_accordion__body">
+                <p>{{ product.dimensions }}</p>
+                <ul *ngIf="product.customization?.sizes?.length" class="pd_size-list">
+                  <li *ngFor="let size of product.customization!.sizes">
+                    <strong>{{ size.label }}</strong> — {{ size.dimensions }}
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="pd_accordion__item">
+              <button type="button" class="pd_accordion__head" (click)="togglePanel('details')" [attr.aria-expanded]="openPanel === 'details'">
+                <span>Chi tiết sản phẩm</span>
+                <app-icon [name]="openPanel === 'details' ? 'chevron-down' : 'chevron-right'" [size]="16"></app-icon>
+              </button>
+              <div *ngIf="openPanel === 'details'" class="pd_accordion__body">
+                <table class="pd_specs">
+                  <tbody>
+                    <tr *ngFor="let row of specRows">
+                      <th>{{ row.label }}</th>
+                      <td>{{ row.value }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="pd_accordion__item">
+              <button type="button" class="pd_accordion__head" (click)="togglePanel('delivery')" [attr.aria-expanded]="openPanel === 'delivery'">
+                <span>Giao hàng, bảo hành & đổi trả</span>
+                <app-icon [name]="openPanel === 'delivery' ? 'chevron-down' : 'chevron-right'" [size]="16"></app-icon>
+              </button>
+              <div *ngIf="openPanel === 'delivery'" class="pd_accordion__body">
+                <ul class="pd_bullets">
+                  <li>Miễn phí vận chuyển cho đơn từ 500.000₫, đơn nhỏ hơn đồng giá 30.000₫ toàn quốc.</li>
+                  <li>Hàng có sẵn giao trong 2-4 ngày làm việc; hàng in theo yêu cầu cộng thêm thời gian sản xuất.</li>
+                  <li>Đổi trả trong 7 ngày nếu lỗi sản xuất, hư hỏng khi vận chuyển hoặc giao sai mẫu.</li>
+                </ul>
+                <div class="pd_links">
+                  <a routerLink="/chinh-sach/giao-hang">Chính sách giao hàng</a>
+                  <a routerLink="/chinh-sach/doi-tra">Chính sách đổi trả</a>
+                  <a routerLink="/warranty-lookup">Tra cứu bảo hành</a>
+                </div>
+              </div>
+            </div>
+
+            <div class="pd_accordion__item">
+              <button type="button" class="pd_accordion__head" (click)="togglePanel('care')" [attr.aria-expanded]="openPanel === 'care'">
+                <span>Điểm nổi bật</span>
+                <app-icon [name]="openPanel === 'care' ? 'chevron-down' : 'chevron-right'" [size]="16"></app-icon>
+              </button>
+              <div *ngIf="openPanel === 'care'" class="pd_accordion__body">
+                <ul class="pd_bullets">
+                  <li *ngFor="let f of product.features">{{ f }}</li>
+                </ul>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <!-- RIGHT: Info -->
-        <div class="lg:col-span-5 space-y-5">
+        <!-- RIGHT: Buy box (sticky) -->
+        <aside class="pd_buybox">
 
-          <div class="flex items-center justify-between gap-3">
-            <span class="pd_category">{{ product.categoryName }}</span>
-            <span *ngIf="product.productionType === 'PRINT_ON_DEMAND'" class="pd_badge pd_badge--accent">
-              <app-icon name="cube" [size]="12"></app-icon> In 3D Theo Yêu Cầu
-            </span>
-            <span *ngIf="product.productionType === 'READY_STOCK'" class="pd_badge pd_badge--success">
-              <app-icon name="check" [size]="12"></app-icon> Có Sẵn
-            </span>
+          <nav class="pd_breadcrumb" aria-label="Breadcrumb">
+            <a routerLink="/">Trang chủ</a>
+            <app-icon name="chevron-right" [size]="12"></app-icon>
+            <a routerLink="/catalog" [queryParams]="{ category: product.category }">{{ product.categoryName }}</a>
+            <app-icon name="chevron-right" [size]="12"></app-icon>
+            <span class="pd_breadcrumb__current">{{ product.name }}</span>
+          </nav>
+
+          <div class="pd_labels">
+            <span *ngIf="product.badge" class="pd_label">{{ product.badge }}</span>
+            <span *ngIf="product.productionType === 'PRINT_ON_DEMAND'" class="pd_label pd_label--outline">In 3D theo yêu cầu</span>
           </div>
 
-          <h1 class="pd_title">{{ product.name }}</h1>
-
-          <div class="pd_meta-row">
-            <span class="pd_sku">{{ sku }}</span>
-            <span class="pd_dot">•</span>
-            <span class="pd_rating"><app-icon name="star" [size]="13"></app-icon> {{ product.rating }}</span>
-            <span class="pd_dot">•</span>
-            <span class="pd_review-count">{{ product.reviews.length }} đánh giá</span>
+          <div class="pd_title-row">
+            <h1 class="pd_title">{{ product.name }}</h1>
+            <button
+              type="button"
+              class="pd_heart"
+              [class.pd_heart--active]="favoriteService.isFavorite(product.id)"
+              (click)="toggleFavorite()"
+              [attr.aria-pressed]="favoriteService.isFavorite(product.id)"
+              aria-label="Yêu thích">
+              <app-icon name="heart" [size]="20" [filled]="favoriteService.isFavorite(product.id)"></app-icon>
+            </button>
           </div>
 
-          <div class="pd_price-block">
+          <button type="button" class="pd_rating-link" (click)="scrollToReviews()">
+            <span class="pd_stars">
+              <app-icon *ngFor="let s of [1,2,3,4,5]" name="star" [size]="12" [filled]="product.rating >= s"></app-icon>
+            </span>
+            <span class="pd_rating-link__count">{{ product.reviews.length }} đánh giá</span>
+          </button>
+
+          <div class="pd_price-row">
             <span class="pd_price">{{ product.basePrice | vnd }}</span>
             <span *ngIf="product.originalPrice" class="pd_price--original">{{ product.originalPrice | vnd }}</span>
-            <span *ngIf="discountPercent" class="pd_badge pd_badge--discount">-{{ discountPercent }}%</span>
+            <span *ngIf="discountPercent" class="pd_discount">-{{ discountPercent }}%</span>
           </div>
 
-          <p class="pd_desc-short">{{ product.description }}</p>
-
-          <!-- Product options: chỉ hiện khi có dữ liệu thật -->
-          <div class="pd_options" *ngIf="product.customization as c">
-            <div class="pd_option-group" *ngIf="c.colors?.length">
-              <span class="pd_option-group__label">Màu sắc: <strong>{{ selectedColorName }}</strong></span>
-              <div class="pd_swatches">
+          <!-- Options -->
+          <ng-container *ngIf="product.customization as c">
+            <div class="pd_option" *ngIf="c.colors?.length">
+              <span class="pd_option__label">Màu sắc: <em>{{ selectedColorName }}</em></span>
+              <div class="pd_chips">
                 <button
                   type="button"
                   *ngFor="let color of c.colors"
-                  class="pd_swatch"
-                  [class.pd_swatch--active]="selectedColorName === color.name"
-                  [style.background]="color.hex"
-                  [title]="color.name"
+                  class="pd_chip"
+                  [class.pd_chip--active]="selectedColorName === color.name"
                   (click)="selectColor(color.name, color.hex)">
+                  <span class="pd_chip__swatch" [style.background]="color.hex"></span>
+                  {{ color.name }}
                 </button>
               </div>
             </div>
 
-            <div class="pd_option-group" *ngIf="c.sizes?.length">
-              <span class="pd_option-group__label">Kích thước:</span>
-              <div class="pd_chip-row">
+            <div class="pd_option" *ngIf="c.sizes?.length">
+              <span class="pd_option__label">Kích thước: <em>{{ selectedSizeLabel }}</em></span>
+              <div class="pd_chips">
                 <button
                   type="button"
                   *ngFor="let size of c.sizes"
@@ -135,9 +224,9 @@
               </div>
             </div>
 
-            <div class="pd_option-group" *ngIf="c.finishes?.length">
-              <span class="pd_option-group__label">Hoàn thiện:</span>
-              <div class="pd_chip-row">
+            <div class="pd_option" *ngIf="c.finishes?.length">
+              <span class="pd_option__label">Hoàn thiện: <em>{{ selectedFinishLabel }}</em></span>
+              <div class="pd_chips">
                 <button
                   type="button"
                   *ngFor="let finish of c.finishes"
@@ -148,118 +237,191 @@
                 </button>
               </div>
             </div>
+          </ng-container>
+
+          <!-- Tùy biến 3D -->
+          <div *ngIf="product.customizable" class="pd_notice">
+            <app-icon name="sliders" [size]="15"></app-icon>
+            <p>
+              <strong>Có thể tùy biến:</strong>
+              đổi màu, chất liệu, kích thước hoặc khắc tên theo ý bạn.
+              <a [routerLink]="['/customizer-3d']" [queryParams]="{ productId: product.id }">Mở trình tùy biến 3D →</a>
+            </p>
           </div>
 
-          <!-- Custom 3D card: chỉ hiện khi customizable -->
-          <div class="pd_custom-card" *ngIf="product.customizable">
-            <div class="pd_custom-card__head">
-              <app-icon name="sliders" [size]="17"></app-icon>
-              <span>Có thể tùy chỉnh</span>
-            </div>
-            <div class="pd_custom-card__tags">
-              <span class="pd_tag" *ngIf="product.customization?.colors?.length">Màu sắc</span>
-              <span class="pd_tag" *ngIf="product.customization?.textOption?.enabled">Tên / Chữ khắc</span>
-              <span class="pd_tag" *ngIf="product.customization?.accessories?.length">Phụ kiện</span>
-              <span class="pd_tag" *ngIf="product.customization?.finishes?.length">Kiểu hoàn thiện</span>
-            </div>
-            <div class="pd_custom-card__foot">
-              <span class="pd_badge pd_badge--accent">Made to Order</span>
-              <span *ngIf="product.productionTime" class="pd_custom-card__time">
-                <app-icon name="truck" [size]="13"></app-icon> {{ product.productionTime }}
-              </span>
-            </div>
-            <a [routerLink]="['/customizer-3d']" [queryParams]="{ productId: product.id }" class="pd_btn pd_btn--outline pd_btn--block">
-              Vào trình tùy biến 3D →
-            </a>
-          </div>
-
-          <!-- Quantity + CTA -->
-          <div class="pd_purchase">
+          <!-- CTA -->
+          <div class="pd_cta">
             <div class="pd_qty">
-              <button type="button" (click)="quantity = quantity > 1 ? quantity - 1 : 1" class="pd_qty__btn">
-                <app-icon name="minus" [size]="14"></app-icon>
+              <button type="button" (click)="quantity = quantity > 1 ? quantity - 1 : 1" class="pd_qty__btn" aria-label="Giảm số lượng">
+                <app-icon name="minus" [size]="13"></app-icon>
               </button>
               <span class="pd_qty__value">{{ quantity }}</span>
-              <button type="button" (click)="quantity = quantity + 1" class="pd_qty__btn">
-                <app-icon name="plus" [size]="14"></app-icon>
+              <button type="button" (click)="quantity = quantity + 1" class="pd_qty__btn" aria-label="Tăng số lượng">
+                <app-icon name="plus" [size]="13"></app-icon>
               </button>
             </div>
-
-            <button type="button" (click)="addToCart()" class="pd_btn pd_btn--outline">
-              <app-icon name="cart" [size]="17"></app-icon>
-              <span>Thêm vào giỏ</span>
-            </button>
-
-            <button type="button" (click)="buyNow()" class="pd_btn pd_btn--primary">
-              Mua ngay
+            <button type="button" (click)="addToCart()" class="pd_btn pd_btn--primary">
+              Thêm vào giỏ · {{ product.basePrice * quantity | vnd }}
             </button>
           </div>
+          <button type="button" (click)="buyNow()" class="pd_btn pd_btn--ghost">Mua ngay</button>
 
-          <!-- Shipping / status -->
-          <div class="pd_facts">
-            <div class="pd_fact">
-              <app-icon name="truck" [size]="15"></app-icon>
-              <span>Giao hàng toàn quốc</span>
+          <p class="pd_eta">
+            <ng-container *ngIf="deliveryRange; else podEta">Dự kiến nhận hàng: <strong>{{ deliveryRange }}</strong></ng-container>
+            <ng-template #podEta>
+              Sản xuất trong <strong>{{ product.productionTime || 'vài ngày' }}</strong>, sau đó giao 2-4 ngày
+            </ng-template>
+          </p>
+
+          <div class="pd_perks">
+            <span><app-icon name="rotate" [size]="14"></app-icon> Đổi trả 7 ngày</span>
+            <span><app-icon name="shield" [size]="14"></app-icon> Kiểm tra hàng trước khi nhận</span>
+            <span><app-icon name="truck" [size]="14"></app-icon> Miễn phí ship đơn từ 500.000₫</span>
+          </div>
+
+          <!-- Nhận hàng -->
+          <div class="pd_where">
+            <div class="pd_where__head">
+              <span>Nhận hàng</span>
+              <span *ngIf="product.productionType === 'READY_STOCK' && product.inStock > 0" class="pd_stock">
+                <app-icon name="check" [size]="11"></app-icon> Còn hàng
+              </span>
+              <span *ngIf="product.productionType === 'READY_STOCK' && product.inStock <= 0" class="pd_stock pd_stock--out">Tạm hết hàng</span>
+              <span *ngIf="product.productionType === 'PRINT_ON_DEMAND'" class="pd_stock">Made to Order</span>
             </div>
-            <div class="pd_fact">
-              <app-icon name="shield" [size]="15"></app-icon>
-              <span>Kiểm tra hàng trước khi nhận</span>
+            <div class="pd_where__box">
+              <a routerLink="/chinh-sach/giao-hang" class="pd_where__row">
+                <app-icon name="truck" [size]="16"></app-icon>
+                <div>
+                  <strong>Giao hàng toàn quốc</strong>
+                  <span>Qua các đối tác vận chuyển uy tín</span>
+                </div>
+                <app-icon name="chevron-right" [size]="14"></app-icon>
+              </a>
+              <a routerLink="/orders/track" class="pd_where__row">
+                <app-icon name="map-pin" [size]="16"></app-icon>
+                <div>
+                  <strong>Theo dõi đơn hàng</strong>
+                  <span>Tra cứu tiến độ bằng mã đơn hàng</span>
+                </div>
+                <app-icon name="chevron-right" [size]="14"></app-icon>
+              </a>
             </div>
           </div>
 
-        </div>
+          <div class="pd_desc">
+            <p>{{ product.description }}</p>
+            <a routerLink="/catalog" [queryParams]="{ category: product.category }">
+              Xem thêm {{ product.categoryName }} →
+            </a>
+          </div>
+        </aside>
       </div>
 
-      <!-- Description + Specifications -->
-      <section class="pd_section">
-        <h3 class="pd_section__title">Thông Tin Sản Phẩm</h3>
-        <div class="pd_info-grid">
-          <p class="pd_desc-full">{{ product.description }}</p>
-          <table class="pd_specs">
-            <tbody>
-              <tr *ngFor="let row of specRows">
-                <th>{{ row.label }}</th>
-                <td>{{ row.value }}</td>
-              </tr>
-            </tbody>
-          </table>
+      <!-- ===== Câu chuyện sản phẩm ===== -->
+      <section class="pd_band">
+        <div class="pd_container pd_story">
+          <div class="pd_story__text">
+            <h2 class="pd_h2">Câu chuyện sản phẩm</h2>
+            <p>{{ product.story || product.description }}</p>
+          </div>
+          <div class="pd_story__img">
+            <img [src]="storyImage" [alt]="product.name" loading="lazy">
+          </div>
         </div>
       </section>
 
-      <!-- Reviews -->
-      <section class="pd_section">
-        <div class="pd_section__head">
-          <h3 class="pd_section__title">Đánh Giá Của Khách Hàng</h3>
-          <button type="button" (click)="showReviewForm = !showReviewForm" class="pd_btn pd_btn--outline pd_btn--sm">
+      <!-- ===== Vì sao bạn sẽ thích ===== -->
+      <section *ngIf="featureHighlights.length" class="pd_container pd_section">
+        <h2 class="pd_h2">Vì sao bạn sẽ thích</h2>
+        <div class="pd_features" [class.pd_features--single]="featureHighlights.length === 1">
+          <div *ngFor="let f of featureHighlights" class="pd_feature">
+            <div class="pd_feature__img"><img [src]="f.image" [alt]="f.title" loading="lazy"></div>
+            <h3>{{ f.title }}</h3>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== Các hàng gợi ý sản phẩm ===== -->
+      <section *ngFor="let row of pickRows" class="pd_container pd_section">
+        <h2 class="pd_h2">{{ row.title }}</h2>
+        <div class="pd_picks" #track (scroll)="onPickScroll(row.key, track)">
+          <div *ngFor="let p of row.products" class="pd_pick">
+            <a [routerLink]="['/product', p.slug]" class="pd_pick__img">
+              <span *ngIf="p.badge" class="pd_label pd_pick__badge">{{ p.badge }}</span>
+              <img [src]="p.images[0]" [alt]="p.name" loading="lazy">
+            </a>
+            <a [routerLink]="['/product', p.slug]" class="pd_pick__name">{{ p.name }}</a>
+            <div class="pd_pick__price">
+              <span [class.pd_pick__price--sale]="p.originalPrice">{{ p.basePrice | vnd }}</span>
+              <s *ngIf="p.originalPrice">{{ p.originalPrice | vnd }}</s>
+            </div>
+            <div class="pd_pick__actions">
+              <button type="button" class="pd_mini-btn" (click)="addPickToCart(p)" [attr.aria-label]="p.customizable ? 'Xem tùy chọn' : 'Thêm vào giỏ'" [title]="p.customizable ? 'Xem tùy chọn' : 'Thêm vào giỏ'">
+                <app-icon [name]="p.customizable ? 'sliders' : 'cart'" [size]="13"></app-icon>
+              </button>
+              <button
+                type="button"
+                class="pd_mini-btn"
+                [class.pd_mini-btn--active]="favoriteService.isFavorite(p.id)"
+                (click)="togglePickFavorite(p)"
+                [attr.aria-pressed]="favoriteService.isFavorite(p.id)"
+                aria-label="Yêu thích">
+                <app-icon name="heart" [size]="13" [filled]="favoriteService.isFavorite(p.id)"></app-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="pd_progress">
+          <div
+            class="pd_progress__thumb"
+            [style.left.%]="scrollProgress[row.key]?.left ?? 0"
+            [style.width.%]="scrollProgress[row.key]?.width ?? 20">
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== Đánh giá ===== -->
+      <section id="pd-reviews" class="pd_container pd_section">
+        <div class="pd_rv-top">
+          <h2 class="pd_h2">Khách hàng nói gì về sản phẩm</h2>
+          <button type="button" (click)="showReviewForm = !showReviewForm" class="pd_btn pd_btn--primary pd_btn--sm">
             {{ showReviewForm ? 'Đóng form' : 'Viết đánh giá' }}
           </button>
         </div>
 
-        <div class="pd_review-summary">
-          <div class="pd_review-summary__score">
-            <span class="pd_review-summary__value">{{ product.rating }}</span>
-            <div class="pd_review-summary__stars">
-              <app-icon *ngFor="let s of [1,2,3,4,5]" name="star" [size]="14"></app-icon>
+        <div class="pd_rv-summary">
+          <div class="pd_rv-score">
+            <span class="pd_rv-score__value">{{ product.rating }}<small>/5</small></span>
+            <div>
+              <span class="pd_stars">
+                <app-icon *ngFor="let s of [1,2,3,4,5]" name="star" [size]="14" [filled]="product.rating >= s"></app-icon>
+              </span>
+              <span class="pd_rv-score__count">Dựa trên {{ product.reviews.length }} đánh giá</span>
             </div>
-            <span class="pd_review-summary__count">{{ product.reviews.length }} đánh giá</span>
           </div>
-          <div class="pd_review-summary__bars">
+
+          <div class="pd_rv-bars">
             <div class="pd_bar-row" *ngFor="let b of ratingBreakdown">
-              <span class="pd_bar-row__label">{{ b.star }} sao</span>
+              <span>{{ b.star }}★</span>
               <div class="pd_bar-row__track"><div class="pd_bar-row__fill" [style.width.%]="b.percent"></div></div>
-              <span class="pd_bar-row__count">{{ b.count }}</span>
+              <span>{{ b.count }}</span>
             </div>
+          </div>
+
+          <div *ngIf="reviewImages.length" class="pd_rv-strip">
+            <img *ngFor="let img of reviewImages" [src]="img" alt="Ảnh khách hàng" loading="lazy">
           </div>
         </div>
 
-        <!-- Write Review Form -->
+        <!-- Form viết đánh giá -->
         <div *ngIf="showReviewForm" class="pd_review-form">
           <h4>Chia sẻ cảm nhận của bạn</h4>
           <div>
             <label>Số sao</label>
             <div class="pd_star-picker">
-              <button *ngFor="let star of [1,2,3,4,5]" type="button" (click)="newReviewRating = star">
-                <app-icon name="star" [size]="20" [class.pd_star--active]="newReviewRating >= star"></app-icon>
+              <button *ngFor="let star of [1,2,3,4,5]" type="button" (click)="newReviewRating = star" [attr.aria-label]="star + ' sao'">
+                <app-icon name="star" [size]="20" [filled]="newReviewRating >= star" [class.pd_star--active]="newReviewRating >= star"></app-icon>
               </button>
             </div>
           </div>
@@ -271,11 +433,11 @@
             <label>Nội dung đánh giá</label>
             <textarea [(ngModel)]="newReviewComment" rows="3" placeholder="Chất lượng in 3D như thế nào, màu sắc có chuẩn không..." class="pd_input"></textarea>
           </div>
-          <button (click)="submitReview()" class="pd_btn pd_btn--primary pd_btn--sm">Gửi đánh giá</button>
+          <button type="button" (click)="submitReview()" class="pd_btn pd_btn--primary pd_btn--sm">Gửi đánh giá</button>
         </div>
 
-        <!-- Filter -->
-        <div class="pd_review-filters">
+        <div class="pd_rv-filters">
+          <span class="pd_rv-filters__label">Lọc theo:</span>
           <button type="button" class="pd_filter-chip" [class.pd_filter-chip--active]="reviewFilter === 'all'" (click)="setReviewFilter('all')">Tất cả</button>
           <button type="button" class="pd_filter-chip" [class.pd_filter-chip--active]="reviewFilter === 'with-images'" (click)="setReviewFilter('with-images')">Có hình ảnh</button>
           <button type="button" class="pd_filter-chip" [class.pd_filter-chip--active]="reviewFilter === '5'" (click)="setReviewFilter('5')">5 sao</button>
@@ -283,63 +445,84 @@
           <button type="button" class="pd_filter-chip" [class.pd_filter-chip--active]="reviewFilter === 'low'" (click)="setReviewFilter('low')">3 sao trở xuống</button>
         </div>
 
-        <!-- Review list -->
-        <div class="pd_review-list">
-          <div *ngFor="let rev of filteredReviews" class="pd_review-card">
-            <div class="pd_review-card__head">
-              <img [src]="rev.avatar" [alt]="rev.author" class="pd_review-card__avatar">
-              <div class="pd_review-card__meta">
-                <div class="pd_review-card__name-row">
-                  <span class="pd_review-card__name">{{ rev.author }}</span>
-                  <span *ngIf="rev.verifiedPurchase" class="pd_badge pd_badge--success pd_badge--xs">Đã mua hàng</span>
-                </div>
-                <span class="pd_review-card__date">{{ rev.date }}</span>
+        <div class="pd_rv-grid">
+          <article *ngFor="let rev of pagedReviews" class="pd_rv-card">
+            <header class="pd_rv-card__head">
+              <div>
+                <span class="pd_rv-card__name">{{ rev.author }}</span>
+                <span class="pd_stars">
+                  <app-icon *ngFor="let s of [1,2,3,4,5]" name="star" [size]="11" [filled]="rev.rating >= s"></app-icon>
+                </span>
+                <span *ngIf="rev.verifiedPurchase" class="pd_rv-card__verified">
+                  <app-icon name="check" [size]="11"></app-icon> Đã mua hàng
+                </span>
               </div>
-              <div class="pd_review-card__stars">
-                <app-icon *ngFor="let s of [1,2,3,4,5]" name="star" [size]="12"></app-icon>
-              </div>
+              <span class="pd_rv-card__date">{{ rev.date }}</span>
+            </header>
+            <p class="pd_rv-card__comment">{{ rev.comment }}</p>
+            <div class="pd_rv-card__images" *ngIf="rev.images?.length">
+              <img *ngFor="let img of rev.images" [src]="img" alt="Ảnh đánh giá" loading="lazy">
             </div>
-            <p class="pd_review-card__comment">{{ rev.comment }}</p>
-            <div class="pd_review-card__images" *ngIf="rev.images?.length">
-              <img *ngFor="let img of rev.images" [src]="img" alt="Ảnh đánh giá">
-            </div>
-          </div>
-
-          <div *ngIf="filteredReviews.length === 0" class="pd_empty">
-            Chưa có đánh giá phù hợp bộ lọc này.
-          </div>
+          </article>
         </div>
+
+        <div *ngIf="filteredReviews.length === 0" class="pd_empty">Chưa có đánh giá phù hợp bộ lọc này.</div>
+
+        <nav *ngIf="totalReviewPages > 1" class="pd_pager" aria-label="Phân trang đánh giá">
+          <button type="button" (click)="goToReviewPage(reviewPage - 1)" [disabled]="reviewPage === 1" aria-label="Trang trước">
+            <app-icon name="chevron-left" [size]="14"></app-icon>
+          </button>
+          <button
+            type="button"
+            *ngFor="let page of reviewPages"
+            [class.pd_pager__active]="page === reviewPage"
+            (click)="goToReviewPage(page)">
+            {{ page }}
+          </button>
+          <button type="button" (click)="goToReviewPage(reviewPage + 1)" [disabled]="reviewPage === totalReviewPages" aria-label="Trang sau">
+            <app-icon name="chevron-right" [size]="14"></app-icon>
+          </button>
+        </nav>
       </section>
 
-      <!-- Related Products -->
-      <section *ngIf="relatedProducts.length > 0" class="pd_section">
-        <h3 class="pd_section__title">Bạn Cũng Có Thể Thích</h3>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <app-product-card *ngFor="let p of relatedProducts" [product]="p"></app-product-card>
-        </div>
-      </section>
-
-      <!-- Decor Community -->
-      <section *ngIf="taggedCommunityPosts.length > 0" class="pd_section">
-        <h3 class="pd_section__title">Góc Decor Từ Cộng Đồng</h3>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <a *ngFor="let post of taggedCommunityPosts" routerLink="/community" class="pd_community-card">
-            <img [src]="post.imageUrl" [alt]="post.title" class="pd_community-card__img">
-            <div class="pd_community-card__overlay">
-              <span class="pd_community-card__user">{{ post.author.name }}</span>
-              <span class="pd_community-card__caption">{{ post.caption }}</span>
-              <span class="pd_community-card__stats">
-                <app-icon name="heart" [size]="11"></app-icon> {{ post.likesCount }}
-                <app-icon name="message" [size]="11"></app-icon> {{ post.commentsCount }}
-              </span>
-            </div>
-            <span class="pd_badge pd_badge--accent pd_community-card__tag">Sản phẩm này</span>
+      <!-- ===== Cộng đồng ===== -->
+      <section *ngIf="taggedCommunityPosts.length > 0" class="pd_container pd_section">
+        <h2 class="pd_h2">#GocDecorCungLumea</h2>
+        <p class="pd_sub">Không gian thật từ cộng đồng có dùng sản phẩm này.</p>
+        <div class="pd_community">
+          <a *ngFor="let post of taggedCommunityPosts" routerLink="/community" class="pd_community__card">
+            <img [src]="post.imageUrl" [alt]="post.title" loading="lazy">
+            <span class="pd_community__user">{{ post.author.name }}</span>
+            <span class="pd_community__stats">
+              <app-icon name="heart" [size]="11"></app-icon> {{ post.likesCount }}
+            </span>
           </a>
         </div>
       </section>
 
+      <!-- ===== FAQ ===== -->
+      <section class="pd_container pd_section pd_faq">
+        <div>
+          <h2 class="pd_h2">Câu hỏi thường gặp</h2>
+          <p class="pd_sub">
+            Chưa tìm thấy câu trả lời? Xem
+            <a routerLink="/chinh-sach/faq">toàn bộ câu hỏi thường gặp</a>
+            hoặc gọi hotline 1800 6928.
+          </p>
+        </div>
+        <div class="pd_faq__list">
+          <div *ngFor="let item of faqItems" class="pd_faq__item">
+            <button type="button" class="pd_faq__q" (click)="toggleFaq(item.id)" [attr.aria-expanded]="openFaqId === item.id">
+              <span>{{ item.question }}</span>
+              <app-icon [name]="openFaqId === item.id ? 'minus' : 'plus'" [size]="14"></app-icon>
+            </button>
+            <p *ngIf="openFaqId === item.id" class="pd_faq__a">{{ item.answer }}</p>
+          </div>
+        </div>
+      </section>
+
       <!-- Recently Viewed -->
-      <div class="pd_section">
+      <div class="pd_container pd_section">
         <app-recently-viewed-section [excludeProductId]="product.id"></app-recently-viewed-section>
       </div>
 

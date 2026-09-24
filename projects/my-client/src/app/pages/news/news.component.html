@@ -1,103 +1,153 @@
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
-      
+    <!-- ================= TRANG CHI TIẾT BÀI VIẾT (layout theo blog Nitori) ================= -->
+    <div *ngIf="selectedArticle as art" class="na">
+
+      <nav class="na-crumb" aria-label="Breadcrumb">
+        <a routerLink="/">Trang chủ</a><span>/</span>
+        <a routerLink="/news">Tin tức</a><span>/</span>
+        <a routerLink="/news">{{ art.category }}</a><span>/</span>
+        <b>{{ art.title }}</b>
+      </nav>
+
+      <div class="na-layout">
+        <!-- Cột chính -->
+        <article class="na-main">
+          <h1 class="na-title">{{ art.title }}</h1>
+          <p class="na-meta">{{ art.publishedAt }} · {{ art.readTime }} · {{ art.author.name }}</p>
+          <p class="na-lead">{{ art.excerpt }}</p>
+
+          <figure class="na-figure">
+            <img [src]="art.coverImage" [alt]="art.title">
+          </figure>
+
+          <ng-container *ngFor="let b of contentBlocks">
+            <h2 *ngIf="b.type === 'heading'" class="na-bar">
+              <ng-container *ngFor="let r of b.runs">{{ r.text }}</ng-container>
+            </h2>
+            <p *ngIf="b.type === 'paragraph'" class="na-p">
+              <ng-container *ngFor="let r of b.runs"><strong *ngIf="r.bold; else plain">{{ r.text }}</strong><ng-template #plain>{{ r.text }}</ng-template></ng-container>
+            </p>
+            <ul *ngIf="b.type === 'list'" class="na-list">
+              <li *ngFor="let item of b.items">
+                <ng-container *ngFor="let r of item"><strong *ngIf="r.bold; else plainItem">{{ r.text }}</strong><ng-template #plainItem>{{ r.text }}</ng-template></ng-container>
+              </li>
+            </ul>
+          </ng-container>
+
+          <div *ngIf="art.videoUrl" class="na-video">
+            <p class="na-video__title">Video hậu trường chế tác</p>
+            <div class="na-video__frame">
+              <app-icon name="cube" [size]="34"></app-icon>
+              <span>Video clip đang được cập nhật</span>
+            </div>
+          </div>
+
+          <!-- Tổng quan sản phẩm -->
+          <ng-container *ngIf="taggedProducts.length > 0">
+            <h2 class="na-bar">Tổng quan sản phẩm</h2>
+
+            <section *ngFor="let p of taggedProducts" class="na-product">
+              <h3 class="na-product__name">{{ p.name }}</h3>
+              <a [routerLink]="['/product', p.slug]" class="na-product__img" [attr.aria-label]="'Xem ' + p.name">
+                <img [src]="p.images[0]" [alt]="p.name" loading="lazy">
+              </a>
+              <p class="na-p">
+                &lt;Đặc điểm sản phẩm&gt;<br>
+                {{ p.description }}<br>
+                &lt;Chất liệu&gt;<br>
+                {{ p.materialInfo }}<br>
+                {{ p.dimensions }}: <strong>{{ p.basePrice | vnd }}</strong>
+              </p>
+            </section>
+
+            <div class="na-thumbs">
+              <a *ngFor="let p of taggedProducts" [routerLink]="['/product', p.slug]" class="na-thumb">
+                <img [src]="p.images[0]" [alt]="p.name" loading="lazy">
+                <span class="na-thumb__cap">{{ p.name }}</span>
+                <strong class="na-thumb__price">{{ p.basePrice | vnd }}</strong>
+              </a>
+            </div>
+          </ng-container>
+
+          <ul class="na-notes">
+            <li>Đây là trang giới thiệu; vui lòng liên hệ Luméa qua hotline <a href="tel:18006928">1800 6928</a> hoặc khung chat hỗ trợ để được tư vấn thêm.</li>
+            <li>Sản phẩm có thể hết hàng tùy thời điểm; tình trạng tồn kho được hiển thị trên trang sản phẩm.</li>
+            <li>Màu sắc sản phẩm có thể chênh lệch nhẹ so với thực tế do màn hình hiển thị.</li>
+          </ul>
+
+          <p class="na-author">{{ art.author.name }}</p>
+
+          <!-- Thanh thao tác cuối bài -->
+          <div class="na-actions">
+            <a routerLink="/news" class="na-actions__btn">
+              <app-icon name="chevron-left" [size]="14"></app-icon> Trở lại Tin tức
+            </a>
+            <button type="button" class="na-actions__btn" (click)="shareArticle(art)">
+              <app-icon name="share-2" [size]="14"></app-icon> Chia sẻ
+            </button>
+          </div>
+
+          <!-- Ý kiến bạn đọc -->
+          <app-news-comments [articleId]="art.id"></app-news-comments>
+
+          <!-- Tags -->
+          <div *ngIf="art.tags.length" class="na-tags">
+            <span class="na-tags__label">Tags:</span>
+            <a routerLink="/news" class="na-tag">{{ art.category }}</a>
+            <span *ngFor="let t of art.tags" class="na-tag">{{ t }}</span>
+          </div>
+
+          <!-- Cùng chuyên mục -->
+          <section *ngIf="sameCategoryArticles.length" class="na-related">
+            <h2 class="na-related__title">Cùng chuyên mục</h2>
+            <a *ngFor="let a of sameCategoryArticles" [routerLink]="['/news', a.slug]" class="na-related__item">
+              <span class="na-related__img"><img [src]="a.coverImage" [alt]="a.title" loading="lazy"></span>
+              <span class="na-related__body">
+                <span class="na-related__name">{{ a.title }}</span>
+                <span class="na-related__excerpt">{{ a.excerpt }}</span>
+                <span class="na-related__meta">{{ a.publishedAt }} · {{ a.readTime }}</span>
+              </span>
+            </a>
+          </section>
+        </article>
+
+        <!-- Cột phải: bài xem nhiều -->
+        <aside class="na-side" aria-label="Bài viết xem nhiều">
+          <h2 class="na-side__title">Xem nhiều</h2>
+          <a *ngFor="let a of otherArticles" [routerLink]="['/news', a.slug]" class="na-side__item">
+            <span class="na-side__img"><img [src]="a.coverImage" [alt]="a.title" loading="lazy"></span>
+            <span class="na-side__body">
+              <span class="na-side__date">{{ a.publishedAt }}</span>
+              <span class="na-side__text">{{ a.title }}</span>
+            </span>
+          </a>
+        </aside>
+      </div>
+    </div>
+
+    <!-- Đang mở /news/:slug nhưng chưa có bài -->
+    <div *ngIf="!selectedArticle && requestedSlug" class="na-missing">
+      <ng-container *ngIf="articles.length === 0; else missing">Đang tải bài viết…</ng-container>
+      <ng-template #missing>
+        <h1>Không tìm thấy bài viết</h1>
+        <a routerLink="/news">← Về danh sách tin tức</a>
+      </ng-template>
+    </div>
+
+    <!-- ================= DANH SÁCH TIN TỨC ================= -->
+    <div *ngIf="!requestedSlug" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
+
       <!-- Header -->
       <div class="border-b border-neutral-200 pb-6">
         <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-950/40 text-amber-400 border border-amber-500/30 text-xs font-bold uppercase tracking-wider mb-2">
           <app-icon name="sparkles" [size]="14"></app-icon>
           <span>Luméa Insights & Knowledge (B2C)</span>
         </div>
-        <h1 class="font-serif text-3xl sm:text-4xl font-extrabold text-neutral-900">
+        <h1 class="font-serif text-3xl sm:text-4xl font-extrabold text-amber-800">
           Xu Hướng Decor & Kiến Thức In 3D
         </h1>
         <p class="text-xs sm:text-sm text-neutral-600 mt-1 max-w-2xl">
           Nội dung chính thức do Luméa biên soạn: Cập nhật xu hướng thiết kế nội thất nhỏ gọn, so sánh vật liệu PLA/PETG và video hậu trường máy in hoạt động.
         </p>
-      </div>
-
-      <!-- Detail Modal / Drawer if viewing an article -->
-      <div 
-        *ngIf="selectedArticle"
-        (click)="selectedArticle = null"
-        class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6">
-        
-        <div 
-          (click)="$event.stopPropagation()"
-          class="bg-[#FFFFFF] w-full max-w-3xl rounded-3xl p-6 sm:p-8 border border-neutral-200 shadow-2xl max-h-[90vh] overflow-y-auto space-y-6">
-          
-          <div class="flex items-start justify-between">
-            <span class="text-xs font-bold uppercase tracking-wider text-amber-400 bg-amber-950/40 border border-amber-500/30 px-3 py-1 rounded-full">
-              {{ selectedArticle.category }}
-            </span>
-            <button (click)="selectedArticle = null" class="text-neutral-600 hover:text-white p-1">
-              <app-icon name="x" [size]="20"></app-icon>
-            </button>
-          </div>
-
-          <h2 class="font-serif text-2xl sm:text-3xl font-extrabold text-neutral-900 leading-tight">
-            {{ selectedArticle.title }}
-          </h2>
-
-          <div class="flex items-center gap-3 text-xs text-neutral-600 border-b border-neutral-200 pb-4">
-            <img [src]="selectedArticle.author.avatar" [alt]="selectedArticle.author.name" class="w-8 h-8 rounded-full object-cover border border-neutral-300">
-            <div>
-              <span class="font-bold text-neutral-800">{{ selectedArticle.author.name }}</span>
-              <span> • {{ selectedArticle.author.role }}</span>
-            </div>
-            <span>•</span>
-            <span>{{ selectedArticle.publishedAt }}</span>
-            <span>•</span>
-            <span>{{ selectedArticle.readTime }}</span>
-          </div>
-
-          <div class="rounded-2xl overflow-hidden aspect-[16/9] bg-neutral-100 border border-neutral-200">
-            <img [src]="selectedArticle.coverImage" [alt]="selectedArticle.title" class="w-full h-full object-cover">
-          </div>
-
-          <!-- Article Content -->
-          <div class="text-xs sm:text-sm text-neutral-700 leading-relaxed whitespace-pre-line space-y-4">
-            {{ selectedArticle.content }}
-          </div>
-
-          <!-- Video Embed Simulation if available -->
-          <div *ngIf="selectedArticle.videoUrl" class="p-4 bg-[#F6F5F2] rounded-2xl border border-neutral-200 space-y-2">
-            <div class="flex items-center gap-2 text-xs font-bold text-neutral-800">
-              <span>🎬 Video Hậu Trường Chế Tác In 3D (Reels/TikTok)</span>
-            </div>
-            <div class="aspect-video bg-neutral-50 rounded-xl border border-neutral-200 flex items-center justify-center text-white text-xs">
-              <div class="text-center space-y-2">
-                <app-icon name="cube" [size]="36" class="mx-auto text-amber-400"></app-icon>
-                <p class="text-neutral-600">Mô phỏng Video Clip Reels: Từng lớp nhựa PLA nóng chảy được đùn qua đầu in 0.4mm</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Tagged Recommended Products in Article -->
-          <div *ngIf="selectedArticle.taggedProductIds.length > 0" class="p-5 bg-[#F6F5F2] rounded-2xl border border-neutral-200 shadow-sm space-y-3">
-            <h4 class="font-serif text-sm font-bold text-neutral-800 flex items-center gap-2">
-              <app-icon name="tag" [size]="16" class="text-amber-400"></app-icon>
-              <span>Sản phẩm được nhắc đến trong bài viết:</span>
-            </h4>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div 
-                *ngFor="let pid of selectedArticle.taggedProductIds"
-                class="p-3 bg-[#FBF7EE] rounded-xl border border-neutral-300/60 flex items-center gap-3">
-                <img [src]="getProduct(pid)?.images?.[0]" class="w-12 h-12 rounded-lg object-cover bg-[#F6F5F2]">
-                <div class="min-w-0 flex-1">
-                  <h5 class="text-xs font-bold text-neutral-800 truncate">{{ getProduct(pid)?.name }}</h5>
-                  <div class="text-xs font-bold text-amber-400">{{ getProduct(pid)?.basePrice | vnd }}</div>
-                </div>
-                <a 
-                  [routerLink]="['/product', getProduct(pid)?.slug]"
-                  (click)="selectedArticle = null"
-                  class="px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-amber-400 to-amber-600 text-neutral-950 text-[11px] font-extrabold shadow-sm">
-                  Khám phá
-                </a>
-              </div>
-            </div>
-          </div>
-
-        </div>
       </div>
 
       <!-- Sidebar + Content -->
@@ -106,12 +156,12 @@
         <!-- Sidebar -->
         <aside class="space-y-8">
           <div>
-            <h3 class="font-serif text-xs font-extrabold text-neutral-900 uppercase tracking-wider mb-3">Danh mục</h3>
+            <h3 class="font-serif text-xs font-extrabold text-amber-800 uppercase tracking-wider mb-3">Danh mục</h3>
             <div class="flex flex-col gap-1.5">
               <button
                 (click)="filterCategory('ALL')"
                 [class]="selectedCategory === 'ALL'
-                  ? 'bg-gradient-to-r from-amber-400 to-amber-600 text-neutral-950 font-extrabold shadow-md'
+                  ? 'bg-gradient-to-r from-amber-400 to-amber-600 text-white font-extrabold shadow-md'
                   : 'bg-[#FFFFFF] border border-neutral-200 text-neutral-700 hover:border-amber-500/40 font-bold'"
                 class="text-left px-3.5 py-2.5 rounded-xl text-xs transition">
                 Tất cả bài viết
@@ -121,7 +171,7 @@
                 *ngFor="let cat of categories"
                 (click)="filterCategory(cat)"
                 [class]="selectedCategory === cat
-                  ? 'bg-gradient-to-r from-amber-400 to-amber-600 text-neutral-950 font-extrabold shadow-md'
+                  ? 'bg-gradient-to-r from-amber-400 to-amber-600 text-white font-extrabold shadow-md'
                   : 'bg-[#FFFFFF] border border-neutral-200 text-neutral-700 hover:border-amber-500/40 font-bold'"
                 class="text-left px-3.5 py-2.5 rounded-xl text-xs transition">
                 {{ cat }}
@@ -130,7 +180,7 @@
           </div>
 
           <div *ngIf="articles.length > 0">
-            <h3 class="font-serif text-xs font-extrabold text-neutral-900 uppercase tracking-wider mb-3">Bài viết mới nhất</h3>
+            <h3 class="font-serif text-xs font-extrabold text-amber-800 uppercase tracking-wider mb-3">Bài viết mới nhất</h3>
             <div class="space-y-3">
               <button
                 *ngFor="let a of articles.slice(0, 5)"
@@ -167,13 +217,13 @@
               class="bg-[#FFFFFF] rounded-3xl border border-neutral-200 shadow-xl hover:border-amber-500/40 transition overflow-hidden cursor-pointer group">
               <div class="relative aspect-[16/9] overflow-hidden bg-[#F6F5F2]">
                 <img [src]="a.coverImage" [alt]="a.title" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                <span class="absolute top-3 left-3 bg-gradient-to-r from-amber-400 to-amber-600 text-neutral-950 text-[10px] font-extrabold px-2.5 py-1 rounded-md shadow-md">
+                <span class="absolute top-3 left-3 bg-gradient-to-r from-amber-400 to-amber-600 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-md shadow-md">
                   {{ a.category }}
                 </span>
               </div>
               <div class="p-6 space-y-2">
                 <span class="text-[11px] text-neutral-500">{{ a.publishedAt }}</span>
-                <h3 class="font-serif text-lg font-bold text-neutral-900 leading-snug group-hover:text-amber-600 transition">
+                <h3 class="font-serif text-lg font-bold text-amber-800 leading-snug group-hover:text-amber-600 transition">
                   {{ a.title }}
                 </h3>
                 <p class="text-xs text-neutral-600 leading-relaxed line-clamp-2">{{ a.excerpt }}</p>

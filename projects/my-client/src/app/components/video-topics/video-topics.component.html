@@ -1,9 +1,9 @@
 <section class="vt_section">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex items-center gap-2 mb-6">
-      <span class="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_6px_#A9C6EA]"></span>
+      <span class="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_6px_#CD818E]"></span>
       <div>
-        <h2 class="font-serif text-xl sm:text-2xl font-bold text-neutral-900">Các Dịch Vụ &amp; Chủ Đề Hữu Ích</h2>
+        <h2 class="font-serif text-xl sm:text-2xl font-bold text-amber-800">Các Dịch Vụ &amp; Chủ Đề Hữu Ích</h2>
         <p class="text-xs sm:text-sm text-neutral-600 mt-1">Bấm mũi tên để khám phá — trỏ chuột vào video để xem trước</p>
       </div>
     </div>
@@ -70,13 +70,20 @@
     </div>
   </div>
 
-  <!-- ============ VIEWER DỌC KIỂU REELS/TIKTOK — mở khi bấm 1 thẻ ============ -->
+  <!-- ============ VIEWER VIDEO — mở khi bấm 1 thẻ ============ -->
   <div class="vw" *ngIf="viewerOpen" (click)="closeViewer()">
     <button type="button" class="vw__close" (click)="closeViewer()" aria-label="Đóng">
-      <app-icon name="x" [size]="20"></app-icon>
+      <app-icon name="x" [size]="18"></app-icon>
     </button>
 
     <div class="vw__stage" (click)="$event.stopPropagation()" *ngIf="viewerTopic as vt">
+
+      <!-- Thẻ phụ trái: mascot Goh, không chữ/nút -->
+      <div class="vw__mascot" aria-hidden="true">
+        <img [src]="mascotImg()" alt="" draggable="false">
+      </div>
+
+      <!-- Thẻ chính: video -->
       <div
         class="vw__video"
         [class.vw__video--slide-next]="viewerAnimDirection === 'next'"
@@ -85,44 +92,34 @@
         (pointerdown)="onViewerPointerDown($event)"
         (pointerup)="onViewerPointerUp($event)"
         (wheel)="onViewerWheel($event)">
-        <div class="vw__video-head">
-          <span class="vw__video-avatar">
-            <app-icon name="sparkles" [size]="13"></app-icon>
-          </span>
-          <div class="vw__video-headtext">
-            <strong>{{ vt.title }}</strong>
-            <span>LUMÉA</span>
-          </div>
-          <button type="button" class="vw__share" (click)="shareViewer($event)">
-            <app-icon name="share-2" [size]="16"></app-icon>
-            <span>Chia sẻ</span>
+        <!-- Player YouTube (IFrame API) — giữ nguyên control gốc: play/pause, tiến trình, fullscreen -->
+        <div class="vw__yt"><div #viewerYt></div></div>
+        <img *ngIf="hasError(viewerIndex) || !vt.youtubeId" [src]="vt.poster" [alt]="vt.title" class="vw__poster">
+
+        <div class="vw__tools">
+          <button
+            *ngIf="vt.youtubeId && !hasError(viewerIndex)"
+            type="button"
+            class="vw__tool"
+            (click)="toggleViewerSound($event)"
+            [attr.aria-label]="viewerMuted ? 'Bật tiếng' : 'Tắt tiếng'"
+            [attr.aria-pressed]="!viewerMuted"
+            [title]="viewerMuted ? 'Bật tiếng (M)' : 'Tắt tiếng (M)'">
+            <app-icon [name]="viewerMuted ? 'volume-x' : 'volume-2'" [size]="16"></app-icon>
+          </button>
+          <button *ngIf="vt.youtubeId" type="button" class="vw__tool" (click)="shareViewer($event)" aria-label="Chia sẻ" title="Chia sẻ">
+            <app-icon name="share-2" [size]="15"></app-icon>
           </button>
         </div>
 
-        <iframe
-          *ngIf="viewerEmbedUrl"
-          [src]="viewerEmbedUrl"
-          allow="autoplay; encrypted-media; fullscreen"
-          allowfullscreen
-          frameborder="0">
-        </iframe>
-        <img *ngIf="!viewerEmbedUrl" [src]="vt.poster" [alt]="vt.title" class="vw__poster">
-
+        <!-- CTA gắn trên video: chỉ dùng ở màn hẹp (khi bảng mô tả bên phải bị ẩn) -->
         <a *ngIf="vt.link" [routerLink]="vt.link" (click)="closeViewer()" class="vw__cta">
-          <app-icon name="chevron-right" [size]="12"></app-icon>
           {{ vt.ctaLabel }}
+          <app-icon name="chevron-right" [size]="12"></app-icon>
         </a>
       </div>
 
-      <div class="vw__info">
-        <span class="vw__info-label">Mô tả</span>
-        <p class="vw__info-desc" [class.vw__info-desc--collapsed]="infoCollapsed">{{ vt.description }}</p>
-        <button type="button" class="vw__info-toggle" (click)="infoCollapsed = !infoCollapsed">
-          <app-icon [name]="infoCollapsed ? 'chevron-down' : 'chevron-up'" [size]="12"></app-icon>
-          {{ infoCollapsed ? 'Mở rộng' : 'Thu gọn' }}
-        </button>
-      </div>
-
+      <!-- Mũi tên lên/xuống nổi giữa video và bảng mô tả -->
       <div class="vw__side-nav">
         <button type="button" class="vw__nav" [disabled]="!canViewerPrev" (click)="viewerStep(-1)" aria-label="Video trước">
           <app-icon name="chevron-up" [size]="18"></app-icon>
@@ -131,6 +128,46 @@
           <app-icon name="chevron-down" [size]="18"></app-icon>
         </button>
       </div>
+
+      <!-- Bên phải: mô tả -->
+      <aside class="vw__panel">
+        <div class="vw__count">
+          <span class="vw__count-now">{{ pad2(viewerIndex + 1) }}</span>
+          <span class="vw__count-total">/ {{ pad2(topics.length) }}</span>
+          <div class="vw__count-bars">
+            <button
+              *ngFor="let t of topics; let i = index"
+              type="button"
+              [class.vw__count-bar--active]="i === viewerIndex"
+              (click)="viewerGoTo(i)"
+              [attr.aria-label]="'Xem video ' + (i + 1) + ': ' + t.title"
+              [attr.aria-current]="i === viewerIndex"></button>
+          </div>
+        </div>
+
+        <div class="vw__desc">
+          <span class="vw__eyebrow">Mô tả video</span>
+          <h3 class="vw__desc-title">{{ vt.title }}</h3>
+          <p class="vw__desc-text">{{ vt.description }}</p>
+        </div>
+
+        <a *ngIf="vt.link" [routerLink]="vt.link" (click)="closeViewer()" class="vw__btn">
+          {{ vt.ctaLabel }} <app-icon name="chevron-right" [size]="13"></app-icon>
+        </a>
+
+        <div class="vw__next" *ngIf="upNextTopics.length">
+          <span class="vw__eyebrow">Tiếp theo</span>
+          <button
+            *ngFor="let item of upNextTopics"
+            type="button"
+            class="vw__next-item"
+            (click)="viewerGoTo(item.index)"
+            [attr.aria-label]="'Xem video ' + item.topic.title">
+            <img [src]="posterUrl(item.topic)" alt="" loading="lazy">
+            <span>{{ item.topic.title }}</span>
+          </button>
+        </div>
+      </aside>
     </div>
   </div>
 </section>

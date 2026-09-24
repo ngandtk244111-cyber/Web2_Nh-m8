@@ -1,6 +1,8 @@
 import { AfterViewInit, Directive, ElementRef, Input, OnDestroy } from '@angular/core';
 
-export type ScrollRevealVariant = 'up' | 'left' | 'right' | 'scale';
+/** 'stagger': đặt trên lưới/hàng — các phần tử con hiện lần lượt, ảnh bên trong "in" dần từ dưới lên
+ *  theo từng lớp như máy in 3D (CSS trong styles.css). */
+export type ScrollRevealVariant = 'up' | 'left' | 'right' | 'scale' | 'stagger';
 
 /**
  * Thêm class reveal-* (định nghĩa trong styles.css) rồi bật .visible khi phần tử

@@ -1,0 +1,96 @@
+<section class="nc" aria-labelledby="nc-title">
+  <div class="nc-head">
+    <h2 id="nc-title" class="nc-title">
+      Ý kiến <span *ngIf="totalCount > 0" class="nc-count">({{ totalCount }})</span>
+    </h2>
+    <div *ngIf="totalCount > 1" class="nc-sort" role="tablist">
+      <button
+        *ngFor="let t of sortTabs"
+        type="button"
+        role="tab"
+        class="nc-sort__btn"
+        [class.nc-sort__btn--active]="sortBy === t.key"
+        [attr.aria-selected]="sortBy === t.key"
+        (click)="setSort(t.key)">
+        {{ t.label }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Ô gửi ý kiến -->
+  <div class="nc-composer" [class.nc-composer--open]="composerFocused || draft">
+    <textarea
+      [(ngModel)]="draft"
+      (focus)="onComposerFocus()"
+      [maxlength]="maxLength"
+      [rows]="composerFocused || draft ? 4 : 1"
+      placeholder="Chia sẻ ý kiến của bạn"
+      aria-label="Chia sẻ ý kiến của bạn"></textarea>
+    <div *ngIf="composerFocused || draft" class="nc-composer__bar">
+      <span class="nc-composer__count">{{ draft.length }}/{{ maxLength }}</span>
+      <button type="button" class="nc-btn nc-btn--ghost" (click)="draft = ''; composerFocused = false">Hủy</button>
+      <button type="button" class="nc-btn" [disabled]="!draft.trim() || submitting" (click)="submit()">
+        {{ submitting ? 'Đang gửi…' : 'Gửi' }}
+      </button>
+    </div>
+  </div>
+
+  <p *ngIf="loading" class="nc-empty">Đang tải ý kiến…</p>
+  <p *ngIf="!loading && totalCount === 0" class="nc-empty">Chưa có ý kiến nào. Hãy là người đầu tiên chia sẻ suy nghĩ của bạn.</p>
+
+  <!-- Danh sách ý kiến -->
+  <ul class="nc-list">
+    <li *ngFor="let th of visibleThreads" class="nc-item">
+      <ng-container *ngTemplateOutlet="commentTpl; context: { $implicit: th.comment, root: th.comment }"></ng-container>
+
+      <ul *ngIf="th.replies.length" class="nc-replies">
+        <li *ngFor="let r of th.replies" class="nc-item nc-item--reply">
+          <ng-container *ngTemplateOutlet="commentTpl; context: { $implicit: r, root: th.comment }"></ng-container>
+        </li>
+      </ul>
+
+      <!-- Ô trả lời -->
+      <div *ngIf="replyingTo === th.comment.id" class="nc-composer nc-composer--open nc-composer--reply">
+        <textarea
+          [(ngModel)]="replyDraft"
+          [maxlength]="maxLength"
+          rows="3"
+          [placeholder]="'Trả lời ' + th.comment.authorName"
+          [attr.aria-label]="'Trả lời ' + th.comment.authorName"></textarea>
+        <div class="nc-composer__bar">
+          <span class="nc-composer__count">{{ replyDraft.length }}/{{ maxLength }}</span>
+          <button type="button" class="nc-btn nc-btn--ghost" (click)="replyingTo = null">Hủy</button>
+          <button type="button" class="nc-btn" [disabled]="!replyDraft.trim() || submitting" (click)="submitReply(th.comment)">
+            {{ submitting ? 'Đang gửi…' : 'Trả lời' }}
+          </button>
+        </div>
+      </div>
+    </li>
+  </ul>
+
+  <button *ngIf="hasMore" type="button" class="nc-more" (click)="loadMore()">
+    Xem thêm ý kiến <app-icon name="chevron-down" [size]="14"></app-icon>
+  </button>
+</section>
+
+<ng-template #commentTpl let-c let-root="root">
+  <div class="nc-comment">
+    <span class="nc-avatar" aria-hidden="true">{{ initial(c.authorName) }}</span>
+    <div class="nc-body">
+      <p class="nc-text"><strong class="nc-name">{{ c.authorName }}</strong>{{ c.text }}</p>
+      <div class="nc-meta">
+        <button
+          type="button"
+          class="nc-meta__btn"
+          [class.nc-meta__btn--liked]="c.isLiked"
+          [attr.aria-pressed]="!!c.isLiked"
+          (click)="toggleLike(c)">
+          <app-icon name="heart" [size]="13" [filled]="!!c.isLiked"></app-icon>
+          Thích<ng-container *ngIf="c.likesCount > 0"> · {{ c.likesCount }}</ng-container>
+        </button>
+        <button type="button" class="nc-meta__btn" (click)="toggleReply(root)">Trả lời</button>
+        <span class="nc-meta__time">{{ timeAgo(c.createdAt) }}</span>
+      </div>
+    </div>
+  </div>
+</ng-template>

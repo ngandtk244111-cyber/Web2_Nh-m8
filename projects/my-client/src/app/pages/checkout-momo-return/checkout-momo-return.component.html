@@ -8,7 +8,7 @@
     <app-icon [name]="isSuccess ? 'check' : 'x'" [size]="28"></app-icon>
   </div>
 
-  <h1 class="font-serif text-2xl font-bold text-neutral-900">
+  <h1 class="font-serif text-2xl font-bold text-amber-800">
     {{ isSuccess ? 'Thanh Toán MoMo Thành Công' : 'Thanh Toán MoMo Chưa Hoàn Tất' }}
   </h1>
 
@@ -22,7 +22,7 @@
     *ngIf="orderNumber"
     [routerLink]="['/orders/track']"
     [queryParams]="{ orderNumber }"
-    class="inline-flex px-6 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-600 text-neutral-950 font-extrabold text-sm shadow-md">
+    class="inline-flex px-6 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-600 text-white font-extrabold text-sm shadow-md">
     Xem tiến độ đơn hàng
   </a>
 </div>

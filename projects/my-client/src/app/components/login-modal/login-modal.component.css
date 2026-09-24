@@ -28,7 +28,7 @@
   padding: 28px 24px 24px;
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.25);
   animation: lm-pop-in 0.22s cubic-bezier(0.2, 1, 0.3, 1);
-  font-family: var(--font-family-content, 'Montserrat', sans-serif);
+  font-family: var(--font-family-content, 'Inter', sans-serif);
 }
 
 @keyframes lm-pop-in {
@@ -53,8 +53,8 @@
 }
 
 .lm_close:hover {
-  color: #2E63B8;
-  border-color: rgba(46, 99, 184, 0.3);
+  color: #A3152D;
+  border-color: rgba(163, 21, 45, 0.3);
 }
 
 .lm_head {
@@ -62,15 +62,34 @@
   margin-bottom: 20px;
 }
 
+.lm_head__badge {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 6px;
+}
+
 .lm_head__logo {
   width: 44px;
   height: 44px;
   object-fit: contain;
-  margin: 0 auto 8px;
+}
+
+.lm_head__mascot {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  animation: lm-mascot-in 0.25s ease both;
+}
+
+@keyframes lm-mascot-in {
+  from { transform: scale(0.9); opacity: 0.6; }
+  to { transform: scale(1); opacity: 1; }
 }
 
 .lm_head__title {
-  font-family: var(--font-family-heading, 'Cormorant Garamond', serif);
+  font-family: var(--font-family-heading, 'Inter', sans-serif);
   font-size: 19px;
   font-weight: 700;
   color: #111111;
@@ -126,7 +145,7 @@
 }
 
 .lm_input:focus {
-  border-color: #2E63B8;
+  border-color: #A3152D;
 }
 
 .lm_input--error {
@@ -144,7 +163,7 @@
 }
 
 .lm_toggle-eye:hover {
-  color: #2055AF;
+  color: #891226;
 }
 
 .lm_error {
@@ -160,14 +179,14 @@
   background: none;
   border: none;
   padding: 0;
-  color: #2055AF;
+  color: #891226;
   font-size: 12.5px;
   font-weight: 700;
   cursor: pointer;
 }
 
 .lm_link:hover {
-  color: #2E63B8;
+  color: #A3152D;
   text-decoration: underline;
 }
 
@@ -186,7 +205,7 @@
   height: 44px;
   border-radius: 12px;
   border: none;
-  background: linear-gradient(135deg, #A9C6EA, #2E63B8 60%, #2055AF);
+  background: linear-gradient(135deg, #CD818E, #A3152D 60%, #891226);
   color: #ffffff;
   font-size: 14px;
   font-weight: 800;
@@ -245,8 +264,8 @@
 }
 
 .lm_social-btn:hover {
-  border-color: #2E63B8;
-  color: #2055AF;
+  border-color: #A3152D;
+  color: #891226;
 }
 
 .lm_switch {
@@ -284,7 +303,7 @@
 }
 
 .lm_otp-box:focus {
-  border-color: #2E63B8;
+  border-color: #A3152D;
 }
 
 .lm_otp-footer {

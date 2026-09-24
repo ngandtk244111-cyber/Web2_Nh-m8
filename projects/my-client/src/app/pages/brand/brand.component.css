@@ -1,0 +1,395 @@
+/* Trang thương hiệu: bố cục theo trang thương hiệu Nitori (nền trắng, tiêu đề đậm đơn giản, các hàng cuộn ngang). */
+:host {
+  display: block;
+  background: #ffffff;
+  color: #333333;
+}
+
+.br { overflow-x: clip; padding-bottom: 56px; }
+
+.br-strip {
+  padding: 8px 16px;
+  background: #A3152D;
+  color: #ffffff;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.br-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+@media (min-width: 768px) {
+  .br-container { padding: 0 32px; }
+}
+
+.br-section { margin-top: 40px; }
+
+.br-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.br-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: #333333;
+}
+
+.br-more {
+  flex-shrink: 0;
+  font-size: 13px;
+  color: #555555;
+  text-decoration: none;
+}
+
+.br-more:hover { color: #A3152D; text-decoration: underline; }
+
+.br-desc {
+  margin: -6px 0 16px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: #666666;
+}
+
+.br a:focus-visible,
+.br button:focus-visible {
+  outline: 2px solid #A3152D;
+  outline-offset: 2px;
+}
+
+/* ---------- Banner carousel ---------- */
+.br-hero {
+  position: relative;
+  margin: 24px -16px 0;
+}
+
+@media (min-width: 768px) {
+  .br-hero { margin-left: -32px; margin-right: -32px; }
+}
+
+.br-hero__track {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  padding: 0 8%;
+  scroll-padding: 0 8%;
+}
+
+.br-hero__track::-webkit-scrollbar { display: none; }
+
+.br-slide {
+  position: relative;
+  flex: 0 0 84%;
+  aspect-ratio: 2 / 1;
+  scroll-snap-align: center;
+  overflow: hidden;
+  border-radius: 4px;
+  background: #F1EADF;
+  color: #ffffff;
+  text-decoration: none;
+}
+
+@media (min-width: 1024px) {
+  .br-slide { flex-basis: 78%; }
+}
+
+.br-slide img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.br-slide::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, rgba(31, 23, 18, 0.55) 0%, rgba(31, 23, 18, 0.1) 55%, transparent 100%);
+}
+
+.br-slide__text {
+  position: absolute;
+  z-index: 1;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 60%;
+  padding: 0 clamp(16px, 4vw, 48px);
+}
+
+.br-slide__eyebrow { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; opacity: 0.9; }
+.br-slide__title { font-family: 'Cormorant Garamond', serif; font-size: clamp(22px, 4.4vw, 48px); font-weight: 700; line-height: 1.05; }
+.br-slide__sub { font-size: clamp(11px, 1.4vw, 15px); opacity: 0.92; }
+
+.br-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.br-dot {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #D2D2D2;
+  cursor: pointer;
+}
+
+.br-dot--on { background: #333333; }
+
+/* ---------- Mũi tên tròn ---------- */
+.br-arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 3;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #D5D5D5;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #555555;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.br-arrow:hover { background: #333333; color: #ffffff; }
+.br-arrow--prev { left: -14px; }
+.br-arrow--next { right: -14px; }
+
+.br-arrow--dark {
+  background: rgba(60, 60, 60, 0.55);
+  border-color: transparent;
+  color: #ffffff;
+}
+
+.br-arrow--dark.br-arrow--prev { left: 6px; }
+.br-arrow--dark.br-arrow--next { right: 6px; }
+
+@media (max-width: 767px) {
+  .br-arrow:not(.br-arrow--dark) { display: none; }
+}
+
+/* ---------- Bài viết nổi bật ---------- */
+.br-tiles {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 40%;
+  gap: 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.br-tiles::-webkit-scrollbar { display: none; }
+
+@media (min-width: 768px) {
+  .br-tiles { grid-auto-flow: row; grid-template-columns: repeat(6, minmax(0, 1fr)); grid-auto-columns: auto; overflow: visible; }
+}
+
+.br-tile {
+  position: relative;
+  display: block;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: 6px;
+  background: #F1EADF;
+}
+
+.br-tile img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.4s ease; }
+.br-tile:hover img { transform: scale(1.04); }
+
+.br-tile__cap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 22px 8px 8px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.62), transparent);
+  color: #ffffff;
+  font-size: 11.5px;
+  font-weight: 700;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ---------- Danh mục sản phẩm ---------- */
+.br-cats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px 8px;
+}
+
+@media (min-width: 768px) {
+  .br-cats { grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 24px 12px; }
+}
+
+.br-cat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  text-decoration: none;
+  color: #333333;
+}
+
+.br-cat__img {
+  display: block;
+  width: 80px;
+  height: 64px;
+}
+
+.br-cat__img img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.br-cat__label { font-size: 12px; line-height: 1.35; }
+.br-cat:hover .br-cat__label { color: #A3152D; text-decoration: underline; }
+
+/* ---------- Hàng cuộn ngang + thẻ ---------- */
+.br-car { position: relative; }
+
+.br-row {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  padding: 2px 1px 6px;
+}
+
+.br-row::-webkit-scrollbar { display: none; }
+
+.br-post {
+  flex: 0 0 148px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid #DDDDDD;
+  border-radius: 6px;
+  background: #ffffff;
+  text-decoration: none;
+  color: #333333;
+  scroll-snap-align: start;
+}
+
+@media (min-width: 768px) { .br-post { flex-basis: 168px; } }
+
+.br-post--room { flex-basis: 200px; }
+@media (min-width: 768px) { .br-post--room { flex-basis: 220px; } }
+
+.br-post__img { display: block; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 4px; background: #F1EADF; }
+.br-post--room .br-post__img { aspect-ratio: 4 / 3; }
+.br-post__img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.br-post__handle { font-size: 11.5px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.br-post__handle--wrap { white-space: normal; font-weight: 500; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; }
+.br-post:hover { border-color: #AAAAAA; }
+
+.br-staff { display: flex; align-items: center; gap: 8px; }
+.br-staff__avatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; background: #F1EADF; flex-shrink: 0; }
+.br-staff__text { display: flex; flex-direction: column; min-width: 0; }
+.br-staff__name { font-size: 11px; font-weight: 700; }
+.br-staff__sub { font-size: 10.5px; color: #777777; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Thẻ sản phẩm */
+.br-prod {
+  flex: 0 0 156px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-decoration: none;
+  color: #333333;
+  scroll-snap-align: start;
+}
+
+@media (min-width: 768px) { .br-prod { flex-basis: 176px; } }
+
+.br-prod__img { display: block; aspect-ratio: 1 / 1; overflow: hidden; background: #F5F2EA; }
+.br-prod__img img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.4s ease; }
+.br-prod:hover .br-prod__img img { transform: scale(1.04); }
+
+.br-prod__name {
+  margin-top: 6px;
+  font-size: 12.5px;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.8em;
+}
+
+.br-prod__off { font-size: 12px; color: #D9534F; }
+.br-prod__price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; font-size: 13px; }
+.br-prod__price strong { color: #D9534F; font-size: 14px; }
+.br-prod--plain .br-prod__price strong { color: #333333; }
+.br-prod__price s { color: #999999; font-size: 12px; }
+.br-prod__rate { display: flex; align-items: center; gap: 4px; font-size: 11px; color: #777777; }
+.br-stars { display: inline-flex; color: #D6D6D6; font-size: 13px; letter-spacing: 1px; }
+.br-star--on { color: #E0A11B; }
+
+/* ---------- Blog ---------- */
+.br-blog {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+
+@media (min-width: 768px) { .br-blog { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; } }
+
+.br-blog__item { display: flex; gap: 12px; text-decoration: none; color: #333333; }
+.br-blog__img { flex: 0 0 116px; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 4px; background: #F1EADF; }
+.br-blog__img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.br-blog__body { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.br-blog__date { font-size: 12px; color: #666666; }
+.br-blog__title { font-size: 12.5px; font-weight: 700; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.br-blog__item:hover .br-blog__title { color: #A3152D; }
+
+/* ---------- Khối cuối ---------- */
+.br-find {
+  display: block;
+  max-width: 480px;
+  margin: 48px auto 0;
+  padding: 26px 16px;
+  background: #EDEDED;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #333333;
+  text-decoration: none;
+  transition: background 0.2s ease;
+}
+
+.br-find:hover { background: #E2E2E2; }
+
+.br-missing { padding: 80px 16px; text-align: center; }
+.br-missing h1 { margin: 0 0 8px; font-size: 22px; font-weight: 700; }
+.br-missing p { margin: 0 0 16px; color: #666666; }
+.br-missing a { color: #A3152D; font-weight: 700; }

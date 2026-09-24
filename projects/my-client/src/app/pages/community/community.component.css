@@ -1,0 +1,250 @@
+/* Bố cục kiểu Threads: [điều hướng] [feed] [trending + danh mục] */
+.cm-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+@media (min-width: 1024px) {
+  .cm-layout {
+    grid-template-columns: 200px minmax(0, 640px);
+    max-width: none;
+    justify-content: center;
+  }
+}
+
+@media (min-width: 1280px) {
+  .cm-layout {
+    grid-template-columns: 200px minmax(0, 620px) 300px;
+  }
+}
+
+.cm-sticky {
+  position: sticky;
+  top: 132px;
+}
+
+/* Khung trắng bo tròn chứa feed/sidebar */
+.cm-panel {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 28px;
+  overflow: hidden;
+}
+
+/* ---------- Điều hướng trái ---------- */
+.cm-nav {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  font-size: 15px;
+  color: #3C332D;
+  text-align: left;
+  transition: background 0.15s ease;
+}
+
+.cm-nav:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.cm-nav--active {
+  background: rgba(0, 0, 0, 0.06);
+  color: #1F1712;
+  font-weight: 600;
+}
+
+.cm-search {
+  width: 100%;
+  font-size: 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: #ffffff;
+  padding: 10px 16px 10px 38px;
+  color: #1F1712;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.cm-search:focus {
+  border-color: #A3152D;
+}
+
+/* ---------- Tabs ---------- */
+.cm-tab {
+  position: relative;
+  padding: 14px 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #93877E;
+  transition: color 0.15s ease;
+}
+
+.cm-tab:hover {
+  color: #1F1712;
+}
+
+.cm-tab--active {
+  color: #1F1712;
+}
+
+.cm-tab--active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1.5px;
+  background: #1F1712;
+}
+
+/* ---------- Nút / chip ---------- */
+.cm-btn-outline {
+  padding: 8px 18px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1F1712;
+  transition: background 0.15s ease;
+}
+
+.cm-btn-outline:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.cm-chip {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+  font-size: 13px;
+  color: #3C332D;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.cm-chip:hover {
+  border-color: rgba(0, 0, 0, 0.25);
+}
+
+.cm-chip--active {
+  background: #1F1712;
+  border-color: #1F1712;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+/* ---------- Bài viết dạng thread ---------- */
+.cm-post {
+  display: flex;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+@media (min-width: 640px) {
+  .cm-post {
+    padding: 18px 24px;
+  }
+}
+
+.cm-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  flex-shrink: 0;
+}
+
+.cm-text {
+  margin-top: 2px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: #1F1712;
+  white-space: pre-line;
+  word-break: break-word;
+}
+
+.cm-media {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: #F7F2E7;
+  max-width: 460px;
+}
+
+.cm-media img {
+  display: block;
+  width: 100%;
+  max-height: 420px;
+  object-fit: cover;
+}
+
+.cm-media--detail {
+  max-width: none;
+  overflow: visible;
+}
+
+.cm-media--detail img {
+  max-height: 560px;
+  border-radius: 16px;
+}
+
+.cm-media__badge {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  font-size: 12px;
+  font-weight: 600;
+  color: #A3152D;
+  backdrop-filter: blur(6px);
+}
+
+.cm-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  transition: background 0.15s ease;
+}
+
+button.cm-action:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* Filter pills row: cuộn ngang trên mobile mà không lộ thanh scrollbar */
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* Like button: pulse nhẹ khi vừa bấm tim, không ảnh hưởng layout xung quanh */
+.community-like--pulse app-icon {
+  animation: community-like-pop 320ms ease;
+}
+
+@keyframes community-like-pop {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}

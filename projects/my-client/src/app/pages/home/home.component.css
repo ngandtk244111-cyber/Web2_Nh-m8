@@ -1,25 +1,159 @@
-/* ---------- Danh mục sản phẩm: vòng tròn icon ---------- */
-.cat-icon {
+/* ---------- Danh mục sản phẩm: thẻ đồng nhất, tông beige/cream ---------- */
+.cat-panel {
+  background: #F5EFE7;
+  border-radius: 28px;
+  padding: 28px 18px 24px;
+}
+
+@media (min-width: 640px) {
+  .cat-panel {
+    padding: 40px 32px 36px;
+  }
+}
+
+.cat-eyebrow {
+  display: inline-block;
+  margin: 0 0 12px;
+  padding: 7px 16px;
+  border-radius: 999px;
+  background: #EBDDCB;
+  color: #6B4A36;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.cat-title {
+  margin: 0;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(30px, 4vw, 46px);
+  font-weight: 700;
+  line-height: 1.1;
+  color: #3B2418;
+}
+
+.cat-sub {
+  margin: 10px 0 0;
+  max-width: 640px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: #7A6558;
+}
+
+.cat-viewall {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  color: #5A3D2E;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.2s ease, gap 0.2s ease;
+}
+
+.cat-viewall:hover {
+  color: #3B2418;
+  gap: 12px;
+}
+
+.cat-viewall:focus-visible,
+.cat-card:focus-visible {
+  outline: 2px solid #8A5A3C;
+  outline-offset: 3px;
+}
+
+.cat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@media (min-width: 640px) {
+  .cat-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .cat-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 18px;
+  }
+}
+
+.cat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 10px 16px;
+  border-radius: 24px;
+  background: #FBF6EF;
+  border: 1px solid rgba(120, 90, 60, 0.1);
+  box-shadow: 0 1px 2px rgba(80, 55, 30, 0.04);
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease;
+}
+
+.cat-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(120, 90, 60, 0.18);
+  box-shadow: 0 16px 30px -14px rgba(80, 55, 30, 0.28);
+}
+
+.cat-card:active {
+  transform: translateY(-1px) scale(0.985);
+  transition-duration: 0.1s;
+}
+
+.cat-card__art {
   display: block;
-  position: relative;
-  background: linear-gradient(145deg, #FBF3E4, #F1E4CC);
-  border: 1px solid rgba(201, 164, 100, 0.35);
-  box-shadow: 0 2px 8px rgba(107, 29, 58, 0.08);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  width: 100%;
+  aspect-ratio: 398 / 218;
+  overflow: hidden;
 }
 
-.group:hover .cat-icon {
-  transform: scale(1.06);
-  box-shadow: 0 8px 20px rgba(107, 29, 58, 0.18);
+.cat-card__art img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  transition: transform 0.4s ease;
+  user-select: none;
 }
 
-/* Ảnh sản phẩm lỗi tải (404/mạng) sẽ bị ẩn qua (error) handler, để lộ nền gradient ấm phía trên
-   thay vì icon "ảnh vỡ" xấu mặc định của trình duyệt. */
-.cat-icon img.cat-icon__broken {
-  display: none;
+.cat-card:hover .cat-card__art img {
+  transform: scale(1.04);
+}
+
+.cat-card__name {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.3;
+  text-align: center;
+  color: #3B2418;
+}
+
+@media (min-width: 640px) {
+  .cat-card__name {
+    font-size: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cat-card,
+  .cat-card__art img {
+    transition: none;
+  }
 }
 
 /* ---------- AI Idea Assistant banner: ảnh concept bên phải ---------- */
+/* Không còn zoom/shine/sparkle chạy vô hạn — ảnh chỉ trôi nhẹ theo cuộn (appParallax ghi --py).
+   scale(1.12) chừa mép để khi dịch dọc không lộ nền. */
 .ai-banner {
   isolation: isolate;
 }
@@ -40,42 +174,8 @@
   background-size: 100% 100%, cover;
   background-position: 0 0, center;
   background-repeat: no-repeat, no-repeat;
-  animation: ai-panel-zoom 11s ease-in-out infinite;
-}
-
-.ai-banner__shine {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(120deg, transparent 35%, rgba(255, 255, 255, 0.45) 50%, transparent 65%);
-  background-size: 220% 100%;
-  animation: ai-shine-sweep 4.5s ease-in-out infinite;
-}
-
-.ai-banner__sparkles {
-  position: absolute;
-  inset: 0;
-  opacity: 0.7;
-  background-image:
-    radial-gradient(1.5px 1.5px at 55% 20%, #ffffff 100%, transparent 100%),
-    radial-gradient(2px 2px at 68% 55%, #A9C6EA 100%, transparent 100%),
-    radial-gradient(1.5px 1.5px at 82% 35%, #ffffff 100%, transparent 100%),
-    radial-gradient(1.5px 1.5px at 75% 75%, #A9C6EA 100%, transparent 100%);
-  animation: ai-sparkle-twinkle 3s ease-in-out infinite;
-}
-
-@keyframes ai-panel-zoom {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.06); }
-}
-
-@keyframes ai-shine-sweep {
-  0%, 55% { background-position: 220% 0; }
-  100% { background-position: -20% 0; }
-}
-
-@keyframes ai-sparkle-twinkle {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 0.9; }
+  transform: translate3d(0, var(--py, 0px), 0) scale(1.12);
+  will-change: transform;
 }
 
 @media (min-width: 1024px) {
@@ -85,6 +185,7 @@
 }
 
 /* ---------- Shop The Room card: ảnh phòng thật ở nửa trên, mờ dần vào nền kem ---------- */
+/* Ảnh dọc nên dư nhiều chiều cao — parallax bằng background-position theo --py */
 .sr-card__photo {
   position: absolute;
   top: 0;
@@ -96,60 +197,148 @@
     linear-gradient(180deg, rgba(255, 255, 255, 0.32) 0%, rgba(255, 255, 255, 0.72) 60%, #FFFFFF 100%),
     url('/assets/home/shop-the-room-hero.jpg');
   background-size: 100% 100%, cover;
-  background-position: 0 0, center 22%;
+  background-position: 0 0, center calc(22% + var(--py, 0px));
   background-repeat: no-repeat, no-repeat;
-  animation: sr-photo-pan 12s ease-in-out infinite;
-}
-
-.sr-card__shine {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 260px;
-  z-index: 1;
-  pointer-events: none;
-  background: linear-gradient(100deg, transparent 40%, rgba(255, 255, 255, 0.35) 50%, transparent 60%);
-  background-size: 220% 100%;
-  animation: sr-shine-sweep 5.5s ease-in-out infinite;
-}
-
-.sr-card__sparkles {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 260px;
-  z-index: 1;
-  pointer-events: none;
-  opacity: 0.7;
-  background-image:
-    radial-gradient(1.5px 1.5px at 20% 30%, #A9C6EA 100%, transparent 100%),
-    radial-gradient(1.5px 1.5px at 40% 65%, #ffffff 100%, transparent 100%),
-    radial-gradient(2px 2px at 60% 25%, #A9C6EA 100%, transparent 100%),
-    radial-gradient(1.5px 1.5px at 78% 55%, #ffffff 100%, transparent 100%);
-  animation: sr-sparkle-twinkle 3.2s ease-in-out infinite;
-}
-
-@keyframes sr-photo-pan {
-  0%, 100% { background-position: 0 0, center 18%; }
-  50% { background-position: 0 0, center 30%; }
-}
-
-@keyframes sr-shine-sweep {
-  0%, 55% { background-position: 220% 0; }
-  100% { background-position: -20% 0; }
-}
-
-@keyframes sr-sparkle-twinkle {
-  0%, 100% { opacity: 0.35; }
-  50% { opacity: 0.85; }
 }
 
 @media (max-width: 767px) {
-  .sr-card__photo,
-  .sr-card__shine,
-  .sr-card__sparkles {
+  .sr-card__photo {
     height: 180px;
   }
 }
+
+/* ---------- Dải chữ chạy ngang (marquee) ---------- */
+.hm-marquee {
+  margin-top: 56px;
+  padding: 18px 0;
+  border-top: 1px solid rgba(31, 23, 18, 0.12);
+  border-bottom: 1px solid rgba(31, 23, 18, 0.12);
+  overflow: hidden;
+  white-space: nowrap;
+  /* mờ dần 2 mép cho cảm giác chữ trôi ra/vào */
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 8%, #000 92%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 8%, #000 92%, transparent 100%);
+}
+
+.hm-marquee__track {
+  display: inline-flex;
+  width: max-content;
+  animation: hm-marquee 45s linear infinite;
+}
+
+.hm-marquee:hover .hm-marquee__track {
+  animation-play-state: paused;
+}
+
+.hm-marquee__item {
+  display: inline-flex;
+  align-items: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(24px, 3.2vw, 40px);
+  font-style: italic;
+  font-weight: 500;
+  line-height: 1.2;
+  color: #1F1712;
+}
+
+.hm-marquee__sep {
+  margin: 0 clamp(18px, 2.4vw, 36px);
+  font-style: normal;
+  font-size: 0.5em;
+  color: #A80D27;
+}
+
+/* Track gồm 2 bản giống nhau → dịch đúng -50% là lặp liền mạch */
+@keyframes hm-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hm-marquee__track {
+    animation: none;
+  }
+}
+
+/* ===== Hàng ô ảnh kiểu Nitori (Tin Tức / Ý Tưởng Phối Đồ): 5 ô/hàng desktop, cuộn ngang trên mobile ===== */
+.nt-row {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.nt-row::-webkit-scrollbar {
+  display: none;
+}
+
+.nt-tile {
+  position: relative;
+  display: block;
+  flex: 0 0 calc((100% - 48px) / 5);
+  overflow: hidden;
+  border-radius: 4px;
+  background: #EFE6D3;
+  scroll-snap-align: start;
+}
+
+.nt-tile--square {
+  aspect-ratio: 1 / 1;
+}
+
+.nt-tile--wide {
+  aspect-ratio: 600 / 370;
+}
+
+.nt-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.4s ease;
+}
+
+.nt-tile:hover img {
+  transform: scale(1.04);
+}
+
+.nt-tile__cap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 28px 10px 10px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.66), transparent);
+  color: #ffffff;
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+@media (max-width: 1023px) {
+  .nt-tile {
+    flex-basis: calc((100% - 24px) / 3);
+  }
+}
+
+@media (max-width: 767px) {
+  .nt-tile--square {
+    flex-basis: 46%;
+  }
+
+  .nt-tile--wide {
+    flex-basis: 58%;
+  }
+}
+
+
+/* Product section editorial heading */
+.ps-head { display: flex; flex-direction: column; gap: 12px; margin-bottom: 28px; }
+@media (min-width: 640px) { .ps-head { flex-direction: row; align-items: flex-end; justify-content: space-between; } }
+.ps-eyebrow { margin: 0 0 8px; font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #7A6558; }
+.ps-title { margin: 0; font-family: 'Cormorant Garamond', serif; font-size: clamp(28px, 3.6vw, 40px); font-weight: 700; line-height: 1.1; color: #3B2418; }
+.ps-sub { margin: 8px 0 0; max-width: 560px; font-size: 14px; color: #7A6558; }
+.ps-link { display: inline-flex; gap: 6px; font-size: 13px; font-weight: 600; color: #3B2418; padding-bottom: 2px; border-bottom: 1px solid #3B2418; white-space: nowrap; transition: color .2s, border-color .2s; }
+.ps-link:hover { color: #A3152D; border-color: #A3152D; }

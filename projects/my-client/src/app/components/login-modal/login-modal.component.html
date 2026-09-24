@@ -5,7 +5,15 @@
     </button>
 
     <div class="lm_head">
-      <img src="assets/logo/lumea-mark.png" alt="Luméa" class="lm_head__logo">
+      <!-- Mascot nổi bị overlay của modal che -> khi đang xử lý / có kết quả thì hiện mascot ngay tại vị trí logo. -->
+      <div class="lm_head__badge">
+        <img
+          *ngIf="mascotService.expression() === 'idle'; else mascotFace"
+          src="assets/logo/lumea-mark.png" alt="Luméa" class="lm_head__logo">
+        <ng-template #mascotFace>
+          <img [src]="mascotService.image()" alt="Goh - trợ lý Luméa" class="lm_head__mascot">
+        </ng-template>
+      </div>
       <h3 class="lm_head__title">{{ title }}</h3>
     </div>
 

@@ -7,7 +7,8 @@
     <div class="qv-modal__grid">
       <div class="qv-modal__image">
         <img [src]="product.images[0]" [alt]="product.name">
-        <span *ngIf="product.productionType === 'PRINT_ON_DEMAND'" class="qv-badge">
+        <span *ngIf="discountPercent" class="qv-badge qv-badge--sale">-{{ discountPercent }}%</span>
+        <span *ngIf="product.productionType === 'PRINT_ON_DEMAND' && !discountPercent" class="qv-badge">
           <app-icon name="cube" [size]="12"></app-icon>
           In 3D (POD)
         </span>
@@ -30,14 +31,25 @@
           <span *ngIf="product.originalPrice" class="qv-modal__price-original">{{ product.originalPrice | vnd }}</span>
         </div>
 
+        <p class="qv-stock" [class.qv-stock--low]="product.inStock > 0 && product.inStock <= 10" [class.qv-stock--out]="product.inStock <= 0">
+          {{ product.inStock <= 0 ? 'Hết hàng' : (product.inStock <= 10 ? 'Chỉ còn ' + product.inStock + ' sản phẩm' : 'Còn hàng') }}
+        </p>
+
+        <div *ngIf="!product.customizable && product.inStock > 0" class="qv-qty" role="group" aria-label="Số lượng">
+          <button type="button" (click)="changeQty(-1)" [disabled]="quantity <= 1" aria-label="Giảm số lượng">−</button>
+          <span aria-live="polite">{{ quantity }}</span>
+          <button type="button" (click)="changeQty(1)" [disabled]="quantity >= maxQty" aria-label="Tăng số lượng">+</button>
+        </div>
+
         <div class="qv-modal__actions">
           <button
             *ngIf="!product.customizable"
             type="button"
             class="qv-btn qv-btn--primary"
+            [disabled]="product.inStock <= 0"
             (click)="addToCart()">
             <app-icon name="cart" [size]="16"></app-icon>
-            <span>Thêm vào giỏ hàng</span>
+            <span>{{ product.inStock <= 0 ? 'Hết hàng' : 'Thêm vào giỏ hàng' }}</span>
           </button>
 
           <a
@@ -48,6 +60,16 @@
             class="qv-btn qv-btn--primary">
             <app-icon name="sliders" [size]="16"></app-icon>
             <span>Tùy biến 3D sản phẩm này</span>
+          </a>
+
+          <a
+            *ngIf="product.threeModelType"
+            [routerLink]="['/product', product.slug]"
+            [queryParams]="{ view: '3d' }"
+            (click)="quickViewService.close()"
+            class="qv-btn qv-btn--ghost">
+            <app-icon name="cube" [size]="16"></app-icon>
+            <span>Xem 3D</span>
           </a>
 
           <a

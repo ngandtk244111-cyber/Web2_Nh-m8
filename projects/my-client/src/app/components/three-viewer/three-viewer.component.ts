@@ -1,13 +1,14 @@
-import { 
-  Component, 
-  ElementRef, 
-  Input, 
-  NgZone, 
-  OnChanges, 
-  OnDestroy, 
-  OnInit, 
-  SimpleChanges, 
-  ViewChild 
+import {
+  Component,
+  ElementRef,
+  Input,
+  NgZone,
+  OnChanges,
+  OnDestroy,
+  OnInit,
+  SimpleChanges,
+  ViewChild,
+  inject
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import * as THREE from 'three';
@@ -16,6 +17,7 @@ import { ViewerRuntime } from '../../shared/three/viewer-runtime';
 import { ProductSceneManager } from '../../shared/three/product-scenes';
 import { QualityManager, QualityMode, QualityTier } from '../../shared/three/quality-manager';
 import { TextCanvasTexturePool } from '../../shared/three/resource-manager';
+import { MascotService } from '../../core/services/mascot.service';
 
 @Component({
   selector: 'app-three-viewer',
@@ -38,6 +40,18 @@ export class ThreeViewerComponent implements OnInit, OnChanges, OnDestroy {
 
   isLoading = true;
   hasError = false;
+
+  private readonly mascotService = inject(MascotService);
+  /** Đang giữ 1 lượt loading của mascot — rebuildScene có thể gọi liên tục khi đổi màu/size,
+   *  cờ này bảo đảm begin/end luôn đi theo cặp. */
+  private mascotLoading = false;
+
+  private setMascotLoading(loading: boolean): void {
+    if (loading === this.mascotLoading) return;
+    this.mascotLoading = loading;
+    if (loading) this.mascotService.beginLoading();
+    else this.mascotService.endLoading();
+  }
 
   readonly qualityOptions: { mode: QualityMode; label: string; description: string }[] = [
     { mode: 'auto', label: 'Tự động', description: 'Tự điều chỉnh FPS theo thiết bị' },
@@ -90,6 +104,7 @@ export class ThreeViewerComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.setMascotLoading(false);
     if (this.textDebounceTimer) {
       clearTimeout(this.textDebounceTimer);
     }
@@ -120,6 +135,7 @@ export class ThreeViewerComponent implements OnInit, OnChanges, OnDestroy {
         alpha: true,
         onContextLost: () => {
           this.hasError = true;
+          this.mascotService.react('angry');
         },
         onContextRestored: () => {
           this.hasError = false;
@@ -135,6 +151,8 @@ export class ThreeViewerComponent implements OnInit, OnChanges, OnDestroy {
       console.error('ThreeViewer initialization failed:', err);
       this.hasError = true;
       this.isLoading = false;
+      this.setMascotLoading(false);
+      this.mascotService.react('angry');
     }
   }
 
@@ -171,6 +189,7 @@ export class ThreeViewerComponent implements OnInit, OnChanges, OnDestroy {
 
   private rebuildScene(): void {
     this.isLoading = true;
+    this.setMascotLoading(true);
     this.productScenes.buildModel({
       modelType: this.modelType,
       colorHex: this.colorHex,
@@ -181,6 +200,7 @@ export class ThreeViewerComponent implements OnInit, OnChanges, OnDestroy {
       showAccessories: this.showAccessories,
     }, this.textPool, () => {
       this.isLoading = false;
+      this.setMascotLoading(false);
       if (this.runtime) {
         this.runtime.requestRender(5);
       }

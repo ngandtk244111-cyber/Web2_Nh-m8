@@ -1,9 +1,9 @@
-import { AfterViewInit, Component, ElementRef, HostListener, OnDestroy, QueryList, ViewChild, ViewChildren } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, computed, HostListener, NgZone, OnDestroy, QueryList, ViewChild, ViewChildren } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { AppIconComponent } from '../icon/icon.component';
 import { ToastService } from '../../core/services/toast.service';
+import { MascotService, MascotExpression } from '../../core/services/mascot.service';
 
 export interface VideoTopic {
   title: string;
@@ -212,7 +212,7 @@ export class VideoTopicsComponent implements AfterViewInit, OnDestroy {
   private viewerDragStartY = 0;
   private viewerDragging = false;
 
-  constructor(private sanitizer: DomSanitizer, private toast: ToastService) {}
+  constructor(private zone: NgZone, private toast: ToastService, private mascotService: MascotService) {}
 
   ngAfterViewInit(): void {
     // Player YouTube được tạo lazy khi div đích (#ytTarget) của 1 thẻ xuất hiện lần đầu trong DOM
@@ -231,6 +231,7 @@ export class VideoTopicsComponent implements AfterViewInit, OnDestroy {
   ngOnDestroy(): void {
     if (this.resizeTimer) clearTimeout(this.resizeTimer);
     this.players.forEach(player => player.destroy?.());
+    this.destroyViewerPlayer();
     this.restoreBodyScroll();
   }
 
@@ -272,6 +273,7 @@ export class VideoTopicsComponent implements AfterViewInit, OnDestroy {
           this.loadedIndices.delete(index);
           this.players.delete(index);
           player.destroy?.();
+          this.mascotService.react('sad');
         },
       },
     });
@@ -325,41 +327,179 @@ export class VideoTopicsComponent implements AfterViewInit, OnDestroy {
     return this.topics[this.viewerIndex];
   }
 
-  /** Cache theo index — SafeResourceUrl là object mới mỗi lần gọi sanitizer, nếu không cache thì
-   *  binding [src] tưởng URL đổi ở mỗi vòng change detection và làm iframe reload/giật liên tục. */
-  private embedUrlCache = new Map<number, SafeResourceUrl>();
+  /** Ảnh mascot Goh ở thẻ trái của viewer — đổi theo biểu cảm hiện tại của MascotService. */
+  readonly mascotImg = computed(() => {
+    const expression: MascotExpression = this.mascotService.expression();
+    return expression === 'idle' ? 'assets/mascot/goh-mascot.png' : `assets/mascot/goh-${expression}.png`;
+  });
 
-  get viewerEmbedUrl(): SafeResourceUrl | null {
-    const id = this.viewerTopic?.youtubeId;
-    if (!id || this.erroredIndices.has(this.viewerIndex)) return null;
-    const cached = this.embedUrlCache.get(this.viewerIndex);
-    if (cached) return cached;
-    const url = `https://www.youtube-nocookie.com/embed/${id}` +
-      `?autoplay=1&mute=1&controls=1&modestbranding=1&rel=0&playsinline=1&loop=1&playlist=${id}`;
-    const safeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(url);
-    this.embedUrlCache.set(this.viewerIndex, safeUrl);
-    return safeUrl;
+  /** Tối đa 2 video kế tiếp (không xoay vòng) cho mục "Tiếp theo" trong bảng mô tả. */
+  get upNextTopics(): { topic: VideoTopic; index: number }[] {
+    return this.topics
+      .slice(this.viewerIndex + 1, this.viewerIndex + 3)
+      .map((topic, k) => ({ topic, index: this.viewerIndex + 1 + k }));
   }
 
-  /** true = mô tả đang thu gọn (ẩn bớt) — mặc định mở rộng, giống trạng thái "Thu gọn" trong ảnh mẫu. */
-  infoCollapsed = false;
+  pad2(value: number): string {
+    return String(value).padStart(2, '0');
+  }
 
   openViewer(index: number, event: Event): void {
     event.stopPropagation();
+    // Dừng preview đang hover ở carousel để không phát chồng hình phía sau viewer.
+    this.players.forEach(player => player.pauseVideo?.());
+    this.hoveredIndex = null;
     this.viewerIndex = index;
     this.viewerAnimDirection = null;
-    this.infoCollapsed = false;
+    this.viewerMuted = true;
     this.viewerOpen = true;
     document.body.style.overflow = 'hidden';
+    // Ẩn banner nổi 2 bên của trang (floating-side-banners) — viewer đã có thẻ mascot/bảng mô tả riêng.
+    document.body.classList.add('vw-open');
   }
 
   closeViewer(): void {
     this.viewerOpen = false;
+    this.destroyViewerPlayer();
     this.restoreBodyScroll();
   }
 
   private restoreBodyScroll(): void {
     document.body.style.overflow = '';
+    document.body.classList.remove('vw-open');
+  }
+
+  // ---------- Player của viewer (YouTube IFrame API để điều khiển được âm thanh) ----------
+
+  /** Trình duyệt chỉ cho autoplay khi tắt tiếng, nên viewer luôn mở ở trạng thái muted; người dùng
+   *  bấm nút loa (hoặc nút loa trong control của YouTube) để bật tiếng — đó là thao tác hợp lệ. */
+  viewerMuted = true;
+  /** Người dùng đã chủ động bật tiếng — giữ lựa chọn này khi chuyển sang video khác trong viewer. */
+  private viewerWantsSound = false;
+  private viewerPlayer: any = null;
+  private viewerSyncTimer: ReturnType<typeof setInterval> | null = null;
+  private viewerSoundCheckTimer: ReturnType<typeof setTimeout> | null = null;
+
+  /** Div đích xuất hiện khi viewer mở (*ngIf) -> tạo player 1 lần, các lần đổi video dùng loadVideoById. */
+  @ViewChild('viewerYt')
+  set viewerYtTarget(ref: ElementRef<HTMLDivElement> | undefined) {
+    if (ref && !this.viewerPlayer) this.createViewerPlayer(ref.nativeElement);
+  }
+
+  private async createViewerPlayer(target: HTMLElement): Promise<void> {
+    const videoId = this.viewerTopic?.youtubeId;
+    if (!videoId) return;
+    await loadYoutubeIframeApi();
+    if (!this.viewerOpen || this.viewerPlayer) return;
+
+    this.viewerPlayer = new window.YT.Player(target, {
+      videoId,
+      host: 'https://www.youtube-nocookie.com',
+      width: '100%',
+      height: '100%',
+      playerVars: {
+        autoplay: 1,
+        mute: 1,
+        controls: 1,
+        fs: 1,
+        modestbranding: 1,
+        rel: 0,
+        playsinline: 1,
+        iv_load_policy: 3,
+      },
+      events: {
+        onReady: (e: any) => {
+          e.target.mute();
+          e.target.playVideo();
+          this.startViewerSync();
+        },
+        // loop=1 của YouTube không áp dụng cho video nạp bằng loadVideoById -> tự phát lại khi hết.
+        onStateChange: (e: any) => {
+          if (e.data === window.YT.PlayerState.ENDED) {
+            e.target.seekTo(0);
+            e.target.playVideo();
+          }
+        },
+        onError: () => {
+          this.erroredIndices.add(this.viewerIndex);
+          this.mascotService.react('sad');
+        },
+      },
+    });
+  }
+
+  /** Đồng bộ icon loa khi người dùng bật/tắt tiếng bằng control gốc của YouTube. Chạy ngoài Angular
+   *  zone, chỉ quay lại zone khi trạng thái thực sự đổi. */
+  private startViewerSync(): void {
+    this.stopViewerSync();
+    this.zone.runOutsideAngular(() => {
+      this.viewerSyncTimer = setInterval(() => {
+        const muted = this.viewerPlayer?.isMuted?.();
+        if (typeof muted === 'boolean' && muted !== this.viewerMuted) {
+          this.zone.run(() => {
+            this.viewerMuted = muted;
+            this.viewerWantsSound = !muted;
+          });
+        }
+      }, 400);
+    });
+  }
+
+  private stopViewerSync(): void {
+    if (this.viewerSyncTimer) clearInterval(this.viewerSyncTimer);
+    this.viewerSyncTimer = null;
+  }
+
+  private destroyViewerPlayer(): void {
+    this.stopViewerSync();
+    if (this.viewerSoundCheckTimer) clearTimeout(this.viewerSoundCheckTimer);
+    this.viewerPlayer?.destroy?.();
+    this.viewerPlayer = null;
+  }
+
+  toggleViewerSound(event?: Event): void {
+    event?.stopPropagation();
+    const player = this.viewerPlayer;
+    if (!player?.isMuted) return;
+    if (player.isMuted()) {
+      player.unMute();
+      if (player.getVolume?.() === 0) player.setVolume(80);
+      player.playVideo();
+      this.viewerMuted = false;
+      this.viewerWantsSound = true;
+    } else {
+      player.mute();
+      this.viewerMuted = true;
+      this.viewerWantsSound = false;
+    }
+  }
+
+  /** Nạp video của viewerIndex hiện tại vào player có sẵn. Nếu người dùng đã bật tiếng thì thử phát
+   *  có tiếng; trình duyệt chặn (video không chạy) thì quay về autoplay muted — không ép. */
+  private loadViewerVideo(): void {
+    const player = this.viewerPlayer;
+    const videoId = this.viewerTopic?.youtubeId;
+    if (!player?.loadVideoById) return;
+    if (!videoId || this.hasError(this.viewerIndex)) {
+      player.pauseVideo?.();
+      return;
+    }
+    if (this.viewerWantsSound) player.unMute();
+    else player.mute();
+    player.loadVideoById(videoId);
+
+    if (this.viewerSoundCheckTimer) clearTimeout(this.viewerSoundCheckTimer);
+    if (!this.viewerWantsSound) return;
+    this.viewerSoundCheckTimer = setTimeout(() => {
+      const state = this.viewerPlayer?.getPlayerState?.();
+      const PS = window.YT.PlayerState;
+      if (state !== PS.PLAYING && state !== PS.BUFFERING) {
+        this.viewerPlayer?.mute();
+        this.viewerPlayer?.playVideo();
+        this.viewerMuted = true;
+        this.viewerWantsSound = false;
+      }
+    }, 1500);
   }
 
   /** Hướng slide hiện tại ('next' trượt lên, 'prev' trượt xuống) — dùng để bật animation
@@ -375,7 +515,15 @@ export class VideoTopicsComponent implements AfterViewInit, OnDestroy {
     if (next < 0 || next >= this.topics.length) return;
     this.viewerIndex = next;
     this.viewerAnimDirection = direction === 1 ? 'next' : 'prev';
-    this.infoCollapsed = false;
+    this.loadViewerVideo();
+  }
+
+  /** Nhảy thẳng tới 1 video (thanh đếm hoặc danh sách "Tiếp theo" trong bảng mô tả). */
+  viewerGoTo(index: number): void {
+    if (index === this.viewerIndex || this.viewerAnimDirection !== null) return;
+    this.viewerAnimDirection = index > this.viewerIndex ? 'next' : 'prev';
+    this.viewerIndex = index;
+    this.loadViewerVideo();
   }
 
   onViewerAnimEnd(): void {
@@ -396,6 +544,7 @@ export class VideoTopicsComponent implements AfterViewInit, OnDestroy {
     if (event.key === 'Escape') this.closeViewer();
     else if (event.key === 'ArrowUp') this.viewerStep(-1);
     else if (event.key === 'ArrowDown') this.viewerStep(1);
+    else if (event.key === 'm' || event.key === 'M') this.toggleViewerSound();
   }
 
   onViewerPointerDown(event: PointerEvent): void {

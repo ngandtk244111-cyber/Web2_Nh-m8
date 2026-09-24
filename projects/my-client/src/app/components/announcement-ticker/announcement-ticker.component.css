@@ -31,11 +31,13 @@
   animation-play-state: paused;
 }
 
-/* Compact (Header đã scroll): đứng im, không marquee, khoảng cách item gọn hơn. */
+/* Compact (Header đã scroll): đứng im, không marquee, các item căn giữa và cách đều nhau. */
 .at_track--compact {
   animation: none;
-  gap: 6px;
+  gap: 14px;
   width: 100%;
+  justify-content: center;
+  justify-content: safe center;
 }
 
 @keyframes at-scroll {
@@ -60,18 +62,18 @@
 }
 
 .at_item--compact {
-  padding: 3px 10px;
-  font-size: 10.5px;
+  padding: 4px 14px;
+  font-size: 12.5px;
 }
 
 .at_item:hover {
-  border-color: rgba(46, 99, 184, 0.4);
-  color: #2E63B8;
+  border-color: rgba(163, 21, 45, 0.4);
+  color: #A3152D;
 }
 
 .at_item--active {
-  background: rgba(46, 99, 184, 0.14);
-  border-color: rgba(46, 99, 184, 0.5);
-  color: #2E63B8;
+  background: #ffffff;
+  border-color: #ffffff;
+  color: #A3152D;
   font-weight: 700;
 }

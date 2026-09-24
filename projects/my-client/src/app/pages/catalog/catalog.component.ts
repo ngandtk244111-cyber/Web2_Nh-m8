@@ -15,6 +15,7 @@ import {
 import { Product, ProductCategory, ProductStyle, ProductColor, PrintMaterial, SizeCategory } from '../../core/models/product.model';
 import { ProductCardComponent } from '../../components/product-card/product-card.component';
 import { AppIconComponent } from '../../components/icon/icon.component';
+import { MascotService } from '../../core/services/mascot.service';
 
 type ViewMode = 'grid' | 'list';
 
@@ -82,7 +83,8 @@ export class CatalogComponent implements OnInit {
   constructor(
     private productService: ProductService,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private mascotService: MascotService
   ) {}
 
   ngOnInit(): void {
@@ -105,6 +107,12 @@ export class CatalogComponent implements OnInit {
       }
       this.searchQuery = params['q'] || this.searchQuery;
       this.applyFilters();
+
+      // Chỉ phản ứng mascot khi đây là một lượt tìm kiếm thật (có query text từ URL),
+      // không phải mỗi lần người dùng bấm filter sidebar.
+      if (params['q']) {
+        this.mascotService.react(this.filteredProducts.length === 0 ? 'sad' : 'happy');
+      }
     });
   }
 

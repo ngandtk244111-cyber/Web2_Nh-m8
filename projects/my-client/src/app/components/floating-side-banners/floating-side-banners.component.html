@@ -3,29 +3,23 @@
     *ngIf="!isDismissed(banner.side)"
     [routerLink]="banner.link"
     class="fsb fsb--{{ banner.side }}"
-    [style.background-image]="background(banner)"
-    [attr.aria-label]="banner.eyebrow + ' - ' + banner.title">
+    [attr.aria-label]="banner.badge + ' - ' + banner.title">
+
+    <img class="fsb__image" [src]="banner.image" [alt]="banner.title" loading="lazy">
+    <span class="fsb__shade" aria-hidden="true"></span>
 
     <button
       type="button"
       class="fsb__close"
-      [attr.aria-label]="'Đóng banner ' + banner.eyebrow"
+      [attr.aria-label]="'Đóng banner ' + banner.badge"
       (click)="dismiss(banner.side, $event)">
-      <app-icon name="x" [size]="13"></app-icon>
+      <app-icon name="x" [size]="12"></app-icon>
     </button>
 
-    <img
-      *ngIf="banner.image && banner.imageMode !== 'cover'"
-      class="fsb__image"
-      [src]="banner.image"
-      alt=""
-      aria-hidden="true">
-
-    <div class="fsb__icon">
-      <app-icon [name]="banner.icon" [size]="24"></app-icon>
-    </div>
-    <span class="fsb__eyebrow">{{ banner.eyebrow }}</span>
-    <h4 class="fsb__title">{{ banner.title }}</h4>
-    <span class="fsb__cta">{{ banner.ctaLabel }}</span>
+    <span class="fsb__content">
+      <span class="fsb__badge">{{ banner.badge }}</span>
+      <span class="fsb__title">{{ banner.title }}</span>
+      <span class="fsb__cta">{{ banner.ctaLabel }}</span>
+    </span>
   </a>
 </ng-container>

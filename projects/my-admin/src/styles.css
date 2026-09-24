@@ -19,8 +19,8 @@
   --accent-blue: #2055AF;
   --border-subtle: rgba(255, 255, 255, 0.08);
 
-  /* Typography — tham khảo font AuraPC-main (Satoshi cho heading, Inter cho nội dung) */
-  --font-family-heading: 'Satoshi', sans-serif;
+  /* Typography — Inter cho cả heading lẫn nội dung */
+  --font-family-heading: 'Inter', sans-serif;
   --font-family-content: 'Inter', sans-serif;
   /* Spacing scale (tăng dần theo bội số 4px) */
   --spacing-0: 0;
@@ -327,7 +327,7 @@ code,
 kbd,
 samp,
 pre {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-family: Inter, system-ui, sans-serif;
   /* 1 */
   font-feature-settings: normal;
   /* 2 */
@@ -2506,7 +2506,7 @@ body::selection{
 }
 
 .font-mono{
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-family: Inter, system-ui, sans-serif;
 }
 
 .font-sans{
@@ -2514,7 +2514,7 @@ body::selection{
 }
 
 .font-serif{
-  font-family: Satoshi, sans-serif;
+  font-family: Inter, system-ui, sans-serif;
 }
 
 .text-2xl{

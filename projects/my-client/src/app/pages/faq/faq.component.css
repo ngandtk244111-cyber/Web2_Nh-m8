@@ -1,0 +1,167 @@
+.faq-page {
+  background: #fff;
+  color: #1F1712;
+}
+
+/* ===== Banner ===== */
+/* 2 lớp ảnh: nếu ảnh trên lỗi thì ảnh dưới (đã dùng ở trang khác) vẫn hiển thị,
+   cuối cùng là màu nền be ấm. */
+.faq-hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: clamp(220px, 24vw, 380px);
+  background-color: #CFC3B2;
+  background-image:
+    linear-gradient(rgba(31, 23, 18, 0.18), rgba(31, 23, 18, 0.18)),
+    url('https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1920&q=80'),
+    url('https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1920&q=80');
+  background-size: cover;
+  background-position: center 60%;
+  overflow: hidden;
+}
+
+.faq-hero__title {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: clamp(64px, 10vw, 150px);
+  line-height: 1;
+  letter-spacing: 0.01em;
+  color: #fff;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.18);
+}
+
+/* ===== Nội dung ===== */
+.faq-body {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 56px 24px 80px;
+}
+
+.faq-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+}
+
+/* align-items: start — mỗi cột tự giãn theo nội dung, không kéo cột còn lại */
+@media (min-width: 768px) {
+  .faq-grid {
+    grid-template-columns: 1fr 1fr;
+    column-gap: clamp(48px, 8vw, 112px);
+    align-items: start;
+  }
+}
+
+.faq-group {
+  margin-bottom: 44px;
+}
+
+.faq-group__title {
+  margin: 0;
+  padding-bottom: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: #1F1712;
+  border-bottom: 1px solid rgba(31, 23, 18, 0.28);
+}
+
+.faq-item {
+  border-bottom: 1px solid rgba(31, 23, 18, 0.28);
+}
+
+.faq-item__question {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 18px 0;
+  background: none;
+  border: 0;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #1F1712;
+  cursor: pointer;
+  transition: color 200ms ease;
+}
+
+.faq-item__question:hover {
+  color: #6C0E1E;
+}
+
+.faq-item__question:focus-visible {
+  outline: 1px solid #6C0E1E;
+  outline-offset: 2px;
+}
+
+.faq-item__chevron {
+  flex-shrink: 0;
+  display: inline-flex;
+  color: #3C332D;
+  transition: transform 280ms ease;
+}
+
+.faq-item__chevron--open {
+  transform: rotate(180deg);
+}
+
+/* Accordion mở/đóng bằng grid-template-rows — animate được chiều cao nội dung động
+   mà không cần đo/set max-height thủ công bằng JS. */
+.faq-answer {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 280ms ease;
+}
+
+.faq-answer--open {
+  grid-template-rows: 1fr;
+}
+
+.faq-answer__inner {
+  overflow: hidden;
+}
+
+.faq-answer__text {
+  margin: 0;
+  padding: 0 40px 20px 0;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #5A4F47;
+}
+
+.faq-support {
+  margin: 16px 0 0;
+  font-size: 13px;
+  color: #93877E;
+  text-align: center;
+}
+
+.faq-support a {
+  color: #6C0E1E;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.faq-support a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 767px) {
+  .faq-body {
+    padding: 40px 16px 64px;
+  }
+
+  .faq-group {
+    margin-bottom: 36px;
+  }
+
+  .faq-answer__text {
+    padding-right: 24px;
+  }
+}

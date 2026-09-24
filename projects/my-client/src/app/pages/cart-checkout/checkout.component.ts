@@ -13,6 +13,7 @@ import { VNLocation } from '../../core/models/address.model';
 import { AppIconComponent } from '../../components/icon/icon.component';
 import { CheckoutStepsComponent } from '../../components/checkout-steps/checkout-steps.component';
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
+import { MascotService } from '../../core/services/mascot.service';
 
 export type PaymentMethodId = 'COD' | 'BANK_TRANSFER' | 'MOMO' | 'ZALOPAY' | 'CARD' | 'VNPAY' | 'ATM';
 type SupportedPaymentMethodId = 'COD' | 'BANK_TRANSFER' | 'MOMO' | 'ZALOPAY' | 'ATM';
@@ -75,7 +76,8 @@ export class CheckoutComponent implements OnInit {
     private orderService: OrderService,
     private customRequestService: CustomRequestService,
     private paymentService: PaymentService,
-    private router: Router
+    private router: Router,
+    private mascotService: MascotService
   ) {}
 
   onProvinceChange(): void {
@@ -196,6 +198,7 @@ export class CheckoutComponent implements OnInit {
     const items = [...this.cartService.checkoutItems()];
     this.placingOrder = true;
     this.placeOrderError = '';
+    this.mascotService.beginLoading({ immediate: true });
 
     this.orderService.createOrder({
       items,
@@ -211,6 +214,7 @@ export class CheckoutComponent implements OnInit {
     }).subscribe({
       next: (newOrder) => {
         this.placingOrder = false;
+        this.mascotService.endLoading('happy');
 
         // Check if any items belong to a custom request, and convert to order
         items.forEach(item => {
@@ -239,6 +243,7 @@ export class CheckoutComponent implements OnInit {
       },
       error: (err) => {
         this.placingOrder = false;
+        this.mascotService.endLoading('sad');
         this.placeOrderError = 'Không tạo được đơn hàng, vui lòng thử lại. (' + (err?.message || 'lỗi kết nối') + ')';
       },
     });

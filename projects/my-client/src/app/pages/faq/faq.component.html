@@ -1,0 +1,48 @@
+<div class="faq-page">
+
+  <!-- Banner full width -->
+  <section class="faq-hero" aria-label="Câu hỏi thường gặp">
+    <h1 class="faq-hero__title">FAQs</h1>
+  </section>
+
+  <!-- 2 cột FAQ: mỗi cột là 1 stack độc lập nên mở accordion chỉ giãn cột đó -->
+  <div class="faq-body">
+    <div class="faq-grid">
+      <div *ngFor="let column of columns" class="faq-column">
+        <section *ngFor="let cat of column" class="faq-group">
+          <h2 class="faq-group__title">{{ cat.title }}</h2>
+
+          <div *ngFor="let item of cat.items" class="faq-item">
+            <button
+              type="button"
+              class="faq-item__question"
+              (click)="toggle(item.id)"
+              [attr.aria-expanded]="isOpen(item.id)"
+              [attr.aria-controls]="'faq-answer-' + item.id">
+              <span>{{ item.question }}</span>
+              <span class="faq-item__chevron" [class.faq-item__chevron--open]="isOpen(item.id)">
+                <app-icon name="chevron-down" [size]="16" [strokeWidth]="1.5"></app-icon>
+              </span>
+            </button>
+
+            <div
+              class="faq-answer"
+              [id]="'faq-answer-' + item.id"
+              [class.faq-answer--open]="isOpen(item.id)">
+              <div class="faq-answer__inner">
+                <p class="faq-answer__text">{{ item.answer }}</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <p class="faq-support">
+      Chưa tìm thấy câu trả lời? Liên hệ hotline
+      <a href="tel:18006928">1800 6928</a>
+      hoặc dùng khung chat hỗ trợ trực tuyến ở góc màn hình.
+    </p>
+  </div>
+
+</div>

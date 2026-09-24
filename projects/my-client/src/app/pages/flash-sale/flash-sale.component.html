@@ -1,0 +1,338 @@
+<div class="fs">
+
+  <!-- ============ A. CAMPAIGN HERO ============ -->
+  <section class="fs-container fs-hero-wrap">
+    <div class="fs-hero">
+      <div class="fs-hero__content">
+        <p class="fs-eyebrow">LUMÉA CAMPAIGN · FLASH SALE</p>
+        <h1 class="fs-hero__title">
+          Flash Sale
+          <span class="fs-hero__title-accent">Giá Tốt</span>
+        </h1>
+        <p class="fs-hero__sub">Những món decor nhỏ, thay đổi cả góc phòng — chỉ trong các khung giờ vàng mỗi ngày.</p>
+
+        <div class="fs-hero__chips">
+          <span *ngIf="maxDiscount() > 0" class="fs-pill fs-pill--accent">Giảm đến {{ maxDiscount() }}%</span>
+          <span *ngIf="heroState() as hs" class="fs-pill">
+            {{ hs.kind === 'live' ? 'Kết thúc sau' : 'Bắt đầu sau' }}
+            <strong>{{ flash.countdown(hs.target).h }}:{{ flash.countdown(hs.target).m }}:{{ flash.countdown(hs.target).s }}</strong>
+          </span>
+        </div>
+
+        <button type="button" class="fs-btn fs-btn--primary fs-hero__cta" (click)="scrollTo('fs-deals')">
+          <span>{{ liveDeals().length > 0 ? 'Xem deal ngay' : 'Xem deal sắp tới' }}</span>
+          <span aria-hidden="true">→</span>
+        </button>
+      </div>
+
+      <div class="fs-hero__visual" aria-hidden="true">
+        <div class="fs-hero__photo">
+          <img src="assets/hero-banner/hero-deal-today.png" alt="" loading="eager">
+        </div>
+        <span class="fs-sticker fs-sticker--lamp"><img src="assets/categories/den-chieu-sang.png" alt=""></span>
+        <span class="fs-sticker fs-sticker--plant"><img src="assets/categories/chau-cay.png" alt=""></span>
+        <img class="fs-hero__mascot" src="assets/mascot/goh-surprised.png" alt="">
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ B. COUNTDOWN / SALE STATUS ============ -->
+  <section class="fs-container fs-status-wrap" appScrollReveal="up">
+    <div class="fs-status" *ngIf="heroState() as hs" [class.fs-status--next]="hs.kind === 'next'">
+      <div class="fs-status__text">
+        <span class="fs-status__dot" aria-hidden="true"></span>
+        <div>
+          <p class="fs-status__title">
+            {{ hs.kind === 'live' ? 'Flash Sale đang diễn ra' : (hs.todayEnded ? 'Sale hôm nay đã kết thúc' : 'Flash Sale sắp diễn ra') }}
+          </p>
+          <p class="fs-status__sub">
+            {{ hs.kind === 'live' ? 'Chỉ còn hôm nay — kết thúc lúc 22:00' : 'Đợt tiếp theo bắt đầu lúc ' }}
+            <ng-container *ngIf="hs.kind === 'next'">{{ hs.target | date:'HH:mm, dd/MM' }}</ng-container>
+          </p>
+        </div>
+      </div>
+
+      <div class="fs-timer" role="timer" aria-live="off" [attr.aria-label]="hs.kind === 'live' ? 'Thời gian còn lại của Flash Sale' : 'Thời gian tới đợt Flash Sale tiếp theo'">
+        <div class="fs-timer__box"><span>{{ flash.countdown(hs.target).h }}</span><small>Giờ</small></div>
+        <span class="fs-timer__sep" aria-hidden="true">:</span>
+        <div class="fs-timer__box"><span>{{ flash.countdown(hs.target).m }}</span><small>Phút</small></div>
+        <span class="fs-timer__sep" aria-hidden="true">:</span>
+        <div class="fs-timer__box"><span>{{ flash.countdown(hs.target).s }}</span><small>Giây</small></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ C. TAB TRẠNG THÁI + DANH MỤC DEAL ============ -->
+  <section class="fs-container fs-nav" appScrollReveal="up">
+    <div class="fs-tabs" role="tablist" aria-label="Lọc theo trạng thái deal">
+      <button
+        *ngFor="let t of tabs()"
+        type="button"
+        role="tab"
+        class="fs-tab"
+        [class.fs-tab--active]="tab() === t.key && !bestDealMode()"
+        [attr.aria-selected]="tab() === t.key && !bestDealMode()"
+        (click)="setTab(t.key)">
+        <span>{{ t.label }}</span>
+        <span class="fs-tab__count">{{ t.count }}</span>
+      </button>
+    </div>
+
+    <div class="fs-chips" aria-label="Danh mục deal">
+      <a
+        *ngFor="let c of categoryLinks"
+        [routerLink]="c.link"
+        [queryParams]="c.queryParams"
+        class="fs-chip">{{ c.label }}</a>
+      <button type="button" class="fs-chip fs-chip--accent" [class.fs-chip--on]="bestDealMode()" (click)="bestDeal()">Best deal</button>
+    </div>
+  </section>
+
+  <!-- ============ D. FLASH SALE PRODUCT SHOWCASE ============ -->
+  <section id="fs-deals" class="fs-container fs-section" appScrollReveal="up">
+    <header class="fs-heading">
+      <h2 class="fs-heading__title">Deal Xịn Quá Xinh</h2>
+      <p class="fs-heading__sub" *ngIf="maxDiscount() > 0">Giảm đến {{ maxDiscount() }}% · Những món decor được săn nhiều nhất hôm nay</p>
+    </header>
+
+    <div class="fs-grid" *ngIf="visibleDeals().length > 0; else emptyDeals">
+      <ng-container *ngFor="let d of visibleDeals(); trackBy: trackDeal">
+        <ng-container *ngTemplateOutlet="dealCard; context: { $implicit: d, wide: false }"></ng-container>
+      </ng-container>
+    </div>
+    <ng-template #emptyDeals>
+      <div class="fs-empty">
+        <p class="fs-empty__title">Chưa có deal nào trong mục này</p>
+        <p class="fs-empty__sub">Thử chuyển sang tab khác hoặc xem toàn bộ sản phẩm LUMÉA.</p>
+        <button type="button" class="fs-btn fs-btn--ghost" (click)="setTab('all')">Xem tất cả deal</button>
+      </div>
+    </ng-template>
+  </section>
+
+  <!-- ============ E. SHOP THE ROOM ============ -->
+  <section class="fs-container fs-section" appScrollReveal="up">
+    <header class="fs-heading">
+      <p class="fs-eyebrow fs-eyebrow--dark">Shop the room</p>
+      <h2 class="fs-heading__title">Mua Sắm Theo Không Gian</h2>
+    </header>
+
+    <div class="fs-rooms">
+      <a
+        *ngFor="let r of rooms()"
+        [routerLink]="r.link"
+        [queryParams]="r.queryParams"
+        class="fs-room"
+        [class.fs-room--large]="r.size === 'large'"
+        [attr.aria-label]="'Khám phá ' + r.title">
+        <img [src]="r.image" [alt]="r.title" loading="lazy">
+        <span class="fs-room__shade" aria-hidden="true"></span>
+        <span class="fs-room__body">
+          <span class="fs-room__count">{{ r.dealCount }} deal</span>
+          <span class="fs-room__title">{{ r.title }}</span>
+          <span class="fs-room__cta">Khám phá <span aria-hidden="true">→</span></span>
+        </span>
+      </a>
+    </div>
+  </section>
+
+  <!-- ============ F. ALMOST SOLD OUT ============ -->
+  <section class="fs-soldout" *ngIf="almostSoldOut().length > 0" appScrollReveal="up">
+    <div class="fs-container">
+      <header class="fs-heading fs-heading--row">
+        <div>
+          <h2 class="fs-heading__title">Sắp Hết Hàng</h2>
+          <p class="fs-heading__sub">Những deal đang được săn nhiều nhất</p>
+        </div>
+      </header>
+
+      <div class="fs-rail">
+        <ng-container *ngFor="let d of almostSoldOut(); trackBy: trackDeal">
+          <ng-container *ngTemplateOutlet="dealCard; context: { $implicit: d, wide: true }"></ng-container>
+        </ng-container>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ G. FEATURED DEAL ============ -->
+  <section class="fs-container fs-section" *ngIf="featured() as f" appScrollReveal="up">
+    <article class="fs-featured">
+      <a [routerLink]="f.slot.status === 'live' ? ['/product', f.product.slug] : null" class="fs-featured__media" [attr.aria-label]="f.slot.status === 'live' ? 'Xem chi tiết ' + f.product.name : null">
+        <img [src]="f.product.images[1] || f.product.images[0]" [alt]="f.product.name" loading="lazy">
+        <span class="fs-badge">-{{ f.discount }}%</span>
+      </a>
+
+      <div class="fs-featured__body">
+        <p class="fs-eyebrow fs-eyebrow--dark">Limited deal</p>
+        <h2 class="fs-featured__title">{{ f.product.name }}</h2>
+        <p class="fs-featured__desc">{{ f.product.description }}</p>
+
+        <div class="fs-price fs-price--lg">
+          <span class="fs-price__sale">{{ f.product.basePrice | vnd }}</span>
+          <span class="fs-price__old">{{ f.product.originalPrice | vnd }}</span>
+          <span class="fs-price__off">Giảm {{ f.discount }}%</span>
+        </div>
+
+        <div class="fs-featured__timer" role="timer" aria-live="off">
+          <span class="fs-featured__timer-label">{{ f.slot.status === 'live' ? 'Kết thúc sau' : 'Bắt đầu sau' }}</span>
+          <strong>{{ flash.countdown(f.slot.status === 'live' ? f.slot.end : f.slot.start).h }}:{{ flash.countdown(f.slot.status === 'live' ? f.slot.end : f.slot.start).m }}:{{ flash.countdown(f.slot.status === 'live' ? f.slot.end : f.slot.start).s }}</strong>
+        </div>
+
+        <div class="fs-featured__actions">
+          <button *ngIf="f.slot.status !== 'upcoming'; else featNotify" type="button" class="fs-btn fs-btn--primary" [disabled]="!canBuy(f)" (click)="buyNow(f)">
+            {{ canBuy(f) ? 'Mua ngay' : 'Sắp mở bán' }}
+          </button>
+          <ng-template #featNotify>
+            <button type="button" class="fs-btn" [ngClass]="isReminded(f.slot) ? 'fs-btn--ghost' : 'fs-btn--primary'" [disabled]="reminderBusy()" (click)="toggleReminder(f.slot, $event)">
+              <app-icon [name]="isReminded(f.slot) ? 'check' : 'bell'" [size]="15"></app-icon>
+              <span>{{ isReminded(f.slot) ? 'Đã đặt nhắc' : 'Nhận thông báo' }}</span>
+            </button>
+          </ng-template>
+          <a *ngIf="f.slot.status === 'live'" [routerLink]="['/product', f.product.slug]" class="fs-btn fs-btn--ghost">Xem chi tiết</a>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <!-- ============ H. NEXT FLASH SALE ============ -->
+  <section class="fs-container fs-section" *ngIf="nextSlots().length > 0" appScrollReveal="up">
+    <header class="fs-heading">
+      <h2 class="fs-heading__title">Sắp Diễn Ra</h2>
+      <p class="fs-heading__sub">Đặt nhắc lịch cho các khung Flash Sale kế tiếp</p>
+    </header>
+
+    <div class="fs-next">
+      <article class="fs-next__card" *ngFor="let n of nextSlots()">
+        <div class="fs-next__thumbs" aria-hidden="true">
+          <img *ngFor="let t of n.thumbs" [src]="t" alt="" loading="lazy">
+          <span *ngIf="n.thumbs.length === 0" class="fs-next__empty">Sắp có deal</span>
+        </div>
+        <div class="fs-next__info">
+          <span class="fs-pill">Sắp diễn ra</span>
+          <p class="fs-next__time">{{ n.slot.start | date:'HH:mm' }} - {{ n.slot.end | date:'HH:mm' }}, {{ n.slot.start | date:'dd/MM' }}</p>
+          <p class="fs-next__meta">{{ n.count }} sản phẩm<ng-container *ngIf="n.categories.length"> · {{ n.categories.join(', ') }}</ng-container></p>
+          <p class="fs-next__count" role="timer" aria-live="off">
+            Bắt đầu sau
+            <strong>{{ flash.countdown(n.slot.start).h }}:{{ flash.countdown(n.slot.start).m }}:{{ flash.countdown(n.slot.start).s }}</strong>
+          </p>
+          <button type="button" class="fs-btn" [ngClass]="isReminded(n.slot) ? 'fs-btn--ghost' : 'fs-btn--primary'" [disabled]="reminderBusy()" (click)="toggleReminder(n.slot, $event)">
+            <app-icon [name]="isReminded(n.slot) ? 'check' : 'bell'" [size]="15"></app-icon>
+            <span>{{ isReminded(n.slot) ? 'Đã đặt nhắc' : 'Nhận thông báo' }}</span>
+          </button>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ============ I. KHÁM PHÁ THÊM ============ -->
+  <section class="fs-container fs-section" appScrollReveal="up">
+    <header class="fs-heading">
+      <p class="fs-eyebrow fs-eyebrow--dark">Khám phá thêm</p>
+      <h2 class="fs-heading__title">Góc Nhỏ Cho Mọi Không Gian</h2>
+    </header>
+
+    <div class="fs-discover">
+      <a
+        *ngFor="let c of discover"
+        [routerLink]="c.link"
+        [queryParams]="c.queryParams"
+        class="fs-discover__card"
+        [attr.aria-label]="'Xem ' + c.label">
+        <span class="fs-discover__art"><img [src]="'assets/categories/' + c.image + '.png'" alt="" aria-hidden="true" loading="lazy"></span>
+        <span class="fs-discover__name">{{ c.label }}</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- ============ J. FINAL CTA ============ -->
+  <section class="fs-container fs-final" appScrollReveal="up">
+    <h2 class="fs-final__title">Đừng bỏ lỡ deal tiếp theo</h2>
+    <p class="fs-final__sub">Những món decor nhỏ, thay đổi cả góc phòng.</p>
+    <a routerLink="/catalog" class="fs-btn fs-btn--primary">Xem tất cả sản phẩm</a>
+    <a routerLink="/catalog" class="fs-final__link">Khám phá bộ sưu tập LUMÉA →</a>
+  </section>
+
+</div>
+
+<!-- ============ THẺ DEAL DÙNG CHUNG (lưới chính + carousel sắp hết) ============ -->
+<ng-template #dealCard let-d let-wide="wide">
+  <article
+    class="fs-card"
+    [class.fs-card--wide]="wide"
+    [class.fs-card--soldout]="d.state === 'soldout'"
+    [class.fs-card--upcoming]="d.slot.status === 'upcoming'">
+
+    <div class="fs-card__media">
+      <img class="fs-card__img" [src]="d.product.images[0]" [alt]="d.product.name" loading="lazy">
+      <!-- Ảnh 2 (lifestyle) crossfade khi hover; không có thì giữ ảnh 1 -->
+      <img
+        *ngIf="d.product.images[1]"
+        class="fs-card__img fs-card__img--alt"
+        [src]="d.product.images[1]"
+        [alt]="d.product.name + ' trong không gian thực tế'"
+        aria-hidden="true"
+        loading="lazy">
+
+      <a
+        *ngIf="d.slot.status !== 'upcoming'"
+        [routerLink]="['/product', d.product.slug]"
+        class="fs-card__link"
+        [attr.aria-label]="'Xem chi tiết ' + d.product.name">
+        <span class="fs-card__more">Xem chi tiết →</span>
+      </a>
+
+      <span class="fs-badge">-{{ d.discount }}%</span>
+      <span *ngIf="d.state === 'soldout'" class="fs-badge fs-badge--dark fs-badge--right">Sold out</span>
+      <span *ngIf="d.state !== 'soldout' && d.slot.status === 'upcoming'" class="fs-badge fs-badge--dark fs-badge--right">Sắp mở bán</span>
+
+      <button *ngIf="d.slot.status !== 'upcoming'" type="button" class="fs-card__qv" (click)="quickView(d)" [attr.aria-label]="'Xem nhanh ' + d.product.name">
+        <app-icon name="eye" [size]="16"></app-icon>
+      </button>
+    </div>
+
+    <div class="fs-card__body">
+      <p class="fs-card__cat">{{ d.product.categoryName }}</p>
+      <h3 class="fs-card__name">
+        <a [routerLink]="d.slot.status === 'upcoming' ? null : ['/product', d.product.slug]" [class.fs-card__name--locked]="d.slot.status === 'upcoming'">{{ d.product.name }}</a>
+      </h3>
+
+      <div class="fs-price">
+        <span class="fs-price__sale">{{ d.product.basePrice | vnd }}</span>
+        <span class="fs-price__old">{{ d.product.originalPrice | vnd }}</span>
+      </div>
+
+      <div class="fs-progress-wrap">
+        <div class="fs-progress__meta">
+          <span>Đã bán {{ d.soldPct }}%</span>
+          <span class="fs-progress__state" [class.fs-progress__state--low]="d.state === 'low'" [class.fs-progress__state--out]="d.state === 'soldout'">
+            {{ d.state === 'soldout' ? 'Sold out' : (d.state === 'low' ? 'Sắp hết · Còn ' + d.left : stateLabel(d)) }}
+          </span>
+        </div>
+        <div class="fs-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuenow]="d.soldPct" [attr.aria-label]="'Đã bán ' + d.soldPct + ' phần trăm'">
+          <span class="fs-progress__bar" [class.fs-progress__bar--low]="d.state === 'low' || d.state === 'soldout'" [style.width.%]="d.soldPct"></span>
+        </div>
+        <p class="fs-progress__left" *ngIf="d.state !== 'soldout' && d.state !== 'low'">Còn {{ d.left }} sản phẩm</p>
+      </div>
+
+      <button
+        *ngIf="d.slot.status === 'upcoming' && d.state !== 'soldout'; else addBtn"
+        type="button"
+        class="fs-btn fs-card__add"
+        [ngClass]="isReminded(d.slot) ? 'fs-btn--ghost' : 'fs-btn--primary'"
+        [disabled]="reminderBusy()"
+        (click)="toggleReminder(d.slot, $event)">
+        <app-icon [name]="isReminded(d.slot) ? 'check' : 'bell'" [size]="15"></app-icon>
+        <span>{{ isReminded(d.slot) ? 'Đã đặt nhắc' : 'Nhận thông báo' }}</span>
+      </button>
+      <ng-template #addBtn>
+        <button
+          type="button"
+          class="fs-btn fs-btn--primary fs-card__add"
+          [disabled]="!canBuy(d)"
+          (click)="addToCart(d)">
+          <app-icon name="cart" [size]="15"></app-icon>
+          <span>{{ d.state === 'soldout' ? 'Hết hàng' : 'Thêm vào giỏ' }}</span>
+        </button>
+      </ng-template>
+    </div>
+  </article>
+</ng-template>

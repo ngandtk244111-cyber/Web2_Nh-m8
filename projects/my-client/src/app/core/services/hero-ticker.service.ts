@@ -10,11 +10,10 @@ export interface HeroTickerItem {
   ctaLabel: string;
   ctaLink: string;
   icon: string;
-  gradient: string;
   image: string;
 }
 
-const AUTOPLAY_INTERVAL_MS = 4500;
+export const AUTOPLAY_INTERVAL_MS = 4500;
 
 /**
  * State dùng chung giữa AnnouncementTickerComponent (trong header, mọi trang) và
@@ -33,7 +32,6 @@ export class HeroTickerService {
       ctaLabel: 'Khám phá ngay',
       ctaLink: '/shop-the-room',
       icon: 'room',
-      gradient: 'linear-gradient(135deg, rgba(26,26,26,0.75) 0%, rgba(46,99,184,0.55) 140%)',
       image: 'assets/hero-banner/hero-room-3d.png',
     },
     {
@@ -44,7 +42,6 @@ export class HeroTickerService {
       ctaLabel: 'Tùy biến ngay',
       ctaLink: '/customizer-3d',
       icon: 'cube',
-      gradient: 'linear-gradient(135deg, rgba(26,26,26,0.75) 0%, rgba(32,85,175,0.55) 140%)',
       image: 'assets/hero-banner/hero-print-3d.png',
     },
     {
@@ -55,7 +52,6 @@ export class HeroTickerService {
       ctaLabel: 'Mua sắm ngay',
       ctaLink: '/catalog',
       icon: 'truck',
-      gradient: 'linear-gradient(135deg, rgba(26,26,26,0.75) 0%, rgba(31,122,77,0.55) 140%)',
       image: 'assets/hero-banner/hero-freeship.png',
     },
     {
@@ -66,7 +62,6 @@ export class HeroTickerService {
       ctaLabel: 'Thử ngay',
       ctaLink: '/style-quiz',
       icon: 'sparkles',
-      gradient: 'linear-gradient(135deg, rgba(26,26,26,0.75) 0%, rgba(46,99,184,0.55) 140%)',
       image: 'assets/hero-banner/hero-ai-assistant.png',
     },
     {
@@ -75,15 +70,16 @@ export class HeroTickerService {
       title: 'Ưu Đãi Hôm Nay Dành Cho Bạn',
       subtitle: 'Khám phá các sản phẩm nổi bật với mức giá tốt nhất, cập nhật mỗi ngày.',
       ctaLabel: 'Xem ưu đãi',
-      ctaLink: '/catalog',
+      ctaLink: '/flash-sale',
       icon: 'tag',
-      gradient: 'linear-gradient(135deg, rgba(26,26,26,0.75) 0%, rgba(169,198,234,0.55) 140%)',
       image: 'assets/hero-banner/hero-deal-today.png',
     },
   ];
 
   readonly activeIndex = signal(0);
   readonly isPaused = signal(false);
+  /** Tăng mỗi khi chu kỳ autoplay bắt đầu lại — hero banner dùng để khởi động lại thanh tiến trình cho khớp timer. */
+  readonly cycle = signal(0);
 
   private timer: ReturnType<typeof setInterval> | null = null;
 
@@ -93,9 +89,11 @@ export class HeroTickerService {
 
   private startAutoplay(): void {
     this.stopAutoplay();
+    this.cycle.update(c => c + 1);
     this.timer = setInterval(() => {
       if (this.isPaused()) return;
       this.activeIndex.update(i => (i + 1) % this.items.length);
+      this.cycle.update(c => c + 1);
     }, AUTOPLAY_INTERVAL_MS);
   }
 
@@ -116,7 +114,9 @@ export class HeroTickerService {
     this.isPaused.set(true);
   }
 
+  /** Chạy lại chu kỳ đầy đủ sau khi rời chuột — slide không nhảy ngay và thanh tiến trình khớp thời gian thật. */
   resume(): void {
     this.isPaused.set(false);
+    this.startAutoplay();
   }
 }

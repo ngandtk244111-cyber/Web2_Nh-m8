@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { DesignBrief } from '../models/custom-request.model';
 import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
+import { MascotService } from './mascot.service';
 
 export interface AiSuggestedProduct {
   id: string;
@@ -37,6 +38,7 @@ const BASE = `${environment.apiUrl}/ai`;
 })
 export class AiAssistantService {
   private http = inject(HttpClient);
+  private mascotService = inject(MascotService);
 
   private isOpenSignal = signal<boolean>(false);
   readonly isOpen = this.isOpenSignal.asReadonly();
@@ -77,6 +79,7 @@ export class AiAssistantService {
     };
     this.messagesSignal.update(msgs => [...msgs, userMsg]);
     this.isThinkingSignal.set(true);
+    this.mascotService.startThinking();
 
     const history = this.messagesSignal().map(m => ({ sender: m.sender, text: m.text }));
 
@@ -125,6 +128,15 @@ export class AiAssistantService {
     };
     this.messagesSignal.update(msgs => [...msgs, aiMsg]);
     this.isThinkingSignal.set(false);
+
+    if (res.success === false) {
+      this.mascotService.stopThinking('sad');
+    } else if (res.brief) {
+      // AI vừa đưa ra gợi ý/brief decor cụ thể — biểu cảm tự tin thay vì cười thường.
+      this.mascotService.stopThinking('confident');
+    } else {
+      this.mascotService.stopThinking('happy');
+    }
   }
 
   private pickConceptImage(brief: DesignBrief): string {
@@ -143,10 +155,12 @@ export class AiAssistantService {
 
   regenerateConcept(): void {
     this.isThinkingSignal.set(true);
+    this.mascotService.startThinking();
     setTimeout(() => {
       const alt = 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=700&q=80';
       this.conceptImageSignal.set(alt);
       this.isThinkingSignal.set(false);
+      this.mascotService.stopThinking('confident');
     }, 500);
   }
 

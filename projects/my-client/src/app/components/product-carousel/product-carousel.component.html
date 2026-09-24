@@ -1,0 +1,15 @@
+<div class="pcar">
+  <button type="button" class="pcar__nav pcar__nav--prev" (click)="scroll(-1)" aria-label="Sản phẩm trước">
+    <app-icon name="chevron-left" [size]="18"></app-icon>
+  </button>
+
+  <div class="pcar__track" #track>
+    <div class="pcar__item" *ngFor="let prod of products">
+      <app-product-card [product]="prod"></app-product-card>
+    </div>
+  </div>
+
+  <button type="button" class="pcar__nav pcar__nav--next" (click)="scroll(1)" aria-label="Sản phẩm tiếp theo">
+    <app-icon name="chevron-right" [size]="18"></app-icon>
+  </button>
+</div>

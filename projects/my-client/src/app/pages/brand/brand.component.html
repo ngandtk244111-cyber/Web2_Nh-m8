@@ -1,0 +1,185 @@
+<div class="br" *ngIf="style() as st; else notFound">
+
+  <!-- Dải giới thiệu thương hiệu -->
+  <div class="br-strip">Luméa {{ st }} — {{ tagline() }}</div>
+
+  <div class="br-container">
+
+    <!-- ===== Banner carousel (mũi tên + chấm, banner kế bên lấp ló) ===== -->
+    <section class="br-hero" aria-roledescription="carousel" [attr.aria-label]="'Banner Luméa ' + st">
+      <div class="br-hero__track" #banner (scroll)="onBannerScroll(banner)">
+        <a *ngFor="let b of banners" [routerLink]="b.link" class="br-slide">
+          <img [src]="b.image" [alt]="b.title" loading="lazy" draggable="false">
+          <span class="br-slide__text">
+            <span class="br-slide__eyebrow">Luméa {{ st }}</span>
+            <span class="br-slide__title">{{ b.title }}</span>
+            <span class="br-slide__sub">{{ b.sub }}</span>
+          </span>
+        </a>
+      </div>
+      <button type="button" class="br-arrow br-arrow--prev br-arrow--dark" (click)="goBanner(banner, bannerIndex() - 1)" aria-label="Banner trước">‹</button>
+      <button type="button" class="br-arrow br-arrow--next br-arrow--dark" (click)="goBanner(banner, bannerIndex() + 1)" aria-label="Banner tiếp theo">›</button>
+      <div class="br-dots">
+        <button
+          *ngFor="let b of banners; let i = index"
+          type="button"
+          class="br-dot"
+          [class.br-dot--on]="i === bannerIndex()"
+          (click)="goBanner(banner, i)"
+          [attr.aria-label]="'Đến banner ' + (i + 1)"></button>
+      </div>
+    </section>
+
+    <!-- ===== Bài viết nổi bật ===== -->
+    <section class="br-section" *ngIf="featuredArticles().length > 0">
+      <div class="br-head">
+        <h2 class="br-title">Bài viết nổi bật</h2>
+        <a routerLink="/news" class="br-more">Xem tất cả</a>
+      </div>
+      <div class="br-tiles">
+        <a *ngFor="let a of featuredArticles()" [routerLink]="['/news', a.slug]" class="br-tile" [attr.aria-label]="a.title">
+          <img [src]="a.coverImage" [alt]="a.title" loading="lazy">
+          <span class="br-tile__cap">{{ a.title }}</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- ===== Danh mục sản phẩm ===== -->
+    <section class="br-section" *ngIf="categoryTiles().length > 0">
+      <div class="br-head">
+        <h2 class="br-title">Danh mục sản phẩm Luméa {{ st }}</h2>
+      </div>
+      <div class="br-cats">
+        <a
+          *ngFor="let c of categoryTiles()"
+          routerLink="/catalog"
+          [queryParams]="{ category: c.category, q: st }"
+          class="br-cat">
+          <span class="br-cat__img"><img [src]="c.image" [alt]="c.label" loading="lazy"></span>
+          <span class="br-cat__label">{{ c.label }}</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- ===== Bài đăng của mọi người ===== -->
+    <section class="br-section" *ngIf="posts().length > 0">
+      <div class="br-head">
+        <h2 class="br-title">Bài đăng của mọi người</h2>
+        <a routerLink="/community" class="br-more">Xem tất cả</a>
+      </div>
+      <p class="br-desc">Dưới đây là một số bài đăng trên Luméa về cuộc sống thường nhật của mọi người được gắn thẻ {{ hashtag() }}.</p>
+      <div class="br-car">
+        <div class="br-row" #postRow>
+          <a *ngFor="let p of posts()" routerLink="/community" class="br-post">
+            <span class="br-post__img"><img [src]="p.imageUrl" [alt]="p.title" loading="lazy"></span>
+            <span class="br-post__handle">{{ p.author.handle }}</span>
+          </a>
+        </div>
+        <button type="button" class="br-arrow br-arrow--prev" (click)="scrollRow(postRow, -1)" aria-label="Cuộn trái">‹</button>
+        <button type="button" class="br-arrow br-arrow--next" (click)="scrollRow(postRow, 1)" aria-label="Cuộn phải">›</button>
+      </div>
+    </section>
+
+    <!-- ===== Điều phối từ đội ngũ ===== -->
+    <section class="br-section" *ngIf="rooms().length > 0">
+      <div class="br-head">
+        <h2 class="br-title">Điều phối từ đội ngũ Luméa</h2>
+        <a routerLink="/shop-the-room" class="br-more">Xem tất cả</a>
+      </div>
+      <p class="br-desc">Chúng tôi giới thiệu những ý tưởng phối đồ hợp tiện lợi và thú vị cùng các sản phẩm phong cách sống mà ngay cả đội ngũ Luméa cũng yêu thích sử dụng.</p>
+      <div class="br-car">
+        <div class="br-row" #roomRow>
+          <a *ngFor="let r of rooms()" routerLink="/shop-the-room" class="br-post br-post--room">
+            <span class="br-post__img"><img [src]="r.coverImage" [alt]="r.name" loading="lazy"></span>
+            <span class="br-staff">
+              <img src="assets/mascot/goh-mascot.png" alt="" class="br-staff__avatar">
+              <span class="br-staff__text">
+                <span class="br-staff__name">Đội ngũ Luméa</span>
+                <span class="br-staff__sub">{{ r.theme }}</span>
+              </span>
+            </span>
+            <span class="br-post__handle br-post__handle--wrap">{{ r.name }}</span>
+          </a>
+        </div>
+        <button type="button" class="br-arrow br-arrow--prev" (click)="scrollRow(roomRow, -1)" aria-label="Cuộn trái">‹</button>
+        <button type="button" class="br-arrow br-arrow--next" (click)="scrollRow(roomRow, 1)" aria-label="Cuộn phải">›</button>
+      </div>
+    </section>
+
+    <!-- ===== Các mặt hàng giảm giá ===== -->
+    <section class="br-section" *ngIf="saleProducts().length > 0">
+      <div class="br-head">
+        <h2 class="br-title">Các mặt hàng giảm giá</h2>
+        <a routerLink="/flash-sale" class="br-more">Xem tất cả</a>
+      </div>
+      <div class="br-car">
+        <div class="br-row" #saleRow>
+          <a *ngFor="let p of saleProducts()" [routerLink]="['/product', p.slug]" class="br-prod">
+            <span class="br-prod__img"><img [src]="p.images[0]" [alt]="p.name" loading="lazy"></span>
+            <span class="br-prod__name">{{ p.name }}</span>
+            <span class="br-prod__off">Giảm giá</span>
+            <span class="br-prod__price">
+              <strong>{{ p.basePrice | vnd }}</strong>
+              <s>{{ p.originalPrice | vnd }}</s>
+            </span>
+            <span class="br-prod__rate">
+              <span class="br-stars" aria-hidden="true">
+                <span *ngFor="let on of stars(p.rating)" [class.br-star--on]="on">★</span>
+              </span>
+              <span>({{ p.reviewCount }})</span>
+            </span>
+          </a>
+        </div>
+        <button type="button" class="br-arrow br-arrow--prev" (click)="scrollRow(saleRow, -1)" aria-label="Cuộn trái">‹</button>
+        <button type="button" class="br-arrow br-arrow--next" (click)="scrollRow(saleRow, 1)" aria-label="Cuộn phải">›</button>
+      </div>
+    </section>
+
+    <!-- ===== Hàng mới về ===== -->
+    <section class="br-section" *ngIf="newProducts().length > 0">
+      <div class="br-head">
+        <h2 class="br-title">Hàng mới về</h2>
+        <a routerLink="/catalog" class="br-more">Xem tất cả</a>
+      </div>
+      <div class="br-car">
+        <div class="br-row" #newRow>
+          <a *ngFor="let p of newProducts()" [routerLink]="['/product', p.slug]" class="br-prod br-prod--plain">
+            <span class="br-prod__img"><img [src]="p.images[0]" [alt]="p.name" loading="lazy"></span>
+            <span class="br-prod__name">{{ p.name }}</span>
+            <span class="br-prod__price"><strong>{{ p.basePrice | vnd }}</strong></span>
+          </a>
+        </div>
+        <button type="button" class="br-arrow br-arrow--prev" (click)="scrollRow(newRow, -1)" aria-label="Cuộn trái">‹</button>
+        <button type="button" class="br-arrow br-arrow--next" (click)="scrollRow(newRow, 1)" aria-label="Cuộn phải">›</button>
+      </div>
+    </section>
+
+    <!-- ===== Blog ===== -->
+    <section class="br-section" *ngIf="blogArticles().length > 0">
+      <div class="br-head">
+        <h2 class="br-title">blog</h2>
+        <a routerLink="/news" class="br-more">Xem tất cả</a>
+      </div>
+      <div class="br-blog">
+        <a *ngFor="let a of blogArticles()" [routerLink]="['/news', a.slug]" class="br-blog__item">
+          <span class="br-blog__img"><img [src]="a.coverImage" [alt]="a.title" loading="lazy"></span>
+          <span class="br-blog__body">
+            <span class="br-blog__date">{{ a.publishedAt }}</span>
+            <span class="br-blog__title">{{ a.title }}</span>
+          </span>
+        </a>
+      </div>
+    </section>
+
+    <!-- ===== Khối cuối trang ===== -->
+    <a routerLink="/catalog" [queryParams]="{ q: st }" class="br-find">Xem toàn bộ sản phẩm Luméa {{ st }}</a>
+  </div>
+</div>
+
+<ng-template #notFound>
+  <div class="br-missing">
+    <h1>Không tìm thấy thương hiệu</h1>
+    <p>Dòng sản phẩm bạn tìm không tồn tại.</p>
+    <a routerLink="/catalog">Xem tất cả sản phẩm</a>
+  </div>
+</ng-template>

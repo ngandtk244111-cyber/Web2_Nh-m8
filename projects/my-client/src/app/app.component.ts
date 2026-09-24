@@ -11,6 +11,7 @@ import { ProductQuickViewComponent } from './components/product-quick-view/produ
 import { FloatingSideBannersComponent } from './components/floating-side-banners/floating-side-banners.component';
 import { FloatingMascotComponent } from './components/floating-mascot/floating-mascot.component';
 import { FloatingCoinWidgetComponent } from './components/floating-coin-widget/floating-coin-widget.component';
+import { ScrollToTopComponent } from './components/scroll-to-top/scroll-to-top.component';
 
 @Component({
   selector: 'app-root',
@@ -27,7 +28,8 @@ import { FloatingCoinWidgetComponent } from './components/floating-coin-widget/f
     ProductQuickViewComponent,
     FloatingSideBannersComponent,
     FloatingMascotComponent,
-    FloatingCoinWidgetComponent
+    FloatingCoinWidgetComponent,
+    ScrollToTopComponent
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'

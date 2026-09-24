@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { HeroTickerService } from '../../core/services/hero-ticker.service';
+import { AUTOPLAY_INTERVAL_MS, HeroTickerService } from '../../core/services/hero-ticker.service';
 import { AiAssistantService } from '../../core/services/ai-assistant.service';
 import { AppIconComponent } from '../icon/icon.component';
 
@@ -13,6 +13,8 @@ import { AppIconComponent } from '../icon/icon.component';
   styleUrl: './hero-banner.component.css'
 })
 export class HeroBannerComponent {
+  readonly intervalMs = AUTOPLAY_INTERVAL_MS;
+
   constructor(
     public tickerService: HeroTickerService,
     private aiService: AiAssistantService

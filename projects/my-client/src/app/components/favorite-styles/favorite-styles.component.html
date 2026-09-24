@@ -1,23 +1,19 @@
 <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" *ngIf="styleTiles().length > 0">
-  <div class="flex items-center gap-2 mb-6">
-    <span class="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_6px_#A9C6EA]"></span>
-    <div>
-      <h2 class="font-serif text-xl sm:text-2xl font-bold text-neutral-900">Thương Hiệu Ưa Thích</h2>
-      <p class="text-xs sm:text-sm font-bold uppercase tracking-wide text-neutral-600 mt-1">Được Khách Hàng Luméa Chọn Nhiều Nhất</p>
-    </div>
-  </div>
+  <header class="fb-head">
+    <p class="fb-eyebrow">Được khách hàng Luméa chọn nhiều nhất</p>
+    <h2 class="fb-title">Thương Hiệu Ưa Thích</h2>
+  </header>
 
-  <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 sm:gap-4">
+  <div class="fb-grid">
     <a
       *ngFor="let tile of styleTiles()"
-      routerLink="/catalog"
-      [queryParams]="{ q: tile.style }"
-      class="flex flex-col items-center text-center gap-2 p-4 rounded-2xl bg-white border border-neutral-200 hover:border-amber-500/40 hover:bg-neutral-100 shadow-soft transition group">
-      <div class="w-11 h-11 rounded-2xl bg-amber-400/10 border border-amber-400/20 flex items-center justify-center text-amber-400 group-hover:scale-110 transition-transform">
-        <app-icon [name]="tile.icon" [size]="20"></app-icon>
-      </div>
-      <div class="text-xs font-bold text-neutral-800">Luméa {{ tile.style }}</div>
-      <div class="text-[10px] text-neutral-500">{{ tile.count }} sản phẩm</div>
+      [routerLink]="['/thuong-hieu', tile.slug]"
+      class="fb-tile"
+      [attr.aria-label]="'Luméa ' + tile.style + ' — ' + tile.count + ' sản phẩm'">
+      <span class="fb-tile__name">Luméa {{ tile.style }}</span>
+      <span class="fb-tile__img">
+        <img [src]="tile.image" [alt]="'Không gian phong cách ' + tile.style" loading="lazy" draggable="false">
+      </span>
     </a>
   </div>
 </section>

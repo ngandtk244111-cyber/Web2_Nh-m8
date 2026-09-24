@@ -29,27 +29,86 @@
   align-items: center;
   justify-content: center;
   opacity: 0;
-  transform: scale(1.03);
-  transition: opacity 0.7s ease, transform 1.2s ease;
+  transition: opacity 0.9s ease;
   pointer-events: none;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  overflow: hidden;
 }
 
 .hb_slide--active {
   opacity: 1;
-  transform: scale(1);
   pointer-events: auto;
   z-index: 2;
 }
 
+.hb_slide__bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transform: scale(1.02);
+}
+
+/* Ken Burns: zoom rất chậm trong suốt thời gian slide hiển thị */
+.hb_slide--active .hb_slide__bg {
+  animation: hb-kenburns 7s ease-out forwards;
+}
+
+@keyframes hb-kenburns {
+  from { transform: scale(1.02); }
+  to { transform: scale(1.09); }
+}
+
+/* Chữ hiện lần lượt: icon → tiêu đề (trượt lên từ sau mặt nạ) → mô tả → nút */
+.hb_slide__inner > * {
+  opacity: 0;
+}
+
+.hb_slide--active .hb_slide__inner > * {
+  animation: hb-rise 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.hb_slide--active .hb_slide__inner > :nth-child(1) { animation-delay: 0.15s; }
+.hb_slide--active .hb_slide__inner > :nth-child(2) { animation-delay: 0.3s; }
+.hb_slide--active .hb_slide__inner > :nth-child(3) { animation-delay: 0.5s; }
+.hb_slide--active .hb_slide__inner > :nth-child(4) { animation-delay: 0.65s; }
+
+.hb_mask {
+  display: block;
+  overflow: hidden;
+  /* chừa chỗ cho dấu tiếng Việt không bị cắt */
+  padding: 0.08em 0;
+}
+
+.hb_mask > span {
+  display: block;
+}
+
+.hb_slide--active .hb_mask > span {
+  animation: hb-mask-up 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.3s both;
+}
+
+@keyframes hb-rise {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes hb-mask-up {
+  from { transform: translateY(105%); }
+  to { transform: none; }
+}
+
 .hb_slide__inner {
+  position: relative;
+  z-index: 1;
   width: min(640px, calc(100% - 48px));
-  text-align: center;
+  margin-right: auto;
+  margin-left: max(24px, calc((100% - 1280px) / 2 + 24px));
+  text-align: left;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   gap: 14px;
 }
 
@@ -67,7 +126,7 @@
 }
 
 .hb_slide__title {
-  font-family: var(--font-family-heading, 'Cormorant Garamond', serif);
+  font-family: var(--font-family-heading, 'Inter', sans-serif);
   font-size: 40px;
   font-weight: 700;
   text-transform: uppercase;
@@ -75,6 +134,7 @@
   color: #ffffff;
   line-height: 1.15;
   margin: 0;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.55), 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
 @media (min-width: 640px) {
@@ -86,9 +146,10 @@
 .hb_slide__subtitle {
   font-size: 14px;
   line-height: 1.7;
-  color: rgba(255, 255, 255, 0.8);
+  color: #ffffff;
   max-width: 520px;
   margin: 0;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6), 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .hb_slide__cta {
@@ -136,8 +197,8 @@
 }
 
 .hb_arrow:hover {
-  background: rgba(46, 99, 184, 0.5);
-  border-color: #2E63B8;
+  background: rgba(163, 21, 45, 0.5);
+  border-color: #A3152D;
 }
 
 .hb_arrow--prev {
@@ -181,4 +242,56 @@
   background: #ffffff;
   width: 22px;
   border-radius: 999px;
+}
+
+/* ===== Thanh tiến trình autoplay ===== */
+.hb_progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 3;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.18);
+  transition: opacity 0.3s ease;
+}
+
+.hb_progress--paused {
+  opacity: 0;
+}
+
+.hb_progress__bar {
+  display: block;
+  height: 100%;
+  width: 100%;
+  background: #ffffff;
+  transform-origin: left center;
+  transform: scaleX(0);
+  animation-name: hb-progress;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+.hb_progress--paused .hb_progress__bar {
+  animation-play-state: paused;
+}
+
+@keyframes hb-progress {
+  to { transform: scaleX(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hb_slide--active .hb_slide__bg,
+  .hb_slide--active .hb_slide__inner > *,
+  .hb_slide--active .hb_mask > span {
+    animation: none;
+  }
+
+  .hb_slide__inner > * {
+    opacity: 1;
+  }
+
+  .hb_progress {
+    display: none;
+  }
 }

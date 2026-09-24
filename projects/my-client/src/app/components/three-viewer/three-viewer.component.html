@@ -28,7 +28,7 @@
             *ngFor="let opt of qualityOptions"
             (click)="setQuality(opt.mode)"
             [class]="qualityMode === opt.mode 
-              ? 'bg-gradient-to-r from-amber-400 to-amber-600 text-neutral-950 font-extrabold shadow-xs' 
+              ? 'bg-gradient-to-r from-amber-400 to-amber-600 text-white font-extrabold shadow-xs' 
               : 'text-neutral-600 hover:text-white hover:bg-neutral-200'"
             class="px-2 py-0.5 rounded-lg transition"
             [title]="opt.description">
@@ -69,17 +69,17 @@
       <div 
         *ngIf="hasError" 
         class="absolute inset-0 bg-[#FFFFFF]/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center z-20 space-y-3">
-        <div class="w-12 h-12 rounded-2xl bg-amber-950/50 text-amber-400 border border-amber-500/30 flex items-center justify-center">
+        <div class="w-12 h-12 rounded-2xl bg-amber-950/50 text-white border border-amber-500/30 flex items-center justify-center">
           <app-icon name="cube" [size]="24"></app-icon>
         </div>
-        <h4 class="font-serif text-sm font-bold text-neutral-900">Không thể tải không gian 3D</h4>
+        <h4 class="font-serif text-sm font-bold text-amber-800">Không thể tải không gian 3D</h4>
         <p class="text-xs text-neutral-600 max-w-xs leading-relaxed">
           Trình duyệt hoặc card đồ họa tạm thời mất kết nối WebGL. Bạn vẫn có thể xem ảnh thật và tiếp tục đặt hàng bình thường.
         </p>
         <button 
           type="button"
           (click)="retryInit()"
-          class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-amber-600 text-neutral-950 text-xs font-bold shadow-md transition active:scale-95 flex items-center gap-1.5">
+          class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-amber-600 text-white text-xs font-bold shadow-md transition active:scale-95 flex items-center gap-1.5">
           <app-icon name="rotate" [size]="14"></app-icon>
           <span>Thử lại tải 3D</span>
         </button>

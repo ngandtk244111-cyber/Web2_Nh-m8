@@ -7,7 +7,7 @@
             ← Danh sách yêu cầu
           </a>
           <div class="flex items-center gap-3">
-            <h1 class="font-serif text-2xl sm:text-3xl font-extrabold text-neutral-900">
+            <h1 class="font-serif text-2xl sm:text-3xl font-extrabold text-amber-800">
               {{ request.title }}
             </h1>
             <span class="font-mono text-xs font-bold text-amber-400 bg-[#FFFFFF] border border-neutral-200 px-2.5 py-1 rounded-lg">
@@ -62,7 +62,7 @@
               [class.bg-gradient-to-r]="request.quotationPrice"
               [class.from-amber-400]="request.quotationPrice"
               [class.to-amber-600]="request.quotationPrice"
-              [class.text-neutral-950]="request.quotationPrice"
+              [class.text-white]="request.quotationPrice"
               [class.bg-[#F6F5F2]]="!request.quotationPrice"
               [class.border]="!request.quotationPrice"
               [class.border-neutral-200]="!request.quotationPrice"
@@ -82,7 +82,7 @@
               [class.bg-gradient-to-r]="request.status === 'PREVIEW_READY' || request.status === 'APPROVED' || request.status === 'CONVERTED_TO_ORDER'"
               [class.from-amber-400]="request.status === 'PREVIEW_READY' || request.status === 'APPROVED' || request.status === 'CONVERTED_TO_ORDER'"
               [class.to-amber-600]="request.status === 'PREVIEW_READY' || request.status === 'APPROVED' || request.status === 'CONVERTED_TO_ORDER'"
-              [class.text-neutral-950]="request.status === 'PREVIEW_READY' || request.status === 'APPROVED' || request.status === 'CONVERTED_TO_ORDER'"
+              [class.text-white]="request.status === 'PREVIEW_READY' || request.status === 'APPROVED' || request.status === 'CONVERTED_TO_ORDER'"
               [class.bg-[#F6F5F2]]="request.status !== 'PREVIEW_READY' && request.status !== 'APPROVED' && request.status !== 'CONVERTED_TO_ORDER'"
               [class.border]="request.status !== 'PREVIEW_READY' && request.status !== 'APPROVED' && request.status !== 'CONVERTED_TO_ORDER'"
               [class.border-neutral-200]="request.status !== 'PREVIEW_READY' && request.status !== 'APPROVED' && request.status !== 'CONVERTED_TO_ORDER'"
@@ -125,7 +125,7 @@
           <!-- 3D Preview Stage (if preview ready) -->
           <div *ngIf="request.preview3dModelType || request.status === 'PREVIEW_READY'" class="bg-[#FFFFFF] rounded-3xl p-6 border border-neutral-200 shadow-xl space-y-3">
             <div class="flex items-center justify-between">
-              <h3 class="font-serif text-lg font-bold text-neutral-900 flex items-center gap-2">
+              <h3 class="font-serif text-lg font-bold text-amber-800 flex items-center gap-2">
                 <app-icon name="cube" [size]="18" class="text-amber-400"></app-icon>
                 <span>Bản Vẽ Mô Phỏng 3D Preview</span>
               </h3>
@@ -137,7 +137,7 @@
             <div class="h-80 w-full rounded-2xl overflow-hidden shadow-inner bg-[#F6F5F2] border border-neutral-200">
               <app-three-viewer 
                 [modelType]="request.preview3dModelType || 'moon_lamp'"
-                [colorHex]="'#A9C6EA'"
+                [colorHex]="'#CD818E'"
                 [customText]="request.brief.customText || ''">
               </app-three-viewer>
             </div>
@@ -168,7 +168,7 @@
                 *ngIf="request.status !== 'CONVERTED_TO_ORDER'"
                 type="button" 
                 (click)="approveAndAddToCart()"
-                class="flex-1 py-3.5 px-5 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-neutral-950 font-extrabold text-xs sm:text-sm shadow-[0_4px_25px_rgba(169,198,234,0.35)] transition flex items-center justify-center gap-2">
+                class="flex-1 py-3.5 px-5 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-white font-extrabold text-xs sm:text-sm shadow-[0_4px_25px_rgba(205, 129, 142,0.35)] transition flex items-center justify-center gap-2">
                 <app-icon name="check" [size]="16"></app-icon>
                 <span>Chấp Thuận Báo Giá & Đặt Hàng Ngay</span>
               </button>
@@ -189,7 +189,7 @@
 
           <!-- Design Brief Card -->
           <div class="bg-[#FFFFFF] rounded-3xl p-6 border border-neutral-200 shadow-xl space-y-4">
-            <h3 class="font-serif text-lg font-bold text-neutral-900 border-b border-neutral-200 pb-2">
+            <h3 class="font-serif text-lg font-bold text-amber-800 border-b border-neutral-200 pb-2">
               Thông Số Design Brief Đã Đăng Ký
             </h3>
 
@@ -280,7 +280,7 @@
                   </div>
                   <div 
                     [class]="msg.sender === 'CUSTOMER' 
-                      ? 'bg-gradient-to-r from-amber-400 to-amber-600 text-neutral-950 font-semibold rounded-2xl rounded-tr-sm px-3.5 py-2 text-xs shadow-md' 
+                      ? 'bg-gradient-to-r from-amber-400 to-amber-600 text-white font-semibold rounded-2xl rounded-tr-sm px-3.5 py-2 text-xs shadow-md' 
                       : 'bg-[#F6F5F2] border border-neutral-200 text-neutral-800 rounded-2xl rounded-tl-sm px-3.5 py-2 text-xs'">
                     {{ msg.text }}
                   </div>
@@ -305,7 +305,7 @@
               <button 
                 type="submit" 
                 [disabled]="!chatInput.trim()" 
-                class="p-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-300 hover:to-amber-500 disabled:opacity-50 text-neutral-950 font-bold transition">
+                class="p-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-300 hover:to-amber-500 disabled:opacity-50 text-white font-bold transition">
                 <app-icon name="send" [size]="14"></app-icon>
               </button>
             </form>

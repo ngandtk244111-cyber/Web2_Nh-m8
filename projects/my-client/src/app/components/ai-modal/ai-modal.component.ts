@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AiAssistantService } from '../../core/services/ai-assistant.service';
+import { MascotService } from '../../core/services/mascot.service';
 import { AppIconComponent } from '../icon/icon.component';
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
 
@@ -16,7 +17,7 @@ import { VndPipe } from '../../shared/pipes/vnd.pipe';
 export class AiModalComponent implements OnDestroy {
   userInput = '';
 
-  constructor(public aiService: AiAssistantService) {
+  constructor(public aiService: AiAssistantService, public mascotService: MascotService) {
     effect(() => {
       const isOpen = this.aiService.isOpen();
       if (typeof document !== 'undefined') {

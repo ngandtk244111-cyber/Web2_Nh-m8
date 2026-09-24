@@ -1,3 +1,89 @@
 :host {
   display: block;
 }
+
+/* Kiểu editorial: tên dòng phong cách (serif) đặt trên, ảnh không gian lớn bên dưới, không khung/đổ bóng. */
+.fb-head {
+  margin-bottom: 28px;
+}
+
+.fb-eyebrow {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #7A6558;
+}
+
+.fb-title {
+  margin: 0;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(28px, 3.6vw, 40px);
+  font-weight: 700;
+  line-height: 1.1;
+  color: #3B2418;
+}
+
+.fb-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px 16px;
+}
+
+@media (min-width: 768px) {
+  .fb-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px 24px; }
+}
+
+@media (min-width: 1100px) {
+  .fb-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 44px 28px; }
+}
+
+.fb-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  text-decoration: none;
+  color: #3B2418;
+}
+
+.fb-tile__name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(19px, 1.7vw, 24px);
+  font-weight: 600;
+  line-height: 1.2;
+  transition: color 0.3s ease;
+}
+
+.fb-tile__img {
+  display: block;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: #EFE6D3;
+}
+
+.fb-tile__img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.7s cubic-bezier(0.22, 0.8, 0.3, 1);
+}
+
+.fb-tile:hover .fb-tile__img img,
+.fb-tile:focus-visible .fb-tile__img img {
+  transform: scale(1.04);
+}
+
+.fb-tile:hover .fb-tile__name {
+  color: #A3152D;
+}
+
+.fb-tile:focus-visible {
+  outline: 2px solid #A3152D;
+  outline-offset: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fb-tile__img img { transition: none; }
+}

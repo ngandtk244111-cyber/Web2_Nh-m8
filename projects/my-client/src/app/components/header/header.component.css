@@ -32,7 +32,7 @@
   position: sticky;
   top: 0;
   z-index: 40;
-  font-family: var(--font-family-content, 'Montserrat', sans-serif);
+  font-family: var(--font-family-content, 'Inter', sans-serif);
 }
 
 .hd_container {
@@ -41,8 +41,8 @@
 }
 
 .hd_top {
-  background: #ffffff;
-  border-bottom: 1px solid rgba(46, 99, 184, 0.2);
+  background: #A3152D;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   max-height: 34px;
   overflow: hidden;
   transition: max-height 0.28s ease, opacity 0.22s ease, border-color 0.28s ease;
@@ -67,27 +67,26 @@
   font-size: 11.5px;
   font-weight: 600;
   text-decoration: none;
-  color: #444444;
+  color: rgba(255, 255, 255, 0.88);
   white-space: nowrap;
   transition: color 0.15s ease;
 }
 
 .hd_top__left:hover,
 .hd_top__right:hover {
-  color: #2E63B8;
+  color: #ffffff;
 }
 
 .hd_top__right {
-  color: #2E63B8;
+  color: #ffffff;
 }
 
 /* ================= TẦNG 2: MAIN BAR ================= */
 .hd_main {
   position: relative;
   z-index: 2;
-  background: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  background: #A3152D;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .hd_main__inner {
@@ -114,8 +113,8 @@
   width: 26px;
   height: 26px;
   border-radius: 999px;
-  background: rgba(46, 99, 184, 0.12);
-  color: #2E63B8;
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
   flex-shrink: 0;
   animation: hd-mascot-bounce 2.4s ease-in-out infinite;
 }
@@ -126,10 +125,18 @@
 }
 
 .hd_logo__mark-img {
-  width: 42px;
-  height: 42px;
+  width: 58px;
+  height: 58px;
   object-fit: contain;
   flex-shrink: 0;
+}
+
+/* Logo trắng trên nền đỏ (main bar desktop + thanh trên mobile); drawer nền trắng giữ màu gốc.
+   margin âm bù phần viền trong suốt của ảnh để mark nằm sát chữ hơn. */
+.hd_logo .hd_logo__mark-img,
+.hd_m__top .hd_logo__mark-img {
+  filter: brightness(0) invert(1);
+  margin: 0 -6px 0 -4px;
 }
 
 .hd_logo__group {
@@ -139,20 +146,20 @@
 }
 
 .hd_logo__text {
-  font-family: var(--font-family-heading, 'Cormorant Garamond', serif);
+  font-family: var(--font-family-heading, 'Inter', sans-serif);
   text-transform: uppercase;
-  font-size: 20px;
+  font-size: 28px;
   font-weight: 700;
   letter-spacing: 0.02em;
-  color: #2055AF;
+  color: #ffffff;
 }
 
 .hd_logo__tagline {
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: rgba(32, 85, 175, 0.7);
+  color: rgba(255, 255, 255, 0.78);
   margin-top: 3px;
 }
 
@@ -171,7 +178,9 @@
   height: 40px;
   padding: 0;
   border: none;
-  background: transparent;
+  border-radius: 999px;
+  background: #F9F1F2;
+  overflow: hidden;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -187,20 +196,21 @@
 .hd_search__icon-img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
+  object-position: center 15%;
 }
 
 .hd_search__input {
   width: 100%;
   height: 42px;
   border-radius: 999px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  background: #F5F4F0;
+  border: 1px solid transparent;
+  background: #F7F2E7;
   color: #171717;
   padding: 0 18px 0 48px;
   font-size: 13.5px;
   outline: none;
-  transition: border-color 0.15s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .hd_search__input::placeholder {
@@ -208,7 +218,8 @@
 }
 
 .hd_search__input:focus {
-  border-color: #2E63B8;
+  border-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.28);
 }
 
 /* actions: đăng nhập | chuông | giỏ hàng */
@@ -223,7 +234,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: #333333;
+  color: #ffffff;
   text-decoration: none;
   background: transparent;
   border: 1px solid transparent;
@@ -234,16 +245,17 @@
 .hd_action--login {
   padding: 8px 14px;
   border-radius: 999px;
-  border-color: rgba(0, 0, 0, 0.1);
-  background: #F5F4F0;
+  border-color: rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.14);
   font-size: 12.5px;
   font-weight: 700;
   max-width: 160px;
 }
 
 .hd_action--login:hover {
-  border-color: #2E63B8;
-  color: #2E63B8;
+  border-color: #ffffff;
+  background: rgba(255, 255, 255, 0.26);
+  color: #ffffff;
 }
 
 .hd_action--login .hd_action__text {
@@ -258,21 +270,22 @@
 }
 
 .hd_action--icon:hover {
-  color: #2E63B8;
-  background: rgba(0, 0, 0, 0.05);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.18);
 }
 
 .hd_action--cart {
   position: relative;
   padding: 9px;
   border-radius: 999px;
-  background: #F5F4F0;
-  border-color: rgba(46, 99, 184, 0.3);
-  color: #2E63B8;
+  background: #ffffff;
+  border-color: #ffffff;
+  color: #A3152D;
 }
 
 .hd_action--cart:hover {
-  border-color: #2E63B8;
+  background: #F7F2E7;
+  color: #A3152D;
 }
 
 .hd_badge {
@@ -283,7 +296,7 @@
   height: 18px;
   padding: 0 4px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #A9C6EA, #2E63B8);
+  background: #1F1712;
   color: #ffffff;
   font-size: 10px;
   font-weight: 800;
@@ -374,7 +387,7 @@
 .hd_cart-item__price {
   font-size: 12.5px;
   font-weight: 700;
-  color: #9C4A42;
+  color: #A3152D;
 }
 
 .hd_cart-item__qty {
@@ -392,7 +405,7 @@
 }
 
 .hd_cart-item__remove:hover {
-  color: #2055AF;
+  color: #891226;
 }
 
 .hd_cart-dropdown__more {
@@ -421,7 +434,7 @@
 .hd_cart-dropdown__view-btn {
   padding: 9px 16px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #A9C6EA, #2E63B8);
+  background: linear-gradient(135deg, #CD818E, #A3152D);
   color: #ffffff;
   font-size: 12.5px;
   font-weight: 700;
@@ -478,7 +491,7 @@
 .hd_notify-dropdown__mark-all {
   border: none;
   background: transparent;
-  color: #2E63B8;
+  color: #A3152D;
   font-size: 10.5px;
   font-weight: 700;
   cursor: pointer;
@@ -486,7 +499,7 @@
 }
 
 .hd_notify-dropdown__mark-all:hover {
-  color: #2E63B8;
+  color: #A3152D;
 }
 
 .hd_notify-dropdown__empty {
@@ -519,7 +532,7 @@
 }
 
 .hd_notify-item--unread {
-  background: rgba(46, 99, 184, 0.06);
+  background: rgba(163, 21, 45, 0.06);
 }
 
 .hd_notify-item__dot {
@@ -527,7 +540,7 @@
   width: 7px;
   height: 7px;
   border-radius: 999px;
-  background: #2E63B8;
+  background: #A3152D;
   margin-top: 5px;
 }
 
@@ -559,9 +572,9 @@
   margin-top: 10px;
   padding: 9px;
   border-radius: 10px;
-  border: 1px solid rgba(46, 99, 184, 0.3);
+  border: 1px solid rgba(163, 21, 45, 0.3);
   background: transparent;
-  color: #2E63B8;
+  color: #A3152D;
   font-size: 11.5px;
   font-weight: 700;
   cursor: pointer;
@@ -569,7 +582,7 @@
 }
 
 .hd_notify-dropdown__view-all:hover {
-  background: rgba(46, 99, 184, 0.08);
+  background: rgba(163, 21, 45, 0.08);
 }
 
 /* ---------- Search suggestions ---------- */
@@ -622,17 +635,17 @@
 }
 
 .hd_search-suggest__chip:hover {
-  border-color: #2E63B8;
-  color: #2E63B8;
-  background: rgba(46, 99, 184, 0.08);
+  border-color: #A3152D;
+  color: #A3152D;
+  background: rgba(163, 21, 45, 0.08);
 }
 
 /* ================= TẦNG 3: UTILITY BAR + MEGA MENU ================= */
 .hd_utility {
   position: relative;
   z-index: 1;
-  background: #ffffff;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  background: #A3152D;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
 }
 
 .hd_utility__inner {
@@ -659,8 +672,8 @@
   gap: 8px;
   padding: 7px 16px;
   border-radius: 999px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  background: #F5F4F0;
+  border: 1px solid transparent;
+  background: #ffffff;
   color: #171717;
   font-size: 12.5px;
   font-weight: 700;
@@ -683,12 +696,12 @@
 
 .hd_menu-btn:hover,
 .hd_menu-btn--active {
-  border-color: #2E63B8;
-  color: #2E63B8;
+  border-color: #ffffff;
+  color: #A3152D;
 }
 
 .hd_menu-btn--active {
-  background: rgba(46, 99, 184, 0.12);
+  background: #F7F2E7;
 }
 
 .hd_location-btn {
@@ -697,7 +710,7 @@
   gap: 6px;
   background: transparent;
   border: none;
-  color: #666666;
+  color: rgba(255, 255, 255, 0.9);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
@@ -715,7 +728,7 @@
 }
 
 .hd_location-btn:hover {
-  color: #2E63B8;
+  color: #ffffff;
 }
 
 /* mega menu panel */
@@ -827,7 +840,7 @@
   color: #111111;
   margin-bottom: 8px;
   padding-bottom: 6px;
-  border-bottom: 2px solid #2E63B8;
+  border-bottom: 2px solid #A3152D;
 }
 
 .hd_megamenu__link {
@@ -842,8 +855,8 @@
 }
 
 .hd_megamenu__link:hover {
-  background: rgba(46, 99, 184, 0.1);
-  color: #1B3F73;
+  background: rgba(163, 21, 45, 0.1);
+  color: #E2B4BC;
   padding-left: 14px;
 }
 
@@ -878,7 +891,7 @@
 }
 
 .hd_megamenu__banner-title {
-  font-family: var(--font-family-heading, 'Cormorant Garamond', serif);
+  font-family: var(--font-family-heading, 'Inter', sans-serif);
   font-size: 19px;
   font-weight: 700;
   color: #ffffff;
@@ -934,8 +947,8 @@
 
   .hd_m {
     display: block;
-    background: #ffffff;
-    border-bottom: 1px solid rgba(46, 99, 184, 0.2);
+    background: #A3152D;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
     padding: 10px 16px 12px;
   }
 
@@ -954,9 +967,9 @@
     width: 36px;
     height: 36px;
     border-radius: 999px;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    background: #F5F4F0;
-    color: #333333;
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    background: rgba(255, 255, 255, 0.14);
+    color: #ffffff;
     flex-shrink: 0;
   }
 
@@ -968,7 +981,7 @@
     height: 16px;
     padding: 0 3px;
     border-radius: 999px;
-    background: linear-gradient(135deg, #A9C6EA, #2E63B8);
+    background: #1F1712;
     color: #ffffff;
     font-size: 9px;
     font-weight: 800;
@@ -985,8 +998,12 @@
   }
 
   .hd_m__logo .hd_logo__mark-img {
-    width: 32px;
-    height: 32px;
+    width: 42px;
+    height: 42px;
+  }
+
+  .hd_m__logo .hd_logo__text {
+    font-size: 22px;
   }
 
   .hd_m__right {
@@ -1010,7 +1027,9 @@
     height: 36px;
     padding: 0;
     border: none;
-    background: transparent;
+    border-radius: 999px;
+    background: #F9F1F2;
+    overflow: hidden;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -1021,15 +1040,16 @@
   .hd_m__search-icon-img {
     width: 100%;
     height: 100%;
-    object-fit: contain;
+    object-fit: cover;
+    object-position: center 15%;
   }
 
   .hd_m__search-input {
     width: 100%;
     height: 38px;
     border-radius: 999px;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    background: #F5F4F0;
+    border: 1px solid transparent;
+    background: #F7F2E7;
     color: #171717;
     padding: 0 14px 0 44px;
     font-size: 13px;
@@ -1093,11 +1113,11 @@
     font-size: 8px;
     font-weight: 700;
     letter-spacing: 0.14em;
-    color: rgba(46, 99, 184, 0.75);
+    color: rgba(163, 21, 45, 0.75);
   }
 
   .hd_drawer__brand-main {
-    font-family: var(--font-family-heading, 'Cormorant Garamond', serif);
+    font-family: var(--font-family-heading, 'Inter', sans-serif);
     font-size: 15px;
     font-weight: 800;
     color: #171717;
@@ -1120,14 +1140,14 @@
     margin: 14px 16px;
     padding: 14px;
     border-radius: 16px;
-    background: rgba(46, 99, 184, 0.1);
-    border: 1px solid rgba(46, 99, 184, 0.25);
+    background: rgba(163, 21, 45, 0.1);
+    border: 1px solid rgba(163, 21, 45, 0.25);
   }
 
   .hd_drawer__login-title {
     font-size: 12px;
     font-weight: 600;
-    color: #2E63B8;
+    color: #A3152D;
     margin-bottom: 10px;
   }
 
@@ -1136,7 +1156,7 @@
     padding: 10px;
     border-radius: 12px;
     border: none;
-    background: linear-gradient(135deg, #A9C6EA, #2E63B8 60%, #2055AF);
+    background: linear-gradient(135deg, #CD818E, #A3152D 60%, #891226);
     color: #ffffff;
     font-size: 13px;
     font-weight: 700;
@@ -1160,8 +1180,8 @@
   }
 
   .hd_drawer__location:hover {
-    color: #2E63B8;
-    border-color: rgba(46, 99, 184, 0.3);
+    color: #A3152D;
+    border-color: rgba(163, 21, 45, 0.3);
   }
 
   .hd_drawer__nav {
@@ -1177,7 +1197,7 @@
     font-weight: 800;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: #2E63B8;
+    color: #A3152D;
   }
 
   .hd_drawer__item {
@@ -1191,8 +1211,8 @@
   }
 
   .hd_drawer__item:hover {
-    background: rgba(46, 99, 184, 0.1);
-    color: #2E63B8;
+    background: rgba(163, 21, 45, 0.1);
+    color: #A3152D;
   }
 
   .hd_drawer__accordion {
@@ -1223,11 +1243,11 @@
 
   .hd_drawer__accordion-head--open app-icon {
     transform: rotate(180deg);
-    color: #2E63B8;
+    color: #A3152D;
   }
 
   .hd_drawer__accordion-head--open {
-    color: #2E63B8;
+    color: #A3152D;
   }
 
   .hd_drawer__accordion-body {
@@ -1251,9 +1271,9 @@
     gap: 8px;
     padding: 11px;
     border-radius: 12px;
-    border: 1px solid rgba(46, 99, 184, 0.3);
-    background: rgba(46, 99, 184, 0.1);
-    color: #2E63B8;
+    border: 1px solid rgba(163, 21, 45, 0.3);
+    background: rgba(163, 21, 45, 0.1);
+    color: #A3152D;
     font-size: 13px;
     font-weight: 700;
     text-decoration: none;

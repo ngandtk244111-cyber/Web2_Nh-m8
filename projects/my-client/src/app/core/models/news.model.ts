@@ -25,3 +25,15 @@ export interface NewsArticle {
   taggedProductIds: string[];
   viewsCount: number;
 }
+
+/** Ý kiến bạn đọc dưới bài Tin tức — parentId khác null là câu trả lời (lồng 1 cấp). */
+export interface NewsComment {
+  id: string;
+  articleId: string;
+  parentId: string | null;
+  authorName: string;
+  text: string;
+  likesCount: number;
+  createdAt: string; // ISO date
+  isLiked?: boolean;
+}

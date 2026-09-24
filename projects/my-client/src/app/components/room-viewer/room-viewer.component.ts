@@ -21,6 +21,7 @@ import { Room, RoomHotspot } from '../../core/models/room.model';
 import { Product } from '../../core/models/product.model';
 import { ProductService } from '../../core/services/product.service';
 import { CartService } from '../../core/services/cart.service';
+import { MascotService } from '../../core/services/mascot.service';
 import { AppIconComponent } from '../icon/icon.component';
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
 import { ViewerRuntime } from '../../shared/three/viewer-runtime';
@@ -68,7 +69,8 @@ export class RoomViewerComponent implements OnInit, AfterViewInit, OnChanges, On
     private productService: ProductService,
     private cartService: CartService,
     private router: Router,
-    private ngZone: NgZone
+    private ngZone: NgZone,
+    private mascotService: MascotService
   ) {}
 
   private debugPointerStart: { x: number; y: number } | null = null;
@@ -177,7 +179,7 @@ export class RoomViewerComponent implements OnInit, AfterViewInit, OnChanges, On
     const worldPoint = hits[0].point;
     const rawPoint = this.roomScenes.worldToRawPosition(worldPoint.clone());
 
-    console.log('%c[Room Debug] Toạ độ tại điểm vừa click:', 'color:#A9C6EA;font-weight:bold;');
+    console.log('%c[Room Debug] Toạ độ tại điểm vừa click:', 'color:#CD818E;font-weight:bold;');
     console.log(
       'Toạ độ GỐC (dán thẳng vào "position" của hotspot trong mock-data.ts):',
       `[${rawPoint.x.toFixed(3)}, ${rawPoint.y.toFixed(3)}, ${rawPoint.z.toFixed(3)}]`
@@ -241,6 +243,7 @@ export class RoomViewerComponent implements OnInit, AfterViewInit, OnChanges, On
         },
         onContextLost: () => {
           this.hasError = true;
+          this.mascotService.react('angry');
         },
         onContextRestored: () => {
           this.hasError = false;
@@ -256,6 +259,7 @@ export class RoomViewerComponent implements OnInit, AfterViewInit, OnChanges, On
     } catch (err) {
       console.error('RoomViewer initialization failed:', err);
       this.hasError = true;
+      this.mascotService.react('angry');
     }
   }
 

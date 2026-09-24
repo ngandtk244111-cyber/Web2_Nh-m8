@@ -1,7 +1,7 @@
 <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
 
   <div class="text-center space-y-2">
-    <h1 class="font-serif text-3xl font-extrabold text-neutral-900">Tra Cứu Bảo Hành</h1>
+    <h1 class="font-serif text-3xl font-extrabold text-amber-800">Tra Cứu Bảo Hành</h1>
     <p class="text-xs sm:text-sm text-neutral-600 max-w-md mx-auto">
       Nhập mã bảo hành (in trên phiếu đi kèm sản phẩm) và số điện thoại đặt hàng để kiểm tra tình trạng bảo hành.
     </p>
@@ -27,7 +27,7 @@
     <button
       (click)="search()"
       [disabled]="isSearching"
-      class="w-full py-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-300 hover:to-amber-500 disabled:opacity-50 text-neutral-950 font-extrabold text-sm shadow-md transition flex items-center justify-center gap-2">
+      class="w-full py-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-300 hover:to-amber-500 disabled:opacity-50 text-white font-extrabold text-sm shadow-md transition flex items-center justify-center gap-2">
       <app-icon name="search" [size]="16"></app-icon>
       <span>{{ isSearching ? 'Đang tra cứu...' : 'Tra cứu bảo hành' }}</span>
     </button>
@@ -41,7 +41,7 @@
     <div class="flex items-center justify-between border-b border-neutral-200 pb-3">
       <div>
         <span class="text-[10px] font-bold uppercase text-neutral-500">Mã bảo hành</span>
-        <h3 class="font-serif text-xl font-bold text-neutral-900">{{ warranty.warrantyCode }}</h3>
+        <h3 class="font-serif text-xl font-bold text-amber-800">{{ warranty.warrantyCode }}</h3>
       </div>
       <span
         class="px-3 py-1.5 rounded-full text-xs font-bold border"
@@ -94,7 +94,7 @@
       <button
         (click)="submitClaim()"
         [disabled]="isSubmittingClaim || !claimNote.trim()"
-        class="px-5 py-2.5 rounded-xl bg-[#2E63B8] hover:bg-[#2055AF] disabled:opacity-50 text-white text-xs font-bold transition">
+        class="px-5 py-2.5 rounded-xl bg-[#A3152D] hover:bg-[#891226] disabled:opacity-50 text-white text-xs font-bold transition">
         {{ isSubmittingClaim ? 'Đang gửi...' : 'Gửi yêu cầu bảo hành' }}
       </button>
     </div>

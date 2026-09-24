@@ -8,7 +8,7 @@
         <a routerLink="/catalog" class="text-xs font-semibold text-neutral-600 hover:text-amber-400 flex items-center gap-1 mb-2 transition">
           ← Tiếp tục mua sắm
         </a>
-        <h1 class="font-serif text-3xl font-extrabold text-neutral-900">
+        <h1 class="font-serif text-3xl font-extrabold text-amber-800">
           Xác Nhận & Thanh Toán Đơn Hàng
         </h1>
         <p class="text-xs sm:text-sm text-neutral-600 mt-1">
@@ -18,9 +18,9 @@
 
       <!-- If no items staged for checkout -->
       <div *ngIf="cartService.checkoutItems().length === 0 && !createdOrder" class="text-center py-16 bg-[#FFFFFF] rounded-3xl border border-neutral-200 p-8 space-y-4">
-        <h3 class="font-serif text-lg font-bold text-neutral-800">Chưa có sản phẩm nào để thanh toán</h3>
+        <h3 class="font-serif text-lg font-bold text-amber-800">Chưa có sản phẩm nào để thanh toán</h3>
         <p class="text-xs text-neutral-600">Vui lòng chọn sản phẩm ở giỏ hàng trước khi tiến hành thanh toán.</p>
-        <a routerLink="/catalog" class="inline-block px-6 py-2.5 rounded-full bg-gradient-to-r from-amber-400 to-amber-600 text-neutral-950 font-extrabold text-xs shadow-md transition">
+        <a routerLink="/catalog" class="inline-block px-6 py-2.5 rounded-full bg-gradient-to-r from-amber-400 to-amber-600 text-white font-extrabold text-xs shadow-md transition">
           Quay lại cửa hàng
         </a>
       </div>
@@ -49,7 +49,7 @@
           <!-- STEP 2: Shipping Details Card -->
           <div *ngIf="flow.currentStep() === 2" id="shipping-info" class="bg-[#FFFFFF] rounded-3xl p-6 sm:p-8 border border-neutral-200 shadow-xl space-y-4 scroll-mt-24">
             <div class="flex items-center justify-between border-b border-neutral-200 pb-3">
-              <h3 class="font-serif text-lg font-bold text-neutral-900 flex items-center gap-2">
+              <h3 class="font-serif text-lg font-bold text-amber-800 flex items-center gap-2">
                 <app-icon name="truck" [size]="18" class="text-amber-400"></app-icon>
                 <span>2. Thông Tin Nhận Hàng</span>
               </h3>
@@ -177,7 +177,7 @@
           <!-- STEP 3: Payment Method Card -->
           <div *ngIf="flow.currentStep() === 3" id="payment-method" class="bg-[#FFFFFF] rounded-3xl p-6 sm:p-8 border border-neutral-200 shadow-xl space-y-4 scroll-mt-24">
             <div class="flex items-center justify-between border-b border-neutral-200 pb-3">
-              <h3 class="font-serif text-lg font-bold text-neutral-900 flex items-center gap-2">
+              <h3 class="font-serif text-lg font-bold text-amber-800 flex items-center gap-2">
                 <app-icon name="shield" [size]="18" class="text-amber-400"></app-icon>
                 <span>3. Phương Thức Thanh Toán</span>
               </h3>
@@ -200,8 +200,8 @@
 
                 <div
                   class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden"
-                  [style.background]="method.image ? 'transparent' : (method.badge ? method.badge.bg : '#EAF1FA')"
-                  [style.color]="method.badge ? method.badge.color : '#2E63B8'">
+                  [style.background]="method.image ? 'transparent' : (method.badge ? method.badge.bg : '#F9F1F2')"
+                  [style.color]="method.badge ? method.badge.color : '#A3152D'">
                   <img *ngIf="method.image" [src]="method.image" [alt]="method.label" class="w-full h-full object-cover">
                   <span *ngIf="!method.image && method.badge" class="font-black text-sm">{{ method.badge.text }}</span>
                   <app-icon *ngIf="!method.image && !method.badge" [name]="method.icon" [size]="18"></app-icon>
@@ -230,7 +230,7 @@
           <!-- Product list (read-only) -->
           <div class="bg-[#FFFFFF] rounded-3xl p-6 border border-neutral-200 shadow-xl space-y-3">
             <div class="border-b border-neutral-200 pb-3 flex items-center justify-between">
-              <h3 class="font-serif text-lg font-bold text-neutral-900">Danh Sách Sản Phẩm</h3>
+              <h3 class="font-serif text-lg font-bold text-amber-800">Danh Sách Sản Phẩm</h3>
               <span class="text-xs text-neutral-600">{{ cartService.checkoutItemCount() }} món</span>
             </div>
 
@@ -257,7 +257,7 @@
 
           <!-- Payment summary -->
           <div class="bg-[#FFFFFF] rounded-3xl p-6 border border-neutral-200 shadow-xl space-y-6">
-            <h3 class="font-serif text-lg font-bold text-neutral-900 border-b border-neutral-200 pb-3">Chi Tiết Thanh Toán</h3>
+            <h3 class="font-serif text-lg font-bold text-amber-800 border-b border-neutral-200 pb-3">Chi Tiết Thanh Toán</h3>
 
             <div class="space-y-2 text-xs text-neutral-600">
               <div class="flex justify-between">
@@ -287,7 +287,7 @@
             <button
               type="submit"
               [disabled]="placingOrder"
-              class="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 disabled:opacity-60 text-neutral-950 font-extrabold text-sm shadow-[0_4px_25px_rgba(169,198,234,0.35)] transition flex items-center justify-center gap-2">
+              class="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 disabled:opacity-60 text-white font-extrabold text-sm shadow-[0_4px_25px_rgba(205, 129, 142,0.35)] transition flex items-center justify-center gap-2">
               <app-icon [name]="flow.currentStep() === 2 ? 'chevron-right' : 'check'" [size]="18"></app-icon>
               <span *ngIf="flow.currentStep() === 2">Tiếp Tục Đến Thanh Toán</span>
               <span *ngIf="flow.currentStep() === 3">{{ placingOrder ? 'Đang xử lý...' : 'Xác Nhận & Đặt Hàng (' + (cartService.checkoutTotal() | vnd) + ')' }}</span>
@@ -308,7 +308,7 @@
 
           <div class="flex items-start justify-between border-b border-neutral-200 pb-4">
             <div class="space-y-1">
-              <h2 class="font-serif text-xl sm:text-2xl font-bold text-neutral-900">Quét Mã Để Thanh Toán</h2>
+              <h2 class="font-serif text-xl sm:text-2xl font-bold text-amber-800">Quét Mã Để Thanh Toán</h2>
               <p class="text-xs text-neutral-600">
                 Mã đơn hàng: <strong class="text-amber-500 font-mono">{{ createdOrder.orderNumber }}</strong>
               </p>
@@ -367,7 +367,7 @@
             <button
               type="button"
               (click)="confirmBankTransferPaid()"
-              class="flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-600 text-neutral-950 font-extrabold text-xs sm:text-sm shadow-md transition text-center">
+              class="flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-600 text-white font-extrabold text-xs sm:text-sm shadow-md transition text-center">
               Tôi Đã Hoàn Tất Chuyển Khoản
             </button>
 
@@ -392,7 +392,7 @@
             <app-icon name="check" [size]="28"></app-icon>
           </div>
 
-          <h2 class="font-serif text-2xl font-bold text-neutral-900">Đặt Hàng Thành Công!</h2>
+          <h2 class="font-serif text-2xl font-bold text-amber-800">Đặt Hàng Thành Công!</h2>
           <p class="text-xs text-neutral-600 leading-relaxed">
             Cảm ơn bạn đã đặt hàng tại <strong class="text-amber-500">Luméa</strong>.<br>
             Đơn hàng của bạn đang được xưởng xử lý.
@@ -405,7 +405,7 @@
 
           <div class="flex flex-col sm:flex-row gap-3 pt-1">
             <button type="button" (click)="navigateToTracking()"
-              class="flex-1 py-3 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-600 text-neutral-950 font-extrabold text-xs shadow-md transition">
+              class="flex-1 py-3 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-600 text-white font-extrabold text-xs shadow-md transition">
               Xem Đơn Hàng
             </button>
             <button type="button" (click)="continueShoppingAfterOrder()"

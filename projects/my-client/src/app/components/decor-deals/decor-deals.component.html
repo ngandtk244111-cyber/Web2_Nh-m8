@@ -8,20 +8,20 @@
 
     <div class="dd_hero__mascot" aria-hidden="true">
       <svg viewBox="0 0 64 64" width="56" height="56">
-        <path d="M6 36 L32 10 L58 36 Z" fill="#A9C6EA" stroke="#2055AF" stroke-width="2" stroke-linejoin="round"/>
-        <ellipse cx="32" cy="37" rx="15" ry="5" fill="#5B9BD5"/>
-        <circle cx="32" cy="42" r="15" fill="#EAF1FA"/>
-        <circle cx="26" cy="42" r="2.2" fill="#1B3F73"/>
-        <circle cx="38" cy="42" r="2.2" fill="#1B3F73"/>
+        <path d="M6 36 L32 10 L58 36 Z" fill="#CD818E" stroke="#891226" stroke-width="2" stroke-linejoin="round"/>
+        <ellipse cx="32" cy="37" rx="15" ry="5" fill="#B7485B"/>
+        <circle cx="32" cy="42" r="15" fill="#F9F1F2"/>
+        <circle cx="26" cy="42" r="2.2" fill="#E2B4BC"/>
+        <circle cx="38" cy="42" r="2.2" fill="#E2B4BC"/>
         <circle cx="23" cy="45" r="2.5" fill="#ff9b9b" opacity="0.7"/>
         <circle cx="41" cy="45" r="2.5" fill="#ff9b9b" opacity="0.7"/>
-        <path d="M26 49 Q32 54 38 49" stroke="#1B3F73" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <path d="M26 49 Q32 54 38 49" stroke="#E2B4BC" stroke-width="2" fill="none" stroke-linecap="round"/>
       </svg>
     </div>
 
     <h2 class="dd_hero__title">FLASH SALE<br>GIÁ TỐT</h2>
 
-    <a routerLink="/catalog" class="dd_hero__cta">XEM NGAY</a>
+    <a routerLink="/flash-sale" class="dd_hero__cta">XEM NGAY</a>
 
     <div class="dd_hero__blossoms" aria-hidden="true">
       <svg class="dd_blossom dd_blossom--1" viewBox="0 0 40 40" width="30" height="30">
@@ -95,8 +95,10 @@
           <ng-container *ngIf="dealProducts().length > 0; else noDeals">
             <a
               *ngFor="let p of dealProducts()"
-              [routerLink]="['/product', p.slug]"
-              class="dd_card">
+              [routerLink]="canViewProducts() ? ['/product', p.slug] : null"
+              class="dd_card"
+              [class.dd_card--locked]="!canViewProducts()"
+              [attr.aria-disabled]="!canViewProducts() ? 'true' : null">
               <div class="dd_card__img-wrap">
                 <span class="dd_card__tag" *ngIf="discountTag(p)">{{ discountTag(p) }}</span>
                 <img [src]="p.images[0]" [alt]="p.name" loading="lazy">
@@ -111,7 +113,36 @@
               <div class="dd_card__promo">
                 <span>🔥 Ưu đãi giá sốc</span>
               </div>
-              <button type="button" class="dd_card__cta" (click)="goToProduct(p, $event)">Chọn mua</button>
+              <div
+                *ngIf="stockInfo(p) as st"
+                class="dd_stock"
+                [class.dd_stock--hot]="st.state === 'hot'"
+                [class.dd_stock--low]="st.state === 'low'"
+                [class.dd_stock--out]="st.state === 'soldout'"
+                role="progressbar" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuenow]="st.soldPct">
+                <span class="dd_stock__fill" [style.width.%]="st.soldPct"></span>
+                <span class="dd_stock__label">
+                  <ng-container [ngSwitch]="st.state">
+                    <ng-container *ngSwitchCase="'upcoming'">Mở bán {{ st.left }} suất</ng-container>
+                    <ng-container *ngSwitchCase="'soldout'">Đã hết suất</ng-container>
+                    <ng-container *ngSwitchCase="'low'">🔥 Sắp hết · Còn {{ st.left }} suất</ng-container>
+                    <ng-container *ngSwitchDefault>Còn {{ st.left }} suất</ng-container>
+                  </ng-container>
+                </span>
+              </div>
+              <button *ngIf="canViewProducts(); else notifyBtn" type="button" class="dd_card__cta" (click)="goToProduct(p, $event)">Chọn mua</button>
+              <ng-template #notifyBtn>
+                <button
+                  type="button"
+                  class="dd_card__cta dd_card__cta--notify"
+                  [class.dd_card__cta--on]="isReminded()"
+                  [disabled]="reminderBusy()"
+                  [attr.title]="isReminded() ? 'Bấm để hủy nhắc hẹn' : 'Nhắc tôi khi deal bắt đầu'"
+                  (click)="toggleReminder($event)">
+                  <app-icon [name]="isReminded() ? 'check' : 'bell'" [size]="13"></app-icon>
+                  {{ isReminded() ? 'Đã đặt nhắc' : 'Nhận thông báo' }}
+                </button>
+              </ng-template>
             </a>
           </ng-container>
 

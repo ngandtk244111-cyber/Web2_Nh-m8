@@ -60,7 +60,7 @@
 }
 
 .cg_group__head:hover {
-  color: #2055AF;
+  color: #891226;
 }
 
 .cg_group__head app-icon {
@@ -70,7 +70,7 @@
 
 .cg_group__arrow--open {
   transform: rotate(180deg);
-  color: #2E63B8 !important;
+  color: #A3152D !important;
 }
 
 .cg_group__body {
@@ -95,7 +95,7 @@
 .cg_radio input {
   width: 15px;
   height: 15px;
-  accent-color: #2E63B8;
+  accent-color: #A3152D;
   cursor: pointer;
   flex-shrink: 0;
 }
@@ -107,7 +107,7 @@
 
 .cg_checkbox:has(input:checked) span,
 .cg_radio:has(input:checked) span {
-  color: #2055AF;
+  color: #891226;
   font-weight: 700;
 }
 
@@ -117,7 +117,7 @@
   gap: 4px;
   border: none;
   background: transparent;
-  color: #2055AF;
+  color: #891226;
   font-size: 11.5px;
   font-weight: 700;
   cursor: pointer;
@@ -130,9 +130,9 @@
   margin-top: 4px;
   padding: 9px;
   border-radius: 10px;
-  border: 1px solid #2E63B8;
+  border: 1px solid #A3152D;
   background: transparent;
-  color: #2055AF;
+  color: #891226;
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
@@ -140,7 +140,7 @@
 }
 
 .cg_reset-btn:hover {
-  background: #2E63B8;
+  background: #A3152D;
   color: #ffffff;
 }
 
@@ -159,13 +159,13 @@
 }
 
 .cg_sort-chip:hover {
-  border-color: #2E63B8;
-  color: #2055AF;
+  border-color: #A3152D;
+  color: #891226;
 }
 
 .cg_sort--active {
-  background: #2E63B8;
-  border-color: #2E63B8;
+  background: #A3152D;
+  border-color: #A3152D;
   color: #ffffff;
   font-weight: 800;
 }
@@ -192,7 +192,7 @@
 }
 
 .cg_view--active {
-  background: #2E63B8 !important;
+  background: #A3152D !important;
   color: #ffffff !important;
 }
 
@@ -259,7 +259,7 @@
   padding: 12px;
   border-radius: 12px;
   border: none;
-  background: linear-gradient(90deg, #2E63B8, #A9C6EA);
+  background: linear-gradient(90deg, #A3152D, #CD818E);
   color: #ffffff;
   font-weight: 800;
   font-size: 13px;

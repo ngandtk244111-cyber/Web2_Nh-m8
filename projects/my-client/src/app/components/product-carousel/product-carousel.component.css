@@ -1,0 +1,22 @@
+.pcar { position: relative; }
+.pcar__track {
+  display: flex; gap: 20px; overflow-x: auto; scroll-snap-type: x mandatory;
+  scroll-behavior: smooth; scrollbar-width: none; padding-bottom: 4px;
+}
+.pcar__track::-webkit-scrollbar { display: none; }
+.pcar__item { flex: 0 0 calc((100% - 60px) / 4); scroll-snap-align: start; min-width: 0; }
+@media (max-width: 1023px) { .pcar__item { flex-basis: calc((100% - 20px) / 2.4); } }
+@media (max-width: 640px) { .pcar__track { gap: 12px; } .pcar__item { flex-basis: 62%; } }
+
+.pcar__nav {
+  position: absolute; top: 36%; transform: translateY(-50%); z-index: 3;
+  width: 42px; height: 42px; border-radius: 999px; border: 1px solid #C9BBA0;
+  background: #fff; color: #3B2418; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  transition: background .2s, color .2s, border-color .2s;
+}
+.pcar__nav:hover { background: #A3152D; border-color: #A3152D; color: #fff; }
+.pcar__nav--prev { left: -18px; }
+.pcar__nav--next { right: -18px; }
+@media (max-width: 640px) { .pcar__nav { display: none; } }

@@ -1,4 +1,5 @@
 import { Injectable, computed, signal } from '@angular/core';
+import { Product } from '../models/product.model';
 
 export type FlashSlotStatus = 'live' | 'upcoming' | 'ended';
 
@@ -46,6 +47,24 @@ export class FlashSaleService {
 
   readonly liveSlot = computed(() => this.slots().find(s => s.status === 'live') ?? null);
   readonly nextSlot = computed(() => this.slots().find(s => s.status === 'upcoming') ?? null);
+
+  /** Khung Flash Sale của sản phẩm (null nếu không phải hàng Flash Sale). Tính theo giờ hiện tại, không phụ thuộc đồng hồ acquire(). */
+  slotFor(product: Product): FlashSlot | null {
+    if (product.flashSaleSlot == null || !product.originalPrice || product.originalPrice <= product.basePrice) return null;
+    const now = Date.now();
+    const d = new Date(now);
+    const index = product.flashSaleSlot;
+    const start = new Date(d.getFullYear(), d.getMonth(), d.getDate() + index, SLOT_START_HOUR).getTime();
+    const end = new Date(d.getFullYear(), d.getMonth(), d.getDate() + index, SLOT_END_HOUR).getTime();
+    const status: FlashSlotStatus = now < start ? 'upcoming' : now >= end ? 'ended' : 'live';
+    return { index, start, end, status };
+  }
+
+  /** Giá nền áp dụng cho sản phẩm: giá Flash Sale chỉ có hiệu lực khi khung đang diễn ra, còn lại là giá gốc. */
+  effectiveBasePrice(product: Product): number {
+    const slot = this.slotFor(product);
+    return slot && slot.status !== 'live' ? product.originalPrice! : product.basePrice;
+  }
 
   acquire(): void {
     this.refs++;

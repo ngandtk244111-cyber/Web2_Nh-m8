@@ -1,0 +1,124 @@
+<div class="cd" *ngIf="room() as r; else notFound">
+
+  <nav class="cd-crumb" aria-label="Breadcrumb">
+    <a routerLink="/">Trang chủ</a> / <a routerLink="/coordinate">Ý tưởng phối đồ</a> / <span>{{ r.name }}</span>
+  </nav>
+
+  <h1 class="cd-title">{{ r.name }}<span *ngIf="r.tagline"> <i>|</i> {{ r.tagline }}</span></h1>
+
+  <div class="cd-chips" *ngIf="rooms().length > 1">
+    <a
+      *ngFor="let x of rooms()"
+      [routerLink]="['/coordinate', x.id]"
+      class="cd-chip"
+      [class.cd-chip--on]="x.id === r.id">
+      {{ x.theme || x.name }}
+    </a>
+  </div>
+
+  <div class="cd-hero">
+    <img [src]="r.coverImage" [alt]="r.name">
+  </div>
+
+  <p class="cd-lead">{{ r.description }}</p>
+
+  <section *ngIf="roomProducts().length > 0">
+    <h2 class="cd-bar">Sản phẩm đề xuất</h2>
+    <div class="cd-grid">
+      <a *ngFor="let p of roomProducts()" [routerLink]="['/product', p.slug]" class="cd-prod">
+        <span class="cd-prod__img"><img [src]="p.images[0]" [alt]="p.name" loading="lazy"></span>
+        <span class="cd-prod__name">{{ p.name }}</span>
+        <span class="cd-prod__price"><strong>{{ p.basePrice | vnd }}</strong></span>
+      </a>
+    </div>
+  </section>
+
+  <section class="cd-block">
+    <h2 class="cd-sub">Điểm nhấn của phong cách này</h2>
+    <div class="cd-cards">
+      <div *ngFor="let h of highlights; let i = index" class="cd-card">
+        <span class="cd-card__no">{{ i + 1 }}</span>
+        <h3>{{ h.title }}</h3>
+        <p>{{ h.text }}</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="cd-block">
+    <h2 class="cd-bar">5 mẹo phối đồ dễ áp dụng</h2>
+    <ol class="cd-tips">
+      <li *ngFor="let t of tips">
+        <strong>{{ t.title }}</strong>
+        <span>{{ t.text }}</span>
+      </li>
+    </ol>
+  </section>
+
+  <section *ngIf="accessoryGroups().length > 0" class="cd-acc">
+    <h2 class="cd-sub">Phụ kiện decor hợp với phong cách</h2>
+    <div class="cd-car" *ngFor="let g of accessoryGroups()">
+      <h3 class="cd-group">{{ g.label }}</h3>
+      <div class="cd-row" #track>
+        <a *ngFor="let p of g.products" [routerLink]="['/product', p.slug]" class="cd-prod cd-prod--row">
+          <span class="cd-prod__img"><img [src]="p.images[0]" [alt]="p.name" loading="lazy"></span>
+          <span class="cd-prod__name">{{ p.name }}</span>
+          <span class="cd-prod__price">
+            <strong [class.cd-sale]="p.originalPrice && p.originalPrice > p.basePrice">{{ p.basePrice | vnd }}</strong>
+          </span>
+        </a>
+      </div>
+      <button type="button" class="cd-arrow cd-arrow--prev" (click)="scrollRow(track, -1)" aria-label="Cuộn trái">‹</button>
+      <button type="button" class="cd-arrow cd-arrow--next" (click)="scrollRow(track, 1)" aria-label="Cuộn phải">›</button>
+    </div>
+  </section>
+
+  <section class="cd-block" *ngIf="otherRooms().length > 0">
+    <h2 class="cd-sub">Ý tưởng phối đồ khác</h2>
+    <div class="cd-others">
+      <a *ngFor="let x of otherRooms()" [routerLink]="['/coordinate', x.id]" class="cd-other">
+        <img [src]="x.coverImage" [alt]="x.name" loading="lazy">
+        <span>{{ x.name }}</span>
+      </a>
+    </div>
+  </section>
+
+  <section class="cd-block" *ngIf="relatedArticles().length > 0">
+    <h2 class="cd-sub">Bài viết hữu ích</h2>
+    <div class="cd-articles">
+      <a *ngFor="let a of relatedArticles()" [routerLink]="['/news', a.slug]" class="cd-article">
+        <span class="cd-article__img"><img [src]="a.coverImage" [alt]="a.title" loading="lazy"></span>
+        <span class="cd-article__body">
+          <span class="cd-article__date">{{ a.publishedAt }}</span>
+          <span class="cd-article__title">{{ a.title }}</span>
+          <span class="cd-article__ex">{{ a.excerpt }}</span>
+        </span>
+      </a>
+    </div>
+  </section>
+
+  <section class="cd-block">
+    <h2 class="cd-sub">Câu hỏi thường gặp</h2>
+    <div class="cd-faq">
+      <details *ngFor="let f of faqs">
+        <summary>{{ f.q }}</summary>
+        <p>{{ f.a }}</p>
+      </details>
+    </div>
+  </section>
+
+  <section class="cd-rel">
+    <h2 class="cd-sub">Nội dung liên quan</h2>
+    <a routerLink="/shop-the-room" class="cd-banner">
+      <img src="assets/hero-banner/hero-room-3d.png" alt="Phòng mẫu 3D" loading="lazy">
+      <span class="cd-banner__label">Tham quan phòng mẫu 3D</span>
+    </a>
+  </section>
+</div>
+
+<ng-template #notFound>
+  <div class="cd-missing">
+    <h1>Chưa có ý tưởng phối đồ</h1>
+    <p>Bộ phối đồ bạn tìm không tồn tại hoặc đang được cập nhật.</p>
+    <a routerLink="/catalog">Xem tất cả sản phẩm</a>
+  </div>
+</ng-template>

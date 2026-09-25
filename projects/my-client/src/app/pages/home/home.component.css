@@ -26,10 +26,11 @@
 
 .cat-title {
   margin: 0;
-  font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(30px, 4vw, 46px);
+  font-family: var(--font-family-heading, 'Inter', system-ui, sans-serif);
+  font-size: clamp(24px, 2.6vw, 32px);
   font-weight: 700;
-  line-height: 1.1;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
   color: #3B2418;
 }
 
@@ -151,66 +152,703 @@
   }
 }
 
-/* ---------- AI Idea Assistant banner: ảnh concept bên phải ---------- */
-/* Không còn zoom/shine/sparkle chạy vô hạn — ảnh chỉ trôi nhẹ theo cuộn (appParallax ghi --py).
-   scale(1.12) chừa mép để khi dịch dọc không lộ nền. */
-.ai-banner {
+/* ---------- AI Idea Assistant banner ---------- */
+.ai-cta {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  border-radius: 28px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #FFFDF9 0%, #F8EFE4 100%);
+  border: 1px solid rgba(58, 10, 18, 0.08);
+  box-shadow: 0 24px 60px rgba(60, 30, 20, 0.14);
+}
+
+.ai-cta__body {
+  padding: 48px 48px 48px 52px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.ai-cta__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 13px;
+  border-radius: 999px;
+  background: rgba(163, 21, 45, 0.1);
+  border: 1px solid rgba(163, 21, 45, 0.28);
+  color: #891226;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.ai-cta__title {
+  margin: 0;
+  font-family: var(--font-family-heading, 'Inter', sans-serif);
+  font-size: clamp(28px, 3vw, 40px);
+  line-height: 1.16;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #3A0A12;
+}
+
+.ai-cta__desc {
+  margin: 0;
+  max-width: 560px;
+  font-size: 15px;
+  line-height: 1.7;
+  color: #5B4A44;
+}
+
+.ai-cta__desc strong {
+  color: #3A0A12;
+}
+
+.ai-cta__steps {
+  list-style: none;
+  margin: 2px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.ai-cta__steps li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px 6px 6px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid rgba(58, 10, 18, 0.1);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #3A0A12;
+}
+
+.ai-cta__steps b {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #A3152D;
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11.5px;
+  font-weight: 800;
+}
+
+.ai-cta__actions {
+  margin-top: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.ai-cta__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 24px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.ai-cta__btn:hover {
+  transform: translateY(-2px);
+}
+
+.ai-cta__btn--primary {
+  border: none;
+  color: #ffffff;
+  background: linear-gradient(135deg, #B3182F 0%, #7D0F22 100%);
+  box-shadow: 0 10px 24px rgba(163, 21, 45, 0.32);
+}
+
+.ai-cta__btn--primary:hover {
+  box-shadow: 0 14px 30px rgba(163, 21, 45, 0.42);
+}
+
+.ai-cta__btn--ghost {
+  color: #3A0A12;
+  background: transparent;
+  border: 1.5px solid rgba(58, 10, 18, 0.25);
+}
+
+.ai-cta__btn--ghost:hover {
+  background: #F3E3D9;
+}
+
+/* Khung minh hoạ bên phải */
+.ai-cta__stage {
+  position: relative;
+  margin: 14px 14px 14px 0;
+  min-height: 340px;
+  border-radius: 22px;
+  overflow: hidden;
+  background: linear-gradient(150deg, #B3182F 0%, #5E0C1B 100%);
   isolation: isolate;
 }
 
-.ai-banner__photo-panel {
-  display: none;
+.ai-cta__glow {
   position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 33.333%;
-  min-width: 220px;
-  pointer-events: none;
-  overflow: hidden;
-  background-image:
-    linear-gradient(90deg, #FBF7EE 0%, rgba(251, 247, 238, 0) 24%),
-    url('/assets/home/ai-idea-concept.jpg');
-  background-size: 100% 100%, cover;
-  background-position: 0 0, center;
-  background-repeat: no-repeat, no-repeat;
-  transform: translate3d(0, var(--py, 0px), 0) scale(1.12);
-  will-change: transform;
+  right: -10%;
+  top: -20%;
+  width: 80%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(227, 168, 181, 0.55) 0%, rgba(227, 168, 181, 0) 65%);
+  z-index: -1;
+}
+
+.ai-cta__chat {
+  position: absolute;
+  left: 22px;
+  top: 26px;
+  width: min(250px, 52%);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ai-bubble {
+  padding: 10px 14px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+  animation: ai-float 4.5s ease-in-out infinite;
+}
+
+.ai-bubble--user {
+  align-self: flex-end;
+  background: #ffffff;
+  color: #3A0A12;
+  border-bottom-right-radius: 4px;
+}
+
+.ai-bubble--ai {
+  align-self: flex-start;
+  display: flex;
+  gap: 7px;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
+  color: #ffffff;
+  border-bottom-left-radius: 4px;
+  animation-delay: -1.5s;
+}
+
+.ai-bubble--ai app-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: #FFE27A;
+}
+
+.ai-brief {
+  align-self: flex-start;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(20, 8, 10, 0.4);
+  border: 1px dashed rgba(255, 255, 255, 0.4);
+  animation: ai-float 4.5s ease-in-out infinite;
+  animation-delay: -3s;
+}
+
+.ai-brief__label {
+  font-size: 10.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #E3A8B5;
+}
+
+.ai-brief__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ai-brief__chips i {
+  font-style: normal;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.ai-cta__goh {
+  position: absolute;
+  right: 6%;
+  bottom: -22px;
+  height: 82%;
+  max-height: 340px;
+  width: auto;
+  /* Ảnh gốc có đốm bụi trắng ở phần bóng dưới chân — cắt bỏ 7% đáy */
+  clip-path: inset(0 0 7% 0);
+  filter: drop-shadow(0 16px 20px rgba(0, 0, 0, 0.35));
+  animation: ai-goh-bob 3.6s ease-in-out infinite;
+  transform-origin: 50% 100%;
+}
+
+@keyframes ai-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes ai-goh-bob {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-6px) rotate(1.5deg); }
+}
+
+@media (max-width: 900px) {
+  .ai-cta {
+    grid-template-columns: 1fr;
+  }
+
+  .ai-cta__body {
+    padding: 34px 26px 26px;
+  }
+
+  .ai-cta__stage {
+    margin: 0 14px 14px;
+    min-height: 0;
+    padding: 22px 22px 172px;
+  }
+
+  .ai-cta__chat {
+    position: static;
+    width: auto;
+    max-width: 320px;
+  }
+
+  .ai-cta__goh {
+    height: 176px;
+    right: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-bubble,
+  .ai-brief,
+  .ai-cta__goh,
+  .ai-cta__btn {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* ---------- Shop The Room ----------
+   Desktop: cột trái (tiêu đề + danh sách sản phẩm trong phòng) | viewer 3D bên phải.
+   Mobile: tiêu đề -> viewer -> danh sách (grid-template-areas đổi thứ tự, không lặp markup). */
+.str {
+  --str-wine: #600816;
+  --str-red: #A3152D;
+  --str-text: #2A1A1A;
+  --str-muted: #6B5E5A;
+  --str-line: rgba(96, 8, 22, 0.1);
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: 'head' 'stage' 'side';
+  gap: 20px;
+  padding: 20px;
+  border-radius: 28px;
+  background: #FFFDF8;
+  border: 1px solid var(--str-line);
+  box-shadow: 0 30px 60px -40px rgba(96, 8, 22, 0.35);
 }
 
 @media (min-width: 1024px) {
-  .ai-banner__photo-panel {
-    display: block;
+  .str {
+    grid-template-columns: 340px minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    grid-template-areas: 'head stage' 'side stage';
+    gap: 12px 28px;
+    padding: 16px;
+  }
+
+  .str_head {
+    padding: 20px 0 0 16px;
+  }
+
+  .str_side {
+    padding: 0 0 16px 16px;
   }
 }
 
-/* ---------- Shop The Room card: ảnh phòng thật ở nửa trên, mờ dần vào nền kem ---------- */
-/* Ảnh dọc nên dư nhiều chiều cao — parallax bằng background-position theo --py */
-.sr-card__photo {
+.str_head {
+  grid-area: head;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.str_eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #F6E7E9;
+  color: var(--str-red);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.str_title {
+  margin: 0;
+  font-family: var(--font-family-heading, 'Inter', system-ui, sans-serif);
+  font-size: clamp(24px, 2.6vw, 32px);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--str-wine);
+}
+
+.str_lead {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--str-muted);
+}
+
+.str_tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.str_tab {
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--str-line);
+  background: #ffffff;
+  color: var(--str-text);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.str_tab:hover {
+  border-color: var(--str-wine);
+}
+
+.str_tab--active {
+  background: var(--str-wine);
+  border-color: var(--str-wine);
+  color: #ffffff;
+}
+
+.str_stage {
+  grid-area: stage;
+  position: relative;
+  min-width: 0;
+}
+
+.str_stage app-room-viewer {
+  height: 100%;
+}
+
+.str_note {
+  margin: 2px 0 0;
+  font-family: var(--font-family-heading, 'Cormorant Garamond', serif);
+  font-size: 16px;
+  font-style: italic;
+  line-height: 1.4;
+  color: var(--str-wine);
+}
+
+.str_head {
+  grid-area: head;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.str_eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #F6E7E9;
+  color: var(--str-red);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.str_title {
+  margin: 0;
+  font-family: var(--font-family-heading, 'Inter', system-ui, sans-serif);
+  font-size: clamp(24px, 2.6vw, 32px);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--str-wine);
+}
+
+.str_lead {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--str-muted);
+}
+
+.str_tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.str_tab {
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--str-line);
+  background: #ffffff;
+  color: var(--str-text);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.str_tab:hover {
+  border-color: var(--str-wine);
+}
+
+.str_tab--active {
+  background: var(--str-wine);
+  border-color: var(--str-wine);
+  color: #ffffff;
+}
+
+.str_stage {
+  grid-area: stage;
+  position: relative;
+  min-width: 0;
+}
+
+.str_stage__caption {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 260px;
-  z-index: 0;
-  background-image:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.32) 0%, rgba(255, 255, 255, 0.72) 60%, #FFFFFF 100%),
-    url('/assets/home/shop-the-room-hero.jpg');
-  background-size: 100% 100%, cover;
-  background-position: 0 0, center calc(22% + var(--py, 0px));
-  background-repeat: no-repeat, no-repeat;
+  right: 20px;
+  bottom: 20px;
+  max-width: 46%;
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: rgba(96, 8, 22, 0.78);
+  color: #ffffff;
+  font-family: var(--font-family-heading, 'Cormorant Garamond', serif);
+  font-size: 15px;
+  font-style: italic;
+  line-height: 1.35;
+  pointer-events: none;
+  z-index: 5;
 }
 
 @media (max-width: 767px) {
-  .sr-card__photo {
-    height: 180px;
+  .str_stage__caption {
+    display: none;
   }
+}
+
+.str_side {
+  grid-area: side;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.str_list-head {
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--str-line);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--str-muted);
+}
+
+.str_list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.str_item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 14px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.str_item:hover {
+  background: #F6EFE3;
+}
+
+.str_item__pin {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--str-wine);
+  box-shadow: 0 0 0 1.5px rgba(163, 21, 45, 0.3);
+  font-size: 11px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.str_item:hover .str_item__pin {
+  background: var(--str-red);
+  color: #ffffff;
+}
+
+.str_item__img {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  object-fit: cover;
+  background: #F3EEE2;
+}
+
+.str_item__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.str_item__name,
+.str_item__note {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.str_item__name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--str-text);
+}
+
+.str_item__note {
+  font-size: 11px;
+  color: var(--str-muted);
+}
+
+.str_item__price {
+  flex-shrink: 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--str-red);
+}
+
+.str_total {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 16px;
+  background: #F6EFE3;
+}
+
+.str_total__sum {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.str_total__sum span {
+  font-size: 12px;
+  color: var(--str-muted);
+}
+
+.str_total__sum strong {
+  font-size: 20px;
+  color: var(--str-wine);
+}
+
+.str_btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 16px;
+  border-radius: 999px;
+  border: none;
+  background: var(--str-red);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.str_btn:hover {
+  background: var(--str-wine);
+}
+
+.str_link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  align-self: flex-start;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--str-wine);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.str_link:hover {
+  color: var(--str-red);
 }
 
 /* ---------- Dải chữ chạy ngang (marquee) ---------- */
 .hm-marquee {
-  margin-top: 56px;
-  padding: 18px 0;
+  margin-top: 32px;
+  padding: 8px 0;
   border-top: 1px solid rgba(31, 23, 18, 0.12);
   border-bottom: 1px solid rgba(31, 23, 18, 0.12);
   overflow: hidden;
@@ -234,7 +872,7 @@
   display: inline-flex;
   align-items: center;
   font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(24px, 3.2vw, 40px);
+  font-size: clamp(12px, 0.8vw, 13px);
   font-style: italic;
   font-weight: 500;
   line-height: 1.2;
@@ -242,7 +880,7 @@
 }
 
 .hm-marquee__sep {
-  margin: 0 clamp(18px, 2.4vw, 36px);
+  margin: 0 clamp(12px, 1.3vw, 20px);
   font-style: normal;
   font-size: 0.5em;
   color: #A80D27;
@@ -338,7 +976,7 @@
 .ps-head { display: flex; flex-direction: column; gap: 12px; margin-bottom: 28px; }
 @media (min-width: 640px) { .ps-head { flex-direction: row; align-items: flex-end; justify-content: space-between; } }
 .ps-eyebrow { margin: 0 0 8px; font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #7A6558; }
-.ps-title { margin: 0; font-family: 'Cormorant Garamond', serif; font-size: clamp(28px, 3.6vw, 40px); font-weight: 700; line-height: 1.1; color: #3B2418; }
+.ps-title { margin: 0; font-family: var(--font-family-heading, 'Inter', system-ui, sans-serif); font-size: clamp(24px, 2.6vw, 32px); font-weight: 700; line-height: 1.2; letter-spacing: -0.01em; color: #3B2418; }
 .ps-sub { margin: 8px 0 0; max-width: 560px; font-size: 14px; color: #7A6558; }
 .ps-link { display: inline-flex; gap: 6px; font-size: 13px; font-weight: 600; color: #3B2418; padding-bottom: 2px; border-bottom: 1px solid #3B2418; white-space: nowrap; transition: color .2s, border-color .2s; }
 .ps-link:hover { color: #A3152D; border-color: #A3152D; }

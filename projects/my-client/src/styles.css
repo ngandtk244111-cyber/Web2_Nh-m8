@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -386,4 +386,15 @@ html {
 /* Viewer video (video-topics) đang mở: ẩn banner nổi 2 bên — viewer đã có cột trái/phải riêng. */
 body.vw-open .fsb {
   display: none;
+}
+
+/* Tiêu đề mục dùng chung (trang chủ...): 1 font/cỡ/màu duy nhất để các mục đồng bộ. */
+.sec-title {
+  margin: 0;
+  font-family: var(--font-family-heading, 'Inter', system-ui, sans-serif);
+  font-size: clamp(24px, 2.6vw, 32px);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: #3B2418;
 }

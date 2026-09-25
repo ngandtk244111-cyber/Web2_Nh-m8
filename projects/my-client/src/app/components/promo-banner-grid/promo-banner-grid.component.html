@@ -1,55 +1,75 @@
 <section class="pg_section">
   <div class="pg_row">
-    <a
-      *ngFor="let banner of squareBanners"
-      [routerLink]="banner.link"
-      class="pg_square"
-      [style.background-image]="banner.image ? 'url(' + banner.image + ')' : banner.gradient">
-      <div class="pg_square__icon">
-        <app-icon [name]="banner.icon" [size]="26"></app-icon>
-      </div>
-      <span class="pg_eyebrow">{{ banner.eyebrow }}</span>
-      <h3 class="pg_title">{{ banner.title }}</h3>
-      <p class="pg_desc">{{ banner.description }}</p>
-      <span class="pg_cta">{{ banner.ctaLabel }} <app-icon name="chevron-right" [size]="14"></app-icon></span>
-    </a>
+    <ng-container *ngFor="let banner of squareBanners">
+
+      <!-- Thẻ ảnh phủ kín -->
+      <a *ngIf="banner.layout === 'photo'" [routerLink]="banner.link" class="pg_card pg_photo">
+        <span class="pg_photo__frame" aria-hidden="true">
+          <img [src]="banner.image" alt="" class="pg_photo__img" loading="lazy" draggable="false">
+        </span>
+        <span class="pg_photo__shade" aria-hidden="true"></span>
+        <span class="pg_chip pg_chip--icon">
+          <app-icon [name]="banner.icon" [size]="20"></app-icon>
+        </span>
+        <div class="pg_photo__text">
+          <span class="pg_eyebrow">{{ banner.eyebrow }}</span>
+          <h3 class="pg_title">{{ banner.title }}</h3>
+          <p class="pg_desc">{{ banner.description }}</p>
+          <span class="pg_btn pg_btn--glass">{{ banner.ctaLabel }} <app-icon name="chevron-right" [size]="14"></app-icon></span>
+        </div>
+      </a>
+
+      <!-- Thẻ ưu đãi có mascot -->
+      <a *ngIf="banner.layout === 'mascot'" [routerLink]="banner.link" class="pg_card pg_promo">
+        <span class="pg_promo__glow" aria-hidden="true"></span>
+        <div class="pg_promo__text">
+          <span class="pg_eyebrow pg_eyebrow--soft">{{ banner.eyebrow }}</span>
+          <h3 class="pg_title pg_title--promo">{{ banner.title }}</h3>
+          <p class="pg_desc">{{ banner.description }}</p>
+          <span class="pg_ticket" *ngIf="banner.code">
+            <app-icon name="tag" [size]="13"></app-icon>
+            Mã: <strong>{{ banner.code }}</strong>
+          </span>
+          <span class="pg_btn pg_btn--light">{{ banner.ctaLabel }} <app-icon name="chevron-right" [size]="14"></app-icon></span>
+        </div>
+        <div class="pg_promo__mascot">
+          <img [src]="banner.image" alt="Goh - mascot Luméa" loading="lazy">
+        </div>
+      </a>
+
+    </ng-container>
   </div>
 
-  <a
-    [routerLink]="wideBanner.link"
-    class="pg_wide"
-    [style.background]="wideBanner.gradient">
-    <video
-      *ngIf="wideBanner.video as video"
-      class="pg_wide__video"
-      [autoplay]="true"
-      loop
-      muted
-      playsinline
-      preload="metadata"
-      aria-hidden="true">
-      <source *ngIf="video.webm" [src]="video.webm" type="video/webm">
-      <source [src]="video.mp4" type="video/mp4">
-    </video>
-    <span class="pg_wide__overlay" aria-hidden="true"></span>
-    <span class="pg_wide__sparkles" aria-hidden="true"></span>
-    <span class="pg_wide__shine" aria-hidden="true"></span>
-
-    <span class="pg_wide__badge">
-      <app-icon name="sparkles" [size]="11"></app-icon>
-      Tính năng mới
-    </span>
-
+  <a [routerLink]="wideBanner.link" class="pg_card pg_wide">
     <div class="pg_wide__text">
-      <span class="pg_eyebrow">{{ wideBanner.eyebrow }}</span>
+      <span class="pg_new"><app-icon name="sparkles" [size]="11"></app-icon> Tính năng mới</span>
+      <span class="pg_eyebrow pg_eyebrow--soft">{{ wideBanner.eyebrow }}</span>
       <h3 class="pg_title pg_title--wide">{{ wideBanner.title }}</h3>
       <p class="pg_desc">{{ wideBanner.description }}</p>
-      <span class="pg_cta pg_cta--wide">{{ wideBanner.ctaLabel }} <app-icon name="chevron-right" [size]="14"></app-icon></span>
+      <span class="pg_btn pg_btn--red">{{ wideBanner.ctaLabel }} <app-icon name="chevron-right" [size]="14"></app-icon></span>
     </div>
 
-    <div class="pg_wide__icon">
-      <span class="pg_wide__icon-ring"></span>
-      <app-icon [name]="wideBanner.icon" [size]="88"></app-icon>
+    <div class="pg_wide__stage" aria-hidden="true">
+      <video
+        class="pg_wide__video"
+        [autoplay]="true"
+        loop
+        muted
+        playsinline
+        preload="metadata">
+        <source *ngIf="wideBanner.video.webm" [src]="wideBanner.video.webm" type="video/webm">
+        <source [src]="wideBanner.video.mp4" type="video/mp4">
+      </video>
+      <div class="pg_wide__panel">
+        <span class="pg_wide__panel-label">Màu sắc</span>
+        <span class="pg_wide__swatches">
+          <i *ngFor="let c of wideBanner.swatches; let i = index" [style.background]="c" [class.is-active]="i === 2"></i>
+        </span>
+      </div>
+      <div class="pg_wide__engrave">
+        <app-icon name="sliders" [size]="13"></app-icon>
+        Khắc tên · <strong>{{ wideBanner.engraving }}</strong>
+      </div>
     </div>
   </a>
 </section>

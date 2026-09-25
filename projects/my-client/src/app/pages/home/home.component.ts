@@ -1,8 +1,12 @@
-import { Component, OnInit, effect } from '@angular/core';
+import { Component, OnInit, ViewChild, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ProductService } from '../../core/services/product.service';
-import { ProductCategory } from '../../core/models/product.model';
+import { Product, ProductCategory } from '../../core/models/product.model';
+import { Room } from '../../core/models/room.model';
+import { CartService } from '../../core/services/cart.service';
+import { ToastService } from '../../core/services/toast.service';
+import { MascotService } from '../../core/services/mascot.service';
 import { RoomService } from '../../core/services/room.service';
 import { AiAssistantService } from '../../core/services/ai-assistant.service';
 import { CommunityService } from '../../core/services/community.service';
@@ -20,7 +24,6 @@ import { VideoTopicsComponent } from '../../components/video-topics/video-topics
 import { AppIconComponent } from '../../components/icon/icon.component';
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
 import { ScrollRevealDirective } from '../../shared/directives/scroll-reveal.directive';
-import { ParallaxDirective } from '../../shared/directives/parallax.directive';
 
 @Component({
   selector: 'app-home',
@@ -39,8 +42,8 @@ import { ParallaxDirective } from '../../shared/directives/parallax.directive';
     FavoriteStylesComponent,
     VideoTopicsComponent,
     AppIconComponent,
-    ScrollRevealDirective,
-    ParallaxDirective
+    VndPipe,
+    ScrollRevealDirective
   ],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css'
@@ -48,7 +51,13 @@ import { ParallaxDirective } from '../../shared/directives/parallax.directive';
 export class HomeComponent implements OnInit {
   customizableProducts: any[] = [];
   readyStockProducts: any[] = [];
-  activeRoom: any;
+  activeRoom: Room | undefined;
+  /** Các phòng hiển thị ở section Shop The Room — chỉ phòng dựng sẵn có điểm sản phẩm
+   *  (phòng scan .glb nặng và chưa gắn sản phẩm để dành cho trang /shop-the-room). */
+  showcaseRooms: Room[] = [];
+  /** Sản phẩm trong phòng đang xem, đúng thứ tự điểm đánh dấu (số 1..N trên viewer). */
+  roomProducts: { product: Product; note: string; pin: number }[] = [];
+  @ViewChild(RoomViewerComponent) roomViewer?: RoomViewerComponent;
   communityPosts: any[] = [];
   newsArticles: any[] = [];
   /** "Mẹo Sống": bài viết thật thuộc chuyên mục Xu hướng Decor (tips sắp xếp/chăm sóc không gian sống). */
@@ -90,7 +99,10 @@ export class HomeComponent implements OnInit {
     private roomService: RoomService,
     private aiService: AiAssistantService,
     private communityService: CommunityService,
-    private newsService: NewsService
+    private newsService: NewsService,
+    private cartService: CartService,
+    private toastService: ToastService,
+    private mascotService: MascotService
   ) {
     // Dữ liệu giờ nạp bất đồng bộ từ backend — dùng effect() để tự cập nhật khi signal đổi,
     // thay vì chỉ đọc 1 lần lúc ngOnInit (lúc đó dữ liệu có thể chưa kịp tải về).
@@ -100,7 +112,12 @@ export class HomeComponent implements OnInit {
       this.readyStockProducts = this.productService.readyStockProducts().slice(0, 10);
     });
     effect(() => {
-      this.activeRoom = this.roomService.getActiveRoom();
+      this.productService.products();
+      this.showcaseRooms = this.roomService.rooms().filter(r => r.roomType !== 'glb_scene' && r.hotspots.length > 0);
+      if (!this.activeRoom || !this.showcaseRooms.some(r => r.id === this.activeRoom!.id)) {
+        this.activeRoom = this.showcaseRooms[0] ?? this.roomService.getActiveRoom();
+      }
+      this.updateRoomProducts();
     });
     effect(() => {
       this.communityPosts = this.communityService.posts().slice(0, 5);
@@ -112,6 +129,38 @@ export class HomeComponent implements OnInit {
   }
 
   ngOnInit(): void {}
+
+  selectRoom(room: Room): void {
+    if (room.id === this.activeRoom?.id) return;
+    this.activeRoom = room;
+    this.updateRoomProducts();
+  }
+
+  private updateRoomProducts(): void {
+    this.roomProducts = (this.activeRoom?.hotspots ?? [])
+      .map((h, i) => ({ product: this.productService.getProductById(h.productId), note: h.annotationNote, pin: i + 1 }))
+      .filter((x): x is { product: Product; note: string; pin: number } => !!x.product);
+  }
+
+  /** Bỏ phần tên tiếng Anh trong ngoặc cho tab: "Góc Học Tập ... (Minimal Study Desk)" -> "Góc Học Tập ...". */
+  shortRoomName(name: string): string {
+    return name.replace(/\s*\(.*\)\s*$/, '');
+  }
+
+  get roomLookTotal(): number {
+    return this.roomProducts.reduce((sum, x) => sum + x.product.basePrice, 0);
+  }
+
+  focusRoomProduct(productId: string): void {
+    this.roomViewer?.selectHotspotByProduct(productId);
+  }
+
+  addRoomLookToCart(): void {
+    if (this.roomProducts.length === 0) return;
+    this.roomProducts.forEach(x => this.cartService.addToCart(x.product, 1));
+    this.toastService.success(`Đã thêm ${this.roomProducts.length} sản phẩm của "${this.activeRoom?.name}" vào giỏ hàng`);
+    this.mascotService.react('happy');
+  }
 
   openAiAssistant(): void {
     this.aiService.openModal();

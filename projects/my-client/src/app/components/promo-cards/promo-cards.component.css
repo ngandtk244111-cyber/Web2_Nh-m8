@@ -2,6 +2,8 @@
   display: block;
 }
 
+/* Dải dịch vụ kiểu editorial: 4 cột ngăn bằng đường kẻ mảnh, góc vuông, không card/shadow —
+   đồng bộ với ngôn ngữ đường line + serif của FAQ, dải chữ chạy và banner vuông. */
 .pc_section {
   width: min(1280px, calc(100% - 32px));
   margin: 0 auto;
@@ -10,76 +12,135 @@
 .pc_grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
+  border-top: 1px solid rgba(31, 23, 18, 0.14);
+  border-bottom: 1px solid rgba(31, 23, 18, 0.14);
 }
 
 .pc_card {
+  position: relative;
   display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px;
-  border-radius: 18px;
-  background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  flex-direction: column;
+  padding: 26px 28px 24px;
   text-decoration: none;
-  transition: border-color 0.15s ease, transform 0.15s ease, background 0.15s ease;
+  color: #1F1712;
+  transition: background-color 0.35s ease;
+}
+
+.pc_card + .pc_card {
+  border-left: 1px solid rgba(31, 23, 18, 0.14);
+}
+
+/* Đường đỏ đô chạy từ trái sang ở mép dưới khi hover */
+.pc_card::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: #A80D27;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .pc_card:hover {
-  border-color: rgba(163, 21, 45, 0.4);
-  background: #F6EBE3;
-  transform: translateY(-2px);
+  background-color: rgba(255, 255, 255, 0.6);
+}
+
+.pc_card:hover::after {
+  transform: scaleX(1);
+}
+
+.pc_card:focus-visible {
+  outline: 1px solid #A80D27;
+  outline-offset: -1px;
+}
+
+.pc_card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.pc_card__index {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1;
+  color: #A80D27;
 }
 
 .pc_card__icon {
-  flex-shrink: 0;
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
-  background: rgba(163, 21, 45, 0.12);
-  color: #891226;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: inline-flex;
+  color: #3C332D;
+  transition: color 0.3s ease, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.pc_card__text {
-  flex: 1;
-  min-width: 0;
+.pc_card:hover .pc_card__icon {
+  color: #A80D27;
+  transform: translateY(-2px);
 }
 
 .pc_card__title {
-  font-size: 13.5px;
-  font-weight: 700;
-  color: #111111;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: #1F1712;
 }
 
 .pc_card__subtitle {
-  font-size: 11.5px;
-  color: #888888;
-  margin-top: 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  margin-top: 6px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: #93877E;
+}
+
+.pc_card__more {
+  margin-top: 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #3C332D;
+  transition: color 0.3s ease;
 }
 
 .pc_card__arrow {
-  flex-shrink: 0;
-  color: #555555;
-  transition: transform 0.15s ease, color 0.15s ease;
+  display: inline-block;
+  transition: transform 0.3s ease;
+}
+
+.pc_card:hover .pc_card__more {
+  color: #A80D27;
 }
 
 .pc_card:hover .pc_card__arrow {
-  color: #A3152D;
-  transform: translateX(3px);
+  transform: translateX(4px);
 }
 
 @media (max-width: 900px) {
   .pc_grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .pc_card {
+    padding: 22px 20px;
+  }
+
+  /* 2 cột: bỏ kẻ trái ở đầu mỗi hàng, thêm kẻ ngang giữa 2 hàng */
+  .pc_card:nth-child(odd) {
+    border-left: none;
+  }
+
+  .pc_card:nth-child(n + 3) {
+    border-top: 1px solid rgba(31, 23, 18, 0.14);
   }
 }
 
@@ -88,7 +149,28 @@
     grid-template-columns: 1fr;
   }
 
-  .pc_card__subtitle {
-    white-space: normal;
+  .pc_card + .pc_card {
+    border-left: none;
+    border-top: 1px solid rgba(31, 23, 18, 0.14);
+  }
+
+  .pc_card {
+    padding: 20px 4px;
+  }
+
+  .pc_card__title {
+    font-size: 20px;
+  }
+
+  .pc_card__more {
+    margin-top: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pc_card::after,
+  .pc_card__icon,
+  .pc_card__arrow {
+    transition: none;
   }
 }

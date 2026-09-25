@@ -22,6 +22,7 @@ import { Product } from '../../core/models/product.model';
 import { ProductService } from '../../core/services/product.service';
 import { CartService } from '../../core/services/cart.service';
 import { MascotService } from '../../core/services/mascot.service';
+import { ToastService } from '../../core/services/toast.service';
 import { AppIconComponent } from '../icon/icon.component';
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
 import { ViewerRuntime } from '../../shared/three/viewer-runtime';
@@ -47,6 +48,8 @@ export class RoomViewerComponent implements OnInit, AfterViewInit, OnChanges, On
 
   @Input() room!: Room;
   @Input() qualityMode: QualityMode = 'auto';
+  /** true: giãn theo chiều cao của phần tử cha (tối thiểu 440px) thay vì chiều cao cố định theo breakpoint. */
+  @Input() fill = false;
   @Output() hotspotClicked = new EventEmitter<Product>();
 
   hotspotViewModels: HotspotViewModel[] = [];
@@ -70,7 +73,8 @@ export class RoomViewerComponent implements OnInit, AfterViewInit, OnChanges, On
     private cartService: CartService,
     private router: Router,
     private ngZone: NgZone,
-    private mascotService: MascotService
+    private mascotService: MascotService,
+    private toastService: ToastService
   ) {}
 
   private debugPointerStart: { x: number; y: number } | null = null;
@@ -290,6 +294,14 @@ export class RoomViewerComponent implements OnInit, AfterViewInit, OnChanges, On
 
   addToCart(product: Product): void {
     this.cartService.addToCart(product, 1);
+    this.toastService.success(`Đã thêm "${product.name}" vào giỏ hàng`);
+    this.mascotService.react('happy');
+  }
+
+  /** Chọn điểm đánh dấu từ bên ngoài (vd: danh sách sản phẩm cạnh viewer ở trang chủ). */
+  selectHotspotByProduct(productId: string): void {
+    const item = this.hotspotViewModels.find(vm => vm.hotspot.productId === productId);
+    if (item) this.selectHotspot(item);
   }
 
   resetCamera(): void {

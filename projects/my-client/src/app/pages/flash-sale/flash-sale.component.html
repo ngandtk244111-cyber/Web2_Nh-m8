@@ -156,7 +156,7 @@
   <!-- ============ G. FEATURED DEAL ============ -->
   <section class="fs-container fs-section" *ngIf="featured() as f" appScrollReveal="up">
     <article class="fs-featured">
-      <a [routerLink]="f.slot.status === 'live' ? ['/product', f.product.slug] : null" class="fs-featured__media" [attr.aria-label]="f.slot.status === 'live' ? 'Xem chi tiết ' + f.product.name : null">
+      <a [routerLink]="['/product', f.product.slug]" class="fs-featured__media" [attr.aria-label]="'Xem chi tiết ' + f.product.name">
         <img [src]="f.product.images[1] || f.product.images[0]" [alt]="f.product.name" loading="lazy">
         <span class="fs-badge">-{{ f.discount }}%</span>
       </a>
@@ -273,7 +273,6 @@
         loading="lazy">
 
       <a
-        *ngIf="d.slot.status !== 'upcoming'"
         [routerLink]="['/product', d.product.slug]"
         class="fs-card__link"
         [attr.aria-label]="'Xem chi tiết ' + d.product.name">
@@ -292,7 +291,7 @@
     <div class="fs-card__body">
       <p class="fs-card__cat">{{ d.product.categoryName }}</p>
       <h3 class="fs-card__name">
-        <a [routerLink]="d.slot.status === 'upcoming' ? null : ['/product', d.product.slug]" [class.fs-card__name--locked]="d.slot.status === 'upcoming'">{{ d.product.name }}</a>
+        <a [routerLink]="['/product', d.product.slug]">{{ d.product.name }}</a>
       </h3>
 
       <div class="fs-price">

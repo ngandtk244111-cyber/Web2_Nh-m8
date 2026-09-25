@@ -2,7 +2,8 @@
   position: fixed;
   bottom: 20px;
   left: 20px;
-  z-index: 32;
+  /* Trên banner dọc 2 bên (35) để popup túi xu không bị che; vẫn dưới nút chat (40) và modal/drawer (50+). */
+  z-index: 36;
 }
 
 .fcw__btn {

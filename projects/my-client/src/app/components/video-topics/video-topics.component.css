@@ -4,8 +4,9 @@
 
 .vt_slider {
   position: relative;
-  /* Chừa chỗ cho nút mũi tên 2 bên (xem .vt_nav) để chúng không bao giờ đè lên nội dung thẻ. */
-  padding: 0 48px;
+  /* Khoảng lề 2 bên carousel; mũi tên (.vt_nav) bám theo mép thẻ dựa vào biến này. */
+  --vt-pad: 48px;
+  padding: 0 var(--vt-pad);
 }
 
 /* Floating side banner (position: fixed, luôn nổi giữa màn hình 2 bên, xem
@@ -13,7 +14,7 @@
    carousel (kể cả mũi tên) không bao giờ chạm/đè lên banner. */
 @media (min-width: 1201px) {
   .vt_slider {
-    padding: 0 170px;
+    --vt-pad: 170px;
   }
 }
 
@@ -58,14 +59,17 @@
 .vt_nav:disabled {
   opacity: 0.35;
   cursor: default;
+  pointer-events: none;
 }
 
+/* Mũi tên nằm đè nửa lên mép thẻ ngoài cùng — không đặt ở mép ngoài vùng lề vì ở màn >1200px
+   chỗ đó trùng với banner nổi 2 bên (fixed, z-index cao hơn) và bị che mất. */
 .vt_nav--prev {
-  left: 0;
+  left: calc(var(--vt-pad) - 18px);
 }
 
 .vt_nav--next {
-  right: 0;
+  right: calc(var(--vt-pad) - 18px);
 }
 
 .vt_card {
@@ -251,12 +255,20 @@
   }
 
   .vt_slider {
-    padding: 0 42px;
+    --vt-pad: 42px;
   }
 
   .vt_nav {
     width: 32px;
     height: 32px;
+  }
+
+  .vt_nav--prev {
+    left: calc(var(--vt-pad) - 16px);
+  }
+
+  .vt_nav--next {
+    right: calc(var(--vt-pad) - 16px);
   }
 }
 

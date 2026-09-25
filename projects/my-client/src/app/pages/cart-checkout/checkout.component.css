@@ -1,0 +1,28 @@
+
+/* ===== Typography: serif display headings + Inter body ===== */
+:host h1.font-serif,
+:host h2.font-serif,
+:host h3.font-serif,
+:host h4.font-serif {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-weight: 700;
+  letter-spacing: 0;
+  color: #3B2418;
+}
+:host h1.font-serif { font-size: clamp(34px, 4.4vw, 48px); line-height: 1.05; }
+:host h3.font-serif { font-size: 26px; line-height: 1.15; }
+:host h1.font-serif + p { font-size: 14px; color: #7A6558; margin-top: 8px; }
+
+:host a[routerLink="/catalog"].text-xs,
+:host a[routerlink="/catalog"].text-xs {
+  font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #7A6558;
+}
+
+:host { font-feature-settings: 'tnum' 1, 'lnum' 1; }
+:host label { letter-spacing: 0.02em; }
+:host .text-lg.font-semibold,
+:host .text-lg.font-bold {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 30px; font-weight: 700; line-height: 1; letter-spacing: 0;
+}
+:host .text-neutral-600.text-xs, :host .text-xs.text-neutral-600 { font-size: 13px; }

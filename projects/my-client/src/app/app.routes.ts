@@ -46,6 +46,14 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/community/community.component').then(m => m.CommunityComponent),
   },
   {
+    path: 'coordinate',
+    loadComponent: () => import('./pages/coordinate/coordinate.component').then(m => m.CoordinateComponent),
+  },
+  {
+    path: 'coordinate/:roomId',
+    loadComponent: () => import('./pages/coordinate/coordinate.component').then(m => m.CoordinateComponent),
+  },
+  {
     path: 'style-quiz',
     loadComponent: () => import('./pages/style-quiz/style-quiz.component').then(m => m.StyleQuizComponent),
   },

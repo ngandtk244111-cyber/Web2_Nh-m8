@@ -121,7 +121,7 @@ export class DecorDealsComponent implements OnInit, OnDestroy {
     this.slotDates().map(d => this.notificationService.flashSaleKey(d)) as [string, string, string]
   );
 
-  /** Chỉ khi deal đang diễn ra mới được xem/mua sản phẩm; chưa tới giờ thì chỉ được đặt nhắc. */
+  /** Chỉ khi deal đang diễn ra mới hiện nút "Chọn mua"; chưa tới giờ thì hiện nút đặt nhắc (vẫn bấm vào thẻ để xem giá gốc). */
   readonly canViewProducts = computed(() => this.activeSlotStatus() === 'Đang diễn ra');
 
   readonly isReminded = computed(() =>
@@ -223,7 +223,6 @@ export class DecorDealsComponent implements OnInit, OnDestroy {
 
   goToProduct(p: Product, event: Event): void {
     event.stopPropagation();
-    if (!this.canViewProducts()) return;
     this.router.navigate(['/product', p.slug]);
   }
 

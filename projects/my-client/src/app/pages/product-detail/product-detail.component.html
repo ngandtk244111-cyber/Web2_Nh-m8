@@ -188,10 +188,16 @@
           </button>
 
           <div class="pd_price-row">
-            <span class="pd_price">{{ product.basePrice | vnd }}</span>
-            <span *ngIf="product.originalPrice" class="pd_price--original">{{ product.originalPrice | vnd }}</span>
+            <span class="pd_price">{{ displayPrice | vnd }}</span>
+            <span *ngIf="discountPercent" class="pd_price--original">{{ product.originalPrice | vnd }}</span>
             <span *ngIf="discountPercent" class="pd_discount">-{{ discountPercent }}%</span>
           </div>
+
+          <a *ngIf="isFlashUpcoming" routerLink="/flash-sale" class="pd_flash">
+            <span class="pd_flash__brand"><app-icon name="bell" [size]="15"></app-icon> FLASH SALE</span>
+            <span class="pd_flash__time">BẮT ĐẦU SAU {{ flashStartLabel }}</span>
+            <app-icon name="chevron-right" [size]="14"></app-icon>
+          </a>
 
           <!-- Options -->
           <ng-container *ngIf="product.customization as c">
@@ -261,7 +267,7 @@
               </button>
             </div>
             <button type="button" (click)="addToCart()" class="pd_btn pd_btn--primary">
-              Thêm vào giỏ · {{ product.basePrice * quantity | vnd }}
+              Thêm vào giỏ · {{ displayPrice * quantity | vnd }}
             </button>
           </div>
           <button type="button" (click)="buyNow()" class="pd_btn pd_btn--ghost">Mua ngay</button>

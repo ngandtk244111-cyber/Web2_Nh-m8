@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -16,6 +16,7 @@ import { AppIconComponent } from '../../components/icon/icon.component';
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
 import { ToastService } from '../../core/services/toast.service';
 import { MascotService } from '../../core/services/mascot.service';
+import { FlashSaleService, FlashSlot } from '../../core/services/flash-sale.service';
 
 type ReviewFilter = 'all' | 'with-images' | '5' | '4' | 'low';
 type InfoPanel = 'dimensions' | 'details' | 'delivery' | 'care';
@@ -85,7 +86,7 @@ const PRODUCT_FAQ: FaqItem[] = [
   templateUrl: './product-detail.component.html',
   styleUrl: './product-detail.component.css'
 })
-export class ProductDetailComponent implements OnInit {
+export class ProductDetailComponent implements OnInit, OnDestroy {
   product: Product | undefined;
   pickRows: PickRow[] = [];
   taggedCommunityPosts: CommunityPost[] = [];
@@ -124,10 +125,16 @@ export class ProductDetailComponent implements OnInit {
     private communityService: CommunityService,
     private toastService: ToastService,
     private authService: AuthService,
-    private mascotService: MascotService
+    private mascotService: MascotService,
+    private flash: FlashSaleService
   ) {}
 
+  ngOnDestroy(): void {
+    this.flash.release();
+  }
+
   ngOnInit(): void {
+    this.flash.acquire();
     this.route.paramMap.subscribe(params => {
       const slug = params.get('slug');
       if (slug) {
@@ -260,9 +267,32 @@ export class ProductDetailComponent implements OnInit {
     }));
   }
 
+  /** Khung Flash Sale của sản phẩm này (null nếu không phải hàng Flash Sale). */
+  get flashSlot(): FlashSlot | null {
+    return this.product ? this.flash.slotFor(this.product) : null;
+  }
+
+  /** Deal Flash Sale chưa tới giờ: vẫn xem và mua được nhưng ở giá gốc, kèm thông báo deal sắp diễn ra. */
+  get isFlashUpcoming(): boolean {
+    return this.flashSlot?.status === 'upcoming';
+  }
+
+  /** Giá đang áp dụng: giá gốc nếu deal chưa diễn ra (hoặc đã hết), giá khuyến mãi nếu đang diễn ra. */
+  get displayPrice(): number {
+    return this.product ? this.flash.effectiveBasePrice(this.product) : 0;
+  }
+
+  /** Nhãn "08:00, 25 Thg 9" của mốc bắt đầu deal. */
+  get flashStartLabel(): string {
+    const slot = this.flashSlot;
+    if (!slot) return '';
+    const d = new Date(slot.start);
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}, ${d.getDate()} Thg ${d.getMonth() + 1}`;
+  }
+
   get discountPercent(): number | null {
-    if (!this.product?.originalPrice || this.product.originalPrice <= this.product.basePrice) return null;
-    return Math.round(((this.product.originalPrice - this.product.basePrice) / this.product.originalPrice) * 100);
+    if (!this.product?.originalPrice || this.product.originalPrice <= this.displayPrice) return null;
+    return Math.round(((this.product.originalPrice - this.displayPrice) / this.product.originalPrice) * 100);
   }
 
   get selectedSizeLabel(): string | undefined {

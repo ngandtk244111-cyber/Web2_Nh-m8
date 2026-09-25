@@ -6,8 +6,10 @@
   height: min(356px, calc(100vh - 200px));
   min-height: 260px;
   transform: translateY(-50%);
-  /* Cao hơn z-index của video viewer dạng reels (.vw = 200) để banner luôn nổi trên nền viewer. */
-  z-index: 210;
+  /* Trên nội dung trang/mascot (32) nhưng dưới nút chat (40), menu header (44+) và mọi modal/drawer (50+)
+     — trước đây 210 làm banner đè lên modal đăng nhập, chat AI, giỏ hàng... Video viewer tự ẩn banner
+     qua body.vw-open (styles.css) nên không cần nổi trên viewer nữa. */
+  z-index: 35;
   border-radius: 0;
   overflow: hidden;
   display: block;

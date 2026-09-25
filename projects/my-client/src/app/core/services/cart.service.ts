@@ -1,12 +1,15 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
 import { CartItem, Coupon } from '../models/cart.model';
 import { Product, SelectedCustomization } from '../models/product.model';
 import { MOCK_COUPONS } from '../data/mock-data';
+import { FlashSaleService } from './flash-sale.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CartService {
+  private readonly flashSale = inject(FlashSaleService);
+
   private readonly storageKey = 'deco3d_cart';
   private readonly checkoutSelectionKey = 'deco3d_checkout_selection';
 
@@ -146,9 +149,10 @@ export class CartService {
 
   // Calculate customized unit price
   calculateUnitPrice(product: Product, customization?: SelectedCustomization): number {
-    if (!customization) return product.basePrice;
+    const basePrice = this.flashSale.effectiveBasePrice(product);
+    if (!customization) return basePrice;
 
-    let base = product.basePrice;
+    let base = basePrice;
     base += customization.color?.priceDelta || 0;
     base += customization.material?.priceDelta || 0;
     base += customization.finish?.priceDelta || 0;

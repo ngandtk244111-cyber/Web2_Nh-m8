@@ -79,39 +79,80 @@
 
       <!-- 5. SHOP THE ROOM -->
       <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" appScrollReveal="up">
-        <div class="relative overflow-hidden bg-gradient-to-br from-[#FFFFFF] via-[#FBF7EE] to-[#FFFFFF] rounded-3xl p-6 sm:p-10 border border-amber-500/25 shadow-2xl sr-card">
+        <div class="str">
 
-          <span class="sr-card__photo" aria-hidden="true" [appParallax]="0.18" [parallaxMax]="60"></span>
+          <!-- Tiêu đề + chọn phòng -->
+          <header class="str_head">
+            <span class="str_eyebrow">
+              <app-icon name="room" [size]="13"></app-icon>
+              Trải nghiệm độc quyền
+            </span>
+            <h2 class="str_title">Shop The Room</h2>
+            <p class="str_lead">Dạo quanh không gian 3D Luméa phối sẵn — chạm vào từng món để xem giá và mua ngay.</p>
 
-          <div class="relative z-10 flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
-            <div>
-              <div class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-amber-700 bg-amber-500/15 px-3 py-1 rounded-full mb-2 border border-amber-500/30">
-                <app-icon name="room" [size]="14"></app-icon>
-                <span>Trải Nghiệm Độc Quyền</span>
-              </div>
-              <h2 class="font-serif text-2xl sm:text-3xl font-bold text-amber-800">
-                Shop The Room: Khám Phá Không Gian 3D
-              </h2>
-              <p class="text-xs sm:text-sm text-neutral-600 mt-1 max-w-xl">
-                Dạo quanh căn phòng học tập & làm việc được Luméa phối sẵn. Nhấp vào các điểm đánh dấu trên từng sản phẩm để xem thông tin, giá và đặt mua ngay!
-              </p>
+            <div *ngIf="showcaseRooms.length > 1" class="str_tabs" role="tablist" aria-label="Chọn không gian">
+              <button
+                *ngFor="let r of showcaseRooms"
+                type="button"
+                role="tab"
+                class="str_tab"
+                [class.str_tab--active]="r.id === activeRoom?.id"
+                [attr.aria-selected]="r.id === activeRoom?.id"
+                (click)="selectRoom(r)">
+                {{ shortRoomName(r.name) }}
+              </button>
             </div>
+            <p *ngIf="activeRoom?.tagline" class="str_note">“{{ activeRoom?.tagline }}”</p>
+          </header>
 
-            <a
-              routerLink="/shop-the-room"
-              class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-neutral-100 hover:bg-neutral-200 text-amber-700 border border-amber-500/30 text-xs font-semibold transition self-start md:self-auto hover:border-amber-400">
-              <span>Xem tất cả không gian phòng →</span>
-            </a>
+          <!-- Viewer 3D -->
+          <div class="str_stage">
+            <app-room-viewer *ngIf="activeRoom" [room]="activeRoom" [fill]="true" qualityMode="auto"></app-room-viewer>
           </div>
 
-          <!-- Live 3D Room Viewer: hiển thị ngay khi vào trang, không cần bấm kích hoạt -->
-          <app-room-viewer *ngIf="activeRoom" [room]="activeRoom" qualityMode="auto" class="relative z-10 block"></app-room-viewer>
+          <!-- Sản phẩm trong phòng + mua trọn bộ -->
+          <div class="str_side">
+            <div class="str_list-head">
+              <span>Có trong phòng này</span>
+              <span>{{ roomProducts.length }} món</span>
+            </div>
+
+            <ol class="str_list">
+              <li *ngFor="let x of roomProducts">
+                <button type="button" class="str_item" (click)="focusRoomProduct(x.product.id)" [attr.aria-label]="'Xem ' + x.product.name + ' trong phòng'">
+                  <span class="str_item__pin">{{ x.pin }}</span>
+                  <img [src]="x.product.images[0]" [alt]="x.product.name" loading="lazy" class="str_item__img">
+                  <span class="str_item__text">
+                    <span class="str_item__name">{{ x.product.name }}</span>
+                    <span class="str_item__note">{{ x.note }}</span>
+                  </span>
+                  <span class="str_item__price">{{ x.product.basePrice | vnd }}</span>
+                </button>
+              </li>
+            </ol>
+
+            <div *ngIf="roomProducts.length > 0" class="str_total">
+              <div class="str_total__sum">
+                <span>Trọn bộ không gian</span>
+                <strong>{{ roomLookTotal | vnd }}</strong>
+              </div>
+              <button type="button" class="str_btn" (click)="addRoomLookToCart()">
+                <app-icon name="cart" [size]="14"></app-icon>
+                Thêm cả bộ vào giỏ
+              </button>
+            </div>
+
+            <a routerLink="/shop-the-room" class="str_link">
+              Xem tất cả không gian phòng <app-icon name="chevron-right" [size]="13"></app-icon>
+            </a>
+          </div>
 
         </div>
       </section>
 
       <!-- 6. ĐÃ XEM GẦN ĐÂY -->
-      <app-recently-viewed-section></app-recently-viewed-section>
+      <!-- block: thẻ host mặc định inline nên space-y-24 không tạo được khoảng cách; empty:hidden ẩn hẳn khi chưa xem sản phẩm nào để không thừa khoảng trống. -->
+      <app-recently-viewed-section class="block empty:hidden"></app-recently-viewed-section>
 
       <!-- 7. SẢN PHẨM IN 3D CÓ THỂ TÙY BIẾN -->
       <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" appScrollReveal="up">
@@ -133,41 +174,56 @@
 
       <!-- AI IDEA ASSISTANT BANNER: đi kèm ngay sau tùy biến 3D -->
       <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" appScrollReveal="up">
-        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#FFFFFF] via-[#FBF7EE] to-[#FFFFFF] text-white p-8 sm:p-12 shadow-2xl border border-amber-500/25 ai-banner">
+        <div class="ai-cta">
 
-          <div class="relative z-10 max-w-2xl space-y-5">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 text-amber-700 text-xs font-semibold border border-amber-500/30">
+          <div class="ai-cta__body">
+            <span class="ai-cta__pill">
               <app-icon name="sparkles" [size]="14"></app-icon>
-              <span>AI Idea Assistant</span>
-            </div>
+              AI Idea Assistant
+            </span>
 
-            <h3 class="font-serif text-3xl sm:text-4xl font-bold tracking-tight text-amber-800">
-              Bạn Có Ý Tưởng Riêng Nhưng Chưa Biết Vẽ?
-            </h3>
+            <h3 class="ai-cta__title">Bạn Có Ý Tưởng Riêng Nhưng Chưa Biết Vẽ?</h3>
 
-            <p class="text-neutral-700 text-sm sm:text-base leading-relaxed">
+            <p class="ai-cta__desc">
               Hãy trò chuyện tự nhiên với Trợ lý AI của chúng tôi. AI sẽ hỏi các chi tiết về kích thước, màu sắc, phong cách để tổng hợp thành một <strong>Design Brief chuẩn</strong>, phác họa concept ảnh và gửi thẳng đến shop để báo giá sản xuất!
             </p>
 
-            <div class="pt-2 flex flex-wrap gap-4">
-              <button
-                type="button"
-                (click)="openAiAssistant()"
-                class="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-white font-extrabold text-sm shadow-[0_4px_25px_rgba(205, 129, 142,0.35)] hover:shadow-[0_4px_35px_rgba(205, 129, 142,0.5)] transition flex items-center gap-2">
+            <ol class="ai-cta__steps">
+              <li><b>1</b> Kể ý tưởng</li>
+              <li><b>2</b> AI lập Design Brief</li>
+              <li><b>3</b> Shop báo giá</li>
+            </ol>
+
+            <div class="ai-cta__actions">
+              <button type="button" (click)="openAiAssistant()" class="ai-cta__btn ai-cta__btn--primary">
                 <app-icon name="sparkles" [size]="18"></app-icon>
                 <span>Trò Chuyện Với AI Ngay</span>
               </button>
 
-              <a
-                routerLink="/custom-request/new"
-                class="px-6 py-3.5 rounded-2xl bg-neutral-100/80 hover:bg-neutral-200 text-neutral-800 font-semibold text-sm border border-neutral-300 hover:border-amber-400/50 transition flex items-center gap-2">
+              <a routerLink="/custom-request/new" class="ai-cta__btn ai-cta__btn--ghost">
                 <span>Tự điền form gửi yêu cầu</span>
               </a>
             </div>
           </div>
 
-          <!-- Decorative right graphic: ảnh concept AI/3D thật, trôi nhẹ theo cuộn trang (parallax) -->
-          <div class="ai-banner__photo-panel" aria-hidden="true" [appParallax]="0.1" [parallaxMax]="24"></div>
+          <!-- Khung minh hoạ: mô phỏng cuộc trò chuyện với AI + mascot Goh -->
+          <div class="ai-cta__stage" aria-hidden="true">
+            <span class="ai-cta__glow"></span>
+
+            <div class="ai-cta__chat">
+              <div class="ai-bubble ai-bubble--user">Mình muốn một chậu cây hình mèo, cao khoảng 15cm.</div>
+              <div class="ai-bubble ai-bubble--ai">
+                <app-icon name="sparkles" [size]="13"></app-icon>
+                Bạn thích tông màu nào? Mình gợi ý màu be, hợp phòng ngủ.
+              </div>
+              <div class="ai-brief">
+                <span class="ai-brief__label">Design Brief</span>
+                <span class="ai-brief__chips"><i>15cm</i><i>Màu be</i><i>Nhựa PLA</i></span>
+              </div>
+            </div>
+
+            <img src="assets/mascot/goh-mascot.png" alt="" class="ai-cta__goh">
+          </div>
 
         </div>
       </section>
@@ -175,7 +231,7 @@
       <!-- 8. TIN TỨC (bố cục theo mục "暮らしのヒント" của Nitori: tiêu đề + "Xem tất cả", hàng ô vuông) -->
       <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" appScrollReveal="up">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="font-sans text-xl sm:text-2xl font-bold text-neutral-900 leading-8">Tin Tức</h2>
+          <h2 class="sec-title">Tin Tức</h2>
           <a routerLink="/news" class="text-sm text-neutral-700 hover:text-amber-600 transition">Xem tất cả &rsaquo;</a>
         </div>
 
@@ -196,7 +252,7 @@
           <div class="flex items-center gap-2">
             <span class="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_6px_#CD818E]"></span>
             <div>
-              <h2 class="font-serif text-2xl sm:text-3xl font-bold text-amber-800">Mẹo Sống</h2>
+              <h2 class="sec-title">Mẹo Sống</h2>
               <p class="text-xs sm:text-sm text-neutral-600 mt-1">
                 Mẹo sắp xếp không gian, chăm sóc góc học tập/làm việc và decor đời sống hằng ngày
               </p>
@@ -232,7 +288,25 @@
       <!-- 10. Ý TƯỞNG PHỐI ĐỒ (bố cục theo mục "コーディネートアイデア" của Nitori: hàng ô ngang, không chú thích rời) -->
       <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" appScrollReveal="up">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="font-sans text-xl sm:text-2xl font-bold text-neutral-900 leading-8">Ý Tưởng Phối Đồ</h2>
+          <h2 class="sec-title">Ý Tưởng Phối Đồ</h2>
+          <a routerLink="/coordinate" class="text-sm text-neutral-700 hover:text-amber-600 transition">Xem tất cả &rsaquo;</a>
+        </div>
+
+        <div class="nt-row" appScrollReveal="stagger">
+          <a
+            *ngFor="let room of showcaseRooms"
+            [routerLink]="['/coordinate', room.id]"
+            class="nt-tile nt-tile--wide">
+            <img class="print-layer" [src]="room.coverImage" [alt]="room.name" loading="lazy">
+            <span class="nt-tile__cap line-clamp-2">{{ room.name }}</span>
+          </a>
+        </div>
+      </section>
+
+      <!-- 10b. DECOR COMMUNITY (bài đăng của cộng đồng) -->
+      <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" *ngIf="communityPosts.length > 0" appScrollReveal="up">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="sec-title">Decor Community</h2>
           <a routerLink="/community" class="text-sm text-neutral-700 hover:text-amber-600 transition">Xem tất cả &rsaquo;</a>
         </div>
 

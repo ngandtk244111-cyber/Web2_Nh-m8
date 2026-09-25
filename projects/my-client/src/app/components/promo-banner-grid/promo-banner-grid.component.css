@@ -12,269 +12,374 @@
 
 .pg_row {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
 }
 
-.pg_square {
+.pg_card {
   position: relative;
-  aspect-ratio: 16 / 11;
-  border-radius: 20px;
+  border-radius: 22px;
   overflow: hidden;
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  gap: 6px;
   text-decoration: none;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  transition: transform 0.2s ease;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
-.pg_square:hover,
-.pg_wide:hover {
-  transform: translateY(-2px);
+.pg_card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 18px 40px rgba(60, 30, 20, 0.22);
 }
 
-.pg_square__icon {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  width: 46px;
-  height: 46px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.14);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #ffffff;
-}
+/* ---------- Chữ dùng chung ---------- */
 
 .pg_eyebrow {
   font-size: 11px;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: rgba(255, 255, 255, 0.75);
-  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.55);
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.pg_eyebrow--soft {
+  color: var(--accent-blush, #E3A8B5);
 }
 
 .pg_title {
   font-family: var(--font-family-heading, 'Inter', sans-serif);
-  font-size: 20px;
+  font-size: 24px;
+  line-height: 1.2;
   font-weight: 700;
   color: #ffffff;
   margin: 0;
-  max-width: 380px;
-  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.55);
 }
 
 .pg_desc {
-  font-size: 12.5px;
-  color: rgba(255, 255, 255, 0.8);
+  font-size: 13px;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.82);
   margin: 0;
-  max-width: 340px;
-  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.55);
 }
 
-.pg_cta {
-  margin-top: 6px;
+.pg_btn {
+  margin-top: 10px;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
+  width: fit-content;
+  padding: 10px 18px;
+  border-radius: 999px;
   font-size: 12.5px;
   font-weight: 800;
-  color: #ffffff;
-  width: fit-content;
-  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.55);
+  transition: background 0.2s ease, transform 0.2s ease;
 }
 
-.pg_wide {
+.pg_btn app-icon {
+  display: inline-flex;
+  transition: transform 0.2s ease;
+}
+
+.pg_card:hover .pg_btn app-icon {
+  transform: translateX(3px);
+}
+
+.pg_btn--glass {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(8px);
+}
+
+.pg_btn--light {
+  color: var(--accent-primary, #A3152D);
+  background: #ffffff;
+}
+
+.pg_btn--red {
+  color: #ffffff;
+  background: var(--accent-primary, #A3152D);
+}
+
+.pg_card:hover .pg_btn--red {
+  background: var(--accent-dark, #891226);
+}
+
+/* ---------- Thẻ ảnh: phòng 3D ---------- */
+
+.pg_photo {
+  container-type: size;
+  aspect-ratio: 1450 / 754;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  background: #d9c9b0;
+}
+
+/* Ảnh gốc có lề trắng + khung bo góc riêng: cắt đúng phần tranh (1450x754 trong ảnh 1498x1050)
+   và dùng đơn vị cq để luôn "cover" kể cả khi thẻ đổi tỉ lệ trên mobile. */
+.pg_photo__frame {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: max(100cqw, calc(100cqh * 1.9231));
+  height: max(100cqh, calc(100cqw / 1.9231));
+  transition: transform 0.6s ease;
+}
+
+.pg_photo:hover .pg_photo__frame {
+  transform: translate(-50%, -50%) scale(1.04);
+}
+
+.pg_photo__img {
+  position: absolute;
+  max-width: none;
+  width: 103.31%;
+  height: 139.26%;
+  left: -1.655%;
+  top: -19.89%;
+  display: block;
+}
+
+.pg_photo__shade {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to top, rgba(24, 16, 12, 0.86) 0%, rgba(24, 16, 12, 0.4) 42%, rgba(24, 16, 12, 0) 72%);
+}
+
+/* Che luôn icon nhà đã "in" sẵn trong ảnh gốc */
+.pg_chip--icon {
+  position: absolute;
+  top: 4px;
+  left: 8px;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  background: rgba(43, 33, 28, 0.92);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+}
+
+/* Padding đặt ở đây (không đặt ở .pg_photo) vì đơn vị cq tính theo content-box của container */
+.pg_photo__text {
   position: relative;
-  min-height: 180px;
-  border-radius: 20px;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 476px;
+  padding: 26px 28px;
+}
+
+/* ---------- Thẻ ưu đãi + mascot ---------- */
+
+.pg_promo {
+  aspect-ratio: 1450 / 754;
+  padding: 26px 26px 26px 32px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
-  padding: 28px 36px;
-  text-decoration: none;
-  background-size: 220% 220%;
-  animation: pg-gradient-shift 9s ease-in-out infinite;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  gap: 16px;
+  background: linear-gradient(135deg, #A3152D 0%, #6C0E1E 100%);
+  --s: clamp(120px, 17vw, 200px);
 }
 
-.pg_wide:hover {
-  box-shadow: 0 16px 40px rgba(163, 21, 45, 0.35);
+.pg_promo__glow {
+  position: absolute;
+  right: -8%;
+  top: -25%;
+  width: 62%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(227, 168, 181, 0.5) 0%, rgba(227, 168, 181, 0) 65%);
+  pointer-events: none;
+}
+
+.pg_promo__text {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.pg_title--promo {
+  font-size: 26px;
+}
+
+.pg_ticket {
+  margin-top: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  padding: 6px 12px;
+  border-radius: 10px;
+  border: 1.5px dashed rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.1);
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.pg_ticket strong {
+  color: #ffffff;
+  letter-spacing: 0.08em;
+}
+
+/* Huy hiệu tròn chứa mascot Goh (PNG nền trong suốt) — đầu nhô nhẹ khỏi vòng tròn cho sinh động. */
+.pg_promo__mascot {
+  position: relative;
+  flex-shrink: 0;
+  width: var(--s);
+  height: var(--s);
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 40%, #FFF8EC 0%, #F6E6D2 70%);
+  box-shadow: 0 0 0 5px #F3E3D9, 0 14px 34px rgba(0, 0, 0, 0.35);
+  transition: transform 0.35s ease;
+}
+
+.pg_promo__mascot img {
+  position: absolute;
+  left: 50%;
+  bottom: 3%;
+  height: 104%;
+  width: auto;
+  transform: translateX(-50%);
+  filter: drop-shadow(0 8px 10px rgba(108, 14, 30, 0.25));
+  pointer-events: none;
+}
+
+.pg_promo:hover .pg_promo__mascot {
+  transform: rotate(-4deg) scale(1.04);
+}
+
+/* ---------- Banner rộng: tùy biến 3D ---------- */
+
+.pg_wide {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  min-height: 250px;
+  background:
+    radial-gradient(120% 140% at 0% 100%, rgba(163, 21, 45, 0.38) 0%, rgba(163, 21, 45, 0) 55%),
+    #1E1815;
+}
+
+.pg_wide__text {
+  position: relative;
+  z-index: 1;
+  padding: 36px 8px 36px 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+}
+
+.pg_title--wide {
+  font-size: 28px;
+  max-width: 560px;
+}
+
+.pg_wide__text .pg_desc {
+  max-width: 420px;
+}
+
+.pg_new {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  width: fit-content;
+  padding: 4px 11px;
+  border-radius: 999px;
+  border: 1px solid rgba(227, 168, 181, 0.5);
+  background: rgba(227, 168, 181, 0.14);
+  color: var(--accent-blush, #E3A8B5);
+  font-size: 10.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 2px;
+}
+
+.pg_wide__stage {
+  position: relative;
+  min-height: 200px;
 }
 
 .pg_wide__video {
   position: absolute;
   inset: 0;
-  z-index: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
   pointer-events: none;
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 34%);
+  mask-image: linear-gradient(to right, transparent 0%, #000 34%);
 }
 
-.pg_wide__overlay {
+.pg_wide__panel,
+.pg_wide__engrave {
   position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  background: linear-gradient(115deg, rgba(6, 10, 18, 0.78) 0%, rgba(226, 180, 188, 0.68) 35%, rgba(163, 21, 45, 0.55) 65%, rgba(205, 129, 142, 0.35) 130%);
-}
-
-.pg_wide__shine {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  background: linear-gradient(100deg, transparent 40%, rgba(255, 255, 255, 0.16) 50%, transparent 60%);
-  background-size: 220% 100%;
-  animation: pg-shine-sweep 5s ease-in-out infinite;
-}
-
-.pg_wide__sparkles {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  opacity: 0.55;
-  background-image:
-    radial-gradient(1.5px 1.5px at 12% 25%, #CD818E 100%, transparent 100%),
-    radial-gradient(1.5px 1.5px at 28% 68%, #ffffff 100%, transparent 100%),
-    radial-gradient(2px 2px at 46% 20%, #CD818E 100%, transparent 100%),
-    radial-gradient(1.5px 1.5px at 62% 55%, #ffffff 100%, transparent 100%),
-    radial-gradient(2px 2px at 78% 30%, #CD818E 100%, transparent 100%),
-    radial-gradient(1.5px 1.5px at 90% 65%, #ffffff 100%, transparent 100%);
-  animation: pg-sparkle-twinkle 3.2s ease-in-out infinite;
-}
-
-.pg_wide__badge {
-  position: absolute;
-  top: 18px;
   right: 20px;
-  z-index: 2;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 5px 11px;
-  border-radius: 999px;
-  background: rgba(205, 129, 142, 0.16);
-  border: 1px solid rgba(205, 129, 142, 0.5);
-  color: #CD818E;
-  font-size: 10.5px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  animation: pg-badge-pulse 2.4s ease-in-out infinite;
+  gap: 10px;
+  padding: 9px 14px;
+  border-radius: 14px;
+  background: rgba(20, 14, 12, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(12px);
+  color: #ffffff;
+  font-size: 11.5px;
 }
 
-.pg_wide__text {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  max-width: 560px;
+.pg_wide__engrave {
+  top: 20px;
+  gap: 7px;
 }
 
-.pg_title--wide {
-  font-size: 24px;
-  max-width: 480px;
+.pg_wide__engrave strong {
+  letter-spacing: 0.1em;
 }
 
-.pg_cta--wide {
-  margin-top: 10px;
-  padding: 10px 18px;
-  border-radius: 999px;
-  background: linear-gradient(120deg, #CD818E, #CD818E);
-  color: #E2B4BC;
-  text-shadow: none;
-  box-shadow: 0 0 0 0 rgba(205, 129, 142, 0.55);
-  animation: pg-cta-glow 2.4s ease-in-out infinite;
-  transition: transform 0.15s ease;
+.pg_wide__panel {
+  bottom: 20px;
 }
 
-.pg_cta--wide:hover {
-  transform: translateY(-1px) scale(1.03);
+.pg_wide__panel-label {
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.78);
 }
 
-.pg_cta--wide app-icon {
-  animation: pg-cta-arrow 1.6s ease-in-out infinite;
+.pg_wide__swatches {
+  display: inline-flex;
+  gap: 7px;
 }
 
-.pg_wide__icon {
-  position: relative;
-  z-index: 2;
-  flex-shrink: 0;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  color: rgba(214, 228, 245, 0.9);
-  animation: pg-icon-float 4s ease-in-out infinite;
+.pg_wide__swatches i {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  box-sizing: border-box;
 }
 
-.pg_wide__icon-ring {
-  position: absolute;
-  inset: -18px;
-  border-radius: 999px;
-  background: radial-gradient(circle, rgba(205, 129, 142, 0.35) 0%, transparent 70%);
-  animation: pg-ring-pulse 2.4s ease-in-out infinite;
+.pg_wide__swatches i.is-active {
+  border-color: #ffffff;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.35);
 }
 
-@media (min-width: 780px) {
-  .pg_wide__icon {
-    display: flex;
+/* ---------- Responsive ---------- */
+
+@media (max-width: 1000px) {
+  .pg_title,
+  .pg_title--promo {
+    font-size: 20px;
   }
-}
 
-@keyframes pg-gradient-shift {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-}
-
-@keyframes pg-shine-sweep {
-  0%, 55% { background-position: 220% 0; }
-  100% { background-position: -20% 0; }
-}
-
-@keyframes pg-sparkle-twinkle {
-  0%, 100% { opacity: 0.35; }
-  50% { opacity: 0.85; }
-}
-
-@keyframes pg-badge-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(205, 129, 142, 0.35); }
-  50% { box-shadow: 0 0 0 6px rgba(205, 129, 142, 0); }
-}
-
-@keyframes pg-cta-glow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(205, 129, 142, 0.45); }
-  50% { box-shadow: 0 0 0 8px rgba(205, 129, 142, 0); }
-}
-
-@keyframes pg-cta-arrow {
-  0%, 100% { transform: translateX(0); }
-  50% { transform: translateX(3px); }
-}
-
-@keyframes pg-icon-float {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-6px) rotate(4deg); }
-}
-
-@keyframes pg-ring-pulse {
-  0%, 100% { transform: scale(0.9); opacity: 0.7; }
-  50% { transform: scale(1.15); opacity: 0.3; }
+  .pg_title--wide {
+    font-size: 24px;
+  }
 }
 
 @media (max-width: 780px) {
@@ -282,15 +387,55 @@
     grid-template-columns: 1fr;
   }
 
-  .pg_square {
-    aspect-ratio: 16 / 9;
+  .pg_photo {
+    aspect-ratio: 4 / 3;
+  }
+
+  .pg_promo {
+    aspect-ratio: auto;
+    min-height: 240px;
+    --s: 150px;
+  }
+
+  .pg_title,
+  .pg_title--promo {
+    font-size: 22px;
   }
 
   .pg_wide {
-    padding: 22px 24px;
+    grid-template-columns: 1fr;
   }
 
-  .pg_title--wide {
-    font-size: 19px;
+  .pg_wide__text {
+    padding: 28px 24px 8px;
+  }
+
+  .pg_wide__video {
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 34%);
+    mask-image: linear-gradient(to bottom, transparent 0%, #000 34%);
+  }
+
+  .pg_wide__stage {
+    min-height: 210px;
+  }
+}
+
+@media (max-width: 480px) {
+  .pg_promo {
+    --s: 110px;
+    padding: 22px 18px 22px 22px;
+  }
+
+  .pg_photo__text {
+    padding: 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pg_card,
+  .pg_photo__frame,
+  .pg_promo__mascot,
+  .pg_btn app-icon {
+    transition: none;
   }
 }

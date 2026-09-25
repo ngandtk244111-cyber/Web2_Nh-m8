@@ -1,212 +1,145 @@
-    <!-- Modal Backdrop -->
-    <div 
+    <div
       *ngIf="aiService.isOpen()"
       (click)="aiService.closeModal()"
-      class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 transition-opacity">
-      
-      <!-- Modal Box -->
-      <div 
+      class="aic_backdrop">
+
+      <section
         (click)="$event.stopPropagation()"
-        class="bg-[#FFFFFF] w-full max-w-2xl rounded-3xl shadow-2xl border border-amber-500/30 overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
-        
-        <!-- Modal Header -->
-        <div class="px-6 py-4 bg-[#FBF7EE] border-b border-neutral-200 flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <!-- Mascot nổi bị backdrop của modal che -> hiển thị mascot ngay trong header, đổi biểu cảm theo trạng thái chat. -->
-            <div class="ai_mascot" [attr.data-expression]="mascotService.expression()">
-              <img [src]="mascotService.image()" alt="Goh - trợ lý Luméa" class="ai_mascot__img">
-            </div>
-            <div>
-              <div class="flex items-center gap-2">
-                <h3 class="font-serif text-lg font-bold text-amber-800">AI Idea Assistant</h3>
-                <span class="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-700 border border-amber-500/30">
-                  Concept Studio
-                </span>
-              </div>
-              <p class="text-xs text-neutral-600">Trợ lý phát triển ý tưởng & phác thảo thiết kế đồ decor in 3D</p>
-            </div>
-          </div>
+        class="aic"
+        role="dialog"
+        aria-label="Trò chuyện với Goh, trợ lý AI của Luméa">
 
-          <div class="flex items-center gap-2">
-            <button 
-              (click)="aiService.resetChat()" 
-              title="Làm mới cuộc trò chuyện"
-              class="p-2 rounded-full hover:bg-neutral-200 text-neutral-600 hover:text-amber-400 transition">
-              <app-icon name="rotate" [size]="16"></app-icon>
-            </button>
-            <button 
-              (click)="aiService.closeModal()"
-              class="p-2 rounded-full hover:bg-neutral-200 text-neutral-600 hover:text-amber-400 transition">
-              <app-icon name="x" [size]="20"></app-icon>
-            </button>
+        <!-- Header -->
+        <header class="aic_head">
+          <div class="aic_avatar ai_mascot" [attr.data-expression]="mascotService.expression()">
+            <img [src]="mascotService.image()" alt="Goh - trợ lý Luméa" class="ai_mascot__img">
+            <span class="aic_online" aria-hidden="true"></span>
           </div>
-        </div>
+          <div class="aic_who">
+            <h3 class="aic_name">Goh · AI Idea Assistant</h3>
+            <p class="aic_status">
+              <span class="aic_dot"></span>
+              {{ aiService.isThinking() ? 'Đang suy nghĩ...' : 'Đang hoạt động' }}
+            </p>
+          </div>
+          <button type="button" (click)="aiService.resetChat()" title="Làm mới cuộc trò chuyện" aria-label="Làm mới cuộc trò chuyện" class="aic_icon">
+            <app-icon name="rotate" [size]="16"></app-icon>
+          </button>
+          <button type="button" (click)="aiService.closeModal()" aria-label="Đóng" class="aic_icon">
+            <app-icon name="x" [size]="20"></app-icon>
+          </button>
+        </header>
 
-        <!-- Chat Conversation Area -->
-        <div class="flex-1 overflow-y-auto px-6 py-5 space-y-4">
-          
-          <!-- Messages -->
-          <div *ngFor="let msg of aiService.messages()" class="flex flex-col" [class.items-end]="msg.sender === 'USER'">
-            
-            <div class="flex items-start gap-2.5 max-w-[85%]" [class.flex-row-reverse]="msg.sender === 'USER'">
-              
-              <!-- Avatar -->
-              <div 
+        <!-- Conversation -->
+        <div class="aic_body">
+          <p class="aic_hint">Trợ lý phát triển ý tưởng &amp; phác thảo thiết kế đồ decor in 3D</p>
+
+          <div *ngFor="let msg of aiService.messages()" class="aic_row" [class.aic_row--user]="msg.sender === 'USER'">
+
+            <div class="aic_msg" [class.aic_msg--user]="msg.sender === 'USER'">
+              <img
                 *ngIf="msg.sender === 'AI'"
-                class="w-7 h-7 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 flex-shrink-0 mt-0.5">
-                <app-icon name="sparkles" [size]="14"></app-icon>
-              </div>
-
-              <!-- Bubble -->
-              <div>
-                <div 
-                  [class]="msg.sender === 'USER' 
-                    ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white font-medium rounded-2xl rounded-tr-sm px-4 py-2.5 text-sm shadow-md' 
-                    : 'bg-[#FBF7EE] text-neutral-800 border border-neutral-300/80 rounded-2xl rounded-tl-sm px-4 py-3 text-sm shadow-soft space-y-2 whitespace-pre-line'">
-                  {{ msg.text }}
-                </div>
-                <span class="text-[10px] text-neutral-500 mt-1 block" [class.text-right]="msg.sender === 'USER'">
-                  {{ msg.time }}
-                </span>
+                src="assets/mascot/goh-mascot.png"
+                alt=""
+                class="aic_msg__av"
+               >
+              <div class="aic_msg__col">
+                <div class="aic_bubble" [class.aic_bubble--user]="msg.sender === 'USER'">{{ msg.text }}</div>
+                <span class="aic_time">{{ msg.time }}</span>
               </div>
             </div>
 
             <!-- Quick replies -->
-            <div *ngIf="msg.quickReplies && msg.quickReplies.length > 0 && !aiService.isThinking()" class="mt-2.5 ml-9 flex flex-wrap gap-1.5">
+            <div *ngIf="msg.quickReplies && msg.quickReplies.length > 0 && !aiService.isThinking()" class="aic_qr">
               <button
                 *ngFor="let qr of msg.quickReplies"
+                type="button"
                 (click)="sendQuickReply(qr)"
-                class="text-xs bg-neutral-200 hover:bg-neutral-300 text-amber-700 hover:text-amber-800 px-3 py-1.5 rounded-full border border-neutral-300 hover:border-amber-500/40 transition shadow-sm active:scale-95">
+                class="aic_qr__btn">
                 {{ qr }}
               </button>
             </div>
 
-            <!-- Suggested products (sản phẩm có sẵn trong shop, do AI chọn từ catalog thật) -->
-            <div *ngIf="msg.suggestedProducts && msg.suggestedProducts.length > 0" class="mt-2.5 ml-9 grid grid-cols-2 gap-2 max-w-[85%]">
+            <!-- Suggested products -->
+            <div *ngIf="msg.suggestedProducts && msg.suggestedProducts.length > 0" class="aic_products">
               <a
                 *ngFor="let p of msg.suggestedProducts"
                 [routerLink]="['/product', p.slug]"
                 (click)="aiService.closeModal()"
-                class="flex items-center gap-2 bg-neutral-100 hover:bg-neutral-200 border border-neutral-300 rounded-xl p-2 transition group">
-                <img [src]="p.images[0]" [alt]="p.name" class="w-10 h-10 rounded-lg object-cover flex-shrink-0">
+                class="aic_prod">
+                <img [src]="p.images[0]" [alt]="p.name">
                 <div class="min-w-0">
-                  <div class="text-xs font-semibold text-neutral-800 truncate group-hover:text-amber-700">{{ p.name }}</div>
-                  <div class="text-[11px] text-amber-700 font-bold">{{ p.basePrice | vnd }}</div>
+                  <div class="aic_prod__name">{{ p.name }}</div>
+                  <div class="aic_prod__price">{{ p.basePrice | vnd }}</div>
                 </div>
               </a>
             </div>
-
           </div>
 
-          <!-- Thinking Loader -->
-          <div *ngIf="aiService.isThinking()" class="flex items-center gap-2 text-neutral-600 text-xs">
-            <img src="assets/mascot/goh-thinking.png" alt="Goh đang suy nghĩ" class="ai_thinking-mascot">
-            <span class="inline-block w-2 h-2 rounded-full bg-amber-400 animate-bounce"></span>
-            <span class="inline-block w-2 h-2 rounded-full bg-amber-400 animate-bounce [animation-delay:0.2s]"></span>
-            <span class="inline-block w-2 h-2 rounded-full bg-amber-400 animate-bounce [animation-delay:0.4s]"></span>
-            <span class="ml-1 text-amber-400 font-medium">AI đang tổng hợp ý tưởng & chuẩn bị Design Brief...</span>
+          <!-- Typing -->
+          <div *ngIf="aiService.isThinking()" class="aic_row">
+            <div class="aic_msg">
+              <img src="assets/mascot/goh-thinking.png" alt="Goh đang suy nghĩ" class="aic_msg__av">
+              <div class="aic_bubble aic_typing" aria-label="AI đang soạn tin">
+                <span></span><span></span><span></span>
+              </div>
+            </div>
+            <p class="aic_typing__txt">Đang tổng hợp ý tưởng &amp; chuẩn bị Design Brief...</p>
           </div>
 
-          <!-- Generated Design Brief Card & Concept Preview -->
-          <div *ngIf="aiService.currentBrief()" class="mt-4 bg-[#FBF7EE] rounded-2xl border border-amber-500/30 p-5 shadow-soft space-y-4">
-            
-            <div class="flex items-center justify-between border-b border-neutral-200 pb-3">
-              <div class="flex items-center gap-2">
-                <span class="w-3 h-3 rounded-full bg-amber-400 shadow-[0_0_8px_#CD818E]"></span>
-                <h4 class="font-serif text-base font-bold text-amber-800">Bản Tổng Hợp Ý Tưởng (Design Brief)</h4>
-              </div>
-              <span class="text-[11px] font-semibold text-amber-700 bg-amber-500/20 border border-amber-500/30 px-2 py-1 rounded-lg">
-                Đã sẵn sàng tạo yêu cầu
-              </span>
+          <!-- Design Brief -->
+          <div *ngIf="aiService.currentBrief()" class="aic_brief">
+            <div class="aic_brief__head">
+              <h4>Bản Tổng Hợp Ý Tưởng</h4>
+              <span>Sẵn sàng tạo yêu cầu</span>
             </div>
 
-            <!-- Brief Items Grid -->
-            <div class="grid grid-cols-2 gap-3 text-xs">
-              <div class="bg-neutral-100/90 p-2.5 rounded-xl border border-neutral-300/70">
-                <span class="text-neutral-500 block text-[10px] uppercase font-bold tracking-wider">Sản Phẩm</span>
-                <span class="font-semibold text-neutral-800">{{ aiService.currentBrief()?.productType }}</span>
-              </div>
+            <dl class="aic_brief__grid">
+              <div><dt>Sản phẩm</dt><dd>{{ aiService.currentBrief()?.productType }}</dd></div>
+              <div><dt>Chủ đề</dt><dd>{{ aiService.currentBrief()?.theme }}</dd></div>
+              <div><dt>Phong cách</dt><dd>{{ aiService.currentBrief()?.style }}</dd></div>
+              <div><dt>Màu sắc</dt><dd>{{ aiService.currentBrief()?.color }}</dd></div>
+              <div><dt>Kích thước</dt><dd>{{ aiService.currentBrief()?.size }}</dd></div>
+              <div><dt>Chữ / Tên khắc</dt><dd>{{ aiService.currentBrief()?.customText || 'Không khắc' }}</dd></div>
+            </dl>
 
-              <div class="bg-neutral-100/90 p-2.5 rounded-xl border border-neutral-300/70">
-                <span class="text-neutral-500 block text-[10px] uppercase font-bold tracking-wider">Chủ Đề & Cảm Hứng</span>
-                <span class="font-semibold text-neutral-800">{{ aiService.currentBrief()?.theme }}</span>
-              </div>
-
-              <div class="bg-neutral-100/90 p-2.5 rounded-xl border border-neutral-300/70">
-                <span class="text-neutral-500 block text-[10px] uppercase font-bold tracking-wider">Phong Cách</span>
-                <span class="font-semibold text-neutral-800">{{ aiService.currentBrief()?.style }}</span>
-              </div>
-
-              <div class="bg-neutral-100/90 p-2.5 rounded-xl border border-neutral-300/70">
-                <span class="text-neutral-500 block text-[10px] uppercase font-bold tracking-wider">Màu Sắc Dự Kiến</span>
-                <span class="font-semibold text-neutral-800">{{ aiService.currentBrief()?.color }}</span>
-              </div>
-
-              <div class="bg-neutral-100/90 p-2.5 rounded-xl border border-neutral-300/70">
-                <span class="text-neutral-500 block text-[10px] uppercase font-bold tracking-wider">Kích Thước</span>
-                <span class="font-semibold text-neutral-800">{{ aiService.currentBrief()?.size }}</span>
-              </div>
-
-              <div class="bg-neutral-100/90 p-2.5 rounded-xl border border-neutral-300/70">
-                <span class="text-neutral-500 block text-[10px] uppercase font-bold tracking-wider">Chữ / Tên Khắc</span>
-                <span class="font-semibold text-neutral-800">{{ aiService.currentBrief()?.customText || 'Không khắc' }}</span>
-              </div>
-            </div>
-
-            <!-- Concept Mock Image Preview -->
-            <div *ngIf="aiService.conceptImage()" class="space-y-2">
-              <div class="flex items-center justify-between text-xs">
-                <span class="font-semibold text-neutral-700">Ảnh Phác Họa Minh Họa (AI Concept Preview):</span>
-                <button 
-                  (click)="aiService.regenerateConcept()"
-                  class="text-amber-400 hover:text-amber-700 font-medium flex items-center gap-1 hover:underline">
-                  <app-icon name="rotate" [size]="12"></app-icon> Tạo lại concept khác
+            <div *ngIf="aiService.conceptImage()" class="aic_concept">
+              <div class="aic_concept__bar">
+                <span>Ảnh phác họa minh họa</span>
+                <button type="button" (click)="aiService.regenerateConcept()">
+                  <app-icon name="rotate" [size]="12"></app-icon> Tạo lại
                 </button>
               </div>
-
-              <div class="relative rounded-2xl overflow-hidden border border-neutral-300 max-h-56 bg-neutral-100 group">
-                <img 
-                  [src]="aiService.conceptImage()" 
-                  alt="AI Concept" 
-                  class="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-500">
-                <div class="absolute bottom-2 left-2 bg-black/70 text-amber-800 text-[10px] px-2.5 py-1 rounded-full backdrop-blur-md border border-amber-500/20">
-                  💡 Concept minh họa ý tưởng • Không phải file 3D sản xuất cuối cùng
-                </div>
+              <div class="aic_concept__img">
+                <img [src]="aiService.conceptImage()" alt="AI Concept">
+                <span>Concept minh họa • Không phải file 3D sản xuất</span>
               </div>
             </div>
 
-            <!-- Action: Use This Idea -->
-            <div class="pt-2 flex flex-col sm:flex-row gap-2.5">
-              <button 
-                (click)="aiService.useThisIdea()"
-                class="flex-1 py-3 px-5 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-white font-extrabold text-xs sm:text-sm shadow-[0_4px_25px_rgba(205, 129, 142,0.3)] transition flex items-center justify-center gap-2">
-                <app-icon name="check" [size]="16"></app-icon>
-                <span>Sử Dụng Ý Tưởng Này (Use This Idea) →</span>
-              </button>
-            </div>
-          </div>
-
-        </div>
-
-        <!-- Input Bar -->
-        <div class="p-4 bg-[#FBF7EE] border-t border-neutral-200">
-          <form (ngSubmit)="sendUserMessage()" class="flex items-center gap-2">
-            <input 
-              type="text" 
-              [(ngModel)]="userInput" 
-              name="aiPrompt"
-              placeholder="Nhập mô tả ý tưởng của bạn (ví dụ: 'Tôi muốn làm đèn ngủ hình mèo')..."
-              class="flex-1 text-xs sm:text-sm bg-neutral-100 border border-neutral-300 rounded-2xl px-4 py-3 focus:outline-none focus:border-amber-400 text-neutral-800 placeholder:text-neutral-500 transition"
-              [disabled]="aiService.isThinking()">
-            
-            <button 
-              type="submit"
-              [disabled]="!userInput.trim() || aiService.isThinking()"
-              class="p-3 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-600 disabled:opacity-50 text-white transition flex-shrink-0 font-bold">
-              <app-icon name="send" [size]="18"></app-icon>
+            <button type="button" (click)="aiService.useThisIdea()" class="aic_cta">
+              <app-icon name="check" [size]="16"></app-icon>
+              <span>Sử dụng ý tưởng này →</span>
             </button>
-          </form>
+          </div>
         </div>
 
-      </div>
+        <!-- Input -->
+        <form (ngSubmit)="sendUserMessage()" class="aic_input">
+          <input
+            type="text"
+            [(ngModel)]="userInput"
+            name="aiPrompt"
+            autocomplete="off"
+            placeholder="Nhập mô tả ý tưởng của bạn..."
+            [disabled]="aiService.isThinking()">
+          <button
+            type="submit"
+            class="aic_send"
+            aria-label="Gửi"
+            [disabled]="!userInput.trim() || aiService.isThinking()">
+            <app-icon name="send" [size]="18"></app-icon>
+          </button>
+        </form>
+
+      </section>
     </div>

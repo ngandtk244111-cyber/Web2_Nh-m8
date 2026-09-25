@@ -38,7 +38,8 @@ const orderSchema = new mongoose.Schema({
   createdAtLabel: { type: String, default: '' },
   status: {
     type: String,
-    enum: ['PENDING', 'CONFIRMED', 'IN_PRODUCTION', 'SHIPPED', 'DELIVERED', 'CANCELLED'],
+    // RETURNED: giao thất bại / khách không nhận (bom hàng), hàng hoàn về kho.
+    enum: ['PENDING', 'CONFIRMED', 'IN_PRODUCTION', 'SHIPPED', 'DELIVERED', 'CANCELLED', 'RETURNED'],
     default: 'CONFIRMED',
   },
   hasPrintOnDemandItems: { type: Boolean, default: false },
@@ -46,7 +47,38 @@ const orderSchema = new mongoose.Schema({
   items: { type: [orderItemSchema], required: true },
   shippingAddress: { type: shippingAddressSchema, required: true },
   paymentMethod: { type: String, enum: ['COD', 'BANK_TRANSFER', 'MOMO', 'ZALOPAY', 'ATM'], required: true },
-  paymentStatus: { type: String, enum: ['UNPAID', 'PAID'], default: 'UNPAID' },
+  // FAILED: cổng MoMo/ZaloPay báo giao dịch thất bại (IPN).
+  paymentStatus: { type: String, enum: ['UNPAID', 'PAID', 'FAILED'], default: 'UNPAID' },
+  // Khách bấm "Tôi đã chuyển khoản" — chỉ là báo, nhân viên đối soát sao kê rồi mới chuyển PAID.
+  transferReportedAt: { type: Date, default: null },
+  paidConfirmedBy: { type: String, default: null },
+  cancelReason: { type: String, default: '' },
+  cancelledAt: { type: Date, default: null },
+  deliveredAt: { type: Date, default: null },
+  // --- Cơ chế COD ---
+  // Nhân viên gọi xác nhận với khách trước khi giao (bắt buộc với COD) — giảm đơn ảo/bom hàng.
+  phoneConfirmedAt: { type: Date, default: null },
+  phoneConfirmedBy: { type: String, default: null },
+  // Shipper đã thu tiền COD khi giao thành công; tiền còn nằm ở hãng vận chuyển tới khi đối soát
+  // (lúc đó nhân viên xác nhận → paymentStatus PAID).
+  codCollectedAt: { type: Date, default: null },
+  // Giao thất bại / khách không nhận hàng → hoàn về kho (status RETURNED).
+  returnReason: { type: String, default: '' },
+  returnedAt: { type: Date, default: null },
+  // Vận đơn của hãng vận chuyển (xem utils/shipping.js).
+  shipment: {
+    type: new mongoose.Schema({
+      carrier: { type: String, required: true },
+      carrierName: { type: String, default: '' },
+      trackingCode: { type: String, default: '' },
+      trackingUrl: { type: String, default: '' },
+      fee: { type: Number, default: 0 },
+      note: { type: String, default: '' },
+      shippedAt: { type: Date, default: null },
+      createdBy: { type: String, default: null },
+    }, { _id: false }),
+    default: null,
+  },
   subtotal: { type: Number, required: true },
   discount: { type: Number, default: 0 },
   shippingFee: { type: Number, default: 0 },

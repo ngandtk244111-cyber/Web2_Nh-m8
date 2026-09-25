@@ -301,12 +301,16 @@ export class CommunityComponent implements OnInit {
       imageUrl: this.newPostImageUrl,
       tags: ['#decor', '#goccanhan', '#deco3d'],
       productTags: tags,
+    }).subscribe({
+      next: () => {
+        this.toastService.success('Đã đăng bài lên Cộng đồng Decor!');
+        this.showCreateModal = false;
+        this.newPostTitle = '';
+        this.newPostCaption = '';
+        this.selectedTagProductId = '';
+      },
+      // Bị bộ lọc chặn (vi phạm tiêu chuẩn cộng đồng) hoặc lỗi mạng: giữ nguyên modal để sửa lại.
+      error: (err) => this.toastService.error(err?.error?.error || 'Không đăng được bài, vui lòng thử lại.', 6000),
     });
-
-    this.toastService.success('Đã đăng bài lên Cộng đồng Decor!');
-    this.showCreateModal = false;
-    this.newPostTitle = '';
-    this.newPostCaption = '';
-    this.selectedTagProductId = '';
   }
 }

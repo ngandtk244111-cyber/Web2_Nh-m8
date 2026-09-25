@@ -465,9 +465,14 @@
               </div>
               <span class="pd_rv-card__date">{{ rev.date }}</span>
             </header>
+            <span *ngIf="rev.pinned" class="pd_rv-card__pinned">★ Đánh giá nổi bật</span>
             <p class="pd_rv-card__comment">{{ rev.comment }}</p>
             <div class="pd_rv-card__images" *ngIf="rev.images?.length">
               <img *ngFor="let img of rev.images" [src]="img" alt="Ảnh đánh giá" loading="lazy">
+            </div>
+            <div *ngIf="rev.reply?.text" class="pd_rv-card__reply">
+              <span class="pd_rv-card__reply-label">Phản hồi từ Luméa<span *ngIf="rev.reply?.date"> · {{ rev.reply?.date }}</span></span>
+              <p>{{ rev.reply?.text }}</p>
             </div>
           </article>
         </div>

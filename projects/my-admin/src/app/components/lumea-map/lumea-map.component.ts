@@ -56,10 +56,10 @@ const esc = (text: string) => text.replace(/[&<>"']/g, c => HTML_ENTITIES[c]);
 const VN_BOUNDS: L.LatLngBoundsExpression = [[8.4, 102.1], [23.4, 109.6]];
 
 const COLOR = {
-  rust: '#7E3F27',
-  orange: '#C8672F',
-  espresso: '#2B1D16',
-  cream: '#FBF8F2',
+  rust: '#A3152D',
+  orange: '#B7485B',
+  espresso: '#1F1712',
+  cream: '#FBF8F1',
 };
 
 /**
@@ -166,12 +166,13 @@ export class LumeaMapComponent implements AfterViewInit, OnChanges, OnDestroy {
 
   statusLabel(status: Order['status']): string {
     switch (status) {
-      case 'PENDING': return 'Chờ xác nhận';
-      case 'CONFIRMED': return 'Đã xác nhận';
+      case 'PENDING': return 'Chờ gọi xác nhận';
+      case 'CONFIRMED': return 'Chờ giao';
       case 'IN_PRODUCTION': return 'Đang in 3D';
       case 'SHIPPED': return 'Đang giao';
       case 'DELIVERED': return 'Hoàn thành';
       case 'CANCELLED': return 'Đã hủy';
+      case 'RETURNED': return 'Hoàn hàng';
     }
   }
 

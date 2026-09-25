@@ -1,5 +1,6 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Observable, map, tap } from 'rxjs';
 import { CommunityPost } from '../models/community.model';
 import { environment } from '../../../environments/environment';
 
@@ -92,11 +93,14 @@ export class CommunityService {
     });
   }
 
-  createPost(data: Omit<CommunityPost, 'id' | 'likesCount' | 'commentsCount' | 'comments' | 'createdAt'> & { userId?: string }): void {
-    this.http.post<{ success: boolean; post: CommunityPost }>(BASE, data).subscribe({
-      next: (res) => {
-        if (res.success) this.postsSignal.update(list => [this.applyLocalFlags([res.post])[0], ...list]);
-      },
-    });
+  /**
+   * Trả Observable để trang gọi tự báo kết quả: server chặn bài vi phạm tiêu chuẩn cộng đồng
+   * bằng HTTP 422 kèm lý do (err.error.error) — bài đó không được thêm vào feed.
+   */
+  createPost(data: Omit<CommunityPost, 'id' | 'likesCount' | 'commentsCount' | 'comments' | 'createdAt'> & { userId?: string }): Observable<CommunityPost> {
+    return this.http.post<{ success: boolean; post: CommunityPost }>(BASE, data).pipe(
+      map(res => res.post),
+      tap(post => this.postsSignal.update(list => [this.applyLocalFlags([post])[0], ...list]))
+    );
   }
 }

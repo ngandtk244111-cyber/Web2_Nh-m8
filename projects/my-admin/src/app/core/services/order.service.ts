@@ -1,7 +1,7 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map, tap, catchError, of } from 'rxjs';
-import { Order, OrderStatus, ProductionStep, ProductionProgress, ShippingAddress } from '../models/order.model';
+import { Order, OrderStatus, ProductionStep, ProductionProgress, ShippingAddress, ShippingOptions } from '../models/order.model';
 import { CartItem } from '../models/cart.model';
 import { AdminAuthService } from './admin-auth.service';
 import { environment } from '../../../environments/environment';
@@ -94,10 +94,12 @@ export class OrderService {
   }
 
   // Admin: cập nhật trạng thái tổng quát + tiến độ sản xuất chi tiết.
-  updateOrderStatus(orderNumber: string, status: OrderStatus, progress?: ProductionProgress): Observable<Order> {
+  updateOrderStatus(orderNumber: string, status: OrderStatus, progress?: ProductionProgress, reason?: string): Observable<Order> {
     return this.http.patch<OrderApiResponse>(`${this.baseUrl}/${encodeURIComponent(orderNumber)}/production`, {
       status,
       productionProgress: progress,
+      cancelReason: status === 'CANCELLED' ? reason : undefined,
+      returnReason: status === 'RETURNED' ? reason : undefined,
       adminId: this.adminAuth.adminId,
     }).pipe(
       map(res => this.normalize(res.order!)),
@@ -115,6 +117,44 @@ export class OrderService {
     };
     const status: OrderStatus = nextStep === 'DISPATCHED' ? 'SHIPPED' : 'IN_PRODUCTION';
     this.updateOrderStatus(orderNumber, status, progress).subscribe();
+  }
+
+  /** Đã gọi điện xác nhận đơn với khách (bắt buộc trước khi giao đơn COD). */
+  confirmPhone(orderNumber: string): Observable<Order> {
+    return this.http.patch<OrderApiResponse>(`${this.baseUrl}/${encodeURIComponent(orderNumber)}/confirm-phone`, {
+      adminId: this.adminAuth.adminId,
+    }).pipe(
+      map(res => this.normalize(res.order!)),
+      tap(order => this.replaceInSignal(order))
+    );
+  }
+
+  getShippingOptions(orderNumber: string): Observable<ShippingOptions> {
+    return this.http.get<{ success: boolean } & ShippingOptions>(`${this.baseUrl}/${encodeURIComponent(orderNumber)}/shipping-options`, {
+      params: { adminId: this.adminAuth.adminId },
+    });
+  }
+
+  /** Tạo vận đơn với hãng vận chuyển đã chọn → đơn chuyển sang Đang giao. */
+  ship(orderNumber: string, payload: { carrier: string; trackingCode: string; fee: number; note: string }): Observable<Order> {
+    return this.http.patch<OrderApiResponse>(`${this.baseUrl}/${encodeURIComponent(orderNumber)}/ship`, {
+      ...payload,
+      adminId: this.adminAuth.adminId,
+    }).pipe(
+      map(res => this.normalize(res.order!)),
+      tap(order => this.replaceInSignal(order))
+    );
+  }
+
+  /** Nhân viên xác nhận đã nhận tiền (đối soát chuyển khoản / đã thu COD) hoặc hoàn tác. */
+  setPaymentStatus(orderNumber: string, paymentStatus: 'PAID' | 'UNPAID'): Observable<Order> {
+    return this.http.patch<OrderApiResponse>(`${this.baseUrl}/${encodeURIComponent(orderNumber)}/payment-status`, {
+      paymentStatus,
+      adminId: this.adminAuth.adminId,
+    }).pipe(
+      map(res => this.normalize(res.order!)),
+      tap(order => this.replaceInSignal(order))
+    );
   }
 
   private replaceInSignal(updated: Order): void {

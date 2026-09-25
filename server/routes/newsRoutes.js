@@ -100,10 +100,25 @@ router.post('/comments/:commentId/:action', async (req, res) => {
   }
 });
 
+// "Nghệ Thuật Ánh Sáng" -> "nghe-thuat-anh-sang" (bỏ dấu tiếng Việt, đ -> d).
+function slugify(text) {
+  return String(text || '')
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/đ/g, 'd').replace(/Đ/g, 'D')
+    .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+
 router.post('/', requireAdminId, async (req, res) => {
   try {
+    // Admin không nhập slug thì tự sinh từ tiêu đề; thêm hậu tố nếu trùng bài đã có.
+    let slug = slugify(req.body.slug || req.body.title);
+    if (!slug) return res.status(400).json({ success: false, error: 'Thiếu tiêu đề bài viết' });
+    if (await NewsArticle.exists({ slug })) slug = `${slug}-${Date.now().toString(36)}`;
+
+    const { adminId: _adminId, ...body } = req.body;
     const article = await NewsArticle.create({
-      ...req.body,
+      ...body,
+      slug,
       id: 'news-' + Date.now(),
       viewsCount: 1,
       publishedAt: new Date().toLocaleDateString('vi-VN'),

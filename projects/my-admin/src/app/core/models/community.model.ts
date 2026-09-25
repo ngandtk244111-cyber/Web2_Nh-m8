@@ -33,4 +33,15 @@ export interface CommunityPost {
   isSaved?: boolean;
   comments: PostComment[];
   createdAt: string;
+  /** Các trường dưới chỉ có ở route admin (GET /community/admin). */
+  userId?: string | null;
+  postedAt?: string;
+  status?: CommunityPostStatus;
+  moderationReason?: string;
+  moderatedBy?: string | null;
+  moderatedAt?: string | null;
+  isStaffPick?: boolean;
 }
+
+/** PUBLISHED: đang hiển thị; HIDDEN: nhân viên ẩn; REJECTED: bộ lọc tự động chặn lúc đăng. */
+export type CommunityPostStatus = 'PUBLISHED' | 'HIDDEN' | 'REJECTED';

@@ -51,6 +51,17 @@
             </div>
           </div>
 
+          <!-- Vận đơn: hãng vận chuyển + mã tra cứu -->
+          <div *ngIf="currentOrder.shipment" class="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-2xl bg-[#F6F5F2] border border-neutral-200 px-4 py-3 text-xs text-neutral-700">
+            <span class="flex items-center gap-1.5 font-bold text-neutral-800"><app-icon name="truck" [size]="15"></app-icon>{{ currentOrder.shipment.carrierName }}</span>
+            <span *ngIf="currentOrder.shipment.trackingCode">Mã vận đơn: <strong class="font-mono">{{ currentOrder.shipment.trackingCode }}</strong></span>
+            <a *ngIf="currentOrder.shipment.trackingUrl" [href]="currentOrder.shipment.trackingUrl" target="_blank" rel="noopener" class="font-semibold text-amber-600 underline">Xem hành trình ↗</a>
+            <span *ngIf="currentOrder.paymentMethod === 'COD' && currentOrder.status === 'SHIPPED'">Vui lòng chuẩn bị <strong>{{ currentOrder.total | number }}đ</strong> để thanh toán khi nhận hàng.</span>
+          </div>
+          <p *ngIf="currentOrder.status === 'PENDING'" class="text-xs text-neutral-600">Luméa sẽ gọi tới số {{ currentOrder.shippingAddress.phone }} để xác nhận đơn trước khi giao. Vui lòng để ý điện thoại nhé.</p>
+          <p *ngIf="currentOrder.status === 'CANCELLED' && currentOrder.cancelReason" class="text-xs text-rose-500">Lý do huỷ: {{ currentOrder.cancelReason }}</p>
+          <p *ngIf="currentOrder.status === 'RETURNED' && currentOrder.returnReason" class="text-xs text-rose-500">Giao không thành công: {{ currentOrder.returnReason }}. Liên hệ Luméa nếu bạn muốn giao lại.</p>
+
           <!-- 3D Production Pipeline Progress Tracker -->
           <div *ngIf="currentOrder.hasPrintOnDemandItems && currentOrder.productionProgress" class="space-y-4 pt-2">
             

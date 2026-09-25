@@ -1,9 +1,10 @@
-import { AfterViewInit, Component, ElementRef, computed, HostListener, NgZone, OnDestroy, QueryList, ViewChild, ViewChildren } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, computed, HostListener, NgZone, OnDestroy, OnInit, QueryList, ViewChild, ViewChildren } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AppIconComponent } from '../icon/icon.component';
 import { ToastService } from '../../core/services/toast.service';
 import { MascotService, MascotExpression } from '../../core/services/mascot.service';
+import { VideoService, VideoItem } from '../../core/services/video.service';
 
 export interface VideoTopic {
   title: string;
@@ -18,6 +19,7 @@ export interface VideoTopic {
   youtubeId?: string;
 }
 
+/** Danh sách dự phòng — dùng khi chưa tải được video do nhân viên đăng ở my-admin (API /videos). */
 const TOPICS: VideoTopic[] = [
   {
     title: 'Giao Hàng Hỏa Tốc',
@@ -118,8 +120,8 @@ function loadYoutubeIframeApi(): Promise<void> {
   templateUrl: './video-topics.component.html',
   styleUrl: './video-topics.component.css'
 })
-export class VideoTopicsComponent implements AfterViewInit, OnDestroy {
-  readonly topics = TOPICS;
+export class VideoTopicsComponent implements OnInit, AfterViewInit, OnDestroy {
+  topics: VideoTopic[] = TOPICS;
   private loadedIndices = new Set<number>();
   private players = new Map<number, any>();
   /** Index của các topic có youtubeId nhưng video lỗi (không tồn tại, riêng tư, hoặc chủ sở hữu
@@ -212,7 +214,43 @@ export class VideoTopicsComponent implements AfterViewInit, OnDestroy {
   private viewerDragStartY = 0;
   private viewerDragging = false;
 
-  constructor(private zone: NgZone, private toast: ToastService, private mascotService: MascotService) {}
+  constructor(
+    private zone: NgZone,
+    private toast: ToastService,
+    private mascotService: MascotService,
+    private videoService: VideoService
+  ) {}
+
+  ngOnInit(): void {
+    this.videoService.getVideos().subscribe({
+      next: (videos) => {
+        if (videos.length > 0) this.applyVideos(videos);
+      },
+      error: (err) => console.warn('Failed to load videos, using default topics', err),
+    });
+  }
+
+  /** Thay danh sách thẻ bằng video từ server. Player YouTube gắn theo index nên phải huỷ hết
+   *  player cũ (nếu người dùng đã hover trước khi dữ liệu về) để không phát nhầm video. */
+  private applyVideos(videos: VideoItem[]): void {
+    if (this.viewerOpen) return;
+    this.players.forEach(player => player.destroy?.());
+    this.players.clear();
+    this.loadedIndices.clear();
+    this.erroredIndices.clear();
+    this.hoveredIndex = null;
+    this.topics = videos.map(v => ({
+      title: v.title,
+      description: v.description,
+      link: v.link || undefined,
+      ctaLabel: v.ctaLabel || 'Xem thêm',
+      poster: v.poster || `https://img.youtube.com/vi/${v.youtubeId}/hqdefault.jpg`,
+      youtubeId: v.youtubeId,
+    }));
+    this.pageStart = 0;
+    // Chờ Angular vẽ lại danh sách thẻ rồi mới đo kích thước để đặt lại carousel.
+    setTimeout(() => this.applyCarouselPosition());
+  }
 
   ngAfterViewInit(): void {
     // Player YouTube được tạo lazy khi div đích (#ytTarget) của 1 thẻ xuất hiện lần đầu trong DOM

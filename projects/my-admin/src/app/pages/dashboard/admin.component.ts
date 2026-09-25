@@ -1,4 +1,4 @@
-import { Component, OnInit, effect } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -7,14 +7,31 @@ import { OrderService } from '../../core/services/order.service';
 import { CustomRequestService } from '../../core/services/custom-request.service';
 import { RoomService } from '../../core/services/room.service';
 import { AdminAuthService } from '../../core/services/admin-auth.service';
+import { CommunityService } from '../../core/services/community.service';
+import { NewsService } from '../../core/services/news.service';
+import { VideoService } from '../../core/services/video.service';
+import { ChatService, ChatSession } from '../../core/services/chat.service';
+import { ReviewService, AdminReview } from '../../core/services/review.service';
 import { Product, ProductionType, ProductCategory } from '../../core/models/product.model';
-import { Order, ProductionStep, OrderStatus } from '../../core/models/order.model';
+import { Order, ProductionStep, OrderStatus, ShippingOptions } from '../../core/models/order.model';
 import { CustomRequest, CustomRequestStatus } from '../../core/models/custom-request.model';
 import { Room } from '../../core/models/room.model';
+import { CommunityPost } from '../../core/models/community.model';
+import { NewsArticle, ArticleCategory } from '../../core/models/news.model';
+import { Video } from '../../core/models/video.model';
 import { AppIconComponent } from '../../components/icon/icon.component';
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
 import { LumeaMapComponent } from '../../components/lumea-map/lumea-map.component';
 import { environment } from '../../../environments/environment';
+
+/** Bộ lọc tab Cộng đồng: bài đăng hôm nay, đang hiển thị, bị bộ lọc tự động chặn, nhân viên đã ẩn. */
+export type CommunityFilter = 'TODAY' | 'ALL' | 'PUBLISHED' | 'REJECTED' | 'HIDDEN' | 'STAFF_PICK';
+
+/** Bộ lọc tab Đánh giá — ưu tiên việc cần làm: đánh giá xấu chưa phản hồi. */
+export type ReviewFilter = 'NEEDS_ACTION' | 'UNREPLIED' | 'ALL' | 'PINNED' | 'HIDDEN';
+
+/** Một bước sản xuất (nút trong modal chi tiết đơn in 3D). */
+export interface ProductionStepOption { step: ProductionStep; label: string; title: string; percent: number; notes: string; }
 
 export type AdminTab =
   | 'dashboard'
@@ -25,11 +42,13 @@ export type AdminTab =
   | 'orders'
   | 'custom-requests'
   | 'customers'
+  | 'messages'
   | 'reviews'
   | 'promotions'
   | 'banners'
   | 'community'
   | 'articles'
+  | 'videos'
   | 'staff'
   | 'roles'
   | 'settings'
@@ -43,7 +62,7 @@ export type AdminTab =
   templateUrl: './admin.component.html',
   styleUrl: './admin.component.css'
 })
-export class AdminComponent implements OnInit {
+export class AdminComponent implements OnInit, OnDestroy {
   readonly clientAppUrl = environment.clientAppUrl;
 
   activeTab: AdminTab = 'dashboard';
@@ -57,6 +76,25 @@ export class AdminComponent implements OnInit {
     this.isSidebarCollapsed = !this.isSidebarCollapsed;
   }
 
+  // Nhóm menu gập/mở để sidebar không phải cuộn dài. Chưa bấm gì thì chỉ mở nhóm chứa tab
+  // đang xem; sau khi người dùng tự gập/mở một nhóm thì giữ theo lựa chọn đó.
+  private navGroupState: Record<string, boolean> = {};
+
+  isNavGroupOpen(group: string): boolean {
+    return this.navGroupState[group] ?? this.tabMeta[this.activeTab].group === group;
+  }
+
+  toggleNavGroup(group: string): void {
+    this.navGroupState[group] = !this.isNavGroupOpen(group);
+  }
+
+  /** Bấm tên nhóm trên breadcrumb: mở tab đầu tiên của nhóm (theo thứ tự trong tabMeta) và mở nhóm trên sidebar. */
+  goToGroup(group: string): void {
+    const firstTab = (Object.keys(this.tabMeta) as AdminTab[]).find(tab => this.tabMeta[tab].group === group);
+    if (firstTab) this.activeTab = firstTab;
+    this.navGroupState[group] = true;
+  }
+
   // Nhóm (breadcrumb), tiêu đề & mô tả của page header theo tab đang mở
   readonly tabMeta: Record<AdminTab, { group: string; title: string; subtitle: string }> = {
     'dashboard': { group: 'Tổng quan', title: 'Tổng quan hoạt động', subtitle: 'Doanh thu, đơn hàng và tình trạng xưởng in 3D hôm nay' },
@@ -67,11 +105,13 @@ export class AdminComponent implements OnInit {
     'orders': { group: 'Vận hành & sản xuất', title: 'Đơn hàng', subtitle: 'Tiến độ xử lý, sản xuất và giao hàng' },
     'custom-requests': { group: 'Vận hành & sản xuất', title: 'Yêu cầu in 3D riêng', subtitle: 'Brief thiết kế từ khách hàng chờ duyệt & báo giá' },
     'customers': { group: 'Khách hàng & CSKH', title: 'Khách hàng', subtitle: 'Hồ sơ, lịch sử mua và hạng thành viên' },
-    'reviews': { group: 'Khách hàng & CSKH', title: 'Đánh giá', subtitle: 'Phản hồi của khách hàng về sản phẩm' },
+    'messages': { group: 'Khách hàng & CSKH', title: 'Tin nhắn hỗ trợ', subtitle: 'Trả lời khách nhắn qua khung chat trên cửa hàng — tin mới hiện ngay, không cần tải lại' },
+    'reviews': { group: 'Khách hàng & CSKH', title: 'Đánh giá', subtitle: 'Đánh giá đăng ngay không cần duyệt — theo dõi, phản hồi khách chưa hài lòng và ẩn nội dung vi phạm' },
     'promotions': { group: 'Khách hàng & CSKH', title: 'Khuyến mãi & voucher', subtitle: 'Mã giảm giá và chương trình ưu đãi' },
     'banners': { group: 'Nội dung & truyền thông', title: 'Banner & Hero', subtitle: 'Nội dung trình bày trên trang chủ cửa hàng' },
-    'community': { group: 'Nội dung & truyền thông', title: 'Decor Community', subtitle: 'Bài đăng và không gian do khách hàng chia sẻ' },
-    'articles': { group: 'Nội dung & truyền thông', title: 'Bài viết', subtitle: 'Cẩm nang phong cách và nội dung editorial' },
+    'community': { group: 'Nội dung & truyền thông', title: 'Cộng đồng', subtitle: 'Kiểm duyệt bài khách hàng đăng: bài mới hôm nay, bài bị chặn do vi phạm, bài đã ẩn' },
+    'articles': { group: 'Nội dung & truyền thông', title: 'Tin tức', subtitle: 'Bài viết do nhân viên Luméa soạn, hiển thị ở trang Tin tức của cửa hàng' },
+    'videos': { group: 'Nội dung & truyền thông', title: 'Video', subtitle: 'Video chủ đề phát ở trang chủ cửa hàng — chỉ nhân viên được đăng' },
     'staff': { group: 'Hệ thống & nhân sự', title: 'Nhân viên', subtitle: 'Tài khoản nội bộ và trạng thái hoạt động' },
     'roles': { group: 'Hệ thống & nhân sự', title: 'Vai trò & phân quyền', subtitle: 'Kiểm soát quyền truy cập theo vai trò' },
     'settings': { group: 'Hệ thống & nhân sự', title: 'Cài đặt hệ thống', subtitle: 'Cấu hình chung của Luméa' },
@@ -182,6 +222,37 @@ export class AdminComponent implements OnInit {
   orderSearch = '';
   selectedOrder: Order | null = null;
   showOrderDetailModal = false;
+  /** Ô nhập lý do huỷ trong modal chi tiết đơn (hiện khi bấm "Huỷ đơn"). */
+  cancellingOrder = false;
+  cancelOrderReason = '';
+  readonly cancelOrderReasons = [
+    'Khách yêu cầu huỷ',
+    'Không liên lạc được khách',
+    'Hết hàng / hết vật liệu in',
+    'Đơn trùng hoặc đặt nhầm',
+    'Nghi ngờ đơn ảo',
+  ];
+  readonly returnReasons = [
+    'Khách không nghe máy khi giao',
+    'Khách từ chối nhận hàng',
+    'Sai địa chỉ / không tìm được nhà',
+    'Hàng hư hỏng khi vận chuyển',
+  ];
+  /** Giao thất bại: đang nhập lý do trong modal. */
+  returningOrder = false;
+  returnOrderReason = '';
+  /** Tạo vận đơn: hãng gợi ý cho đơn đang mở + form nhập. */
+  shippingOptions: ShippingOptions | null = null;
+  shipForm = { carrier: '', trackingCode: '', fee: 0, note: '' };
+  shipping = false;
+
+  /** 4 bước sản xuất cho đơn có sản phẩm in 3D theo yêu cầu. */
+  readonly productionSteps: ProductionStepOption[] = [
+    { step: 'FILE_PREPARATION', label: 'Chuẩn bị file', title: 'Đã tiếp nhận file mô hình 3D', percent: 20, notes: 'File STL/3MF đã sẵn sàng' },
+    { step: '3D_PRINTING', label: 'Đang in 3D', title: 'Đang in 3D với độ nét cao', percent: 55, notes: 'Máy in Bambu Lab đang in' },
+    { step: 'POST_PROCESSING', label: 'Xử lý bề mặt', title: 'Đang xử lý bề mặt & hoàn thiện', percent: 80, notes: 'Chà nhám và phủ satin' },
+    { step: 'PACKAGING', label: 'Đóng gói', title: 'Đã đóng gói, chờ bàn giao vận chuyển', percent: 95, notes: 'Đã dán tem bảo hành Luméa' },
+  ];
 
   // 7. Custom 3D Requests State
   customRequests: CustomRequest[] = [];
@@ -206,15 +277,28 @@ export class AdminComponent implements OnInit {
   selectedCustomer: any = null;
   showCustomerModal = false;
 
-  // 9. Reviews State
-  reviews = [
-    { id: 'rev-1', productName: 'Đèn Ngủ Mặt Trăng Moon Lamp 3D', customerName: 'Phạm Minh Tuấn', rating: 5, date: '19/09/2026', title: 'Ánh sáng cực kỳ dịu và ấm áp!', content: 'Bề mặt in 3D rất sắc nét, sờ vào thấy rõ vân nổi hố thiên thạch. Đế gỗ sồi thơm mùi gỗ mộc tự nhiên. Đóng gói hộp rất sang trọng!', status: 'APPROVED', reply: 'Luméa cảm ơn anh Tuấn rất nhiều! Chúc anh có những giấc ngủ thật êm đềm bên ánh trăng Luméa ạ.' },
-    { id: 'rev-2', productName: 'Bình Hoa Gốm Gợn Sóng Wave Vase', customerName: 'Nguyễn Bích Ngọc', rating: 5, date: '18/09/2026', title: 'Đẹp vượt kỳ vọng, góc decor sáng bừng', content: 'Phom dáng uốn lượn phong cách organic hiện đại, cắm hoa cúc họa mi hay cành lá bạch đàn đều cực kỳ ăn ảnh.', status: 'APPROVED', reply: 'Dạ Luméa rất vui vì chị Ngọc yêu thích sản phẩm ạ!' },
-    { id: 'rev-3', productName: 'Khay Bút Origami Minimalist', customerName: 'Trần Đăng Khoa', rating: 4, date: '15/09/2026', title: 'Chất lượng nhựa mịn, rất gọn gàng', content: 'Thiết kế góc cạnh rất bắt mắt. Điểm trừ nhỏ là đế chưa có đệm silicon chống trượt, shop nên bổ sung ở đợt sau.', status: 'APPROVED', reply: 'Luméa xin ghi nhận góp ý quý báu của anh Khoa và sẽ bổ sung đệm chống trượt ngay trong đợt sản xuất mới!' },
-    { id: 'rev-4', productName: 'Đèn Ngủ Mặt Trăng Tùy Biến', customerName: 'Khách hàng ẩn danh', rating: 2, date: '12/09/2026', title: 'Giao hàng chậm 1 ngày', content: 'Sản phẩm đẹp nhưng bên vận chuyển giao hơi trễ so với dự kiến.', status: 'PENDING', reply: '' },
-  ];
-  reviewRatingFilter: 'ALL' | number = 'ALL';
+  // 9. Đánh giá sản phẩm (dữ liệu thật từ Product.reviews)
+  reviews: AdminReview[] = [];
+  reviewFilter: ReviewFilter = 'NEEDS_ACTION';
+  reviewStarFilter: 'ALL' | number = 'ALL';
+  reviewSearch = '';
   reviewReplyInputs: { [key: string]: string } = {};
+  /** Đánh giá đang mở ô soạn/sửa phản hồi. */
+  replyingReviewId: string | null = null;
+  hidingReview: AdminReview | null = null;
+  hideReviewReason = '';
+  readonly hideReviewReasons = [
+    'Ngôn từ thô tục / xúc phạm',
+    'Spam hoặc quảng cáo',
+    'Lộ thông tin cá nhân',
+    'Đánh giá nhầm sản phẩm',
+    'Nội dung không liên quan',
+  ];
+  readonly reviewReplyTemplates = [
+    'Cảm ơn bạn đã tin chọn Luméa! Rất vui vì sản phẩm làm bạn hài lòng.',
+    'Luméa rất tiếc về trải nghiệm chưa tốt của bạn. Bộ phận CSKH sẽ liên hệ để hỗ trợ đổi/trả ngay ạ.',
+    'Cảm ơn góp ý của bạn, xưởng in 3D sẽ cải thiện ở các lô sản phẩm tiếp theo.',
+  ];
 
   // 10. Promotions & Coupons State
   coupons = [
@@ -235,21 +319,48 @@ export class AdminComponent implements OnInit {
   showBannerModal = false;
   bannerForm = { title: '', subtitle: '', ctaText: '', ctaLink: '', imageUrl: '', position: 'HERO_HOME', order: 1 };
 
-  // 12. Decor Community (UGC) State
-  communityPosts = [
-    { id: 'ugc-1', authorName: 'Hà My Decor', authorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80', title: 'Góc làm việc phong cách Wabi-sabi cùng đèn Moon Lamp', imageUrl: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80', likes: 245, comments: 38, taggedProduct: 'Đèn Ngủ Mặt Trăng Moon Lamp 3D', status: 'APPROVED', isStaffPick: true, date: '19/09/2026' },
-    { id: 'ugc-2', authorName: 'Thành Studio', authorAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80', title: 'Bình hoa gợn sóng đặt trên bàn ăn sồi tự nhiên', imageUrl: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=800&q=80', likes: 189, comments: 16, taggedProduct: 'Bình Hoa Gốm Gợn Sóng Wave Vase', status: 'APPROVED', isStaffPick: true, date: '17/09/2026' },
-    { id: 'ugc-3', authorName: 'Lê An Nhiên', authorAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80', title: 'Kệ sách mini in 3D tone màu Terracotta cực xinh', imageUrl: 'https://images.unsplash.com/photo-1538688525198-9b88f6f53126?auto=format&fit=crop&w=800&q=80', likes: 92, comments: 7, taggedProduct: 'Kệ Trang Trí Dải Lụa Ribbon Shelf', status: 'PENDING', isStaffPick: false, date: '16/09/2026' },
+  // 12. Cộng đồng — bài khách đăng ở my-client (GET /community/admin, gồm cả bài bị chặn/ẩn)
+  communityPosts: CommunityPost[] = [];
+  communityFilter: CommunityFilter = 'TODAY';
+  communitySearch = '';
+  /** Bài đang mở modal "Ẩn bài" để nhập lý do. */
+  hidingPost: CommunityPost | null = null;
+  hideReason = '';
+  readonly hideReasonPresets = [
+    'Ảnh không liên quan đến decor / nội thất',
+    'Spam hoặc quảng cáo',
+    'Ngôn từ không phù hợp',
+    'Hình ảnh vi phạm bản quyền',
+    'Lộ thông tin cá nhân',
   ];
 
-  // 13. Articles State
-  articles = [
-    { id: 'art-1', title: 'Nghệ Thuật Chọn Ánh Sáng Ấm Cho Phòng Ngủ Hiện Đại', category: 'Cảm Hứng Thiết Kế', author: 'Lê Linh Chi (Creative Lead)', readTime: '5 phút đọc', views: 1840, status: 'PUBLISHED', date: '15/09/2026', coverImage: 'https://images.unsplash.com/photo-1532274402911-5a369e4c4bb5?auto=format&fit=crop&w=600&q=80' },
-    { id: 'art-2', title: 'Công Nghệ In 3D Đang Thay Đổi Thiết Kế Nội Thất Như Thế Nào?', category: 'Kiến Thức In 3D', author: 'Đặng Tuấn Vũ (3D Specialist)', readTime: '7 phút đọc', views: 2420, status: 'PUBLISHED', date: '10/09/2026', coverImage: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=600&q=80' },
-    { id: 'art-3', title: 'Mẹo Bảo Quản & Vệ Sinh Đồ Trang Trí Nhựa Sinh Học PLA', category: 'Cẩm Nang Luméa', author: 'Nguyễn Bích Ngọc', readTime: '4 phút đọc', views: 980, status: 'PUBLISHED', date: '04/09/2026', coverImage: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=600&q=80' },
+  // 12b. Tin nhắn hỗ trợ — khung chat của khách trên my-client (socket.io)
+  chatSearch = '';
+  chatDraft = '';
+  readonly chatQuickReplies = [
+    'Chào bạn, Luméa có thể hỗ trợ gì cho bạn ạ?',
+    'Bạn cho mình xin mã đơn hàng để kiểm tra nhé.',
+    'Đơn của bạn đang được in 3D, dự kiến giao trong 3–5 ngày ạ.',
+    'Cảm ơn bạn đã liên hệ Luméa!',
   ];
+  @ViewChild('chatScroll') chatScroll?: ElementRef<HTMLDivElement>;
+
+  // 13. Tin tức — nhân viên soạn, client đọc ở /news
+  articles: NewsArticle[] = [];
+  articleSearch = '';
+  articleCategoryFilter: ArticleCategory | 'ALL' = 'ALL';
+  readonly articleCategories: ArticleCategory[] = ['Xu hướng Decor', 'Kiến thức In 3D', 'Bộ sưu tập & Room Look', 'Kinh nghiệm & Hậu trường'];
   showArticleModal = false;
-  articleForm = { title: '', category: 'Cảm Hứng Thiết Kế', author: 'Luméa Editorial', readTime: '5 phút đọc', status: 'PUBLISHED', coverImage: '' };
+  editingArticle: NewsArticle | null = null;
+  articleForm = this.emptyArticleForm();
+  savingArticle = false;
+
+  // 13b. Video trang chủ — nhân viên đăng, client phát ở mục video
+  videos: Video[] = [];
+  showVideoModal = false;
+  editingVideo: Video | null = null;
+  videoForm = this.emptyVideoForm();
+  savingVideo = false;
 
   // 14. Staff State
   staffList = [
@@ -363,6 +474,11 @@ export class AdminComponent implements OnInit {
     private orderService: OrderService,
     private customRequestService: CustomRequestService,
     private roomService: RoomService,
+    private communityService: CommunityService,
+    private newsService: NewsService,
+    private videoService: VideoService,
+    public chatService: ChatService,
+    private reviewService: ReviewService,
     public adminAuth: AdminAuthService,
     private router: Router
   ) {
@@ -377,16 +493,46 @@ export class AdminComponent implements OnInit {
     effect(() => {
       this.rooms = this.roomService.rooms();
     });
+    effect(() => {
+      this.communityPosts = this.communityService.posts();
+    });
+    effect(() => {
+      this.articles = this.newsService.articles();
+    });
+    effect(() => {
+      this.videos = this.videoService.videos();
+    });
+    effect(() => {
+      this.reviews = this.reviewService.reviews();
+    });
+    // Có tin mới trong hội thoại đang mở thì cuộn xuống cuối (chờ Angular vẽ tin mới xong).
+    effect(() => {
+      this.chatService.activeMessages();
+      setTimeout(() => {
+        const el = this.chatScroll?.nativeElement;
+        if (el) el.scrollTop = el.scrollHeight;
+      });
+    });
   }
 
   ngOnInit(): void {
     this.refreshData();
+    this.chatService.connect();
+  }
+
+  ngOnDestroy(): void {
+    this.chatService.disconnect();
   }
 
   refreshData(): void {
+    this.communityService.refresh();
+    this.newsService.refresh();
+    this.videoService.refresh();
+    this.reviewService.refresh();
     this.orderService.fetchAll().subscribe(orders => {
       this.orders = orders;
-      this.totalRevenue = this.orders.reduce((sum, o) => sum + o.total, 0);
+      // Doanh thu không tính đơn đã huỷ.
+      this.totalRevenue = this.orders.filter(o => o.status !== 'CANCELLED').reduce((sum, o) => sum + o.total, 0);
       this.podOrdersCount = this.orders.filter(o => o.hasPrintOnDemandItems).length;
     });
   }
@@ -431,8 +577,30 @@ export class AdminComponent implements OnInit {
   }
 
   // --- Đếm cho thẻ thống kê dạng bộ lọc (pattern stat-card của my-admin-vita) ---
+  private matchesOrderFilter(o: Order, filter: 'ALL' | OrderStatus): boolean {
+    return filter === 'ALL' || o.status === filter;
+  }
+
   orderCount(status: 'ALL' | OrderStatus): number {
-    return status === 'ALL' ? this.orders.length : this.orders.filter(o => o.status === status).length;
+    return this.orders.filter(o => this.matchesOrderFilter(o, status)).length;
+  }
+
+  /** Đơn cần nhân viên làm gì đó ngay: khách báo đã chuyển khoản chờ đối soát. */
+  get transferToVerifyCount(): number {
+    return this.orders.filter(o => o.transferReportedAt && o.paymentStatus !== 'PAID' && o.status !== 'CANCELLED').length;
+  }
+
+  /** Đơn COD đã giao, shipper đã thu tiền nhưng chưa đối soát với hãng vận chuyển. */
+  get codToReconcile(): { count: number; amount: number } {
+    const list = this.orders.filter(o => o.paymentMethod === 'COD' && o.status === 'DELIVERED' && o.paymentStatus !== 'PAID');
+    return { count: list.length, amount: list.reduce((sum, o) => sum + o.total, 0) };
+  }
+
+  /** Số đơn trước đây của cùng SĐT bị giao thất bại (bom hàng) — cảnh báo khi gọi xác nhận đơn COD. */
+  customerReturnCount(o: Order): number {
+    const phone = o.shippingAddress?.phone;
+    if (!phone) return 0;
+    return this.orders.filter(x => x.orderNumber !== o.orderNumber && x.status === 'RETURNED' && x.shippingAddress?.phone === phone).length;
   }
 
   customRequestCount(status: 'ALL' | CustomRequestStatus): number {
@@ -447,8 +615,30 @@ export class AdminComponent implements OnInit {
     return tier === 'ALL' ? this.customers.length : this.customers.filter(c => c.tier === tier).length;
   }
 
-  reviewCount(rating: 'ALL' | number): number {
-    return rating === 'ALL' ? this.reviews.length : this.reviews.filter(r => r.rating === rating).length;
+  private matchesReviewFilter(r: AdminReview, filter: ReviewFilter): boolean {
+    switch (filter) {
+      case 'NEEDS_ACTION': return r.status !== 'HIDDEN' && r.rating <= 2 && !r.reply?.text;
+      case 'UNREPLIED': return r.status !== 'HIDDEN' && !r.reply?.text;
+      case 'PINNED': return !!r.pinned && r.status !== 'HIDDEN';
+      case 'HIDDEN': return r.status === 'HIDDEN';
+      default: return true;
+    }
+  }
+
+  reviewCount(filter: ReviewFilter): number {
+    return this.reviews.filter(r => this.matchesReviewFilter(r, filter)).length;
+  }
+
+  /** Điểm trung bình & phân bố sao, chỉ tính đánh giá đang hiển thị (giống khách nhìn thấy). */
+  get reviewStats(): { average: number; total: number; byStar: { star: number; count: number; percent: number }[] } {
+    const visible = this.reviews.filter(r => r.status !== 'HIDDEN');
+    const total = visible.length;
+    const average = total ? visible.reduce((sum, r) => sum + r.rating, 0) / total : 0;
+    const byStar = [5, 4, 3, 2, 1].map(star => {
+      const count = visible.filter(r => r.rating === star).length;
+      return { star, count, percent: total ? Math.round((count / total) * 100) : 0 };
+    });
+    return { average, total, byStar };
   }
 
   couponCount(status: string): number {
@@ -490,57 +680,208 @@ export class AdminComponent implements OnInit {
 
   // --- Orders ---
   get filteredOrders(): Order[] {
+    const q = this.orderSearch.toLowerCase().trim();
     return this.orders.filter(o => {
-      const matchStatus = this.orderFilter === 'ALL' || o.status === this.orderFilter;
-      const q = this.orderSearch.toLowerCase().trim();
       const matchSearch = !q ||
         o.orderNumber.toLowerCase().includes(q) ||
         (o.shippingAddress?.fullName || '').toLowerCase().includes(q) ||
         (o.shippingAddress?.phone || '').includes(q);
-      return matchStatus && matchSearch;
+      return this.matchesOrderFilter(o, this.orderFilter) && matchSearch;
     });
+  }
+
+  orderStatusLabel(status: OrderStatus): string {
+    const labels: Record<OrderStatus, string> = {
+      PENDING: 'Chờ gọi xác nhận',
+      CONFIRMED: 'Chờ giao',
+      IN_PRODUCTION: 'Đang in 3D',
+      SHIPPED: 'Đang giao',
+      DELIVERED: 'Hoàn thành',
+      CANCELLED: 'Đã huỷ',
+      RETURNED: 'Hoàn hàng',
+    };
+    return labels[status] || status;
+  }
+
+  orderStatusClass(status: OrderStatus): string {
+    const classes: Record<OrderStatus, string> = {
+      PENDING: 'bg-[#FEF3C7] text-[#92400E]',
+      CONFIRMED: 'bg-[#EEF4F8] text-[#355C7D]',
+      IN_PRODUCTION: 'bg-[#FEF3C7] text-[#92400E]',
+      SHIPPED: 'bg-[#EEF4F8] text-[#355C7D]',
+      DELIVERED: 'bg-[#EDF7F1] text-[#2D6A4F]',
+      CANCELLED: 'bg-[#EFE6D3] text-[#7A6F67]',
+      RETURNED: 'bg-[#F9F1F2] text-[#9E2A2B]',
+    };
+    return classes[status] || '';
+  }
+
+  paymentMethodLabel(method: Order['paymentMethod'] | string): string {
+    const labels: Record<string, string> = { COD: 'COD', BANK_TRANSFER: 'Chuyển khoản', MOMO: 'MoMo', ZALOPAY: 'ZaloPay', VNPAY: 'VNPay', ATM: 'Thẻ ATM' };
+    return labels[method] || method;
+  }
+
+  /** Nhãn thanh toán: đã trả / thất bại / khách báo đã chuyển khoản / chưa trả. */
+  paymentStatusLabel(o: Order): string {
+    if (o.paymentStatus === 'PAID') return 'Đã thanh toán';
+    if (o.paymentStatus === 'FAILED') return 'Thanh toán lỗi';
+    if (o.status === 'CANCELLED' || o.status === 'RETURNED') return 'Không thu';
+    if (o.paymentMethod === 'COD' && o.status === 'DELIVERED') return 'Chờ đối soát COD';
+    if (o.transferReportedAt) return 'Khách báo đã CK';
+    return o.paymentMethod === 'COD' ? 'Thu khi giao' : 'Chưa thanh toán';
+  }
+
+  paymentStatusClass(o: Order): string {
+    if (o.paymentStatus === 'PAID') return 'bg-[#EDF7F1] text-[#2D6A4F]';
+    if (o.paymentStatus === 'FAILED') return 'bg-[#F9F1F2] text-[#9E2A2B]';
+    if (o.status === 'CANCELLED' || o.status === 'RETURNED') return 'bg-[#EFE6D3] text-[#7A6F67]';
+    if (o.paymentMethod === 'COD' && o.status === 'DELIVERED') return 'bg-[#EEF4F8] text-[#355C7D]';
+    if (o.transferReportedAt) return 'bg-[#EEF4F8] text-[#355C7D]';
+    return 'bg-[#FEF3C7] text-[#92400E]';
+  }
+
+  /** Ngày đặt dễ đọc — backend có sẵn createdAtLabel ("25/09/2026 18:34"). */
+  orderDateLabel(o: Order): string {
+    if (o.createdAtLabel) return o.createdAtLabel;
+    const d = new Date(o.createdAt);
+    return isNaN(d.getTime()) ? o.createdAt : d.toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  }
+
+  isOrderFinal(o: Order): boolean {
+    return o.status === 'DELIVERED' || o.status === 'CANCELLED' || o.status === 'RETURNED';
+  }
+
+  /** Đơn đã sẵn sàng tạo vận đơn: (COD) đã gọi xác nhận, và đơn in 3D đã tới bước Đóng gói. */
+  canShip(o: Order): boolean {
+    if (o.paymentMethod === 'COD' && !o.phoneConfirmedAt) return false;
+    if (o.status === 'CONFIRMED') return true;
+    return o.status === 'IN_PRODUCTION' && this.isProductionStepDone(o, 'PACKAGING');
+  }
+
+  /** Bước sản xuất đã đạt tới (để tô các bước đã xong trong modal). */
+  isProductionStepDone(o: Order, step: ProductionStep): boolean {
+    const order: ProductionStep[] = ['FILE_PREPARATION', '3D_PRINTING', 'POST_PROCESSING', 'ASSEMBLY_TESTING', 'PACKAGING', 'DISPATCHED'];
+    const current = o.productionProgress?.currentStep;
+    return !!current && order.indexOf(current) >= order.indexOf(step);
   }
 
   viewOrderDetail(order: Order): void {
     this.selectedOrder = order;
+    this.cancellingOrder = false;
+    this.cancelOrderReason = '';
+    this.returningOrder = false;
+    this.returnOrderReason = '';
     this.showOrderDetailModal = true;
+    this.loadShippingOptions(order);
   }
 
-  setProductionStep(orderNumber: string, step: ProductionStep, title: string, percent: number, notes: string): void {
-    const status = step === 'DISPATCHED' ? 'SHIPPED' : 'IN_PRODUCTION';
-    const nowStr = new Date().toLocaleDateString('vi-VN') + ' ' + new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
-    this.orderService.updateOrderStatus(orderNumber, status, {
-      currentStep: step,
-      percentage: percent,
-      stepTitle: title,
-      notes,
-      updatedAt: nowStr,
-    }).subscribe(() => {
-      this.refreshData();
-      if (this.selectedOrder && this.selectedOrder.orderNumber === orderNumber) {
-        this.selectedOrder.status = status;
-        this.selectedOrder.productionProgress = {
-          currentStep: step,
-          percentage: percent,
-          stepTitle: title,
-          notes,
-          updatedAt: nowStr,
-        };
-      }
-      this.showToast(`Đã cập nhật tiến độ đơn ${orderNumber}: ${title} (${percent}%)`, 'success');
-      this.recordAudit('Đơn Hàng', 'Cập nhật tiến độ in 3D', `Đơn ${orderNumber}: ${title} (${percent}%)`, 'SUCCESS');
+  private loadShippingOptions(order: Order): void {
+    this.shippingOptions = null;
+    this.shipForm = { carrier: '', trackingCode: '', fee: 0, note: '' };
+    if (!this.canShip(order) && order.status !== 'PENDING') return;
+    this.orderService.getShippingOptions(order.orderNumber).subscribe({
+      next: (opts) => {
+        if (this.selectedOrder?.orderNumber !== order.orderNumber) return;
+        this.shippingOptions = opts;
+        this.shipForm.carrier = opts.carriers.find(c => c.suitable)?.id || '';
+      },
     });
   }
 
-  updateOrderStatusDirect(orderNumber: string, status: OrderStatus): void {
-    this.orderService.updateOrderStatus(orderNumber, status).subscribe(() => {
-      this.refreshData();
-      if (this.selectedOrder && this.selectedOrder.orderNumber === orderNumber) {
-        this.selectedOrder.status = status;
-      }
-      this.showToast(`Đã chuyển trạng thái đơn ${orderNumber} sang ${status}`, 'info');
-      this.recordAudit('Đơn Hàng', 'Đổi trạng thái đơn hàng', `Đơn ${orderNumber} -> ${status}`, 'INFO');
+  confirmOrderPhone(o: Order): void {
+    this.applyOrderUpdate(this.orderService.confirmPhone(o.orderNumber), `Đã xác nhận đơn ${o.orderNumber} với khách`, 'Gọi xác nhận đơn COD');
+  }
+
+  /** Không gọi được khách: mở sẵn ô huỷ với lý do tương ứng. */
+  cannotReachCustomer(): void {
+    this.cancellingOrder = true;
+    this.cancelOrderReason = 'Không liên lạc được khách';
+  }
+
+  /** Cập nhật đơn và đồng bộ lại modal đang mở theo dữ liệu server trả về. */
+  private applyOrderUpdate(request: ReturnType<OrderService['updateOrderStatus']>, message: string, audit: string): void {
+    request.subscribe({
+      next: (updated) => {
+        this.refreshData();
+        if (this.selectedOrder?.orderNumber === updated.orderNumber) {
+          this.selectedOrder = updated;
+          if (this.canShip(updated) && !this.shippingOptions) this.loadShippingOptions(updated);
+        }
+        this.showToast(message, 'success');
+        this.recordAudit('Đơn Hàng', audit, `Đơn ${updated.orderNumber}`, 'SUCCESS');
+      },
+      error: (err) => this.showToast(err?.error?.error || 'Không cập nhật được đơn hàng', 'error'),
     });
+  }
+
+  setProductionStep(o: Order, step: ProductionStepOption): void {
+    this.applyOrderUpdate(
+      this.orderService.updateOrderStatus(o.orderNumber, 'IN_PRODUCTION', {
+        currentStep: step.step,
+        percentage: step.percent,
+        stepTitle: step.title,
+        notes: step.notes,
+        updatedAt: this.nowLabel(),
+      }),
+      `Đơn ${o.orderNumber}: ${step.title} (${step.percent}%)`,
+      `Cập nhật tiến độ in 3D: ${step.label}`
+    );
+  }
+
+  /** Tạo vận đơn với hãng đã chọn → đơn chuyển sang "Đang giao". */
+  submitShipment(o: Order): void {
+    if (!this.shipForm.carrier || this.shipping) return;
+    this.shipping = true;
+    this.orderService.ship(o.orderNumber, { ...this.shipForm, fee: Number(this.shipForm.fee) || 0 }).subscribe({
+      next: (updated) => {
+        this.shipping = false;
+        this.refreshData();
+        this.selectedOrder = updated;
+        this.showToast(`Đã tạo vận đơn ${updated.shipment?.carrierName} ${updated.shipment?.trackingCode || ''}`, 'success');
+        this.recordAudit('Đơn Hàng', 'Tạo vận đơn', `Đơn ${o.orderNumber} — ${updated.shipment?.carrierName} ${updated.shipment?.trackingCode || ''}`, 'SUCCESS');
+      },
+      error: (err) => {
+        this.shipping = false;
+        this.showToast(err?.error?.error || 'Không tạo được vận đơn', 'error');
+      },
+    });
+  }
+
+  confirmReturnOrder(o: Order): void {
+    const reason = this.returnOrderReason.trim();
+    if (!reason) return;
+    this.applyOrderUpdate(this.orderService.updateOrderStatus(o.orderNumber, 'RETURNED', undefined, reason), `Đơn ${o.orderNumber} giao thất bại — hàng hoàn về kho`, `Giao thất bại: ${reason}`);
+    this.returningOrder = false;
+  }
+
+  markOrderDelivered(o: Order): void {
+    const codNote = o.paymentMethod === 'COD' ? ' Shipper đã thu tiền COD (còn chờ đối soát với hãng).' : '';
+    if (!confirm(`Xác nhận đơn ${o.orderNumber} đã giao thành công?${codNote} Khách sẽ được cộng Xu thưởng và đơn không sửa được nữa.`)) return;
+    this.applyOrderUpdate(this.orderService.updateOrderStatus(o.orderNumber, 'DELIVERED'), `Đơn ${o.orderNumber} đã hoàn thành`, 'Giao thành công');
+  }
+
+  confirmCancelOrder(o: Order): void {
+    const reason = this.cancelOrderReason.trim();
+    if (!reason) return;
+    this.applyOrderUpdate(this.orderService.updateOrderStatus(o.orderNumber, 'CANCELLED', undefined, reason), `Đã huỷ đơn ${o.orderNumber}`, `Huỷ đơn: ${reason}`);
+    this.cancellingOrder = false;
+  }
+
+  setOrderPaid(o: Order, paid: boolean): void {
+    this.orderService.setPaymentStatus(o.orderNumber, paid ? 'PAID' : 'UNPAID').subscribe({
+      next: (updated) => {
+        this.refreshData();
+        if (this.selectedOrder?.orderNumber === updated.orderNumber) this.selectedOrder = updated;
+        this.showToast(paid ? `Đã xác nhận nhận tiền đơn ${o.orderNumber}` : 'Đã chuyển về chưa thanh toán', paid ? 'success' : 'info');
+        this.recordAudit('Đơn Hàng', paid ? 'Xác nhận đã thanh toán' : 'Huỷ xác nhận thanh toán', `Đơn ${o.orderNumber}`, paid ? 'SUCCESS' : 'WARNING');
+      },
+      error: (err) => this.showToast(err?.error?.error || 'Không cập nhật được thanh toán', 'error'),
+    });
+  }
+
+  private nowLabel(): string {
+    const now = new Date();
+    return now.toLocaleDateString('vi-VN') + ' ' + now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
   }
 
   // --- Products ---
@@ -857,33 +1198,81 @@ export class AdminComponent implements OnInit {
     this.recordAudit('Khách Hàng', 'Thưởng Luméa Xu', `${c.name}: +${coins} Xu`, 'INFO');
   }
 
-  // --- Reviews ---
-  get filteredReviews(): any[] {
-    return this.reviews.filter(r => {
-      const matchRating = this.reviewRatingFilter === 'ALL' || r.rating === this.reviewRatingFilter;
-      return matchRating;
+  // --- Đánh giá ---
+  get filteredReviews(): AdminReview[] {
+    const q = this.reviewSearch.trim().toLowerCase();
+    return this.reviews.filter(r =>
+      this.matchesReviewFilter(r, this.reviewFilter) &&
+      (this.reviewStarFilter === 'ALL' || r.rating === this.reviewStarFilter) &&
+      (!q || r.productName.toLowerCase().includes(q) || r.author.toLowerCase().includes(q) || r.comment.toLowerCase().includes(q))
+    );
+  }
+
+  reviewClientUrl(r: AdminReview): string {
+    return `${this.clientAppUrl}/product/${r.productSlug}`;
+  }
+
+  startReply(r: AdminReview): void {
+    this.replyingReviewId = r.id;
+    this.reviewReplyInputs[r.id] = r.reply?.text || '';
+  }
+
+  saveReviewReply(r: AdminReview): void {
+    const text = (this.reviewReplyInputs[r.id] || '').trim();
+    if (!text) return;
+    const isEdit = !!r.reply?.text;
+    this.reviewService.update(r, { reply: text }).subscribe({
+      next: () => {
+        this.replyingReviewId = null;
+        this.reviewReplyInputs[r.id] = '';
+        this.showToast(isEdit ? 'Đã cập nhật phản hồi' : 'Đã đăng phản hồi — khách thấy ngay dưới đánh giá', 'success');
+        this.recordAudit('Đánh Giá', isEdit ? 'Sửa phản hồi đánh giá' : 'Phản hồi đánh giá', `${r.author} — ${r.productName}`, 'INFO');
+      },
+      error: (err) => this.showToast(err?.error?.error || 'Không lưu được phản hồi', 'error'),
     });
   }
 
-  approveReview(r: any): void {
-    r.status = 'APPROVED';
-    this.showToast(`Đã duyệt hiển thị đánh giá của ${r.customerName}`, 'success');
-    this.recordAudit('Đánh Giá', 'Duyệt đánh giá', `Duyệt đánh giá ${r.id}`, 'SUCCESS');
+  deleteReviewReply(r: AdminReview): void {
+    if (!confirm('Xoá phản hồi của Luméa cho đánh giá này?')) return;
+    this.reviewService.update(r, { reply: '' }).subscribe({
+      next: () => this.showToast('Đã xoá phản hồi', 'info'),
+      error: (err) => this.showToast(err?.error?.error || 'Không xoá được phản hồi', 'error'),
+    });
   }
 
-  hideReview(r: any): void {
-    r.status = 'HIDDEN';
-    this.showToast(`Đã ẩn đánh giá của ${r.customerName}`, 'info');
-    this.recordAudit('Đánh Giá', 'Ẩn đánh giá', `Ẩn đánh giá ${r.id}`, 'WARNING');
+  toggleReviewPinned(r: AdminReview): void {
+    this.reviewService.update(r, { pinned: !r.pinned }).subscribe({
+      next: (updated) => this.showToast(updated.pinned ? 'Đã ghim — đánh giá hiện đầu trang sản phẩm' : 'Đã bỏ ghim', 'info'),
+      error: (err) => this.showToast(err?.error?.error || 'Không cập nhật được đánh giá', 'error'),
+    });
   }
 
-  replyReview(r: any): void {
-    const text = (this.reviewReplyInputs[r.id] || '').trim();
-    if (!text) return;
-    r.reply = text;
-    this.reviewReplyInputs[r.id] = '';
-    this.showToast('Đã gửi phản hồi chính thức từ Luméa!', 'success');
-    this.recordAudit('Đánh Giá', 'Phản hồi đánh giá', `Phản hồi cho ${r.customerName}: "${text}"`, 'INFO');
+  openHideReview(r: AdminReview): void {
+    this.hidingReview = r;
+    this.hideReviewReason = this.hideReviewReasons[0];
+  }
+
+  confirmHideReview(): void {
+    const r = this.hidingReview;
+    if (!r) return;
+    this.reviewService.update(r, { status: 'HIDDEN', hiddenReason: this.hideReviewReason.trim() }).subscribe({
+      next: () => {
+        this.hidingReview = null;
+        this.showToast(`Đã ẩn đánh giá của ${r.author}`, 'info');
+        this.recordAudit('Đánh Giá', 'Ẩn đánh giá', `${r.author} — ${r.productName}: ${this.hideReviewReason}`, 'WARNING');
+      },
+      error: (err) => this.showToast(err?.error?.error || 'Không ẩn được đánh giá', 'error'),
+    });
+  }
+
+  showReviewAgain(r: AdminReview): void {
+    this.reviewService.update(r, { status: 'VISIBLE' }).subscribe({
+      next: () => {
+        this.showToast('Đánh giá đã hiển thị lại', 'success');
+        this.recordAudit('Đánh Giá', 'Hiện lại đánh giá', `${r.author} — ${r.productName}`, 'SUCCESS');
+      },
+      error: (err) => this.showToast(err?.error?.error || 'Không cập nhật được đánh giá', 'error'),
+    });
   }
 
   // --- Promotions ---
@@ -942,43 +1331,340 @@ export class AdminComponent implements OnInit {
     this.recordAudit('Banner', 'Đổi trạng thái banner', `${b.title} -> ${b.active ? 'ACTIVE' : 'HIDDEN'}`, 'INFO');
   }
 
-  // --- Decor Community ---
-  approveCommunityPost(post: any): void {
-    post.status = 'APPROVED';
-    this.showToast(`Đã duyệt bài đăng của ${post.authorName}!`, 'success');
-    this.recordAudit('Cộng Đồng', 'Duyệt bài đăng UGC', post.title, 'SUCCESS');
+  // --- Cộng đồng (kiểm duyệt) ---
+  private isPostedToday(post: CommunityPost): boolean {
+    if (!post.postedAt) return false;
+    return new Date(post.postedAt).toDateString() === this.today.toDateString();
   }
 
-  toggleStaffPick(post: any): void {
-    post.isStaffPick = !post.isStaffPick;
-    this.showToast(`Bài đăng đã ${post.isStaffPick ? 'GẮN HUY HIỆU NỔI BẬT' : 'BỎ HUY HIỆU NỔI BẬT'}!`, 'info');
-    this.recordAudit('Cộng Đồng', 'Gắn huy hiệu nổi bật', `${post.title}: ${post.isStaffPick}`, 'INFO');
+  private matchesCommunityFilter(post: CommunityPost, filter: CommunityFilter): boolean {
+    switch (filter) {
+      case 'TODAY': return this.isPostedToday(post);
+      case 'STAFF_PICK': return !!post.isStaffPick;
+      case 'ALL': return true;
+      default: return (post.status || 'PUBLISHED') === filter;
+    }
   }
 
-  hideCommunityPost(post: any): void {
-    post.status = 'HIDDEN';
-    this.showToast(`Đã ẩn bài đăng của ${post.authorName}!`, 'info');
-    this.recordAudit('Cộng Đồng', 'Ẩn bài đăng UGC', post.title, 'WARNING');
+  communityCount(filter: CommunityFilter): number {
+    return this.communityPosts.filter(p => this.matchesCommunityFilter(p, filter)).length;
   }
 
-  // --- Articles ---
+  get filteredCommunityPosts(): CommunityPost[] {
+    const q = this.communitySearch.trim().toLowerCase();
+    return this.communityPosts.filter(p =>
+      this.matchesCommunityFilter(p, this.communityFilter) &&
+      (!q || p.title.toLowerCase().includes(q) || (p.caption || '').toLowerCase().includes(q) || (p.author?.name || '').toLowerCase().includes(q))
+    );
+  }
+
+  /** Bài bị bộ lọc tự động chặn — nhân viên nên xem lại vì có thể chặn nhầm. */
+  get rejectedPostsCount(): number {
+    return this.communityCount('REJECTED');
+  }
+
+  toggleStaffPick(post: CommunityPost): void {
+    this.communityService.moderate(post.id, { isStaffPick: !post.isStaffPick }).subscribe({
+      next: (updated) => {
+        this.showToast(updated.isStaffPick ? 'Đã gắn nhãn Staff Pick cho bài đăng' : 'Đã bỏ nhãn Staff Pick', 'info');
+        this.recordAudit('Cộng Đồng', 'Gắn nhãn Staff Pick', `${post.title}: ${updated.isStaffPick}`, 'INFO');
+      },
+      error: (err) => this.showToast(err?.error?.error || 'Không cập nhật được bài đăng', 'error'),
+    });
+  }
+
+  openHidePost(post: CommunityPost): void {
+    this.hidingPost = post;
+    this.hideReason = this.hideReasonPresets[0];
+  }
+
+  confirmHidePost(): void {
+    const post = this.hidingPost;
+    if (!post) return;
+    this.communityService.moderate(post.id, { status: 'HIDDEN', reason: this.hideReason.trim() }).subscribe({
+      next: () => {
+        this.hidingPost = null;
+        this.showToast(`Đã ẩn bài của ${post.author?.name || 'khách hàng'} và gửi thông báo cho người đăng`, 'info');
+        this.recordAudit('Cộng Đồng', 'Ẩn bài đăng', `${post.title} — ${this.hideReason}`, 'WARNING');
+      },
+      error: (err) => this.showToast(err?.error?.error || 'Không ẩn được bài đăng', 'error'),
+    });
+  }
+
+  /** Hiển thị lại bài đã ẩn, hoặc duyệt bài bị bộ lọc tự động chặn nhầm. */
+  publishCommunityPost(post: CommunityPost): void {
+    const wasRejected = post.status === 'REJECTED';
+    this.communityService.moderate(post.id, { status: 'PUBLISHED' }).subscribe({
+      next: () => {
+        this.showToast(wasRejected ? 'Đã duyệt bài — bài hiện đã hiển thị trên Cộng đồng' : 'Đã hiển thị lại bài đăng', 'success');
+        this.recordAudit('Cộng Đồng', wasRejected ? 'Duyệt bài bị chặn tự động' : 'Hiển thị lại bài đăng', post.title, 'SUCCESS');
+      },
+      error: (err) => this.showToast(err?.error?.error || 'Không cập nhật được bài đăng', 'error'),
+    });
+  }
+
+  deleteCommunityPost(post: CommunityPost): void {
+    if (!confirm(`Xoá vĩnh viễn bài "${post.title}"? Thao tác này không hoàn tác được.`)) return;
+    this.communityService.delete(post.id).subscribe({
+      next: () => {
+        this.showToast('Đã xoá bài đăng', 'info');
+        this.recordAudit('Cộng Đồng', 'Xoá bài đăng', post.title, 'WARNING');
+      },
+      error: (err) => this.showToast(err?.error?.error || 'Không xoá được bài đăng', 'error'),
+    });
+  }
+
+  // --- Tin nhắn hỗ trợ ---
+  get filteredChatSessions(): ChatSession[] {
+    const q = this.chatSearch.trim().toLowerCase();
+    const sessions = this.chatService.sessions();
+    if (!q) return sessions;
+    return sessions.filter(s =>
+      (s.customerName || '').toLowerCase().includes(q) ||
+      (s.customerPhone || '').includes(q) ||
+      s.lastText.toLowerCase().includes(q)
+    );
+  }
+
+  /** Tên hiển thị: khách đã đăng nhập thì lấy tên, khách vãng lai thì lấy 4 số cuối mã phiên. */
+  chatDisplayName(session: ChatSession | null): string {
+    if (!session) return '';
+    return session.customerName || session.customerPhone || `Khách vãng lai #${session.sessionId.slice(-4)}`;
+  }
+
+  /** Giờ nếu là hôm nay, ngày/tháng nếu cũ hơn. */
+  chatTimeLabel(iso: string | undefined): string {
+    if (!iso) return '';
+    const d = new Date(iso);
+    const sameDay = d.toDateString() === new Date().toDateString();
+    return sameDay
+      ? d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+      : d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+  }
+
+  openChat(session: ChatSession): void {
+    this.chatService.openSession(session.sessionId);
+    this.chatDraft = '';
+  }
+
+  sendChat(): void {
+    if (!this.chatDraft.trim()) return;
+    this.chatService.send(this.chatDraft);
+    this.chatDraft = '';
+  }
+
+  // --- Tin tức ---
+  private emptyArticleForm() {
+    return {
+      title: '',
+      category: 'Xu hướng Decor' as ArticleCategory,
+      excerpt: '',
+      content: '',
+      coverImage: '',
+      videoUrl: '',
+      readTime: '5 phút đọc',
+      authorName: 'Luméa Editorial',
+      authorRole: 'Biên tập viên Luméa',
+      tags: '',
+      featured: false,
+    };
+  }
+
+  get filteredArticles(): NewsArticle[] {
+    const q = this.articleSearch.trim().toLowerCase();
+    return this.articles.filter(a =>
+      (this.articleCategoryFilter === 'ALL' || a.category === this.articleCategoryFilter) &&
+      (!q || a.title.toLowerCase().includes(q) || (a.author?.name || '').toLowerCase().includes(q))
+    );
+  }
+
+  get totalArticleViews(): number {
+    return this.articles.reduce((sum, a) => sum + (a.viewsCount || 0), 0);
+  }
+
+  get featuredArticlesCount(): number {
+    return this.articles.filter(a => a.featured).length;
+  }
+
   openAddArticleModal(): void {
-    this.articleForm = { title: '', category: 'Cảm Hứng Thiết Kế', author: 'Luméa Editorial', readTime: '5 phút đọc', status: 'PUBLISHED', coverImage: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=600&q=80' };
+    this.editingArticle = null;
+    this.articleForm = { ...this.emptyArticleForm(), authorName: this.adminAuth.currentAdmin()?.fullName || 'Luméa Editorial' };
+    this.showArticleModal = true;
+  }
+
+  openEditArticle(art: NewsArticle): void {
+    this.editingArticle = art;
+    this.articleForm = {
+      title: art.title,
+      category: art.category,
+      excerpt: art.excerpt || '',
+      content: art.content || '',
+      coverImage: art.coverImage || '',
+      videoUrl: art.videoUrl || '',
+      readTime: art.readTime || '',
+      authorName: art.author?.name || '',
+      authorRole: art.author?.role || '',
+      tags: (art.tags || []).join(', '),
+      featured: !!art.featured,
+    };
     this.showArticleModal = true;
   }
 
   saveArticle(): void {
-    if (!this.articleForm.title.trim()) return;
-    const newArt = {
-      id: 'art-' + (this.articles.length + 1),
-      ...this.articleForm,
-      views: 0,
-      date: new Date().toLocaleDateString('vi-VN'),
+    const f = this.articleForm;
+    if (this.savingArticle) return;
+    if (!f.title.trim() || !f.content.trim()) {
+      this.showToast('Vui lòng nhập tiêu đề và nội dung bài viết', 'warning');
+      return;
+    }
+    const editing = this.editingArticle;
+    const payload = {
+      title: f.title.trim(),
+      category: f.category,
+      excerpt: f.excerpt.trim(),
+      content: f.content,
+      coverImage: f.coverImage.trim(),
+      videoUrl: f.videoUrl.trim() || undefined,
+      readTime: f.readTime.trim(),
+      featured: f.featured,
+      tags: f.tags.split(',').map(t => t.trim()).filter(Boolean),
+      author: {
+        name: f.authorName.trim() || 'Luméa Editorial',
+        role: f.authorRole.trim(),
+        avatar: editing?.author?.avatar || '',
+      },
     };
-    this.articles.unshift(newArt);
-    this.showArticleModal = false;
-    this.showToast(`Đã xuất bản bài viết "${newArt.title}"!`, 'success');
-    this.recordAudit('Bài Viết', 'Xuất bản bài viết', newArt.title, 'SUCCESS');
+    this.savingArticle = true;
+    const request = editing ? this.newsService.update(editing.id, payload) : this.newsService.create(payload);
+    request.subscribe({
+      next: (art) => {
+        this.savingArticle = false;
+        this.showArticleModal = false;
+        this.showToast(editing ? `Đã cập nhật bài "${art.title}"` : `Đã đăng bài "${art.title}" lên trang Tin tức`, 'success');
+        this.recordAudit('Tin Tức', editing ? 'Sửa bài viết' : 'Đăng bài viết', art.title, 'SUCCESS');
+      },
+      error: (err) => {
+        this.savingArticle = false;
+        this.showToast(err?.error?.error || 'Không lưu được bài viết', 'error');
+      },
+    });
+  }
+
+  toggleArticleFeatured(art: NewsArticle): void {
+    this.newsService.update(art.id, { featured: !art.featured }).subscribe({
+      next: (updated) => this.showToast(updated.featured ? 'Đã đặt làm bài nổi bật' : 'Đã bỏ nổi bật', 'info'),
+      error: (err) => this.showToast(err?.error?.error || 'Không cập nhật được bài viết', 'error'),
+    });
+  }
+
+  deleteArticle(art: NewsArticle): void {
+    if (!confirm(`Xoá bài "${art.title}"? Toàn bộ ý kiến bạn đọc của bài cũng bị xoá.`)) return;
+    this.newsService.delete(art.id).subscribe({
+      next: () => {
+        this.showToast('Đã xoá bài viết', 'info');
+        this.recordAudit('Tin Tức', 'Xoá bài viết', art.title, 'WARNING');
+      },
+      error: (err) => this.showToast(err?.error?.error || 'Không xoá được bài viết', 'error'),
+    });
+  }
+
+  // --- Video ---
+  private emptyVideoForm() {
+    return { title: '', description: '', youtubeId: '', poster: '', link: '', ctaLabel: 'Xem thêm', active: true };
+  }
+
+  /** ID YouTube đọc từ ô nhập (link đầy đủ, youtu.be, shorts hoặc ID trần) — để xem trước; server tự kiểm tra lại. */
+  get previewYoutubeId(): string | null {
+    const raw = this.videoForm.youtubeId.trim();
+    const match = raw.match(/(?:youtu\.be\/|[?&]v=|\/shorts\/|\/embed\/)([\w-]{11})/);
+    if (match) return match[1];
+    return /^[\w-]{11}$/.test(raw) ? raw : null;
+  }
+
+  youtubeThumb(youtubeId: string): string {
+    return `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
+  }
+
+  get sortedVideos(): Video[] {
+    return [...this.videos].sort((a, b) => a.order - b.order);
+  }
+
+  get activeVideosCount(): number {
+    return this.videos.filter(v => v.active).length;
+  }
+
+  openAddVideoModal(): void {
+    this.editingVideo = null;
+    this.videoForm = this.emptyVideoForm();
+    this.showVideoModal = true;
+  }
+
+  openEditVideo(video: Video): void {
+    this.editingVideo = video;
+    this.videoForm = {
+      title: video.title,
+      description: video.description || '',
+      youtubeId: `https://youtu.be/${video.youtubeId}`,
+      poster: video.poster || '',
+      link: video.link || '',
+      ctaLabel: video.ctaLabel || '',
+      active: video.active,
+    };
+    this.showVideoModal = true;
+  }
+
+  saveVideo(): void {
+    const f = this.videoForm;
+    if (this.savingVideo) return;
+    if (!f.title.trim() || !f.youtubeId.trim()) {
+      this.showToast('Vui lòng nhập tiêu đề và link YouTube', 'warning');
+      return;
+    }
+    const editing = this.editingVideo;
+    const payload = { ...f, title: f.title.trim(), youtubeId: f.youtubeId.trim() };
+    this.savingVideo = true;
+    const request = editing ? this.videoService.update(editing.id, payload) : this.videoService.create(payload);
+    request.subscribe({
+      next: (video) => {
+        this.savingVideo = false;
+        this.showVideoModal = false;
+        this.showToast(editing ? `Đã cập nhật video "${video.title}"` : `Đã đăng video "${video.title}" lên trang chủ`, 'success');
+        this.recordAudit('Video', editing ? 'Sửa video' : 'Đăng video', video.title, 'SUCCESS');
+      },
+      error: (err) => {
+        this.savingVideo = false;
+        this.showToast(err?.error?.error || 'Không lưu được video', 'error');
+      },
+    });
+  }
+
+  toggleVideoActive(video: Video): void {
+    this.videoService.update(video.id, { active: !video.active }).subscribe({
+      next: (updated) => this.showToast(updated.active ? 'Video đã hiển thị trên trang chủ' : 'Đã ẩn video khỏi trang chủ', 'info'),
+      error: (err) => this.showToast(err?.error?.error || 'Không cập nhật được video', 'error'),
+    });
+  }
+
+  /** Đổi chỗ với video liền trước/sau. Dữ liệu cũ có thể trùng order nên lấy vị trí trong danh
+   *  sách đã sắp làm thứ tự mới cho cả hai video. */
+  moveVideo(video: Video, direction: -1 | 1): void {
+    const sorted = this.sortedVideos;
+    const index = sorted.findIndex(v => v.id === video.id);
+    const other = sorted[index + direction];
+    if (!other) return;
+    this.videoService.update(video.id, { order: index + direction + 1 }).subscribe();
+    this.videoService.update(other.id, { order: index + 1 }).subscribe();
+  }
+
+  deleteVideo(video: Video): void {
+    if (!confirm(`Xoá video "${video.title}" khỏi trang chủ?`)) return;
+    this.videoService.delete(video.id).subscribe({
+      next: () => {
+        this.showToast('Đã xoá video', 'info');
+        this.recordAudit('Video', 'Xoá video', video.title, 'WARNING');
+      },
+      error: (err) => this.showToast(err?.error?.error || 'Không xoá được video', 'error'),
+    });
   }
 
   // --- Staff ---
@@ -1091,6 +1777,11 @@ export class AdminComponent implements OnInit {
 
   getOrderItemName(order: Order): string {
     return order.items?.[0]?.product?.name || 'Sản phẩm Luméa';
+  }
+
+  /** Tổng số món trong đơn (cộng dồn số lượng). */
+  orderItemQuantity(order: Order): number {
+    return (order.items || []).reduce((sum, i) => sum + (i.quantity || 0), 0);
   }
 
   getOrderCustomText(order: Order): string {

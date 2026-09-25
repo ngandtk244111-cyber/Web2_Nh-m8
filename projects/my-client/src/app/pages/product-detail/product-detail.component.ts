@@ -479,8 +479,9 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
         );
         this.mascotService.endLoading('happy');
       },
-      error: () => {
-        this.toastService.error('Không gửi được đánh giá, vui lòng thử lại.');
+      // Server trả lý do cụ thể khi đánh giá bị bộ lọc chặn (từ ngữ thô tục, spam...).
+      error: (err) => {
+        this.toastService.error(err?.error?.error || 'Không gửi được đánh giá, vui lòng thử lại.', 6000);
         this.mascotService.endLoading('sad');
       },
     });

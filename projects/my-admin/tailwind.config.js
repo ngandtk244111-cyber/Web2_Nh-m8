@@ -13,20 +13,21 @@ module.exports = {
     extend: {
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
-        serif: ['Cormorant Garamond', 'Georgia', 'serif'],
+        // Client dùng Inter cho mọi chữ; giữ key `serif` để các class font-serif cũ vẫn chạy
+        serif: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
       },
       colors: {
-        // Palette Castlery: rust (CTA/topbar), espresso (sidebar), kem (nền), cam đất (điểm nhấn)
-        rust: { DEFAULT: '#7E3F27', dark: '#693320' },
-        espresso: '#2B1D16',
-        ink: { DEFAULT: '#33241C', muted: '#7D6B5D' },
-        canvas: '#F7F3EA',
-        clay: { DEFAULT: '#C8672F', tint: '#FBEEE4' },
+        // Đồng bộ palette my-client (giữ tên token cũ): rust = đỏ MUJI, espresso = nâu đen, canvas = be kraft, clay = hồng đỏ nhấn
+        rust: { DEFAULT: '#A3152D', dark: '#891226' },
+        espresso: '#1F1712',
+        ink: { DEFAULT: '#1F1712', muted: '#7A6F67' },
+        canvas: '#F7F2E7',
+        clay: { DEFAULT: '#B7485B', tint: '#F9F1F2' },
       },
       boxShadow: {
-        xs: '0 1px 2px 0 rgba(43, 29, 22, 0.04)',
-        card: '0 1px 2px rgba(43, 29, 22, 0.04), 0 4px 16px -6px rgba(43, 29, 22, 0.06)',
-        lift: '0 2px 4px rgba(43, 29, 22, 0.04), 0 12px 32px -8px rgba(43, 29, 22, 0.12)',
+        xs: '0 1px 2px 0 rgba(31, 23, 18, 0.04)',
+        card: '0 1px 2px rgba(31, 23, 18, 0.04), 0 4px 16px -6px rgba(31, 23, 18, 0.06)',
+        lift: '0 2px 4px rgba(31, 23, 18, 0.04), 0 12px 32px -8px rgba(31, 23, 18, 0.12)',
       },
       backdropBlur: { xs: '2px' },
     },

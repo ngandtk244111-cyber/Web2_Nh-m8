@@ -59,8 +59,11 @@ export class OrderTrackingComponent implements OnInit {
 
   getStatusLabel(status: string): string {
     switch (status) {
+      case 'PENDING': return 'Chờ Luméa gọi xác nhận';
       case 'IN_PRODUCTION': return 'Đang in 3D & sản xuất';
-      case 'CONFIRMED': return 'Đã xác nhận đơn';
+      case 'CONFIRMED': return 'Đã xác nhận, chờ giao';
+      case 'CANCELLED': return 'Đơn đã huỷ';
+      case 'RETURNED': return 'Giao không thành công';
       case 'SHIPPED': return 'Đang giao hàng';
       case 'DELIVERED': return 'Giao hàng thành công';
       default: return status;

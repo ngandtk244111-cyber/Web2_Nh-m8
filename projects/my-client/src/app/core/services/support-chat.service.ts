@@ -1,5 +1,7 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { io, Socket } from 'socket.io-client';
+import { AuthService } from './auth.service';
 import { environment } from '../../../environments/environment';
 
 export interface ChatMessage {
@@ -14,7 +16,11 @@ const SESSION_KEY = 'deco3d_chat_session';
 
 @Injectable({ providedIn: 'root' })
 export class SupportChatService {
+  private http = inject(HttpClient);
+  private authService = inject(AuthService);
+
   private socket: Socket | null = null;
+  private historyLoaded = false;
   readonly messages = signal<ChatMessage[]>([]);
   readonly isOpen = signal(false);
   readonly sessionId: string;
@@ -43,9 +49,27 @@ export class SupportChatService {
     this.socket.on('connect', () => {
       this.socket?.emit('chat:join', this.sessionId);
     });
-    this.socket.on('chat:message', (message: ChatMessage) => {
-      this.messages.update(list => [...list, message]);
+    this.socket.on('chat:message', (message: ChatMessage) => this.appendMessage(message));
+    this.loadHistory();
+  }
+
+  /** Nạp lại tin cũ (kể cả câu trả lời nhân viên gửi khi khách đã đóng trang). */
+  private loadHistory(): void {
+    if (this.historyLoaded) return;
+    this.historyLoaded = true;
+    this.http.get<{ success: boolean; messages: ChatMessage[] }>(`${environment.apiUrl}/chat/${this.sessionId}/messages`).subscribe({
+      next: (res) => {
+        if (!res.success) return;
+        // Gộp với tin vừa nhận qua socket trong lúc chờ HTTP, bỏ trùng theo _id.
+        const seen = new Set(res.messages.map(m => m._id));
+        this.messages.update(live => [...res.messages, ...live.filter(m => !m._id || !seen.has(m._id))]);
+      },
+      error: () => { this.historyLoaded = false; },
     });
+  }
+
+  private appendMessage(message: ChatMessage): void {
+    this.messages.update(list => (message._id && list.some(m => m._id === message._id) ? list : [...list, message]));
   }
 
   open(): void {
@@ -60,6 +84,14 @@ export class SupportChatService {
   sendMessage(text: string): void {
     if (!text.trim()) return;
     this.ensureConnected();
-    this.socket?.emit('chat:message', { sessionId: this.sessionId, sender: 'customer', text: text.trim() });
+    // Khách đã đăng nhập thì gửi kèm tên/SĐT để nhân viên biết đang nói chuyện với ai.
+    const user = this.authService.currentUser();
+    this.socket?.emit('chat:message', {
+      sessionId: this.sessionId,
+      text: text.trim(),
+      userId: user?._id,
+      customerName: user?.fullName || undefined,
+      customerPhone: user?.phoneNumber || undefined,
+    });
   }
 }

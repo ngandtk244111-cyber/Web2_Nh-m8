@@ -1,9 +1,9 @@
-<div class="min-h-screen grid lg:grid-cols-[1.1fr_1fr] bg-[#F7F3EA]">
+<div class="min-h-screen grid lg:grid-cols-[1.1fr_1fr] bg-[#F7F2E7]">
 
   <!-- Brand panel — tông nâu espresso như hero banner Castlery -->
-  <section class="relative hidden lg:flex flex-col justify-between overflow-hidden bg-[#2B1D16] text-[#FBF8F2] px-14 py-12">
+  <section class="relative hidden lg:flex flex-col justify-between overflow-hidden bg-[#1F1712] text-[#FBF8F1] px-14 py-12">
     <!-- lớp chiếu sáng ấm + vân sọc mảnh gợi chất liệu vải -->
-    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,rgba(200,103,47,0.28),transparent_60%),radial-gradient(ellipse_at_80%_90%,rgba(126,63,39,0.45),transparent_55%)] pointer-events-none"></div>
+    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,rgba(183,72,91,0.28),transparent_60%),radial-gradient(ellipse_at_80%_90%,rgba(163,21,45,0.45),transparent_55%)] pointer-events-none"></div>
     <div class="absolute inset-0 opacity-[0.07] bg-[repeating-linear-gradient(90deg,#fff_0,#fff_1px,transparent_1px,transparent_5px)] pointer-events-none"></div>
 
     <div class="relative flex items-center gap-3">
@@ -12,23 +12,23 @@
     </div>
 
     <div class="relative max-w-md">
-      <p class="text-[11px] uppercase tracking-[0.28em] text-[#F2B48A]">Admin Portal</p>
+      <p class="text-[11px] uppercase tracking-[0.28em] text-[#E2B4BC]">Admin Portal</p>
       <h1 class="mt-4 font-serif text-[46px] leading-[1.08] font-medium">Quản lý không gian sống, từ bản vẽ đến tay khách hàng.</h1>
-      <p class="mt-5 text-sm leading-relaxed text-[#D9CCB8]">Theo dõi đơn hàng, xưởng in 3D, kho vật liệu và cộng đồng decor Luméa trong một bảng điều khiển.</p>
+      <p class="mt-5 text-sm leading-relaxed text-[#E3D5BA]">Theo dõi đơn hàng, xưởng in 3D, kho vật liệu và cộng đồng decor Luméa trong một bảng điều khiển.</p>
     </div>
 
     <div class="relative grid grid-cols-3 max-w-md text-center border-t border-white/10 pt-6">
       <div>
         <div class="font-serif text-2xl">Đơn hàng</div>
-        <div class="mt-1 text-[11px] uppercase tracking-[0.14em] text-[#A8988A]">Theo dõi</div>
+        <div class="mt-1 text-[11px] uppercase tracking-[0.14em] text-[#93877E]">Theo dõi</div>
       </div>
       <div class="border-x border-white/15">
         <div class="font-serif text-2xl">In 3D</div>
-        <div class="mt-1 text-[11px] uppercase tracking-[0.14em] text-[#A8988A]">Sản xuất</div>
+        <div class="mt-1 text-[11px] uppercase tracking-[0.14em] text-[#93877E]">Sản xuất</div>
       </div>
       <div>
         <div class="font-serif text-2xl">Kho</div>
-        <div class="mt-1 text-[11px] uppercase tracking-[0.14em] text-[#A8988A]">Tồn kho</div>
+        <div class="mt-1 text-[11px] uppercase tracking-[0.14em] text-[#93877E]">Tồn kho</div>
       </div>
     </div>
   </section>
@@ -36,7 +36,7 @@
   <!-- Form panel -->
   <section class="flex flex-col">
     <!-- dải nâu gỉ mảnh trên cùng, giống thanh thông báo Castlery -->
-    <div class="h-10 bg-[#7E3F27] text-[#FBF8F2] text-xs flex items-center justify-center tracking-wide px-4 text-center">
+    <div class="h-10 bg-[#A3152D] text-[#FBF8F1] text-xs flex items-center justify-center tracking-wide px-4 text-center">
       Khu vực nội bộ — chỉ dành cho nhân viên Luméa
     </div>
 
@@ -45,20 +45,20 @@
 
         <!-- Logo cho màn hình nhỏ (panel trái bị ẩn) -->
         <div class="lg:hidden flex items-center gap-3">
-          <div class="w-11 h-11 rounded-xl bg-[#2B1D16] overflow-hidden">
+          <div class="w-11 h-11 rounded-xl bg-[#1F1712] overflow-hidden">
             <img src="/logo/lumea-mark.png" alt="Luméa" class="w-full h-full object-cover mix-blend-lighten">
           </div>
-          <span class="font-serif text-2xl font-medium tracking-[0.2em] text-[#33241C]">LUMÉA</span>
+          <span class="font-serif text-2xl font-medium tracking-[0.2em] text-[#1F1712]">LUMÉA</span>
         </div>
 
         <div>
-          <h2 class="font-serif text-[36px] leading-tight font-medium text-[#33241C]">Đăng nhập</h2>
-          <p class="mt-1.5 text-sm text-[#7D6B5D]">Dùng tài khoản nhân viên để truy cập bảng quản trị.</p>
+          <h2 class="font-serif text-[36px] leading-tight font-medium text-[#1F1712]">Đăng nhập</h2>
+          <p class="mt-1.5 text-sm text-[#7A6F67]">Dùng tài khoản nhân viên để truy cập bảng quản trị.</p>
         </div>
 
         <form (ngSubmit)="submit()" class="space-y-5">
           <div>
-            <label for="username" class="block text-[11px] font-semibold text-[#4E3C30] mb-2 uppercase tracking-[0.14em]">Tên đăng nhập</label>
+            <label for="username" class="block text-[11px] font-semibold text-[#3C332D] mb-2 uppercase tracking-[0.14em]">Tên đăng nhập</label>
             <input
               id="username"
               type="text"
@@ -66,14 +66,14 @@
               name="username"
               autocomplete="username"
               placeholder="Nhập username nhân viên"
-              class="w-full text-sm bg-white border border-[#D9CCB8] rounded-lg px-4 py-3 text-[#33241C] placeholder-[#A8988A]"
+              class="w-full text-sm bg-white border border-[#E3D5BA] rounded-lg px-4 py-3 text-[#1F1712] placeholder-[#93877E]"
               [disabled]="submitting">
           </div>
 
           <div>
             <div class="flex items-center justify-between mb-2">
-              <label for="password" class="block text-[11px] font-semibold text-[#4E3C30] uppercase tracking-[0.14em]">Mật khẩu</label>
-              <span class="text-xs text-[#7E3F27] hover:underline cursor-pointer">Quên mật khẩu?</span>
+              <label for="password" class="block text-[11px] font-semibold text-[#3C332D] uppercase tracking-[0.14em]">Mật khẩu</label>
+              <span class="text-xs text-[#A3152D] hover:underline cursor-pointer">Quên mật khẩu?</span>
             </div>
             <input
               id="password"
@@ -82,12 +82,12 @@
               name="password"
               autocomplete="current-password"
               placeholder="Nhập mật khẩu"
-              class="w-full text-sm bg-white border border-[#D9CCB8] rounded-lg px-4 py-3 text-[#33241C] placeholder-[#A8988A]"
+              class="w-full text-sm bg-white border border-[#E3D5BA] rounded-lg px-4 py-3 text-[#1F1712] placeholder-[#93877E]"
               [disabled]="submitting">
           </div>
 
           <!-- Error alert -->
-          <div *ngIf="error" class="p-3 rounded-lg bg-[#FBEEE4] border border-[#F8C8C4] text-[#9E2A2B] text-xs flex items-center gap-2 animate-fade-in">
+          <div *ngIf="error" class="p-3 rounded-lg bg-[#F9F1F2] border border-[#F8C8C4] text-[#9E2A2B] text-xs flex items-center gap-2 animate-fade-in">
             <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="10"></circle>
               <line x1="12" y1="8" x2="12" y2="12"></line>
@@ -99,7 +99,7 @@
           <button
             type="submit"
             [disabled]="!username.trim() || !password.trim() || submitting"
-            class="w-full py-3.5 rounded-lg bg-[#7E3F27] hover:bg-[#693320] disabled:opacity-40 text-white font-medium text-[13px] uppercase tracking-[0.16em] transition shadow-sm flex items-center justify-center gap-2">
+            class="w-full py-3.5 rounded-lg bg-[#A3152D] hover:bg-[#891226] disabled:opacity-40 text-white font-medium text-[13px] uppercase tracking-[0.16em] transition shadow-sm flex items-center justify-center gap-2">
             <svg *ngIf="submitting" class="animate-spin w-4 h-4 text-white" viewBox="0 0 24 24" fill="none">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
@@ -109,20 +109,20 @@
         </form>
 
         <!-- Tài khoản demo -->
-        <div class="flex items-center justify-between gap-3 p-4 rounded-xl bg-[#F2EADC]/70 border border-[#E6DCCB]">
-          <div class="text-xs text-[#5E4B3E] leading-relaxed">
-            <div class="font-semibold text-[#33241C]">Tài khoản mặc định</div>
+        <div class="flex items-center justify-between gap-3 p-4 rounded-xl bg-[#EFE6D3]/70 border border-[#E8DEC9]">
+          <div class="text-xs text-[#4A403A] leading-relaxed">
+            <div class="font-semibold text-[#1F1712]">Tài khoản mặc định</div>
             admin / admin123
           </div>
           <button
             type="button"
             (click)="fillDemo('admin', 'admin123')"
-            class="px-3 py-1.5 bg-white hover:bg-[#FBF8F2] border border-[#D9CCB8] rounded-lg text-xs font-medium text-[#33241C] transition whitespace-nowrap">
+            class="px-3 py-1.5 bg-white hover:bg-[#FBF8F1] border border-[#E3D5BA] rounded-lg text-xs font-medium text-[#1F1712] transition whitespace-nowrap">
             Điền nhanh
           </button>
         </div>
 
-        <p class="text-[11px] text-[#A8988A] leading-relaxed">
+        <p class="text-[11px] text-[#93877E] leading-relaxed">
           Mọi lượt truy cập đều được ghi nhận trong Audit Log theo tiêu chuẩn bảo mật nội bộ.
         </p>
       </div>

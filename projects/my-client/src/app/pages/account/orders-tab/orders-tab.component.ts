@@ -51,6 +51,7 @@ export class OrdersTabComponent implements OnInit {
   private matchesStatusTab(status: OrderStatus): boolean {
     if (this.statusTab === 'ALL') return true;
     if (this.statusTab === 'PROCESSING') return ['PENDING', 'CONFIRMED', 'IN_PRODUCTION'].includes(status);
+    if (this.statusTab === 'CANCELLED') return status === 'CANCELLED' || status === 'RETURNED';
     return this.statusTab === status;
   }
 
@@ -72,6 +73,7 @@ export class OrdersTabComponent implements OnInit {
       SHIPPED: 'Đang giao',
       DELIVERED: 'Đã giao',
       CANCELLED: 'Đã hủy',
+      RETURNED: 'Giao không thành công',
     };
     return map[status] || status;
   }
@@ -79,7 +81,7 @@ export class OrdersTabComponent implements OnInit {
   statusClass(status: OrderStatus): string {
     if (status === 'DELIVERED') return 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30';
     if (status === 'SHIPPED') return 'bg-[#5b9bf0]/15 text-[#5b9bf0] border-[#5b9bf0]/30';
-    if (status === 'CANCELLED') return 'bg-rose-500/15 text-rose-400 border-rose-500/30';
+    if (status === 'CANCELLED' || status === 'RETURNED') return 'bg-rose-500/15 text-rose-400 border-rose-500/30';
     return 'bg-amber-500/15 text-amber-500 border-amber-500/30';
   }
 }

@@ -6,7 +6,8 @@ export type OrderStatus =
   | 'IN_PRODUCTION'
   | 'SHIPPED'
   | 'DELIVERED'
-  | 'CANCELLED';
+  | 'CANCELLED'
+  | 'RETURNED'; // giao thất bại / không nhận hàng
 
 export type ProductionStep =
   | 'FILE_PREPARATION' // Kiểm tra thiết kế & Slicing
@@ -46,10 +47,19 @@ export interface Order {
   items: CartItem[];
   shippingAddress: ShippingAddress;
   paymentMethod: 'COD' | 'BANK_TRANSFER' | 'MOMO' | 'ZALOPAY' | 'VNPAY' | 'ATM';
-  paymentStatus: 'PAID' | 'UNPAID';
+  paymentStatus: 'PAID' | 'UNPAID' | 'FAILED';
   subtotal: number;
   discount: number;
   shippingFee: number;
   total: number;
   notes?: string;
+  cancelReason?: string;
+  returnReason?: string;
+  /** Vận đơn do shop tạo với hãng vận chuyển (có khi đơn đã giao cho vận chuyển). */
+  shipment?: {
+    carrierName: string;
+    trackingCode: string;
+    trackingUrl: string;
+    shippedAt: string | null;
+  } | null;
 }

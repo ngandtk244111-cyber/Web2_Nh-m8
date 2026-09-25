@@ -27,6 +27,7 @@ app.use('/api/rooms', require('./routes/roomRoutes'));
 app.use('/api/custom-requests', require('./routes/customRequestRoutes'));
 app.use('/api/community', require('./routes/communityRoutes'));
 app.use('/api/news', require('./routes/newsRoutes'));
+app.use('/api/videos', require('./routes/videoRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/newsletter', require('./routes/newsletterRoutes'));
 app.use('/api/ai', require('./routes/aiRoutes'));

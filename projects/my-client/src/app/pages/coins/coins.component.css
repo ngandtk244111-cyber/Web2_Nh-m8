@@ -1,0 +1,1233 @@
+/* Trang Ưu đãi Luméa Xu — bố cục theo trang xu kiểu Shopee nhưng dùng màu thương hiệu
+   (đỏ đô + kem + vàng xu). Thiết kế desktop trước, co về 1 cột trên mobile. */
+:host {
+  display: block;
+  --xu-wine: #A80D27;
+  --xu-wine-dark: #600816;
+  --xu-gold: #F6C244;
+  --xu-cream: #F7F2E7;
+  --xu-ink: #1F1712;
+  --xu-muted: #93877E;
+  --xu-line: rgba(31, 23, 18, 0.12);
+}
+
+.xu-page {
+  background: var(--xu-cream);
+  padding-bottom: 80px;
+  color: var(--xu-ink);
+}
+
+.xu-wrap {
+  width: min(1200px, calc(100% - 32px));
+  margin: 0 auto;
+}
+
+/* ===== Hero ===== */
+.xu-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 22px 0 130px;
+  color: #fff;
+  background:
+    radial-gradient(circle at 85% 20%, rgba(246, 194, 68, 0.28), transparent 40%),
+    radial-gradient(circle at 10% 90%, rgba(255, 255, 255, 0.08), transparent 35%),
+    linear-gradient(135deg, #C8102E 0%, var(--xu-wine) 45%, var(--xu-wine-dark) 100%);
+}
+
+.xu-hero::after {
+  /* chấm xu mờ trang trí góc phải */
+  content: '';
+  position: absolute;
+  right: -60px;
+  top: -40px;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  border: 36px solid rgba(246, 194, 68, 0.12);
+  pointer-events: none;
+}
+
+.xu-hero__inner {
+  position: relative;
+  z-index: 1;
+}
+
+.xu-hero__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 26px;
+}
+
+.xu-hero__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.xu-hero__back:hover {
+  color: #fff;
+}
+
+.xu-hero__history {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.xu-hero__history:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.xu-hero__eyebrow {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgba(255, 233, 168, 0.9);
+}
+
+.xu-hero__title {
+  margin: 2px 0 14px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(34px, 4vw, 48px);
+  font-weight: 600;
+  line-height: 1.05;
+}
+
+.xu-hero__balance {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.xu-hero__amount {
+  font-size: clamp(44px, 6vw, 64px);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.xu-hero__unit {
+  align-self: flex-end;
+  margin-bottom: 8px;
+  font-size: 16px;
+  opacity: 0.8;
+}
+
+.xu-hero__login {
+  padding: 12px 24px;
+  border: none;
+  background: #fff;
+  color: var(--xu-wine);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.xu-hero__note {
+  margin: 12px 0 0;
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+/* ===== Khung chung ===== */
+.xu-main {
+  position: relative;
+  z-index: 2;
+  margin-top: -100px;
+}
+
+.xu-card {
+  background: #fff;
+  border: 1px solid var(--xu-line);
+  box-shadow: 0 18px 40px -24px rgba(60, 10, 18, 0.35);
+}
+
+.xu-top-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: stretch;
+}
+
+.xu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 13px 26px;
+  border: none;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease, opacity 0.2s ease;
+}
+
+.xu-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.xu-btn--primary {
+  background: linear-gradient(180deg, #C8102E, var(--xu-wine));
+  color: #fff;
+  box-shadow: 0 8px 18px -8px rgba(168, 13, 39, 0.7);
+}
+
+.xu-btn--primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.xu-btn--dark {
+  background: var(--xu-ink);
+  color: #fff;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 11px 20px;
+}
+
+.xu-btn--dark:hover {
+  background: var(--xu-wine);
+}
+
+/* ===== Điểm danh ===== */
+.xu-checkin {
+  padding: 0 28px 24px;
+  text-align: center;
+}
+
+.xu-checkin__title {
+  display: inline-block;
+  margin: 0 0 22px;
+  padding: 10px 48px;
+  background: #FCEFE4;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 26px;
+  font-style: italic;
+  font-weight: 600;
+  color: var(--xu-wine);
+}
+
+.xu-days {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr)) minmax(0, 1.6fr);
+  gap: 12px;
+  margin: 0 0 22px;
+  padding: 0;
+  list-style: none;
+}
+
+.xu-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.xu-day__tile {
+  position: relative;
+  width: 100%;
+  height: 104px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #F6F1EA;
+  border: 1.5px solid transparent;
+  transition: transform 0.2s ease;
+}
+
+.xu-day__amount {
+  font-size: 15px;
+  font-weight: 700;
+  color: #6B5A4E;
+}
+
+.xu-day__coin {
+  position: relative;
+  display: inline-flex;
+}
+
+.xu-day__coin-stack {
+  position: absolute;
+  left: 18px;
+  top: 8px;
+}
+
+.xu-day--today .xu-day__tile {
+  background: #fff;
+  border-color: var(--xu-wine);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px -12px rgba(168, 13, 39, 0.6);
+}
+
+.xu-day--today .xu-day__amount,
+.xu-day--today .xu-day__label {
+  color: var(--xu-wine);
+  font-weight: 700;
+}
+
+.xu-day--big .xu-day__tile {
+  background: linear-gradient(160deg, #FFF3C9, #F8D778);
+}
+
+.xu-day--big .xu-day__amount {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 4px 0;
+  background: var(--xu-wine);
+  color: #fff;
+  font-size: 14px;
+}
+
+.xu-day--big .xu-day__coin {
+  margin-top: 18px;
+}
+
+.xu-day--claimed .xu-day__tile {
+  opacity: 0.55;
+}
+
+.xu-day__check {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #2E7D4F;
+  color: #fff;
+}
+
+.xu-day__label {
+  font-size: 13px;
+  color: var(--xu-muted);
+}
+
+.xu-checkin__btn {
+  width: min(460px, 100%);
+}
+
+.xu-checkin__hint {
+  margin: 12px 0 0;
+  font-size: 12px;
+  color: var(--xu-muted);
+}
+
+/* ===== Tóm tắt hôm nay ===== */
+.xu-summary {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.xu-summary__label {
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--xu-muted);
+}
+
+.xu-summary__value {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0 18px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 34px;
+  font-weight: 700;
+}
+
+.xu-summary__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--xu-line);
+}
+
+.xu-summary__list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--xu-line);
+  font-size: 13px;
+}
+
+.xu-summary__list strong {
+  color: var(--xu-wine);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* ===== Section ===== */
+.xu-section {
+  margin-top: 48px;
+}
+
+.xu-section__title {
+  margin: 0 0 18px;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--xu-wine);
+}
+
+/* ===== Banner trò chơi ===== */
+.xu-banners {
+  position: relative;
+  overflow: hidden;
+}
+
+.xu-banners__track {
+  display: flex;
+  transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.xu-banner {
+  position: relative;
+  flex: 0 0 100%;
+  height: 240px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 0 56px;
+  overflow: hidden;
+  border: none;
+  text-align: left;
+  color: #fff;
+  cursor: pointer;
+}
+
+.xu-banner--wheel {
+  background: radial-gradient(circle at 78% 50%, #D34058 0 18%, transparent 45%), linear-gradient(120deg, #7A0A1D, #C8102E);
+}
+
+.xu-banner--memory {
+  background: radial-gradient(circle at 78% 50%, rgba(246, 194, 68, 0.35), transparent 45%), linear-gradient(120deg, #3C332D, #6E5B4C);
+}
+
+.xu-banner--gift {
+  background: radial-gradient(circle at 78% 50%, rgba(255, 255, 255, 0.35), transparent 45%), linear-gradient(120deg, #C9861A, #F2B544);
+}
+
+.xu-banner__text {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 460px;
+}
+
+.xu-banner__eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.xu-banner__title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(30px, 3.6vw, 46px);
+  font-weight: 700;
+  line-height: 1.05;
+}
+
+.xu-banner__desc {
+  font-size: 14px;
+  opacity: 0.88;
+}
+
+.xu-banner__cta {
+  align-self: flex-start;
+  margin-top: 8px;
+  padding: 9px 18px;
+  background: #fff;
+  color: var(--xu-ink);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.xu-banner__art {
+  flex-shrink: 0;
+  margin-right: 40px;
+  --s: 170px;
+}
+
+.xu-banners__dots {
+  position: absolute;
+  left: 56px;
+  bottom: 18px;
+  display: flex;
+  gap: 6px;
+}
+
+.xu-banners__dot {
+  width: 18px;
+  height: 3px;
+  padding: 0;
+  border: none;
+  background: rgba(255, 255, 255, 0.45);
+  cursor: pointer;
+  transition: width 0.25s ease, background 0.25s ease;
+}
+
+.xu-banners__dot--active {
+  width: 34px;
+  background: #fff;
+}
+
+/* ===== Minh họa CSS cho trò chơi (dùng lại ở banner, icon tròn, thẻ trò chơi) ===== */
+.xu-art {
+  --s: inherit;
+  position: relative;
+  display: block;
+  width: var(--s, 120px);
+  height: var(--s, 120px);
+}
+
+.xu-art--mini {
+  --s: 56px;
+}
+
+.xu-art--wheel {
+  border-radius: 50%;
+  background: conic-gradient(#FBF3E4 0 45deg, #A80D27 0 90deg, #FBF3E4 0 135deg, #F6C244 0 180deg, #FBF3E4 0 225deg, #A80D27 0 270deg, #FBF3E4 0 315deg, #A80D27 0);
+  box-shadow: 0 0 0 calc(var(--s, 120px) * 0.05) #3C0A12, 0 0 0 calc(var(--s, 120px) * 0.08) #FFE9A8, 0 12px 26px rgba(0, 0, 0, 0.3);
+  animation: xu-spin-idle 14s linear infinite;
+}
+
+.xu-art--wheel::after {
+  content: '';
+  position: absolute;
+  inset: 38%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #D34058, #840B1E);
+  border: 2px solid #FFE9A8;
+}
+
+.xu-art--memory::before,
+.xu-art--memory::after {
+  content: '';
+  position: absolute;
+  top: 12%;
+  width: 56%;
+  height: 76%;
+  background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.08) 0 5px, transparent 5px 10px), linear-gradient(145deg, #A80D27, #600816);
+  box-shadow: inset 0 0 0 3px rgba(255, 233, 168, 0.45), 0 10px 20px rgba(0, 0, 0, 0.3);
+}
+
+.xu-art--memory::before {
+  left: 6%;
+  transform: rotate(-12deg);
+}
+
+.xu-art--memory::after {
+  right: 6%;
+  transform: rotate(10deg);
+  background: #FBF7EE url('/assets/categories/den-chieu-sang.png') center / 85% no-repeat;
+}
+
+.xu-art--gift {
+  background:
+    linear-gradient(90deg, transparent 43%, #FFD76A 43% 57%, transparent 57%) 50% 100% / 80% 60% no-repeat,
+    linear-gradient(160deg, #C8102E, #840B1E) 50% 100% / 80% 60% no-repeat,
+    linear-gradient(90deg, transparent 42%, #FFE38C 42% 58%, transparent 58%) 50% 30% / 92% 16% no-repeat,
+    linear-gradient(180deg, #D34058, #A80D27) 50% 30% / 92% 16% no-repeat;
+  filter: drop-shadow(0 12px 16px rgba(0, 0, 0, 0.25));
+}
+
+.xu-art--gift::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 6%;
+  width: 46%;
+  height: 20%;
+  transform: translateX(-50%);
+  background:
+    radial-gradient(ellipse 45% 60% at 25% 60%, #FFD76A 60%, transparent 62%),
+    radial-gradient(ellipse 45% 60% at 75% 60%, #FFD76A 60%, transparent 62%);
+}
+
+@keyframes xu-spin-idle {
+  to { transform: rotate(360deg); }
+}
+
+/* ===== Hàng icon tròn ===== */
+.xu-shortcuts {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 26px;
+}
+
+.xu-shortcut {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--xu-ink);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.xu-shortcut__icon {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: #fff;
+  transition: transform 0.25s cubic-bezier(0.3, 1.4, 0.5, 1);
+}
+
+.xu-shortcut:hover .xu-shortcut__icon {
+  transform: translateY(-4px) scale(1.04);
+}
+
+.xu-shortcut__icon--wheel { background: #FCE3E6; }
+.xu-shortcut__icon--memory { background: #EFE6D3; }
+.xu-shortcut__icon--gift { background: #FFF1CC; }
+.xu-shortcut__icon--browse { background: #FFF6DA; }
+.xu-shortcut__icon--quiz { background: linear-gradient(145deg, #D34058, #840B1E); }
+.xu-shortcut__icon--shop { background: linear-gradient(145deg, #3C332D, #1F1712); }
+
+.xu-shortcut__badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--xu-cream);
+  border-radius: 999px;
+  background: var(--xu-wine);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.xu-shortcut__label {
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.35;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+/* ===== Thẻ trò chơi ===== */
+.xu-games {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.xu-game {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: 1px solid var(--xu-line);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.xu-game:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 34px -20px rgba(60, 10, 18, 0.45);
+}
+
+.xu-game__art {
+  height: 170px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  --s: 110px;
+}
+
+.xu-game__art--wheel { background: linear-gradient(135deg, #FCE3E6, #F7C9D0); }
+.xu-game__art--memory { background: linear-gradient(135deg, #EFE6D3, #E3D5BA); }
+.xu-game__art--gift { background: linear-gradient(135deg, #FFF3C9, #F8D778); }
+
+.xu-game__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px;
+}
+
+.xu-game__title {
+  margin: 0;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.xu-game__desc {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #5A4F47;
+}
+
+.xu-game__meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0 12px;
+  font-size: 12.5px;
+}
+
+.xu-game__reward {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  color: #6B3E07;
+}
+
+.xu-game__plays {
+  color: var(--xu-muted);
+}
+
+.xu-game .xu-btn {
+  margin-top: auto;
+}
+
+/* ===== Lịch sử ===== */
+.xu-history {
+  background: #fff;
+  border: 1px solid var(--xu-line);
+  padding: 4px 24px;
+}
+
+.xu-history__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--xu-line);
+}
+
+.xu-history__row:last-of-type {
+  border-bottom: none;
+}
+
+.xu-history__note {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.xu-history__date {
+  margin: 3px 0 0;
+  font-size: 12px;
+  color: var(--xu-muted);
+}
+
+.xu-history__amount {
+  color: #2E7D4F;
+  font-size: 15px;
+  white-space: nowrap;
+}
+
+.xu-history__empty {
+  margin: 0;
+  padding: 18px 0;
+  font-size: 13px;
+  color: var(--xu-muted);
+  text-align: center;
+}
+
+.xu-history__more {
+  display: block;
+  width: 100%;
+  padding: 14px 0;
+  border: none;
+  border-top: 1px solid var(--xu-line);
+  background: none;
+  color: var(--xu-wine);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.xu-link {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--xu-wine);
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ===== Gợi ý cho bạn ===== */
+.xu-feed__title {
+  margin: 0;
+  padding: 16px 0;
+  border-bottom: 2px solid var(--xu-wine);
+  background: #fff;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--xu-wine);
+}
+
+.xu-feed__banner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 56px;
+  margin: 14px 0 20px;
+  overflow: hidden;
+  background: #FCEBC0;
+  clip-path: polygon(0 0, 100% 0, 98.5% 100%, 1.5% 100%);
+}
+
+.xu-feed__fill {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, #F6C244, #F8D778);
+  transform-origin: left center;
+  transition: transform 0.3s ease;
+}
+
+.xu-feed__coin {
+  position: absolute;
+  left: 22px;
+}
+
+.xu-feed__text {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 16px;
+  color: #6B3E07;
+}
+
+.xu-feed__text strong {
+  font-size: 18px;
+  color: var(--xu-ink);
+}
+
+.xu-feed__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 28px 20px;
+}
+
+/* ===== Viên tiến độ nổi ===== */
+.xu-progress-pill {
+  position: fixed;
+  left: 50%;
+  bottom: 22px;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 16px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: rgba(31, 23, 18, 0.92);
+  color: #fff;
+  font-size: 12.5px;
+  white-space: nowrap;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
+  animation: xu-rise 0.35s ease both;
+}
+
+.xu-progress-pill__bar {
+  width: 90px;
+  height: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.xu-progress-pill__bar span {
+  display: block;
+  height: 100%;
+  background: var(--xu-gold);
+  transform-origin: left center;
+  transition: transform 0.3s ease;
+}
+
+.xu-progress-pill strong {
+  color: var(--xu-gold);
+}
+
+/* ===== Modal trò chơi ===== */
+.xu-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(20, 10, 8, 0.6);
+  backdrop-filter: blur(3px);
+  animation: xu-fade 0.25s ease both;
+}
+
+.xu-modal__panel {
+  width: min(560px, 100%);
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  background: #fff;
+  animation: xu-rise 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.xu-modal__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--xu-line);
+}
+
+.xu-modal__head h3 {
+  margin: 0;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.xu-modal__close {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--xu-line);
+  background: none;
+  color: var(--xu-ink);
+  cursor: pointer;
+}
+
+.xu-modal__body {
+  padding: 26px 22px;
+}
+
+/* ===== Hiệu ứng nhận xu ===== */
+.xu-pop {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.xu-pop__card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 28px 44px;
+  background: #fff;
+  box-shadow: 0 24px 60px rgba(60, 10, 18, 0.35);
+  animation: xu-pop 2.2s ease both;
+}
+
+.xu-pop__card strong {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 40px;
+  font-weight: 700;
+  color: var(--xu-wine);
+  line-height: 1;
+}
+
+.xu-pop__card > span:last-child {
+  font-size: 13px;
+  color: var(--xu-muted);
+}
+
+.xu-pop__burst {
+  position: absolute;
+  left: 50%;
+  top: 60px;
+}
+
+/* 6 đồng xu bắn toả theo 6 hướng (--i: 0..5) */
+.xu-pop__coin {
+  position: absolute;
+  animation: xu-burst 0.9s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+  --a: calc(var(--i) * 60deg);
+}
+
+@keyframes xu-burst {
+  from { transform: rotate(var(--a)) translateY(0) scale(0.4); opacity: 1; }
+  to { transform: rotate(var(--a)) translateY(-90px) scale(1); opacity: 0; }
+}
+
+@keyframes xu-pop {
+  0% { opacity: 0; transform: scale(0.7); }
+  12% { opacity: 1; transform: scale(1.04); }
+  20% { transform: scale(1); }
+  85% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: translateY(-16px); }
+}
+
+@keyframes xu-fade {
+  from { opacity: 0; }
+}
+
+@keyframes xu-rise {
+  from { opacity: 0; transform: translateY(16px); }
+}
+
+.xu-progress-pill {
+  animation-name: xu-rise-pill;
+}
+
+@keyframes xu-rise-pill {
+  from { opacity: 0; transform: translate(-50%, 16px); }
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 1023px) {
+  .xu-top-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .xu-shortcuts {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    row-gap: 22px;
+  }
+
+  .xu-feed__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .xu-banner {
+    padding: 0 32px;
+  }
+
+  .xu-banners__dots {
+    left: 32px;
+  }
+}
+
+@media (max-width: 767px) {
+  .xu-hero {
+    padding-bottom: 110px;
+  }
+
+  .xu-main {
+    margin-top: -86px;
+  }
+
+  .xu-checkin {
+    padding: 0 12px 18px;
+  }
+
+  .xu-checkin__title {
+    font-size: 21px;
+    padding: 8px 26px;
+  }
+
+  .xu-days {
+    grid-template-columns: repeat(6, minmax(0, 1fr)) minmax(0, 1.5fr);
+    gap: 5px;
+  }
+
+  .xu-day__tile {
+    height: 74px;
+    gap: 4px;
+  }
+
+  .xu-day__amount {
+    font-size: 11.5px;
+  }
+
+  .xu-day__coin app-xu-coin:first-child {
+    transform: scale(0.72);
+  }
+
+  .xu-day__coin-stack {
+    display: none;
+  }
+
+  .xu-day--big .xu-day__coin {
+    margin-top: 14px;
+  }
+
+  .xu-day__label {
+    font-size: 10.5px;
+    white-space: nowrap;
+  }
+
+  .xu-section {
+    margin-top: 36px;
+  }
+
+  .xu-section__title {
+    font-size: 17px;
+  }
+
+  .xu-banner {
+    height: 180px;
+    padding: 0 20px;
+  }
+
+  .xu-banner__desc {
+    display: none;
+  }
+
+  .xu-banner__art {
+    margin-right: 0;
+    --s: 100px;
+  }
+
+  .xu-banners__dots {
+    left: 20px;
+    bottom: 12px;
+  }
+
+  /* icon tròn cuộn ngang như app */
+  .xu-shortcuts {
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    margin-right: -16px;
+    padding-right: 16px;
+  }
+
+  .xu-shortcuts::-webkit-scrollbar {
+    display: none;
+  }
+
+  .xu-shortcut {
+    flex: 0 0 84px;
+  }
+
+  .xu-shortcut__icon {
+    width: 72px;
+    height: 72px;
+  }
+
+  .xu-shortcut .xu-art--mini {
+    --s: 42px;
+  }
+
+  .xu-shortcut__label {
+    font-size: 11px;
+  }
+
+  .xu-games {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .xu-game {
+    flex-direction: row;
+  }
+
+  .xu-game__art {
+    width: 120px;
+    height: auto;
+    flex-shrink: 0;
+    --s: 72px;
+  }
+
+  .xu-game__body {
+    padding: 14px;
+    gap: 4px;
+  }
+
+  .xu-game__title {
+    font-size: 20px;
+  }
+
+  .xu-game__meta {
+    flex-direction: column;
+    align-items: flex-start;
+    margin: 4px 0 8px;
+  }
+
+  .xu-history {
+    padding: 2px 14px;
+  }
+
+  .xu-feed__banner {
+    height: 48px;
+  }
+
+  .xu-feed__coin {
+    left: 12px;
+  }
+
+  .xu-feed__text {
+    font-size: 13.5px;
+  }
+
+  .xu-feed__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px 12px;
+  }
+
+  .xu-modal {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .xu-modal__panel {
+    max-height: 92vh;
+  }
+
+  .xu-modal__body {
+    padding: 20px 14px 28px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xu-art--wheel,
+  .xu-pop__coin {
+    animation: none;
+  }
+
+  .xu-banners__track {
+    transition: none;
+  }
+}

@@ -106,6 +106,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/account/account.component').then(m => m.AccountComponent),
   },
   {
+    path: 'xu',
+    loadComponent: () => import('./pages/coins/coins.component').then(m => m.CoinsComponent),
+  },
+  {
     path: 'notifications',
     loadComponent: () => import('./pages/notifications/notifications.component').then(m => m.NotificationsComponent),
   },

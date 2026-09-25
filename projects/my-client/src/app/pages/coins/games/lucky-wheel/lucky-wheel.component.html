@@ -1,0 +1,43 @@
+<div class="lw">
+  <div class="lw__stage">
+    <!-- Kim chỉ cố định ở đỉnh -->
+    <span class="lw__pointer" aria-hidden="true"></span>
+
+    <div
+      class="lw__wheel"
+      [style.background]="wheelBackground"
+      [style.transform]="'rotate(' + rotation() + 'deg)'"
+      [style.transition-duration.ms]="spinMs">
+      <span
+        *ngFor="let amount of prizes; let i = index"
+        class="lw__label"
+        [style.transform]="'rotate(' + (i * segmentAngle + segmentAngle / 2) + 'deg)'">
+        <span class="lw__label-inner" [style.color]="labelColor(i)">
+          <strong>{{ amount }}</strong>
+          <small>xu</small>
+        </span>
+      </span>
+    </div>
+
+    <!-- Viền đèn + nút quay ở tâm -->
+    <span class="lw__rim" aria-hidden="true"></span>
+    <button
+      type="button"
+      class="lw__hub"
+      [disabled]="spinning() || playsLeft <= 0"
+      (click)="spin()">
+      {{ spinning() ? '...' : 'QUAY' }}
+    </button>
+  </div>
+
+  <div class="lw__footer">
+    <div class="lw__result" *ngIf="result() !== null; else hint">
+      <app-xu-coin [size]="26"></app-xu-coin>
+      <span>Chúc mừng! Bạn nhận được <strong>+{{ result() }} xu</strong></span>
+    </div>
+    <ng-template #hint>
+      <p class="lw__hint">Bấm <strong>QUAY</strong> ở giữa vòng quay để thử vận may.</p>
+    </ng-template>
+    <p class="lw__plays">Còn <strong>{{ playsLeft }}</strong> lượt quay hôm nay</p>
+  </div>
+</div>

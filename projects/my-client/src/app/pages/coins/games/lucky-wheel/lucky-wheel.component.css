@@ -1,0 +1,163 @@
+:host {
+  display: block;
+}
+
+.lw {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+}
+
+.lw__stage {
+  position: relative;
+  width: min(380px, 78vw);
+  aspect-ratio: 1;
+}
+
+.lw__wheel {
+  position: absolute;
+  inset: 14px;
+  border-radius: 50%;
+  transition-property: transform;
+  transition-timing-function: cubic-bezier(0.15, 0.7, 0.1, 1);
+  box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.5);
+}
+
+/* Mỗi nhãn là 1 thanh từ tâm lên đỉnh, xoay tới giữa lát tương ứng */
+.lw__label {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 0;
+  height: 50%;
+  transform-origin: bottom center;
+}
+
+.lw__label-inner {
+  position: absolute;
+  top: 12%;
+  left: 0;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.lw__label-inner strong {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(20px, 5vw, 28px);
+  font-weight: 700;
+}
+
+.lw__label-inner small {
+  margin-top: 2px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+/* Viền ngoài có chấm đèn */
+.lw__rim {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  background:
+    radial-gradient(circle, transparent 0 calc(50% - 14px), #3C0A12 calc(50% - 14px) calc(50% - 11px), #840B1E calc(50% - 11px) 50%, transparent 50%);
+  box-shadow: 0 18px 40px rgba(60, 10, 18, 0.28);
+}
+
+.lw__rim::before {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  border-radius: 50%;
+  background: repeating-conic-gradient(#FFE9A8 0deg 4deg, transparent 4deg 22.5deg);
+  -webkit-mask: radial-gradient(circle, transparent 0 calc(50% - 4px), #000 calc(50% - 4px) 50%, transparent 50%);
+  mask: radial-gradient(circle, transparent 0 calc(50% - 4px), #000 calc(50% - 4px) 50%, transparent 50%);
+}
+
+.lw__pointer {
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  z-index: 3;
+  width: 30px;
+  height: 38px;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, #FFE27A, #EBAA2C);
+  clip-path: polygon(50% 100%, 0 0, 100% 0);
+  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.3));
+}
+
+.lw__hub {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  width: 25%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 4px solid #FFE9A8;
+  background: radial-gradient(circle at 35% 30%, #D34058, #840B1E 70%);
+  color: #ffffff;
+  font-size: clamp(13px, 3.4vw, 16px);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(60, 10, 18, 0.4);
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.lw__hub:hover:not(:disabled) {
+  transform: translate(-50%, -50%) scale(1.06);
+}
+
+.lw__hub:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.4) brightness(0.9);
+}
+
+.lw__footer {
+  text-align: center;
+  min-height: 60px;
+}
+
+.lw__result {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
+  background: #FFF6DA;
+  border: 1px solid #F1D48A;
+  color: #6B3E07;
+  font-size: 14px;
+  animation: lw-pop 0.45s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+
+.lw__hint {
+  margin: 0;
+  font-size: 13px;
+  color: #93877E;
+}
+
+.lw__plays {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: #93877E;
+}
+
+.lw__plays strong {
+  color: #A80D27;
+}
+
+@keyframes lw-pop {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: none; }
+}

@@ -7,6 +7,11 @@
     </div>
   </div>
 
+  <a routerLink="/xu" class="flex items-center justify-between gap-3 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-800 hover:bg-amber-500/15 transition">
+    <span class="text-xs font-semibold">Điểm danh mỗi ngày &amp; chơi game để nhận thêm xu</span>
+    <span class="text-xs font-bold whitespace-nowrap">Săn xu →</span>
+  </a>
+
   <div *ngIf="coinService.transactions().length === 0" class="text-xs text-neutral-500 text-center py-4">
     Bạn chưa có lịch sử nhận xu. Thử làm
     <a routerLink="/style-quiz" class="text-amber-600 font-semibold hover:underline">Trắc Nghiệm Phong Cách</a>

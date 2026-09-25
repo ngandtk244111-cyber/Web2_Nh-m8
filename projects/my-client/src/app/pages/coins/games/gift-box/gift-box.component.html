@@ -1,0 +1,33 @@
+<div class="gb">
+  <p class="gb__lead">Chọn 1 hộp quà — mỗi ngày được mở <strong>1 lần</strong>, phần thưởng từ 10 đến 150 xu.</p>
+
+  <div class="gb__row">
+    <button
+      *ngFor="let i of boxes"
+      type="button"
+      class="gb__box"
+      [class.gb__box--shaking]="opening() && picked() === i"
+      [class.gb__box--open]="isOpen(i)"
+      [class.gb__box--picked]="picked() === i"
+      [class.gb__box--dim]="picked() !== null && picked() !== i"
+      [disabled]="picked() !== null || playsLeft <= 0"
+      [attr.aria-label]="'Mở hộp quà số ' + (i + 1)"
+      (click)="pick(i)">
+
+      <span class="gb__prize" *ngIf="isOpen(i)">
+        <app-xu-coin [size]="30"></app-xu-coin>
+        <strong>+{{ amounts()[i] }}</strong>
+      </span>
+
+      <span class="gb__lid"><span class="gb__bow"></span></span>
+      <span class="gb__body"></span>
+    </button>
+  </div>
+
+  <div class="gb__footer">
+    <p class="gb__result" *ngIf="picked() !== null && isOpen(picked()!)">
+      Bạn nhận được <strong>+{{ amounts()[picked()!] }} xu</strong>! Quay lại ngày mai để mở hộp mới nhé.
+    </p>
+    <p class="gb__muted" *ngIf="picked() === null && playsLeft <= 0">Hôm nay bạn đã mở hộp quà rồi — quay lại vào ngày mai nhé!</p>
+  </div>
+</div>

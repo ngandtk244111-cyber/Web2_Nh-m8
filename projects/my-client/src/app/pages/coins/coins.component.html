@@ -1,0 +1,282 @@
+<div class="xu-page">
+
+  <!-- ================= HERO: số dư ================= -->
+  <section class="xu-hero">
+    <div class="xu-wrap xu-hero__inner">
+      <div class="xu-hero__top">
+        <a routerLink="/" class="xu-hero__back" aria-label="Về trang chủ">
+          <app-icon name="chevron-left" [size]="18"></app-icon>
+          <span>Trang chủ</span>
+        </a>
+        <button type="button" class="xu-hero__history" (click)="scrollToHistory()">
+          <span>Lịch sử</span>
+          <app-icon name="chevron-right" [size]="14"></app-icon>
+        </button>
+      </div>
+
+      <p class="xu-hero__eyebrow">Ưu đãi</p>
+      <h1 class="xu-hero__title">Luméa Xu</h1>
+
+      <div class="xu-hero__balance" *ngIf="isLoggedIn(); else loggedOut">
+        <app-xu-coin [size]="46"></app-xu-coin>
+        <span class="xu-hero__amount">{{ coinService.balance() }}</span>
+        <span class="xu-hero__unit">xu</span>
+      </div>
+      <ng-template #loggedOut>
+        <button type="button" class="xu-hero__login" (click)="login()">Đăng nhập để nhận xu</button>
+      </ng-template>
+
+      <p class="xu-hero__note">1 xu = 1đ, trừ trực tiếp vào đơn hàng khi thanh toán</p>
+    </div>
+  </section>
+
+  <div class="xu-wrap xu-main">
+
+    <!-- ================= ĐIỂM DANH + TÓM TẮT ================= -->
+    <div class="xu-top-grid">
+      <section class="xu-card xu-checkin">
+        <h2 class="xu-checkin__title">Điểm Danh Nhận Xu</h2>
+
+        <ol class="xu-days">
+          <li
+            *ngFor="let d of checkinDays()"
+            class="xu-day"
+            [class.xu-day--claimed]="d.state === 'claimed'"
+            [class.xu-day--today]="d.isToday"
+            [class.xu-day--big]="d.isBig">
+            <span class="xu-day__tile">
+              <span class="xu-day__amount">+{{ d.amount }}</span>
+              <span class="xu-day__coin">
+                <app-xu-coin [size]="d.isBig ? 38 : 30"></app-xu-coin>
+                <app-xu-coin *ngIf="d.isBig" [size]="30" class="xu-day__coin-stack"></app-xu-coin>
+              </span>
+              <span class="xu-day__check" *ngIf="d.state === 'claimed'">
+                <app-icon name="check" [size]="12"></app-icon>
+              </span>
+            </span>
+            <span class="xu-day__label">{{ d.isToday ? 'Hôm nay' : 'Ngày ' + d.day }}</span>
+          </li>
+        </ol>
+
+        <button
+          type="button"
+          class="xu-btn xu-btn--primary xu-checkin__btn"
+          [disabled]="checkingIn() || claimedToday()"
+          (click)="checkIn()">
+          <ng-container *ngIf="!claimedToday(); else claimedTpl">
+            {{ checkingIn() ? 'Đang nhận...' : 'Nhận ngay ' + todayCheckinAmount() + ' xu' }}
+          </ng-container>
+          <ng-template #claimedTpl>Đã điểm danh · quay lại ngày mai</ng-template>
+        </button>
+        <p class="xu-checkin__hint">Điểm danh 7 ngày liên tiếp, ngày thứ 7 nhận <strong>300 xu</strong>. Bỏ lỡ 1 ngày chuỗi sẽ bắt đầu lại.</p>
+      </section>
+
+      <aside class="xu-card xu-summary">
+        <p class="xu-summary__label">Hôm nay bạn đã nhận</p>
+        <p class="xu-summary__value">
+          <app-xu-coin [size]="26"></app-xu-coin>
+          <span>{{ isLoggedIn() ? earnedToday() : 0 }} xu</span>
+        </p>
+
+        <ul class="xu-summary__list">
+          <li *ngFor="let g of games">
+            <span>{{ g.title }}</span>
+            <strong>{{ isLoggedIn() ? playsLeft(g.key) : dailyLimit(g.key) }}/{{ dailyLimit(g.key) }} lượt</strong>
+          </li>
+          <li>
+            <span>Lướt gợi ý</span>
+            <strong>{{ browseClaimed() ? 'Đã nhận' : '+' + browseAmount() + ' xu' }}</strong>
+          </li>
+        </ul>
+      </aside>
+    </div>
+
+    <!-- ================= SĂN THÊM XU ================= -->
+    <section class="xu-section">
+      <h2 class="xu-section__title">Săn Thêm Xu Dưới Đây</h2>
+
+      <!-- Banner trò chơi tự chuyển -->
+      <div class="xu-banners">
+        <div class="xu-banners__track" [style.transform]="'translateX(-' + bannerIndex() * 100 + '%)'">
+          <button
+            *ngFor="let g of games"
+            type="button"
+            class="xu-banner xu-banner--{{ g.theme }}"
+            (click)="openGame(g.key)">
+            <span class="xu-banner__text">
+              <span class="xu-banner__eyebrow">Trò chơi nhận xu</span>
+              <span class="xu-banner__title">{{ g.title }}</span>
+              <span class="xu-banner__desc">{{ g.desc }}</span>
+              <span class="xu-banner__cta">Tham gia ngay →</span>
+            </span>
+            <span class="xu-banner__art" aria-hidden="true">
+              <span class="xu-art xu-art--{{ g.theme }}"></span>
+            </span>
+          </button>
+        </div>
+        <div class="xu-banners__dots">
+          <button
+            *ngFor="let g of games; let i = index"
+            type="button"
+            class="xu-banners__dot"
+            [class.xu-banners__dot--active]="i === bannerIndex()"
+            [attr.aria-label]="g.title"
+            (click)="setBanner(i)">
+          </button>
+        </div>
+      </div>
+
+      <!-- Hàng icon tròn -->
+      <div class="xu-shortcuts">
+        <button *ngFor="let g of games" type="button" class="xu-shortcut" (click)="openGame(g.key)">
+          <span class="xu-shortcut__icon xu-shortcut__icon--{{ g.theme }}">
+            <span class="xu-art xu-art--{{ g.theme }} xu-art--mini"></span>
+            <span class="xu-shortcut__badge" *ngIf="isLoggedIn() && playsLeft(g.key) > 0">{{ playsLeft(g.key) }}</span>
+          </span>
+          <span class="xu-shortcut__label">{{ g.title }}</span>
+        </button>
+
+        <button type="button" class="xu-shortcut" (click)="scrollToFeed()">
+          <span class="xu-shortcut__icon xu-shortcut__icon--browse">
+            <app-xu-coin [size]="34"></app-xu-coin>
+          </span>
+          <span class="xu-shortcut__label">Lướt Nhận {{ browseAmount() }} Xu</span>
+        </button>
+
+        <a routerLink="/style-quiz" class="xu-shortcut">
+          <span class="xu-shortcut__icon xu-shortcut__icon--quiz">
+            <app-icon name="sparkles" [size]="30"></app-icon>
+          </span>
+          <span class="xu-shortcut__label">Trắc Nghiệm +30 Xu</span>
+        </a>
+
+        <a routerLink="/catalog" class="xu-shortcut">
+          <span class="xu-shortcut__icon xu-shortcut__icon--shop">
+            <app-icon name="cart" [size]="28"></app-icon>
+          </span>
+          <span class="xu-shortcut__label">Mua Sắm Tích Xu</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- ================= TRÒ CHƠI ================= -->
+    <section class="xu-section">
+      <h2 class="xu-section__title">Trò Chơi Nhận Xu</h2>
+      <div class="xu-games">
+        <article *ngFor="let g of games" class="xu-game">
+          <div class="xu-game__art xu-game__art--{{ g.theme }}" aria-hidden="true">
+            <span class="xu-art xu-art--{{ g.theme }}"></span>
+          </div>
+          <div class="xu-game__body">
+            <h3 class="xu-game__title">{{ g.title }}</h3>
+            <p class="xu-game__desc">{{ g.desc }}</p>
+            <div class="xu-game__meta">
+              <span class="xu-game__reward"><app-xu-coin [size]="16"></app-xu-coin>{{ g.reward }}</span>
+              <span class="xu-game__plays" *ngIf="isLoggedIn()">Còn {{ playsLeft(g.key) }}/{{ dailyLimit(g.key) }} lượt</span>
+            </div>
+            <button type="button" class="xu-btn xu-btn--dark" (click)="openGame(g.key)">
+              {{ isLoggedIn() && playsLeft(g.key) === 0 ? (g.key === 'MEMORY' ? 'Chơi thử' : 'Hết lượt hôm nay') : 'Chơi ngay' }}
+            </button>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ================= LỊCH SỬ ================= -->
+    <section class="xu-section" #history id="lich-su">
+      <h2 class="xu-section__title">Lịch Sử Xu</h2>
+      <div class="xu-history" *ngIf="isLoggedIn(); else historyLogin">
+        <p class="xu-history__empty" *ngIf="coinService.transactions().length === 0">Chưa có giao dịch xu nào — điểm danh ngay để nhận xu đầu tiên!</p>
+        <div class="xu-history__row" *ngFor="let t of visibleHistory()">
+          <div>
+            <p class="xu-history__note">{{ t.note }}</p>
+            <p class="xu-history__date">{{ t.createdAt | date: 'HH:mm · dd/MM/yyyy' }}</p>
+          </div>
+          <strong class="xu-history__amount">+{{ t.amount }} xu</strong>
+        </div>
+        <button
+          *ngIf="coinService.transactions().length > 6"
+          type="button"
+          class="xu-history__more"
+          (click)="historyExpanded.set(!historyExpanded())">
+          {{ historyExpanded() ? 'Thu gọn' : 'Xem tất cả ' + coinService.transactions().length + ' giao dịch' }}
+        </button>
+      </div>
+      <ng-template #historyLogin>
+        <p class="xu-history__empty">
+          <button type="button" class="xu-link" (click)="login()">Đăng nhập</button> để xem lịch sử nhận xu của bạn.
+        </p>
+      </ng-template>
+    </section>
+
+    <!-- ================= GỢI Ý CHO BẠN + LƯỚT NHẬN XU ================= -->
+    <section class="xu-section xu-feed" #feed>
+      <h2 class="xu-feed__title">Gợi ý cho bạn</h2>
+
+      <div class="xu-feed__banner" [class.xu-feed__banner--done]="browseClaimed()">
+        <span class="xu-feed__fill" [style.transform]="'scaleX(' + (browseClaimed() ? 1 : feedProgress()) + ')'"></span>
+        <app-xu-coin [size]="34" class="xu-feed__coin"></app-xu-coin>
+        <span class="xu-feed__text" *ngIf="!browseClaimed(); else browseDone">
+          Lướt hết gợi ý để nhận <app-xu-coin [size]="18"></app-xu-coin> <strong>x{{ browseAmount() }} xu</strong>
+        </span>
+        <ng-template #browseDone>
+          <span class="xu-feed__text">Đã nhận <strong>{{ browseAmount() }} xu</strong> lướt gợi ý hôm nay</span>
+        </ng-template>
+      </div>
+
+      <div class="xu-feed__grid">
+        <app-product-card *ngFor="let p of feedProducts()" [product]="p"></app-product-card>
+      </div>
+    </section>
+  </div>
+
+  <!-- Tiến độ lướt nổi — chỉ hiện khi đang xem phần gợi ý -->
+  <div class="xu-progress-pill" *ngIf="feedInView() && isLoggedIn() && !browseClaimed()">
+    <app-xu-coin [size]="20"></app-xu-coin>
+    <span>Lướt tiếp để nhận {{ browseAmount() }} xu</span>
+    <span class="xu-progress-pill__bar"><span [style.transform]="'scaleX(' + feedProgress() + ')'"></span></span>
+    <strong>{{ (feedProgress() * 100) | number: '1.0-0' }}%</strong>
+  </div>
+
+  <!-- ================= MODAL TRÒ CHƠI ================= -->
+  <div class="xu-modal" *ngIf="activeGame() as game" (click)="closeGame()">
+    <div class="xu-modal__panel" role="dialog" aria-modal="true" [attr.aria-label]="gameTitle(game)" (click)="$event.stopPropagation()">
+      <div class="xu-modal__head">
+        <h3>{{ gameTitle(game) }}</h3>
+        <button type="button" class="xu-modal__close" aria-label="Đóng" (click)="closeGame()">
+          <app-icon name="x" [size]="16"></app-icon>
+        </button>
+      </div>
+      <div class="xu-modal__body">
+        <app-lucky-wheel
+          *ngIf="game === 'WHEEL'"
+          [prizes]="wheelPrizes()"
+          [playsLeft]="playsLeft('WHEEL')"
+          (rewarded)="onGameRewarded($event)">
+        </app-lucky-wheel>
+        <app-memory-game
+          *ngIf="game === 'MEMORY'"
+          [playsLeft]="playsLeft('MEMORY')"
+          (rewarded)="onGameRewarded($event)">
+        </app-memory-game>
+        <app-gift-box
+          *ngIf="game === 'GIFT_BOX'"
+          [playsLeft]="playsLeft('GIFT_BOX')"
+          (rewarded)="onGameRewarded($event)">
+        </app-gift-box>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= HIỆU ỨNG NHẬN XU ================= -->
+  <div class="xu-pop" *ngIf="rewardPop() as pop" aria-live="polite">
+    <div class="xu-pop__card">
+      <span class="xu-pop__burst" aria-hidden="true">
+        <app-xu-coin *ngFor="let i of [0, 1, 2, 3, 4, 5]" [size]="22" class="xu-pop__coin" [style.--i]="i"></app-xu-coin>
+      </span>
+      <app-xu-coin [size]="64"></app-xu-coin>
+      <strong>+{{ pop.amount }} xu</strong>
+      <span>{{ pop.label }}</span>
+    </div>
+  </div>
+</div>

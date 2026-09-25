@@ -27,6 +27,25 @@ import { environment } from '../../../environments/environment';
 /** Bộ lọc tab Cộng đồng: bài đăng hôm nay, đang hiển thị, bị bộ lọc tự động chặn, nhân viên đã ẩn. */
 export type CommunityFilter = 'TODAY' | 'ALL' | 'PUBLISHED' | 'REJECTED' | 'HIDDEN' | 'STAFF_PICK';
 
+/** Khách hàng tổng hợp từ đơn hàng thật (gom theo SĐT) — không có hạng thành viên giả. */
+export interface CustomerSummary {
+  phone: string;
+  name: string;
+  email: string;
+  city: string;
+  hasAccount: boolean;
+  orders: Order[];
+  deliveredCount: number;
+  returnedCount: number;
+  cancelledCount: number;
+  openCount: number;
+  totalSpend: number;
+  firstOrderAt: string;
+  lastOrderAt: string;
+}
+
+export type CustomerFilter = 'ALL' | 'LOYAL' | 'NEW' | 'RISK' | 'ACCOUNT';
+
 /** Bộ lọc tab Đánh giá — ưu tiên việc cần làm: đánh giá xấu chưa phản hồi. */
 export type ReviewFilter = 'NEEDS_ACTION' | 'UNREPLIED' | 'ALL' | 'PINNED' | 'HIDDEN';
 
@@ -104,7 +123,7 @@ export class AdminComponent implements OnInit, OnDestroy {
     'suppliers': { group: 'Thương mại & kho', title: 'Nhà cung cấp & xưởng chế tác', subtitle: 'Đối tác vật tư, filament và gia công' },
     'orders': { group: 'Vận hành & sản xuất', title: 'Đơn hàng', subtitle: 'Tiến độ xử lý, sản xuất và giao hàng' },
     'custom-requests': { group: 'Vận hành & sản xuất', title: 'Yêu cầu in 3D riêng', subtitle: 'Brief thiết kế từ khách hàng chờ duyệt & báo giá' },
-    'customers': { group: 'Khách hàng & CSKH', title: 'Khách hàng', subtitle: 'Hồ sơ, lịch sử mua và hạng thành viên' },
+    'customers': { group: 'Khách hàng & CSKH', title: 'Khách hàng', subtitle: 'Khách mua hàng tổng hợp từ đơn, lịch sử mua và tỉ lệ nhận hàng COD' },
     'messages': { group: 'Khách hàng & CSKH', title: 'Tin nhắn hỗ trợ', subtitle: 'Trả lời khách nhắn qua khung chat trên cửa hàng — tin mới hiện ngay, không cần tải lại' },
     'reviews': { group: 'Khách hàng & CSKH', title: 'Đánh giá', subtitle: 'Đánh giá đăng ngay không cần duyệt — theo dõi, phản hồi khách chưa hài lòng và ẩn nội dung vi phạm' },
     'promotions': { group: 'Khách hàng & CSKH', title: 'Khuyến mãi & voucher', subtitle: 'Mã giảm giá và chương trình ưu đãi' },
@@ -130,22 +149,14 @@ export class AdminComponent implements OnInit, OnDestroy {
   oldPassword = '';
   newPassword = '';
   confirmPassword = '';
-  twoFactorEnabled = true;
 
   // 1. Dashboard State
   totalRevenue = 0;
   podOrdersCount = 0;
   pendingRequestsCount = 0;
   customizableProductsCount = 0;
-  weeklySales = [
-    { day: 'T2', amount: 2450000, orders: 4, height: '45%' },
-    { day: 'T3', amount: 3820000, orders: 7, height: '65%' },
-    { day: 'T4', amount: 3100000, orders: 5, height: '55%' },
-    { day: 'T5', amount: 5600000, orders: 9, height: '85%' },
-    { day: 'T6', amount: 6450000, orders: 12, height: '95%' },
-    { day: 'T7', amount: 4900000, orders: 8, height: '78%' },
-    { day: 'CN', amount: 4200000, orders: 6, height: '70%' },
-  ];
+  /** Ngưỡng coi là sắp hết hàng (tồn kho ≤ số này). */
+  readonly LOW_STOCK_THRESHOLD = 5;
 
   // 2. Products State
   products: Product[] = [];
@@ -265,16 +276,9 @@ export class AdminComponent implements OnInit, OnDestroy {
   showRequestModal = false;
 
   // 8. Customers State
-  customers = [
-    { id: 'c-1', name: 'Phạm Minh Tuấn', phone: '0988 123 456', email: 'tuan.pham@gmail.com', tier: 'VÀNG', coins: 450, totalOrders: 6, totalSpend: 3450000, joinedDate: '12/03/2026', active: true, address: '124 Hoàng Hoa Thám, Ba Đình, Hà Nội' },
-    { id: 'c-2', name: 'Nguyễn Bích Ngọc', phone: '0912 888 999', email: 'ngoc.nguyen@outlook.com', tier: 'KIM CƯƠNG', coins: 1280, totalOrders: 14, totalSpend: 8900000, joinedDate: '05/01/2026', active: true, address: '88 Nguyễn Đình Chiểu, P. Đa Kao, Q.1, TP.HCM' },
-    { id: 'c-3', name: 'Trần Đăng Khoa', phone: '0933 456 789', email: 'khoa.tran@studio.vn', tier: 'BẠC', coins: 150, totalOrders: 3, totalSpend: 1850000, joinedDate: '28/05/2026', active: true, address: '25 Lê Lợi, TP. Đà Nẵng' },
-    { id: 'c-4', name: 'Lê Phương Thảo', phone: '0977 654 321', email: 'thao.le@interiordesign.com', tier: 'VÀNG', coins: 620, totalOrders: 8, totalSpend: 5200000, joinedDate: '14/02/2026', active: true, address: '45 Thảo Điền, TP. Thủ Đức' },
-    { id: 'c-5', name: 'Hoàng Anh Quân', phone: '0903 111 222', email: 'quan.hoang@gmail.com', tier: 'ĐỒNG', coins: 30, totalOrders: 1, totalSpend: 480000, joinedDate: '18/09/2026', active: true, address: '72 Nguyễn Trãi, Q.5, TP.HCM' },
-  ];
   customerSearch = '';
-  customerTierFilter = 'ALL';
-  selectedCustomer: any = null;
+  customerFilter: CustomerFilter = 'ALL';
+  selectedCustomer: CustomerSummary | null = null;
   showCustomerModal = false;
 
   // 9. Đánh giá sản phẩm (dữ liệu thật từ Product.reviews)
@@ -564,12 +568,6 @@ export class AdminComponent implements OnInit, OnDestroy {
     this.recordAudit('Bảo Mật', 'Đổi mật khẩu tài khoản quản trị', 'Thành công', 'SUCCESS');
   }
 
-  toggle2FA(): void {
-    this.twoFactorEnabled = !this.twoFactorEnabled;
-    this.showToast(this.twoFactorEnabled ? 'Đã bật xác thực 2 lớp (2FA)' : 'Đã tắt xác thực 2 lớp', 'info');
-    this.recordAudit('Bảo Mật', 'Cấu hình xác thực 2FA', this.twoFactorEnabled ? 'Bật 2FA' : 'Tắt 2FA', 'INFO');
-  }
-
   logout(): void {
     this.recordAudit('Hệ Thống', 'Đăng xuất', 'Đăng xuất khỏi hệ thống', 'INFO');
     this.adminAuth.logout();
@@ -611,8 +609,8 @@ export class AdminComponent implements OnInit, OnDestroy {
     return status === 'ALL' ? this.inventoryItems.length : this.inventoryItems.filter(i => i.status === status).length;
   }
 
-  customerCount(tier: string): number {
-    return tier === 'ALL' ? this.customers.length : this.customers.filter(c => c.tier === tier).length;
+  customerCount(filter: CustomerFilter): number {
+    return this.customers.filter(c => this.matchesCustomerFilter(c, filter)).length;
   }
 
   private matchesReviewFilter(r: AdminReview, filter: ReviewFilter): boolean {
@@ -1171,31 +1169,145 @@ export class AdminComponent implements OnInit, OnDestroy {
     this.showToast('Đã gửi phản hồi tư vấn cho khách!', 'info');
   }
 
-  // --- Customers ---
-  get filteredCustomers(): any[] {
-    return this.customers.filter(c => {
-      const matchTier = this.customerTierFilter === 'ALL' || c.tier === this.customerTierFilter;
-      const q = this.customerSearch.toLowerCase().trim();
-      const matchSearch = !q || c.name.toLowerCase().includes(q) || c.phone.includes(q) || c.email.toLowerCase().includes(q);
-      return matchTier && matchSearch;
-    });
+  // --- Customers (tổng hợp từ đơn hàng, chỉ đọc) ---
+  /** Gom đơn theo SĐT người nhận: mỗi SĐT là 1 khách, tên/email lấy theo đơn gần nhất. */
+  get customers(): CustomerSummary[] {
+    const byPhone = new Map<string, Order[]>();
+    for (const o of this.orders) {
+      const phone = (o.shippingAddress?.phone || '').replace(/\s+/g, '');
+      if (!phone) continue;
+      byPhone.set(phone, [...(byPhone.get(phone) || []), o]);
+    }
+    return [...byPhone.entries()].map(([phone, orders]) => {
+      const sorted = [...orders].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      const latest = sorted[0];
+      const delivered = orders.filter(o => o.status === 'DELIVERED');
+      return {
+        phone,
+        name: latest.shippingAddress.fullName,
+        email: latest.shippingAddress.email || '',
+        city: latest.shippingAddress.city,
+        hasAccount: orders.some(o => !!o.userId),
+        orders: sorted,
+        deliveredCount: delivered.length,
+        returnedCount: orders.filter(o => o.status === 'RETURNED').length,
+        cancelledCount: orders.filter(o => o.status === 'CANCELLED').length,
+        openCount: orders.filter(o => !this.isOrderFinal(o)).length,
+        totalSpend: delivered.reduce((sum, o) => sum + o.total, 0),
+        firstOrderAt: sorted[sorted.length - 1].createdAt,
+        lastOrderAt: latest.createdAt,
+      };
+    }).sort((a, b) => new Date(b.lastOrderAt).getTime() - new Date(a.lastOrderAt).getTime());
   }
 
-  viewCustomerDetail(c: any): void {
+  private matchesCustomerFilter(c: CustomerSummary, filter: CustomerFilter): boolean {
+    switch (filter) {
+      case 'LOYAL': return c.deliveredCount >= 2;
+      case 'NEW': return c.orders.length === 1;
+      case 'RISK': return c.returnedCount > 0;
+      case 'ACCOUNT': return c.hasAccount;
+      default: return true;
+    }
+  }
+
+  get filteredCustomers(): CustomerSummary[] {
+    const q = this.customerSearch.toLowerCase().trim();
+    return this.customers.filter(c =>
+      this.matchesCustomerFilter(c, this.customerFilter) &&
+      (!q || c.name.toLowerCase().includes(q) || c.phone.includes(q) || c.email.toLowerCase().includes(q))
+    );
+  }
+
+  /** Tỉ lệ nhận hàng thành công trên các đơn đã có kết quả giao — dùng đánh giá rủi ro COD. */
+  customerSuccessRate(c: CustomerSummary): number | null {
+    const finished = c.deliveredCount + c.returnedCount;
+    return finished ? Math.round((c.deliveredCount / finished) * 100) : null;
+  }
+
+  viewCustomerDetail(c: CustomerSummary): void {
     this.selectedCustomer = c;
     this.showCustomerModal = true;
   }
 
-  toggleCustomerStatus(c: any): void {
-    c.active = !c.active;
-    this.showToast(`Khách hàng ${c.name} hiện đã ${c.active ? 'KÍCH HOẠT' : 'TẠM KHÓA'}`, 'info');
-    this.recordAudit('Khách Hàng', 'Đổi trạng thái tài khoản', `${c.name} -> ${c.active ? 'ACTIVE' : 'LOCKED'}`, 'WARNING');
+  openCustomerOrder(o: Order): void {
+    this.showCustomerModal = false;
+    this.activeTab = 'orders';
+    this.viewOrderDetail(o);
   }
 
-  addCustomerCoins(c: any, coins: number): void {
-    c.coins += coins;
-    this.showToast(`Đã tặng ${coins} Luméa Xu cho khách hàng ${c.name}`, 'success');
-    this.recordAudit('Khách Hàng', 'Thưởng Luméa Xu', `${c.name}: +${coins} Xu`, 'INFO');
+  // --- Dashboard (tính từ đơn hàng & sản phẩm thật) ---
+  /** Đơn tính doanh thu: bỏ đơn huỷ và đơn giao thất bại. */
+  private isRevenueOrder(o: Order): boolean {
+    return o.status !== 'CANCELLED' && o.status !== 'RETURNED';
+  }
+
+  /** Doanh số 7 ngày gần nhất (hôm nay là cột cuối), chiều cao cột theo ngày cao nhất. */
+  get weeklySales(): { day: string; date: string; amount: number; orders: number; height: string; isPeak: boolean }[] {
+    const days = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(this.today);
+      d.setHours(0, 0, 0, 0);
+      d.setDate(d.getDate() - (6 - i));
+      return d;
+    });
+    const rows = days.map(d => {
+      const list = this.orders.filter(o => this.isRevenueOrder(o) && new Date(o.createdAt).toDateString() === d.toDateString());
+      return {
+        day: d.getDay() === 0 ? 'CN' : 'T' + (d.getDay() + 1),
+        date: d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }),
+        amount: list.reduce((sum, o) => sum + o.total, 0),
+        orders: list.length,
+      };
+    });
+    const max = Math.max(...rows.map(r => r.amount));
+    return rows.map(r => ({
+      ...r,
+      // Ngày không có đơn vẫn hiện 1 vạch mỏng để biết là 0 chứ không phải lỗi.
+      height: max > 0 ? Math.max(2, Math.round((r.amount / max) * 95)) + '%' : '2%',
+      isPeak: max > 0 && r.amount === max,
+    }));
+  }
+
+  get weekTotal(): number {
+    return this.weeklySales.reduce((sum, r) => sum + r.amount, 0);
+  }
+
+  get weekPeak(): { day: string; date: string; amount: number; orders: number } | null {
+    const peak = this.weeklySales.find(r => r.isPeak);
+    return peak || null;
+  }
+
+  /** Doanh thu tháng này so với tháng trước (cả tháng). */
+  get monthRevenue(): { current: number; previous: number; changePct: number | null } {
+    const now = this.today;
+    const sumMonth = (year: number, month: number) => this.orders
+      .filter(o => {
+        const d = new Date(o.createdAt);
+        return this.isRevenueOrder(o) && d.getFullYear() === year && d.getMonth() === month;
+      })
+      .reduce((sum, o) => sum + o.total, 0);
+    const current = sumMonth(now.getFullYear(), now.getMonth());
+    const prevDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const previous = sumMonth(prevDate.getFullYear(), prevDate.getMonth());
+    return { current, previous, changePct: previous > 0 ? Math.round(((current - previous) / previous) * 1000) / 10 : null };
+  }
+
+  /** Số đơn đang ở từng bước của xưởng in 3D. */
+  get printQueue(): { label: string; hint: string; count: number }[] {
+    const inProduction = this.orders.filter(o => o.status === 'IN_PRODUCTION');
+    const count = (steps: ProductionStep[]) => inProduction.filter(o => steps.includes(o.productionProgress?.currentStep as ProductionStep)).length;
+    return [
+      { label: '1. Chuẩn bị file & slicing', hint: 'Kiểm tra file, xuất G-code', count: count(['FILE_PREPARATION']) },
+      { label: '2. Đang chạy máy in', hint: 'Máy FDM/SLA đang in', count: count(['3D_PRINTING']) },
+      { label: '3. Xử lý bề mặt', hint: 'Chà nhám, phủ satin', count: count(['POST_PROCESSING', 'ASSEMBLY_TESTING']) },
+      { label: '4. Đóng gói, chờ giao', hint: 'Kiểm tra chất lượng & tem', count: count(['PACKAGING']) },
+    ];
+  }
+
+  get stockAlerts(): { outOfStock: Product[]; lowStock: Product[] } {
+    return {
+      outOfStock: this.products.filter(p => (p.inStock ?? 0) <= 0),
+      lowStock: this.products.filter(p => (p.inStock ?? 0) > 0 && p.inStock <= this.LOW_STOCK_THRESHOLD),
+    };
   }
 
   // --- Đánh giá ---

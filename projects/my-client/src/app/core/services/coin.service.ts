@@ -4,7 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthService } from './auth.service';
 import { ToastService } from './toast.service';
-import { CoinClaimResult, CoinRewardReason, CoinTransaction } from '../models/coin.model';
+import { CoinClaimResult, CoinGameKey, CoinGamePlayResult, CoinRewardReason, CoinRewardsState, CoinTransaction } from '../models/coin.model';
 
 const BASE = `${environment.apiUrl}/coins`;
 
@@ -16,6 +16,8 @@ export class CoinService {
 
   readonly balance = signal<number>(0);
   readonly transactions = signal<CoinTransaction[]>([]);
+  /** Trạng thái trang /xu (điểm danh, lượt chơi còn lại...) — null khi chưa đăng nhập/chưa tải. */
+  readonly rewards = signal<CoinRewardsState | null>(null);
 
   constructor() {
     effect(() => {
@@ -24,6 +26,7 @@ export class CoinService {
       } else {
         this.balance.set(0);
         this.transactions.set([]);
+        this.rewards.set(null);
       }
     });
   }
@@ -53,5 +56,56 @@ export class CoinService {
     this.balance.set(res.coins);
     this.refresh();
     return res;
+  }
+
+  // ===== Trang "Ưu đãi Luméa Xu" — mọi mức thưởng do server quyết định =====
+
+  private requireUserId(): string {
+    const userId = this.authService.currentUser()?._id;
+    if (!userId) throw new Error('Vui lòng đăng nhập để nhận xu.');
+    return userId;
+  }
+
+  /** Lỗi từ server (409 đã nhận, 429 hết lượt...) mang sẵn thông điệp tiếng Việt trong error.error. */
+  private errorMessage(err: any): string {
+    return err?.error?.error || err?.message || 'Có lỗi xảy ra, vui lòng thử lại.';
+  }
+
+  loadRewards(): void {
+    const userId = this.authService.currentUser()?._id;
+    if (!userId) return;
+    this.http.get<{ success: boolean } & CoinRewardsState>(`${BASE}/rewards`, { params: { userId } }).subscribe({
+      next: (res) => {
+        if (res.success) this.rewards.set(res);
+      },
+      error: () => { /* giữ trạng thái cũ */ },
+    });
+  }
+
+  private async post<T extends { coins: number }>(url: string, body: Record<string, unknown> = {}): Promise<T> {
+    const userId = this.requireUserId();
+    try {
+      const res = await firstValueFrom(this.http.post<T>(url, { userId, ...body }));
+      this.balance.set(res.coins);
+      return res;
+    } catch (err) {
+      throw new Error(this.errorMessage(err));
+    } finally {
+      // Đồng bộ lại lịch sử + lượt còn lại, kể cả khi server từ chối (VD đã nhận ở tab khác).
+      this.refresh();
+      this.loadRewards();
+    }
+  }
+
+  checkIn(): Promise<{ amount: number; coins: number; streakDay: number }> {
+    return this.post(`${BASE}/checkin`);
+  }
+
+  claimBrowse(): Promise<{ amount: number; coins: number }> {
+    return this.post(`${BASE}/browse`);
+  }
+
+  playGame(game: CoinGameKey, result: { moves?: number; seconds?: number } = {}): Promise<CoinGamePlayResult> {
+    return this.post<CoinGamePlayResult>(`${BASE}/games/${game.toLowerCase()}/play`, result);
   }
 }

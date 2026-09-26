@@ -679,7 +679,7 @@
   font-weight: 700;
   flex-shrink: 0;
   cursor: pointer;
-  max-width: 160px;
+  max-width: 220px;
   overflow: hidden;
   white-space: nowrap;
   transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease,
@@ -792,27 +792,14 @@
 
 .hd_megamenu__inner {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr)) 260px;
-  gap: 28px;
-  padding: 30px 0;
-}
-
-.hd_megamenu__columns {
-  display: contents;
-}
-
-.hd_megamenu__col {
-  display: flex;
-  flex-direction: column;
-  gap: 22px;
-  opacity: 0;
+  grid-template-columns: 230px minmax(0, 1fr) 250px;
+  gap: 32px;
+  padding: 28px 0 32px;
   animation: hd-col-in 0.3s ease both;
-  animation-delay: calc(var(--col-index, 0) * 0.05s);
 }
 
-.hd_megamenu--closing .hd_megamenu__col {
+.hd_megamenu--closing .hd_megamenu__inner {
   animation: none;
-  opacity: 1;
 }
 
 @keyframes hd-col-in {
@@ -826,21 +813,233 @@
   }
 }
 
-.hd_megamenu__group {
+/* Cột trái: nhóm lớn — chữ to, đậm hơn danh mục con để dễ scan */
+.hd_mega-rail {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  padding-right: 24px;
+  border-right: 1px solid rgba(31, 23, 18, 0.1);
 }
 
-.hd_megamenu__title {
-  font-size: 11.5px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: #111111;
-  margin-bottom: 8px;
-  padding-bottom: 6px;
-  border-bottom: 2px solid #A3152D;
+.hd_mega-rail__item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 11px 12px 11px 16px;
+  border-radius: 10px;
+  color: #1F1712;
+  font-size: 14.5px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+/* Vạch đỏ rượu bên trái mọc dần khi hover / đang chọn */
+.hd_mega-rail__item::after {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 50%;
+  width: 3px;
+  height: 60%;
+  border-radius: 3px;
+  background: #A3152D;
+  transform: translateY(-50%) scaleY(0);
+  transition: transform 0.25s cubic-bezier(0.2, 1, 0.3, 1);
+}
+
+.hd_mega-rail__text {
+  transition: transform 0.25s cubic-bezier(0.2, 1, 0.3, 1);
+}
+
+.hd_mega-rail__item app-icon {
+  color: #B7ADA4;
+  transition: transform 0.25s ease, color 0.2s ease, opacity 0.2s ease;
+}
+
+.hd_mega-rail__item--divider {
+  margin-top: 10px;
+}
+
+.hd_mega-rail__item--divider::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 12px;
+  right: 12px;
+  border-top: 1px solid rgba(31, 23, 18, 0.1);
+}
+
+.hd_mega-rail__item:hover,
+.hd_mega-rail__item--active {
+  background: #fff;
+  color: #A3152D;
+}
+
+.hd_mega-rail__item:hover::after,
+.hd_mega-rail__item--active::after {
+  transform: translateY(-50%) scaleY(1);
+}
+
+.hd_mega-rail__item:hover .hd_mega-rail__text,
+.hd_mega-rail__item--active .hd_mega-rail__text {
+  transform: translateX(4px);
+}
+
+.hd_mega-rail__item:hover app-icon,
+.hd_mega-rail__item--active app-icon {
+  color: #A3152D;
+  transform: translateX(3px);
+}
+
+/* Panel danh mục con */
+.hd_mega-panel {
+  min-width: 0;
+}
+
+.hd_mega-panel__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(31, 23, 18, 0.1);
+}
+
+.hd_mega-panel__title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #1F1712;
+}
+
+.hd_mega-panel__desc {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  color: #7A6F67;
+}
+
+.hd_mega-panel__all {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #1F1712;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 0.2s ease;
+}
+
+.hd_mega-panel__all app-icon {
+  transition: transform 0.2s ease;
+}
+
+.hd_mega-panel__all:hover {
+  color: #A3152D;
+}
+
+.hd_mega-panel__all:hover app-icon {
+  transform: translateX(4px);
+}
+
+.hd_mega-tiles {
+  display: grid;
+  /* --cols do template đặt: ≤4 mục → 1 hàng, nhiều hơn → lưới 3 cột */
+  grid-template-columns: repeat(var(--cols, 3), minmax(0, 240px));
+  gap: 16px 14px;
+}
+
+.hd_mega-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: #1F1712;
+  text-decoration: none;
+  animation: hd-tile-in 0.35s cubic-bezier(0.2, 1, 0.3, 1) both;
+  animation-delay: calc(var(--i, 0) * 40ms);
+}
+
+@keyframes hd-tile-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hd_mega-tile__img {
+  display: block;
+  aspect-ratio: 16 / 10;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #EFE8DD;
+  box-shadow: 0 0 0 0 rgba(163, 21, 45, 0);
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.hd_mega-tile__img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s cubic-bezier(0.2, 1, 0.3, 1);
+}
+
+.hd_mega-tile:hover .hd_mega-tile__img {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px -12px rgba(163, 21, 45, 0.55);
+}
+
+.hd_mega-tile:hover .hd_mega-tile__img img {
+  transform: scale(1.06);
+}
+
+.hd_mega-tile__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13.5px;
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+/* Gạch chân đỏ rượu chạy từ trái sang khi hover */
+.hd_mega-tile__text {
+  background-image: linear-gradient(#A3152D, #A3152D);
+  background-size: 0% 1.5px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  padding-bottom: 2px;
+  transition: background-size 0.3s ease;
+}
+
+.hd_mega-tile__label app-icon {
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.hd_mega-tile:hover .hd_mega-tile__label {
+  color: #A3152D;
+}
+
+.hd_mega-tile:hover .hd_mega-tile__text {
+  background-size: 100% 1.5px;
+}
+
+.hd_mega-tile:hover .hd_mega-tile__label app-icon {
+  opacity: 1;
+  transform: translateX(0);
 }
 
 .hd_megamenu__link {
@@ -855,13 +1054,15 @@
 }
 
 .hd_megamenu__link:hover {
-  background: rgba(163, 21, 45, 0.1);
-  color: #E2B4BC;
+  background: #fff;
+  color: #1F1712;
   padding-left: 14px;
 }
 
 .hd_megamenu__banner {
   position: relative;
+  isolation: isolate;
+  min-height: 280px;
   border-radius: 18px;
   overflow: hidden;
   padding: 22px 20px;
@@ -875,6 +1076,23 @@
 
 .hd_megamenu__banner:hover {
   transform: translateY(-2px);
+}
+
+.hd_megamenu__banner-img,
+.hd_megamenu__banner-shade {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+}
+
+.hd_megamenu__banner-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hd_megamenu__banner-shade {
+  background: linear-gradient(180deg, rgba(20, 16, 13, 0.15) 0%, rgba(20, 16, 13, 0.75) 100%);
 }
 
 .hd_megamenu__banner-icon {
@@ -916,9 +1134,9 @@
   color: #ffffff;
 }
 
-@media (max-width: 1400px) {
+@media (max-width: 1280px) {
   .hd_megamenu__inner {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: 210px minmax(0, 1fr);
   }
 
   .hd_megamenu__banner {
@@ -1208,6 +1426,19 @@
     font-size: 14px;
     font-weight: 500;
     transition: background 0.15s ease, color 0.15s ease;
+  }
+
+  .hd_drawer__item--all {
+    font-weight: 700;
+  }
+
+  .hd_drawer__item {
+    transition: background 0.15s ease, color 0.2s ease, transform 0.2s ease;
+  }
+
+  .hd_drawer__item:hover,
+  .hd_drawer__item:active {
+    transform: translateX(4px);
   }
 
   .hd_drawer__item:hover {

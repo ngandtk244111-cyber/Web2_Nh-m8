@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 
-export type ToastType = 'success' | 'error' | 'info';
+export type ToastType = 'success' | 'error' | 'info' | 'cart';
 
 export interface ToastMessage {
   id: number;
@@ -30,6 +30,11 @@ export class ToastService {
 
   info(message: string, durationMs = 3000): void {
     this.push(message, 'info', 'sparkles', durationMs);
+  }
+
+  /** Thông báo thêm giỏ hàng — hiển thị riêng ở giữa phía trên màn hình. */
+  cart(message: string, durationMs = 3000): void {
+    this.push(message, 'cart', 'check', durationMs);
   }
 
   dismiss(id: number): void {

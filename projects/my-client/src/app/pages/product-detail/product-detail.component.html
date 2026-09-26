@@ -157,8 +157,18 @@
           <nav class="pd_breadcrumb" aria-label="Breadcrumb">
             <a routerLink="/">Trang chủ</a>
             <app-icon name="chevron-right" [size]="12"></app-icon>
-            <a routerLink="/catalog" [queryParams]="{ category: product.category }">{{ product.categoryName }}</a>
-            <app-icon name="chevron-right" [size]="12"></app-icon>
+            <ng-container *ngIf="departmentLink as dl">
+              <a [routerLink]="dl.link" [queryParams]="dl.queryParams">{{ dl.label }}</a>
+              <app-icon name="chevron-right" [size]="12"></app-icon>
+            </ng-container>
+            <ng-container *ngIf="subcategory">
+              <a [routerLink]="categoryLink.link" [queryParams]="categoryLink.queryParams">{{ categoryLink.label }}</a>
+              <app-icon name="chevron-right" [size]="12"></app-icon>
+            </ng-container>
+            <ng-container *ngIf="!departmentLink">
+              <a routerLink="/catalog" [queryParams]="{ category: product.category }">{{ product.categoryName }}</a>
+              <app-icon name="chevron-right" [size]="12"></app-icon>
+            </ng-container>
             <span class="pd_breadcrumb__current">{{ product.name }}</span>
           </nav>
 
@@ -245,6 +255,18 @@
             </div>
           </ng-container>
 
+          <!-- 3D / Space Builder: chỉ hiện khi sản phẩm thực sự có dữ liệu tương ứng -->
+          <div *ngIf="has3D || isInShowroom" class="pd_feature-btns">
+            <button *ngIf="has3D" type="button" class="pd_feature-btn" (click)="view3D(carousel)">
+              <app-icon name="cube" [size]="15"></app-icon>
+              Xem 3D
+            </button>
+            <a *ngIf="isInShowroom" routerLink="/shop-the-room" class="pd_feature-btn">
+              <app-icon name="room" [size]="15"></app-icon>
+              Xem trong Space Builder
+            </a>
+          </div>
+
           <!-- Tùy biến 3D -->
           <div *ngIf="product.customizable" class="pd_notice">
             <app-icon name="sliders" [size]="15"></app-icon>
@@ -317,9 +339,13 @@
 
           <div class="pd_desc">
             <p>{{ product.description }}</p>
-            <a routerLink="/catalog" [queryParams]="{ category: product.category }">
-              Xem thêm {{ product.categoryName }} →
+            <a [routerLink]="categoryLink.link" [queryParams]="categoryLink.queryParams">
+              Xem thêm {{ categoryLink.label }} →
             </a>
+            <div *ngIf="spaceLinks.length" class="pd_spaces">
+              <span>Phù hợp với:</span>
+              <a *ngFor="let sp of spaceLinks" [routerLink]="sp.link" [queryParams]="sp.queryParams" class="pd_space-chip">{{ sp.label }}</a>
+            </div>
           </div>
         </aside>
       </div>
@@ -521,13 +547,27 @@
             hoặc gọi hotline 1800 6928.
           </p>
         </div>
-        <div class="pd_faq__list">
-          <div *ngFor="let item of faqItems" class="pd_faq__item">
-            <button type="button" class="pd_faq__q" (click)="toggleFaq(item.id)" [attr.aria-expanded]="openFaqId === item.id">
-              <span>{{ item.question }}</span>
-              <app-icon [name]="openFaqId === item.id ? 'minus' : 'plus'" [size]="14"></app-icon>
-            </button>
-            <p *ngIf="openFaqId === item.id" class="pd_faq__a">{{ item.answer }}</p>
+        <div class="pd_faq__grid">
+          <div *ngFor="let cat of faqCategories" class="pd_faq__group">
+            <h3 class="pd_faq__group-title">{{ cat.title }}</h3>
+            <div *ngFor="let item of cat.items" class="pd_faq__item">
+              <button
+                type="button"
+                class="pd_faq__q"
+                (click)="toggleFaq(item.id)"
+                [attr.aria-expanded]="openFaqId === item.id"
+                [attr.aria-controls]="'pd-faq-' + item.id">
+                <span>{{ item.question }}</span>
+                <span class="pd_faq__chevron" [class.pd_faq__chevron--open]="openFaqId === item.id">
+                  <app-icon name="chevron-down" [size]="16" [strokeWidth]="1.5"></app-icon>
+                </span>
+              </button>
+              <div class="pd_faq__a-wrap" [id]="'pd-faq-' + item.id" [class.pd_faq__a-wrap--open]="openFaqId === item.id">
+                <div class="pd_faq__a-inner">
+                  <p class="pd_faq__a">{{ item.answer }}</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>

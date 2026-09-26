@@ -17,7 +17,7 @@ import { Order, ProductionStep, OrderStatus, ShippingOptions } from '../../core/
 import { CustomRequest, CustomRequestStatus } from '../../core/models/custom-request.model';
 import { Room } from '../../core/models/room.model';
 import { CommunityPost } from '../../core/models/community.model';
-import { NewsArticle, ArticleCategory } from '../../core/models/news.model';
+import { NewsArticle, ArticleCategory, ARTICLE_CATEGORIES } from '../../core/models/news.model';
 import { Video } from '../../core/models/video.model';
 import { AppIconComponent } from '../../components/icon/icon.component';
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
@@ -163,6 +163,40 @@ export class AdminComponent implements OnInit, OnDestroy {
   productSubTab: 'all' | 'ready' | 'customizable' = 'all';
   productSearch = '';
   productCategoryFilter = 'ALL';
+  /** Khớp ProductCategory của my-client (cây danh mục: core/data/catalog-taxonomy.ts bên my-client). */
+  readonly productCategoryOptions: { value: ProductCategory; label: string; group: 'FURNITURE' | 'DECOR'; section: string }[] = [
+    { value: 'sofa', label: 'Sofa', group: 'FURNITURE', section: 'Nội thất' },
+    { value: 'bed', label: 'Giường', group: 'FURNITURE', section: 'Nội thất' },
+    { value: 'table', label: 'Bàn', group: 'FURNITURE', section: 'Nội thất' },
+    { value: 'side_table', label: 'Bàn Phụ & Side Table', group: 'FURNITURE', section: 'Nội thất' },
+    { value: 'chair', label: 'Ghế', group: 'FURNITURE', section: 'Nội thất' },
+    { value: 'stool', label: 'Ghế Đôn & Ghế Phụ', group: 'FURNITURE', section: 'Nội thất' },
+    { value: 'cabinet', label: 'Tủ', group: 'FURNITURE', section: 'Nội thất' },
+    { value: 'bookshelf', label: 'Kệ Sách & Kệ Treo Tường', group: 'FURNITURE', section: 'Nội thất' },
+    { value: 'desk_lamp', label: 'Đèn Bàn', group: 'FURNITURE', section: 'Đèn & ánh sáng' },
+    { value: 'night_lamp', label: 'Đèn Ngủ', group: 'FURNITURE', section: 'Đèn & ánh sáng' },
+    { value: 'pendant_lamp', label: 'Đèn Trang Trí (thả/cây)', group: 'FURNITURE', section: 'Đèn & ánh sáng' },
+    { value: 'lamp', label: 'Đèn Decor', group: 'FURNITURE', section: 'Đèn & ánh sáng' },
+    { value: 'vase', label: 'Bình Hoa & Lọ Decor', group: 'DECOR', section: 'Decor' },
+    { value: 'candle_holder', label: 'Đế Nến', group: 'DECOR', section: 'Decor' },
+    { value: 'clock', label: 'Đồng Hồ Decor', group: 'DECOR', section: 'Decor' },
+    { value: 'sculpture', label: 'Tượng & Figure', group: 'DECOR', section: 'Decor' },
+    { value: 'plant_pot', label: 'Chậu Cây', group: 'DECOR', section: 'Decor' },
+    { value: 'frame', label: 'Khung Ảnh', group: 'DECOR', section: 'Decor' },
+    { value: 'organizer', label: 'Khay & Hộp Đựng', group: 'FURNITURE', section: 'Đồ dùng & phụ kiện' },
+    { value: 'tray', label: 'Khay Decor', group: 'DECOR', section: 'Đồ dùng & phụ kiện' },
+    { value: 'bookend', label: 'Giá Đỡ & Bookend', group: 'DECOR', section: 'Đồ dùng & phụ kiện' },
+  ];
+
+  /** Chọn danh mục trong form → tự điền categoryName/categoryGroup tương ứng. */
+  onProductCategoryChange(value: ProductCategory): void {
+    const opt = this.productCategoryOptions.find(o => o.value === value);
+    this.productForm.category = value;
+    if (opt) {
+      this.productForm.categoryName = opt.label;
+      this.productForm.categoryGroup = opt.group;
+    }
+  }
   showProductModal = false;
   editingProduct: Product | null = null;
   productForm = {
@@ -187,14 +221,24 @@ export class AdminComponent implements OnInit, OnDestroy {
   };
 
   // 3. Categories State
+  // Nhóm lớn khớp mega menu của my-client (Nội thất / Đèn & ánh sáng / Decor / Đồ dùng & phụ kiện).
+  // productCount tính lại từ sản phẩm thật mỗi khi danh sách sản phẩm thay đổi (xem refreshCategoryCounts).
   categories = [
-    { id: 'cat-1', name: 'Đèn Bàn & Đèn Ngủ', slug: 'lamp', group: 'FURNITURE', icon: 'sparkles', productCount: 14, active: true, desc: 'Đèn ngủ mặt trăng, đèn decor ambient in 3D' },
-    { id: 'cat-2', name: 'Bàn Ghế & Tủ Kệ', slug: 'furniture-chair', group: 'FURNITURE', icon: 'box', productCount: 18, active: true, desc: 'Bàn trà tối giản, ghế thư giãn phong cách Scandinavian' },
-    { id: 'cat-3', name: 'Bình Hoa & Chậu Cây 3D', slug: 'vase-planter', group: 'DECOR', icon: 'layers', productCount: 26, active: true, desc: 'Bình hoa hình học xoắn ốc, chậu cây tự tưới PLA' },
-    { id: 'cat-4', name: 'Phụ Kiện Bàn Làm Việc', slug: 'desk-organizer', group: 'DECOR', icon: 'archive', productCount: 19, active: true, desc: 'Khay bút, giá đỡ điện thoại/laptop công thái học' },
-    { id: 'cat-5', name: 'Tranh & Phù Điêu Treo Tường', slug: 'wall-art', group: 'DECOR', icon: 'image', productCount: 11, active: true, desc: 'Tranh phù điêu 3D vân sóng, nghệ thuật parametric' },
-    { id: 'cat-6', name: 'Đồng Hồ & Nghệ Thuật Decor', slug: 'art-clock', group: 'DECOR', icon: 'clock', productCount: 8, active: true, desc: 'Đồng hồ cát in 3D, tượng decor trừu tượng' },
+    { id: 'cat-1', name: 'Nội thất', slug: 'noi-that', group: 'FURNITURE', icon: 'home', productCount: 0, active: true, desc: 'Sofa, giường, bàn, ghế, tủ, kệ' },
+    { id: 'cat-2', name: 'Đèn & ánh sáng', slug: 'anh-sang', group: 'FURNITURE', icon: 'sparkles', productCount: 0, active: true, desc: 'Đèn bàn, đèn ngủ, đèn trang trí, đèn decor' },
+    { id: 'cat-3', name: 'Decor', slug: 'decor', group: 'DECOR', icon: 'image', productCount: 0, active: true, desc: 'Đồ trang trí, tượng & figure, chậu cây, khung ảnh' },
+    { id: 'cat-4', name: 'Đồ dùng & phụ kiện', slug: 'do-dung', group: 'DECOR', icon: 'archive', productCount: 0, active: true, desc: 'Khay & hộp đựng, giá đỡ & bookend' },
   ];
+
+  /** Đếm số sản phẩm thật theo nhóm lớn (dựa trên section của productCategoryOptions). */
+  private refreshCategoryCounts(): void {
+    const sectionOf = new Map(this.productCategoryOptions.map(o => [o.value as string, o.section]));
+    for (const cat of this.categories) {
+      // Danh mục admin tự thêm (không thuộc 4 nhóm lớn) giữ nguyên số đã nhập.
+      if (!this.productCategoryOptions.some(o => o.section === cat.name)) continue;
+      cat.productCount = this.products.filter(p => sectionOf.get(p.category) === cat.name).length;
+    }
+  }
   showCategoryModal = false;
   editingCategory: any = null;
   categoryForm = { name: '', slug: '', group: 'DECOR', icon: 'box', desc: '', active: true };
@@ -353,7 +397,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   articles: NewsArticle[] = [];
   articleSearch = '';
   articleCategoryFilter: ArticleCategory | 'ALL' = 'ALL';
-  readonly articleCategories: ArticleCategory[] = ['Xu hướng Decor', 'Kiến thức In 3D', 'Bộ sưu tập & Room Look', 'Kinh nghiệm & Hậu trường'];
+  readonly articleCategories: ArticleCategory[] = ARTICLE_CATEGORIES;
   showArticleModal = false;
   editingArticle: NewsArticle | null = null;
   articleForm = this.emptyArticleForm();
@@ -489,6 +533,7 @@ export class AdminComponent implements OnInit, OnDestroy {
     effect(() => {
       this.products = this.productService.products();
       this.customizableProductsCount = this.products.filter(p => p.customizable).length;
+      this.refreshCategoryCounts();
     });
     effect(() => {
       this.customRequests = this.customRequestService.requests();
@@ -1569,7 +1614,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   private emptyArticleForm() {
     return {
       title: '',
-      category: 'Xu hướng Decor' as ArticleCategory,
+      category: 'Xu hướng' as ArticleCategory,
       excerpt: '',
       content: '',
       coverImage: '',

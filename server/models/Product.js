@@ -37,7 +37,10 @@ const productSchema = new mongoose.Schema({
   style: { type: String, enum: ['Minimalist', 'Scandinavian', 'Vintage', 'Cute/Kawaii', 'Modern', 'Retro', 'Japanese', null], default: null },
   color: { type: String, enum: ['Trắng', 'Đen', 'Xám', 'Be', 'Pastel', 'Xanh', 'Hồng', null], default: null },
   printMaterial: { type: String, enum: ['PLA', 'PETG', 'Resin', 'Wood PLA', 'Nhựa tái chế', null], default: null },
-  sizeCategory: { type: String, enum: ['Mini', 'Nhỏ', 'Trung bình', 'Theo yêu cầu', null], default: null },
+  sizeCategory: { type: String, enum: ['Mini', 'Nhỏ', 'Trung bình', 'Lớn', 'Theo yêu cầu', null], default: null },
+  // Không gian phù hợp (phong-khach, phong-ngu, phong-lam-viec, phong-hoc, goc-chill). Rỗng = frontend
+  // tự suy ra theo category (xem catalog-taxonomy.ts).
+  spaces: { type: [String], default: [] },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Product', productSchema);

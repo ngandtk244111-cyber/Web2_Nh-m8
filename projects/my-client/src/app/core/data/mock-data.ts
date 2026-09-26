@@ -223,7 +223,7 @@ export const MOCK_PRODUCTS: Product[] = [
     reviewCount: 19,
     inStock: 8,
     images: [
-      'https://images.unsplash.com/photo-1533090161767-e6ffed986c88?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1611486212557-88be5ff6f941?auto=format&fit=crop&w=800&q=80',
     ],
     dimensions: 'Đường kính 40cm x Cao 48cm',
     materialInfo: 'Gỗ sồi (Oak) tự nhiên 100%',
@@ -714,6 +714,169 @@ export const MOCK_PRODUCTS: Product[] = [
     style: 'Minimalist',
     color: 'Trắng',
     sizeCategory: 'Trung bình',
+  },
+  // ---------- Nội thất chính (Sofa, Giường, Bàn, Ghế, Tủ) + phụ kiện in 3D ----------
+  {
+    id: 'prod-22',
+    name: 'Sofa Nhung 3 Chỗ Verde Chân Gỗ Sồi',
+    slug: 'sofa-nhung-3-cho-verde-chan-go-soi',
+    category: 'sofa',
+    categoryName: 'Sofa',
+    categoryGroup: 'FURNITURE',
+    productionType: 'READY_STOCK',
+    customizable: false,
+    basePrice: 12900000,
+    originalPrice: 14500000,
+    description: 'Sofa 3 chỗ bọc nhung xanh rêu, đệm ngồi lò xo túi êm ái, chân gỗ sồi thon gọn — điểm nhấn sang trọng cho phòng khách hiện đại.',
+    rating: 4.8,
+    reviewCount: 27,
+    inStock: 8,
+    images: ['https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1618220179428-22790b461013?auto=format&fit=crop&w=800&q=80'],
+    badge: 'Mới',
+    dimensions: 'Dài 210cm x Sâu 88cm x Cao 82cm',
+    materialInfo: 'Vải nhung chống bám bụi + khung gỗ thông sấy + chân gỗ sồi',
+    weight: '48kg',
+    features: ['Đệm lò xo túi độc lập, không lún sau thời gian dài', 'Vải nhung chống bám lông thú cưng, dễ vệ sinh', 'Giao và lắp đặt miễn phí nội thành'],
+    reviews: [],
+    style: 'Modern',
+    color: 'Xanh',
+    sizeCategory: 'Lớn',
+    spaces: ['phong-khach', 'goc-chill'],
+  },
+  {
+    id: 'prod-23',
+    name: 'Giường Bọc Nệm Đầu Giường Chần Nút Lune 1m6',
+    slug: 'giuong-boc-nem-dau-giuong-chan-nut-lune-1m6',
+    category: 'bed',
+    categoryName: 'Giường',
+    categoryGroup: 'FURNITURE',
+    productionType: 'READY_STOCK',
+    customizable: false,
+    basePrice: 9800000,
+    originalPrice: 11200000,
+    description: 'Giường 1m6 đầu giường bọc nệm chần nút cổ điển, khung gỗ tự nhiên chắc chắn, gam màu be dịu mắt cho phòng ngủ thư thái.',
+    rating: 4.7,
+    reviewCount: 19,
+    inStock: 5,
+    images: ['https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1616594039964-ae9021a400a0?auto=format&fit=crop&w=800&q=80'],
+    badge: 'Bán Chạy',
+    dimensions: 'Dài 210cm x Rộng 172cm x Cao đầu giường 120cm (nệm 1m6 x 2m)',
+    materialInfo: 'Khung gỗ cao su + đầu giường bọc vải linen chần nút',
+    weight: '65kg',
+    features: ['Đầu giường chần nút bọc linen mềm', 'Dát giường gỗ thông thoáng khí', 'Lắp đặt tại nhà trong 60 phút'],
+    reviews: [],
+    style: 'Vintage',
+    color: 'Be',
+    sizeCategory: 'Lớn',
+    spaces: ['phong-ngu'],
+  },
+  {
+    id: 'prod-24',
+    name: 'Bàn Ăn Gỗ Sồi Nordic 6 Chỗ',
+    slug: 'ban-an-go-soi-nordic-6-cho',
+    category: 'table',
+    categoryName: 'Bàn',
+    categoryGroup: 'FURNITURE',
+    productionType: 'READY_STOCK',
+    customizable: false,
+    basePrice: 6500000,
+    originalPrice: 7400000,
+    description: 'Bàn ăn gỗ sồi mặt chữ nhật cho 6 người, chân vát thanh mảnh đúng tinh thần Bắc Âu — dùng làm bàn ăn hay bàn làm việc lớn đều hợp.',
+    rating: 4.9,
+    reviewCount: 23,
+    inStock: 7,
+    images: ['https://images.unsplash.com/photo-1577140917170-285929fb55b7?auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80'],
+    badge: 'Có Sẵn Giao Nhanh',
+    dimensions: 'Dài 180cm x Rộng 90cm x Cao 75cm',
+    materialInfo: 'Gỗ sồi tự nhiên phủ dầu lau chống thấm',
+    weight: '42kg',
+    features: ['Mặt gỗ sồi dày 3cm', 'Phủ dầu lau gốc thực vật, an toàn thực phẩm', 'Chân vát tháo rời tiện vận chuyển'],
+    reviews: [],
+    style: 'Scandinavian',
+    color: 'Be',
+    sizeCategory: 'Lớn',
+    spaces: ['phong-khach', 'phong-lam-viec'],
+  },
+  {
+    id: 'prod-25',
+    name: 'Ghế Bành Armchair Vải Dạ Chân Gỗ Tần Bì',
+    slug: 'ghe-banh-armchair-vai-da-chan-go-tan-bi',
+    category: 'chair',
+    categoryName: 'Ghế',
+    categoryGroup: 'FURNITURE',
+    productionType: 'READY_STOCK',
+    customizable: false,
+    basePrice: 2450000,
+    originalPrice: 2890000,
+    description: 'Ghế bành lưng cong ôm người, bọc vải dạ xám ấm, chân gỗ tần bì — góc đọc sách hay bàn làm việc đều thêm phần thư giãn.',
+    rating: 4.7,
+    reviewCount: 31,
+    inStock: 14,
+    images: ['https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=800&q=80'],
+    dimensions: 'Rộng 56cm x Sâu 58cm x Cao 86cm',
+    materialInfo: 'Vải dạ bọc mút D40 + chân gỗ tần bì tự nhiên',
+    weight: '9kg',
+    features: ['Lưng cong công thái học', 'Mút D40 đàn hồi tốt', 'Chân gỗ có đệm chống trầy sàn'],
+    reviews: [],
+    style: 'Minimalist',
+    color: 'Xám',
+    sizeCategory: 'Trung bình',
+    spaces: ['phong-lam-viec', 'phong-khach', 'goc-chill'],
+  },
+  {
+    id: 'prod-26',
+    name: 'Tủ Quần Áo Gỗ Óc Chó 2 Cánh Walden',
+    slug: 'tu-quan-ao-go-oc-cho-2-canh-walden',
+    category: 'cabinet',
+    categoryName: 'Tủ',
+    categoryGroup: 'FURNITURE',
+    productionType: 'READY_STOCK',
+    customizable: false,
+    basePrice: 7900000,
+    originalPrice: 8900000,
+    description: 'Tủ quần áo 2 cánh vân gỗ óc chó ấm áp, bên trong có thanh treo và 3 ngăn xếp — gọn gàng, bền bỉ cho phòng ngủ.',
+    rating: 4.6,
+    reviewCount: 12,
+    inStock: 4,
+    images: ['https://images.unsplash.com/photo-1558997519-83ea9252edf8?auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1595428774223-ef52624120d2?auto=format&fit=crop&w=800&q=80'],
+    dimensions: 'Rộng 100cm x Sâu 58cm x Cao 190cm',
+    materialInfo: 'Gỗ MDF chống ẩm phủ veneer óc chó + bản lề giảm chấn',
+    weight: '72kg',
+    features: ['Bản lề giảm chấn đóng êm', 'Thanh treo + 3 ngăn xếp điều chỉnh được', 'Chân tủ chống ẩm'],
+    reviews: [],
+    style: 'Vintage',
+    color: 'Be',
+    sizeCategory: 'Lớn',
+    spaces: ['phong-ngu'],
+  },
+  {
+    id: 'prod-27',
+    name: 'Giá Đỡ Sách Bookend Sóng In 3D',
+    slug: 'gia-do-sach-bookend-song-in-3d',
+    category: 'bookend',
+    categoryName: 'Giá Đỡ & Bookend',
+    categoryGroup: 'DECOR',
+    productionType: 'PRINT_ON_DEMAND',
+    customizable: false,
+    basePrice: 159000,
+    originalPrice: 199000,
+    description: 'Cặp bookend hình sóng in 3D giữ sách đứng thẳng trên kệ hoặc bàn học, đế nặng chống trượt.',
+    rating: 4.7,
+    reviewCount: 41,
+    inStock: 30,
+    images: ['https://images.unsplash.com/photo-1532372320572-cda25653a26d?auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1449247709967-d4461a6a6103?auto=format&fit=crop&w=800&q=80'],
+    dimensions: '12 x 10 x 16 cm (1 chiếc)',
+    materialInfo: 'Nhựa PLA hoàn thiện mờ + đế cao su chống trượt',
+    weight: '420g (cặp)',
+    features: ['Bán theo cặp', 'Đế cao su chống trượt', 'Có nhiều màu PLA theo yêu cầu'],
+    reviews: [],
+    productionTime: '2-3 ngày',
+    printTechnology: 'FDM 0.16mm, PLA',
+    style: 'Modern',
+    color: 'Trắng',
+    printMaterial: 'PLA',
+    sizeCategory: 'Nhỏ',
+    spaces: ['phong-hoc', 'phong-lam-viec'],
   },
 ];
 
@@ -1275,7 +1438,7 @@ export const MOCK_NEWS_ARTICLES: NewsArticle[] = [
     excerpt: 'Hiểu rõ đặc tính cơ lý, độ an toàn sức khỏe và thẩm mỹ bề mặt của từng loại vật liệu sợi nhựa in 3D trước khi lựa chọn sản phẩm trang trí không gian sống.',
     coverImage: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1000&q=80',
     videoUrl: 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ', // Mock embed
-    category: 'Kiến thức In 3D',
+    category: '3D & Design',
     readTime: '5 phút đọc',
     publishedAt: '14/09/2026',
     author: {
@@ -1309,7 +1472,7 @@ Bằng cách phối hợp một lượng nhỏ chất đàn hồi đặc biệt,
     slug: '5-xu-huong-decor-ban-lam-viec-nam-2026',
     excerpt: 'Từ phong cách Japandi ấm áp đến xu hướng cá nhân hóa phụ kiện in 3D khắc tên, khám phá các bí quyết nâng tầm góc làm việc truyền cảm hứng mỗi ngày.',
     coverImage: 'https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?auto=format&fit=crop&w=1000&q=80',
-    category: 'Xu hướng Decor',
+    category: 'Xu hướng',
     readTime: '4 phút đọc',
     publishedAt: '10/09/2026',
     author: {
@@ -1317,7 +1480,7 @@ Bằng cách phối hợp một lượng nhỏ chất đàn hồi đặc biệt,
       role: 'Interior Stylist',
       avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&q=80',
     },
-    featured: false,
+    featured: true,
     tags: ['Xu hướng 2026', 'Desk Setup', 'Japandi', 'Góc làm việc'],
     taggedProductIds: ['prod-1', 'prod-7', 'prod-4'],
     viewsCount: 980,
@@ -1337,7 +1500,7 @@ Góc làm việc không chỉ là nơi đặt máy tính mà còn là không gia
     slug: 'phoi-mau-be-nau-cam-dat-cho-phong-khach',
     excerpt: 'Ba gam màu ấm dễ phối nhất cho phòng khách và cách cân bằng chúng để không gian vừa sang vừa gần gũi.',
     coverImage: 'https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?auto=format&fit=crop&w=1000&q=80',
-    category: 'Xu hướng Decor',
+    category: 'Xu hướng',
     readTime: '4 phút đọc',
     publishedAt: '18/09/2026',
     author: {
@@ -1365,7 +1528,7 @@ Kết hợp gốm, gỗ sồi và cỏ khô giúp bảng màu ít đổi nhưng 
     slug: 'chon-chau-cay-mini-cho-ban-lam-viec',
     excerpt: 'Sen đá, nha đam hay bonsai mini? Gợi ý cây dễ sống và cách bố trí chậu để bàn làm việc gọn mà vẫn xanh.',
     coverImage: 'https://images.unsplash.com/photo-1509423350716-97f9360b4e09?auto=format&fit=crop&w=1000&q=80',
-    category: 'Xu hướng Decor',
+    category: 'Mẹo sống',
     readTime: '3 phút đọc',
     publishedAt: '16/09/2026',
     author: {
@@ -1373,7 +1536,7 @@ Kết hợp gốm, gỗ sồi và cỏ khô giúp bảng màu ít đổi nhưng 
       role: 'Chuyên mục Decor & Không gian sống',
       avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80',
     },
-    featured: false,
+    featured: true,
     tags: ['Chậu cây', 'Bàn làm việc', 'Decor xanh'],
     taggedProductIds: ['prod-12', 'prod-15', 'prod-19'],
     viewsCount: 640,
@@ -1393,7 +1556,7 @@ Kết hợp gốm, gỗ sồi và cỏ khô giúp bảng màu ít đổi nhưng 
     slug: 'anh-sang-am-cho-phong-ngu',
     excerpt: 'Nhiệt độ màu, độ cao đặt đèn và số lượng nguồn sáng ảnh hưởng thế nào tới giấc ngủ của bạn.',
     coverImage: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1000&q=80',
-    category: 'Xu hướng Decor',
+    category: 'Mẹo sống',
     readTime: '4 phút đọc',
     publishedAt: '12/09/2026',
     author: {
@@ -1420,7 +1583,7 @@ Kết hợp gốm, gỗ sồi và cỏ khô giúp bảng màu ít đổi nhưng 
     slug: 'cach-ve-sinh-bao-quan-do-decor-in-3d',
     excerpt: 'Những lưu ý đơn giản về lau chùi, tránh nhiệt và ánh nắng giúp sản phẩm in 3D giữ dáng và màu lâu hơn.',
     coverImage: 'https://images.unsplash.com/photo-1543198126-a8ad8e47fb22?auto=format&fit=crop&w=1000&q=80',
-    category: 'Kiến thức In 3D',
+    category: 'Mẹo sống',
     readTime: '3 phút đọc',
     publishedAt: '10/09/2026',
     author: {
@@ -1439,6 +1602,251 @@ Kết hợp gốm, gỗ sồi và cỏ khô giúp bảng màu ít đổi nhưng 
 
 ### 2. Bảo quản
 - Không đặt sát nguồn nhiệt trên 50°C hoặc dưới nắng trực tiếp lâu.`,
+  },
+  {
+    id: 'news-7',
+    title: 'Japandi: khi tối giản Nhật Bản gặp sự ấm áp Bắc Âu',
+    slug: 'japandi-toi-gian-nhat-ban-gap-bac-au',
+    excerpt: 'Gỗ sáng màu, đường nét gọn và bảng màu trung tính — cách đưa phong cách Japandi vào căn hộ mà không cần thay toàn bộ nội thất.',
+    coverImage: 'https://images.unsplash.com/photo-1616594039964-ae9021a400a0?auto=format&fit=crop&w=1000&q=80',
+    category: 'Phong cách',
+    readTime: '5 phút đọc',
+    publishedAt: '16/09/2026',
+    author: {
+      name: 'Biên tập Luméa',
+      role: 'Chuyên mục Luméa Living',
+      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80',
+    },
+    featured: true,
+    tags: ['Japandi', 'Minimalism', 'Scandinavian'],
+    taggedProductIds: ['prod-5', 'prod-13', 'prod-2'],
+    viewsCount: 640,
+    content: `Japandi kết hợp sự tiết chế của Nhật Bản với cảm giác ấm cúng (hygge) của Bắc Âu.
+
+### 1. Bảng màu
+- Nền be, trắng ngà, xám đá; điểm nhấn nâu gỗ và đen mờ.
+
+### 2. Vật liệu
+- **Gỗ sáng** (sồi, tần bì), gốm mộc, vải lanh — ưu tiên bề mặt tự nhiên, không bóng.
+
+### 3. Nguyên tắc bày trí
+- Ít món nhưng có công năng rõ ràng, chừa khoảng trống để mắt "nghỉ".
+- Một bình hoa gốm hoặc cành khô là đủ làm điểm nhấn cho cả góc phòng.`,
+  },
+  {
+    id: 'news-8',
+    title: 'Wabi-sabi: vẻ đẹp của sự không hoàn hảo trong decor',
+    slug: 'wabi-sabi-ve-dep-khong-hoan-hao',
+    excerpt: 'Bề mặt thô, vết men loang, gỗ mộc còn vân — Wabi-sabi giúp không gian sống chậm và có chiều sâu hơn.',
+    coverImage: 'https://images.unsplash.com/photo-1615529182904-14819c35db37?auto=format&fit=crop&w=1000&q=80',
+    category: 'Phong cách',
+    readTime: '4 phút đọc',
+    publishedAt: '12/09/2026',
+    author: {
+      name: 'Biên tập Luméa',
+      role: 'Chuyên mục Luméa Living',
+      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80',
+    },
+    featured: false,
+    tags: ['Wabi-sabi', 'Contemporary', 'Gốm mộc'],
+    taggedProductIds: ['prod-17', 'prod-20', 'prod-10'],
+    viewsCount: 410,
+    content: `Wabi-sabi trân trọng những gì mộc mạc, cũ kỹ và không đối xứng.
+
+### 1. Chọn đồ vật
+- Gốm thủ công có vết men không đều, khay gỗ còn vân tự nhiên.
+
+### 2. Ánh sáng
+- Ánh sáng ấm, dịu, tạo bóng đổ mềm trên bề mặt thô.
+
+### 3. Kết hợp với Contemporary
+Giữ khung nội thất hiện đại, gọn gàng và để các món đồ Wabi-sabi làm điểm nhấn cảm xúc.`,
+  },
+  {
+    id: 'news-9',
+    title: 'Bố trí giường ngủ và bàn làm việc theo phong thủy',
+    slug: 'bo-tri-giuong-ban-lam-viec-phong-thuy',
+    excerpt: 'Vài nguyên tắc phong thủy ứng dụng dễ làm: vị trí giường, hướng ngồi làm việc và cách giữ luồng khí thông thoáng.',
+    coverImage: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1000&q=80',
+    category: 'Phong thủy',
+    readTime: '5 phút đọc',
+    publishedAt: '15/09/2026',
+    author: {
+      name: 'Biên tập Luméa',
+      role: 'Chuyên mục Luméa Living',
+      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80',
+    },
+    featured: true,
+    tags: ['Phong thủy', 'Bố trí nội thất', 'Phòng ngủ'],
+    taggedProductIds: ['prod-23', 'prod-11'],
+    viewsCount: 720,
+    content: `Phong thủy ứng dụng tập trung vào sự thoải mái và cảm giác an toàn trong không gian.
+
+### 1. Giường ngủ
+- Đầu giường tựa vào tường chắc chắn, tránh đặt ngay dưới xà ngang.
+- Không đặt giường thẳng hàng với cửa ra vào.
+
+### 2. Bàn làm việc
+- Ngồi quay lưng vào tường, nhìn được về phía cửa — tạo cảm giác "có chỗ dựa".
+- Giữ mặt bàn gọn gàng để luồng khí lưu thông.
+
+### 3. Không gian
+Mở cửa sổ đón sáng tự nhiên mỗi sáng và bổ sung một chậu cây xanh nhỏ.`,
+  },
+  {
+    id: 'news-10',
+    title: 'Màu sắc phong thủy cho phòng khách: hài hòa mà vẫn hiện đại',
+    slug: 'mau-sac-phong-thuy-phong-khach',
+    excerpt: 'Cách chọn tông màu chủ đạo và màu nhấn cho phòng khách theo ngũ hành, vẫn giữ được vẻ tinh tế của nội thất đương đại.',
+    coverImage: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1000&q=80',
+    category: 'Phong thủy',
+    readTime: '4 phút đọc',
+    publishedAt: '11/09/2026',
+    author: {
+      name: 'Biên tập Luméa',
+      role: 'Chuyên mục Luméa Living',
+      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80',
+    },
+    featured: false,
+    tags: ['Phong thủy', 'Màu sắc', 'Phòng khách'],
+    taggedProductIds: ['prod-22', 'prod-20'],
+    viewsCount: 380,
+    content: `Màu sắc là cách đơn giản nhất để áp dụng phong thủy mà không phải thay đổi bố cục.
+
+### 1. Tông nền
+- Be, kem, nâu đất (hành Thổ) tạo cảm giác ổn định, dễ phối.
+
+### 2. Màu nhấn theo ngũ hành
+- **Mộc**: xanh lá, xanh rêu — gối tựa, cây xanh.
+- **Hỏa**: đỏ đất, cam — một món decor nhỏ là đủ.
+- **Kim**: trắng, ánh kim — đế nến, khung tranh viền kim loại.
+
+### 3. Lưu ý
+Không dùng quá 3 màu chủ đạo trong một không gian để giữ sự hài hòa.`,
+  },
+  {
+    id: 'news-11',
+    title: 'Before / After: căn studio 25m² thay áo với ngân sách nhỏ',
+    slug: 'before-after-studio-25m2',
+    excerpt: 'Từ căn phòng chật chội đến không gian sáng, gọn và có "chất" — hành trình setup lại studio chỉ với vài món nội thất chọn đúng.',
+    coverImage: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1000&q=80',
+    category: 'Cảm hứng',
+    readTime: '6 phút đọc',
+    publishedAt: '17/09/2026',
+    author: {
+      name: 'Biên tập Luméa',
+      role: 'Chuyên mục Luméa Living',
+      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80',
+    },
+    featured: true,
+    tags: ['Before / After', 'Setup phòng', 'Room inspiration'],
+    taggedProductIds: ['prod-4', 'prod-11', 'prod-21'],
+    viewsCount: 860,
+    content: `Chủ nhân căn studio muốn một góc ngủ, một góc làm việc và chỗ tiếp bạn bè trong 25m².
+
+### Before
+- Đồ đạc cao, tối màu, che mất cửa sổ.
+- Không có khu vực chức năng rõ ràng.
+
+### After
+- **Kệ treo tường** thay tủ đứng, giải phóng sàn.
+- **Đèn bàn** và đèn ngủ ánh ấm chia vùng bằng ánh sáng.
+- **Khung tranh typography** tạo điểm nhấn cá nhân cho bức tường trống.
+
+Kết quả: căn phòng rộng hơn về cảm giác và dễ dọn dẹp mỗi ngày.`,
+  },
+  {
+    id: 'news-12',
+    title: 'Concept góc làm việc 1m²: phối sản phẩm để vừa đẹp vừa tập trung',
+    slug: 'concept-goc-lam-viec-1m2',
+    excerpt: 'Gợi ý phối đèn, khay organizer và cây xanh mini cho một góc làm việc nhỏ gọn, đủ cảm hứng cho cả ngày dài.',
+    coverImage: 'https://images.unsplash.com/photo-1616046229478-9901c5536a45?auto=format&fit=crop&w=1000&q=80',
+    category: 'Cảm hứng',
+    readTime: '3 phút đọc',
+    publishedAt: '09/09/2026',
+    author: {
+      name: 'Biên tập Luméa',
+      role: 'Chuyên mục Luméa Living',
+      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80',
+    },
+    featured: false,
+    tags: ['Setup phòng', 'Concept không gian', 'Phối sản phẩm'],
+    taggedProductIds: ['prod-7', 'prod-11', 'prod-12', 'prod-14'],
+    viewsCount: 350,
+    content: `Một góc làm việc đẹp không cần rộng — chỉ cần các món đồ "ăn ý" với nhau.
+
+### Công thức phối
+- **Đèn bàn** cổ cong màu đen mờ làm trục chính.
+- **Khay organizer** gom bút, sạc, sổ tay về một chỗ.
+- **Chậu cây mini** đặt góc bàn để mắt được nghỉ.
+- **Giá treo tai nghe** giữ mặt bàn luôn thoáng.`,
+  },
+  {
+    id: 'news-13',
+    title: 'Từ ý tưởng đến sản phẩm: quy trình thiết kế và in 3D custom tại Luméa',
+    slug: 'quy-trinh-thiet-ke-in-3d-custom',
+    excerpt: 'Hậu trường một đơn custom: phác thảo, dựng mô hình 3D, chọn vật liệu, in thử và hoàn thiện — bạn cần chuẩn bị gì?',
+    coverImage: 'https://images.unsplash.com/photo-1581783342308-f792dbdd27c5?auto=format&fit=crop&w=1000&q=80',
+    category: '3D & Design',
+    readTime: '6 phút đọc',
+    publishedAt: '13/09/2026',
+    author: {
+      name: 'Biên tập Luméa',
+      role: 'Chuyên mục Luméa Living',
+      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80',
+    },
+    featured: true,
+    tags: ['Quy trình thiết kế', 'Custom', 'Design story', 'Vật liệu'],
+    taggedProductIds: ['prod-1', 'prod-3', 'prod-27'],
+    viewsCount: 590,
+    content: `Mỗi sản phẩm custom tại Luméa đi qua 5 bước.
+
+### 1. Brief
+Bạn mô tả ý tưởng (hoặc trò chuyện với AI Idea Assistant) — kích thước, màu sắc, nơi đặt.
+
+### 2. Dựng mô hình 3D
+Designer dựng mô hình và gửi bản xem trước để bạn góp ý.
+
+### 3. Chọn vật liệu
+- **PLA** cho đồ decor trong nhà, **PETG** cho đồ cần chịu nước.
+
+### 4. In thử & chỉnh sửa
+In mẫu nhỏ để kiểm tra tỷ lệ, độ chắc và bề mặt.
+
+### 5. Hoàn thiện
+Chà nhám, xử lý bề mặt, kiểm tra chất lượng và đóng gói.`,
+  },
+  {
+    id: 'news-14',
+    title: '7 mẹo tối ưu không gian cho phòng nhỏ dưới 15m²',
+    slug: 'meo-toi-uu-khong-gian-phong-nho',
+    excerpt: 'Tận dụng chiều cao, chọn nội thất đa năng và sắp xếp theo vùng — những mẹo giúp phòng nhỏ trông rộng và gọn hơn.',
+    coverImage: 'https://images.unsplash.com/photo-1540518614846-7eded433c457?auto=format&fit=crop&w=1000&q=80',
+    category: 'Mẹo sống',
+    readTime: '4 phút đọc',
+    publishedAt: '08/09/2026',
+    author: {
+      name: 'Biên tập Luméa',
+      role: 'Chuyên mục Luméa Living',
+      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80',
+    },
+    featured: false,
+    tags: ['Tối ưu không gian', 'Sắp xếp nội thất', 'Phòng nhỏ'],
+    taggedProductIds: ['prod-4', 'prod-6', 'prod-27'],
+    viewsCount: 530,
+    content: `Phòng nhỏ vẫn thoáng nếu sắp xếp có chủ đích.
+
+### Tối ưu không gian
+- Dùng **kệ treo tường** thay cho tủ đứng.
+- Chọn **đôn/ghế nhỏ** có thể làm bàn phụ khi cần.
+- Để trống ít nhất 60cm lối đi chính.
+
+### Sắp xếp nội thất
+- Chia phòng thành vùng ngủ – làm việc – thư giãn.
+- Đồ cao đặt sát tường, đồ thấp ở giữa phòng.
+
+### Mẹo decor
+- Gương lớn và rèm sáng màu giúp phòng như rộng gấp đôi.`,
   },
 ];
 

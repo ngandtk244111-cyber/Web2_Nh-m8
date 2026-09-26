@@ -35,7 +35,7 @@ import { ScrollToTopComponent } from './components/scroll-to-top/scroll-to-top.c
   styleUrl: './app.component.css'
 })
 export class AppComponent {
-  title = 'Luméa - Nền Tảng TMĐT Decor & In 3D Độc Bản';
+  title = 'Luméa - Nội Thất, Decor & 3D Custom';
 
   /** Hiệu ứng chuyển trang: fade-out ngắn khi bắt đầu điều hướng, fade-in khi route mới sẵn sàng. */
   readonly routeLeaving = signal(false);

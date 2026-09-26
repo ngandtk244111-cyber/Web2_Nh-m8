@@ -1,6 +1,6 @@
 <div class="toast-stack">
   <div
-    *ngFor="let t of toastService.toasts()"
+    *ngFor="let t of generalToasts()"
     class="toast-item"
     [class.toast-item--success]="t.type === 'success'"
     [class.toast-item--error]="t.type === 'error'"
@@ -11,6 +11,19 @@
     <span class="toast-item__msg">{{ t.message }}</span>
     <button type="button" class="toast-item__close" (click)="toastService.dismiss(t.id)">
       <app-icon name="x" [size]="13"></app-icon>
+    </button>
+  </div>
+</div>
+
+<!-- Thông báo thêm giỏ hàng: giữa phía trên màn hình -->
+<div class="cart-toast-stack">
+  <div *ngFor="let t of cartToasts()" class="cart-toast" role="status">
+    <span class="cart-toast__icon">
+      <app-icon name="check" [size]="15"></app-icon>
+    </span>
+    <span class="cart-toast__msg">{{ t.message }}</span>
+    <button type="button" class="cart-toast__close" aria-label="Đóng" (click)="toastService.dismiss(t.id)">
+      <app-icon name="x" [size]="14"></app-icon>
     </button>
   </div>
 </div>

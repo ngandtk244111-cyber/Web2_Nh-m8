@@ -19,6 +19,7 @@
 }
 .pc__tag--dark { background: #1F1712; color: #fff; }
 .pc__tag--accent { background: #A3152D; color: #fff; }
+.pc__tag--sale { background: #A3152D; color: #fff; letter-spacing: 0.02em; }
 
 .pc__fav {
   background: rgba(255, 255, 255, 0.92);
@@ -73,11 +74,13 @@
 .pc__cart:hover { background: #A3152D; border-color: #A3152D; color: #fff; }
 
 .pc__custom {
-  display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0;
-  font-size: 12px; font-weight: 600; color: #A3152D;
-  border-bottom: 1px solid transparent; transition: border-color 0.2s ease;
+  height: 36px; padding: 0 14px; border-radius: 999px; flex-shrink: 0;
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 13px; font-weight: 600; white-space: nowrap;
+  background: #A3152D; color: #fff; border: 1px solid #A3152D;
+  transition: background 0.2s ease, border-color 0.2s ease;
 }
-.pc__custom:hover { border-bottom-color: #A3152D; }
+.pc__custom:hover { background: #82101F; border-color: #82101F; }
 
 @media (max-width: 640px) {
   .pc__name { font-size: 17px; }

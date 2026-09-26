@@ -42,6 +42,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/brand/brand.component').then(m => m.BrandComponent),
   },
   {
+    path: 've-lumea',
+    loadComponent: () => import('./pages/about/about.component').then(m => m.AboutComponent),
+  },
+  {
     path: 'community',
     loadComponent: () => import('./pages/community/community.component').then(m => m.CommunityComponent),
   },
@@ -74,12 +78,20 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/favorites/favorites.component').then(m => m.FavoritesComponent),
   },
   {
-    path: 'chinh-sach/faq',
-    loadComponent: () => import('./pages/faq/faq.component').then(m => m.FaqComponent),
-  },
-  {
-    path: 'chinh-sach/:slug',
-    loadComponent: () => import('./pages/policy/policy.component').then(m => m.PolicyComponent),
+    // Khu vực Hỗ trợ & Chính sách dùng chung 1 khung có "Menu chính sách" để chuyển qua lại giữa các trang.
+    path: 'chinh-sach',
+    loadComponent: () => import('./pages/policy/policy-layout.component').then(m => m.PolicyLayoutComponent),
+    children: [
+      { path: '', pathMatch: 'full', redirectTo: 'faq' },
+      {
+        path: 'faq',
+        loadComponent: () => import('./pages/faq/faq.component').then(m => m.FaqComponent),
+      },
+      {
+        path: ':slug',
+        loadComponent: () => import('./pages/policy/policy.component').then(m => m.PolicyComponent),
+      },
+    ],
   },
   {
     path: 'checkout',

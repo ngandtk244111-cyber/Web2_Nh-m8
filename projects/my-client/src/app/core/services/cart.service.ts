@@ -3,12 +3,17 @@ import { CartItem, Coupon } from '../models/cart.model';
 import { Product, SelectedCustomization } from '../models/product.model';
 import { MOCK_COUPONS } from '../data/mock-data';
 import { FlashSaleService } from './flash-sale.service';
+import { ToastService } from './toast.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CartService {
   private readonly flashSale = inject(FlashSaleService);
+  private readonly toast = inject(ToastService);
+
+  // Gom các lần thêm giỏ trong cùng một lượt xử lý (vd. "thêm tất cả") thành một thông báo duy nhất.
+  private pendingAddedNames: string[] = [];
 
   private readonly storageKey = 'deco3d_cart';
   private readonly checkoutSelectionKey = 'deco3d_checkout_selection';
@@ -217,6 +222,19 @@ export class CartService {
 
     this.saveCart(current);
     this.openCart();
+    this.notifyAdded(product.name);
+  }
+
+  private notifyAdded(productName: string): void {
+    this.pendingAddedNames.push(productName);
+    if (this.pendingAddedNames.length > 1) return;
+    queueMicrotask(() => {
+      const names = this.pendingAddedNames;
+      this.pendingAddedNames = [];
+      this.toast.cart(names.length === 1
+        ? `Đã thêm "${names[0]}" vào giỏ hàng thành công.`
+        : `Đã thêm ${names.length} sản phẩm vào giỏ hàng thành công.`);
+    });
   }
 
   updateQuantity(itemId: string, newQty: number): void {

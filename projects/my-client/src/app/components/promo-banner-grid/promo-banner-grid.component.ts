@@ -57,7 +57,7 @@ export class PromoBannerGridComponent {
       description: 'Áp dụng cho đơn hàng từ 200.000đ',
       ctaLabel: 'Nhận ưu đãi',
       link: '/catalog',
-      image: 'assets/mascot/goh-mascot.png',
+      image: 'assets/mascot/lumea-mascot.png',
       code: 'LUMÉANEW',
     },
   ];

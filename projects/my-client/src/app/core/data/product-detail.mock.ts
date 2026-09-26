@@ -66,7 +66,7 @@ const RICH_MOCK_PRODUCTS: Product[] = [
     reviewCount: 128,
     inStock: 24,
     images: [
-      img('photo-1533090161767-e6ffed986c88'),
+      img('photo-1611486212557-88be5ff6f941'),
       ROOM_SHOTS[0],
       ROOM_SHOTS[1],
       ROOM_SHOTS[2],

@@ -42,13 +42,13 @@ interface RoomCard {
   size: 'large' | 'small';
 }
 
-/** Điều hướng bằng đúng route/query đang có: /catalog?category=…, /shop-the-room, /customizer-3d. */
+/** Điều hướng theo cây danh mục chung (core/data/catalog-taxonomy.ts): /catalog?dept=…|cat=…|space=… */
 const CATEGORY_LINKS: NavLink[] = [
-  { label: 'Decor bàn', link: '/catalog', queryParams: { category: 'tray' } },
-  { label: 'Decor phòng', link: '/shop-the-room' },
-  { label: 'Đèn', link: '/catalog', queryParams: { category: 'lamp' } },
-  { label: 'Mô hình', link: '/catalog', queryParams: { category: 'sculpture' } },
-  { label: 'Phụ kiện', link: '/catalog', queryParams: { category: 'organizer' } },
+  { label: 'Nội thất', link: '/catalog', queryParams: { dept: 'noi-that' } },
+  { label: 'Đèn', link: '/catalog', queryParams: { dept: 'anh-sang' } },
+  { label: 'Decor', link: '/catalog', queryParams: { dept: 'decor' } },
+  { label: 'Phụ kiện', link: '/catalog', queryParams: { dept: 'do-dung' } },
+  { label: 'Đang giảm giá', link: '/catalog', queryParams: { sale: '1' } },
   { label: '3D Custom', link: '/customizer-3d' },
 ];
 
@@ -56,35 +56,35 @@ const ROOMS: RoomCard[] = [
   {
     key: 'desk', title: 'Desk Setup', size: 'large',
     image: 'https://images.unsplash.com/photo-1486946255434-2466348c2166?auto=format&fit=crop&w=1200&q=80',
-    link: '/catalog', queryParams: { category: 'organizer' },
+    link: '/catalog', queryParams: { space: 'phong-lam-viec' },
     categories: ['organizer', 'tray', 'lamp', 'clock'],
   },
   {
     key: 'bedroom', title: 'Bedroom', size: 'small',
     image: 'https://images.unsplash.com/photo-1540518614846-7eded433c457?auto=format&fit=crop&w=900&q=80',
-    link: '/catalog', queryParams: { category: 'lamp' },
+    link: '/catalog', queryParams: { space: 'phong-ngu' },
     categories: ['lamp', 'plant_pot', 'candle_holder', 'clock'],
   },
   {
     key: 'living', title: 'Living Room', size: 'small',
     image: 'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?auto=format&fit=crop&w=900&q=80',
-    link: '/shop-the-room',
+    link: '/catalog', queryParams: { space: 'phong-khach' },
     categories: ['vase', 'frame', 'side_table', 'stool', 'sculpture'],
   },
   {
     key: 'study', title: 'Study Corner', size: 'large',
     image: 'https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?auto=format&fit=crop&w=1200&q=80',
-    link: '/catalog', queryParams: { category: 'bookshelf' },
+    link: '/catalog', queryParams: { space: 'phong-hoc' },
     categories: ['bookshelf', 'organizer', 'sculpture', 'plant_pot'],
   },
 ];
 
 const DISCOVER: (NavLink & { image: string })[] = [
-  { label: 'Decor bàn học', image: 'decor-ban', link: '/catalog', queryParams: { category: 'organizer' } },
-  { label: 'Decor phòng ngủ', image: 'khong-gian', link: '/catalog', queryParams: { category: 'lamp' } },
-  { label: 'Miniature', image: 'tuong-mo-hinh', link: '/catalog', queryParams: { category: 'sculpture' } },
-  { label: 'Đèn', image: 'den-chieu-sang', link: '/catalog', queryParams: { category: 'lamp' } },
-  { label: 'Cây & chậu', image: 'chau-cay', link: '/catalog', queryParams: { category: 'plant_pot' } },
+  { label: 'Phụ kiện bàn học', image: 'decor-ban', link: '/catalog', queryParams: { cat: 'khay-hop-dung' } },
+  { label: 'Phòng ngủ', image: 'khong-gian', link: '/catalog', queryParams: { space: 'phong-ngu' } },
+  { label: 'Tượng & figure', image: 'tuong-mo-hinh', link: '/catalog', queryParams: { cat: 'tuong-figure' } },
+  { label: 'Đèn', image: 'den-chieu-sang', link: '/catalog', queryParams: { dept: 'anh-sang' } },
+  { label: 'Chậu cây', image: 'chau-cay', link: '/catalog', queryParams: { cat: 'chau-cay' } },
   { label: '3D Custom', image: '3d-custom', link: '/customizer-3d' },
 ];
 
@@ -295,7 +295,6 @@ export class FlashSaleComponent implements OnInit, OnDestroy {
       return;
     }
     this.cartService.addToCart(d.product, 1);
-    this.toastService.success(`Đã thêm "${d.product.name}" vào giỏ hàng`);
     this.mascotService.react('happy');
   }
 

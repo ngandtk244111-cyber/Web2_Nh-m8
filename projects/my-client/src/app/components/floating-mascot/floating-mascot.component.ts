@@ -4,14 +4,17 @@ import { AiAssistantService } from '../../core/services/ai-assistant.service';
 import { MascotService, MascotExpression } from '../../core/services/mascot.service';
 import { AppIconComponent } from '../icon/icon.component';
 
+// Mascot nổi dùng nhân vật Luméa mới — chưa có ảnh riêng cho từng biểu cảm nên dùng chung 1 ảnh,
+// thay đổi biểu cảm vẫn được thể hiện qua animation pulse.
+const LUMEA_MASCOT = 'assets/mascot/lumea-mascot.png';
 const MASCOT_IMAGES: Record<MascotExpression, string> = {
-  idle: 'assets/mascot/goh-mascot.png',
-  thinking: 'assets/mascot/goh-thinking.png',
-  happy: 'assets/mascot/goh-happy.png',
-  surprised: 'assets/mascot/goh-surprised.png',
-  confident: 'assets/mascot/goh-confident.png',
-  sad: 'assets/mascot/goh-sad.png',
-  angry: 'assets/mascot/goh-angry.png',
+  idle: LUMEA_MASCOT,
+  thinking: LUMEA_MASCOT,
+  happy: LUMEA_MASCOT,
+  surprised: LUMEA_MASCOT,
+  confident: LUMEA_MASCOT,
+  sad: LUMEA_MASCOT,
+  angry: LUMEA_MASCOT,
 };
 
 const MASCOT_ALT: Record<MascotExpression, string> = {

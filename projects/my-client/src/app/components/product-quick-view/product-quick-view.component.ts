@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { QuickViewService } from '../../core/services/quick-view.service';
 import { CartService } from '../../core/services/cart.service';
-import { ToastService } from '../../core/services/toast.service';
 import { AppIconComponent } from '../icon/icon.component';
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
 
@@ -19,8 +18,7 @@ export class ProductQuickViewComponent {
 
   constructor(
     public quickViewService: QuickViewService,
-    private cartService: CartService,
-    private toastService: ToastService
+    private cartService: CartService
   ) {
     // Mỗi lần mở sản phẩm khác thì đặt lại số lượng về 1.
     effect(() => {
@@ -52,7 +50,6 @@ export class ProductQuickViewComponent {
     if (!product) return;
     if (product.inStock <= 0) return;
     this.cartService.addToCart(product, Math.min(this.quantity, product.inStock));
-    this.toastService.success(`Đã thêm "${product.name}" vào giỏ hàng`);
     this.quickViewService.close();
   }
 }

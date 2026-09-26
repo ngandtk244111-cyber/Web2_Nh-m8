@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { NewsService } from '../../core/services/news.service';
 import { ProductService } from '../../core/services/product.service';
-import { NewsArticle, ArticleCategory } from '../../core/models/news.model';
+import { NewsArticle, ArticleCategory, ARTICLE_CATEGORIES } from '../../core/models/news.model';
 import { Product } from '../../core/models/product.model';
 import { AppIconComponent } from '../../components/icon/icon.component';
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
@@ -35,12 +35,7 @@ export class NewsComponent implements OnInit {
   selectedArticle: NewsArticle | null = null;
   selectedCategory: ArticleCategory | 'ALL' = 'ALL';
 
-  categories: ArticleCategory[] = [
-    'Xu hướng Decor',
-    'Kiến thức In 3D',
-    'Bộ sưu tập & Room Look',
-    'Kinh nghiệm & Hậu trường',
-  ];
+  categories: ArticleCategory[] = ARTICLE_CATEGORIES;
 
   requestedSlug: string | null = null;
 
@@ -69,6 +64,11 @@ export class NewsComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // "Xem tất cả" ở trang chủ mang theo ?category= của chuyên mục đang chọn.
+    this.route.queryParamMap.subscribe(params => {
+      const cat = params.get('category') as ArticleCategory | null;
+      this.filterCategory(cat && this.categories.includes(cat) ? cat : 'ALL');
+    });
     this.route.paramMap.subscribe(params => {
       this.requestedSlug = params.get('slug');
       if (this.requestedSlug) {

@@ -71,17 +71,11 @@
   gap: 12px;
 }
 
-@media (min-width: 640px) {
+/* 10 thẻ: 6 nhóm nội thất + Đèn, Decor, Đồ dùng, 3D & Custom → 2 hàng × 5 (desktop/tablet), 5 hàng × 2 (mobile) */
+@media (min-width: 768px) {
   .cat-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 16px;
-  }
-}
-
-@media (min-width: 1024px) {
-  .cat-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 18px;
   }
 }
 
@@ -121,7 +115,8 @@
 .cat-card__art img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
+  border-radius: 16px;
   display: block;
   transition: transform 0.4s ease;
   user-select: none;
@@ -396,8 +391,6 @@
   height: 82%;
   max-height: 340px;
   width: auto;
-  /* Ảnh gốc có đốm bụi trắng ở phần bóng dưới chân — cắt bỏ 7% đáy */
-  clip-path: inset(0 0 7% 0);
   filter: drop-shadow(0 16px 20px rgba(0, 0, 0, 0.35));
   animation: ai-goh-bob 3.6s ease-in-out infinite;
   transform-origin: 50% 100%;
@@ -975,8 +968,67 @@
 /* Product section editorial heading */
 .ps-head { display: flex; flex-direction: column; gap: 12px; margin-bottom: 28px; }
 @media (min-width: 640px) { .ps-head { flex-direction: row; align-items: flex-end; justify-content: space-between; } }
-.ps-eyebrow { margin: 0 0 8px; font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #7A6558; }
+.ps-eyebrow { display: inline-block; margin: 0 0 12px; padding: 7px 16px; border-radius: 999px; background: #EBDDCB; color: #6B4A36; font-size: 12px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; }
 .ps-title { margin: 0; font-family: var(--font-family-heading, 'Inter', system-ui, sans-serif); font-size: clamp(24px, 2.6vw, 32px); font-weight: 700; line-height: 1.2; letter-spacing: -0.01em; color: #3B2418; }
-.ps-sub { margin: 8px 0 0; max-width: 560px; font-size: 14px; color: #7A6558; }
+.ps-sub { margin: 10px 0 0; max-width: 640px; font-size: 13.5px; line-height: 1.6; color: #7A6558; }
 .ps-link { display: inline-flex; gap: 6px; font-size: 13px; font-weight: 600; color: #3B2418; padding-bottom: 2px; border-bottom: 1px solid #3B2418; white-space: nowrap; transition: color .2s, border-color .2s; }
 .ps-link:hover { color: #A3152D; border-color: #A3152D; }
+
+/* ===== Mua theo không gian ===== */
+.sp-row {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(200px, 1fr);
+  gap: 14px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.sp-row::-webkit-scrollbar {
+  display: none;
+}
+
+.sp-tile {
+  position: relative;
+  display: block;
+  aspect-ratio: 3 / 4;
+  border-radius: 16px;
+  overflow: hidden;
+  scroll-snap-align: start;
+  background: #EFE8DD;
+}
+
+.sp-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.sp-tile::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 55%, rgba(0, 0, 0, 0.55) 100%);
+}
+
+.sp-tile:hover img {
+  transform: scale(1.05);
+}
+
+.sp-tile__label {
+  position: absolute;
+  left: 16px;
+  bottom: 14px;
+  z-index: 1;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .sp-row {
+    grid-auto-columns: 62%;
+  }
+}

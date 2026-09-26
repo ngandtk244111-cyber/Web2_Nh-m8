@@ -1,10 +1,18 @@
 export type CategoryGroup = 'FURNITURE' | 'DECOR';
 
 export type FurnitureCategory =
-  | 'lamp'          // Đèn bàn / Đèn ngủ
-  | 'bookshelf'     // Kệ sách / Kệ treo tường
+  | 'sofa'          // Sofa / ghế băng
+  | 'bed'           // Giường
+  | 'table'         // Bàn ăn / bàn trà / bàn làm việc
   | 'side_table'    // Bàn phụ / side table
+  | 'chair'         // Ghế ăn / ghế làm việc / armchair
   | 'stool'         // Ghế đôn
+  | 'cabinet'       // Tủ
+  | 'bookshelf'     // Kệ sách / Kệ treo tường
+  | 'lamp'          // Đèn (dữ liệu cũ, chưa phân loại chi tiết)
+  | 'desk_lamp'     // Đèn bàn
+  | 'night_lamp'    // Đèn ngủ
+  | 'pendant_lamp'  // Đèn thả / đèn cây trang trí
   | 'organizer';    // Khay bàn, Hộp đựng, Organizer để bàn
 
 export type DecorCategory =

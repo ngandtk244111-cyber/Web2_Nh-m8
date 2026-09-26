@@ -91,8 +91,6 @@
 
 .dd_goh--body {
   height: 132px;
-  /* Ảnh gốc có đốm bụi ở phần bóng dưới chân — cắt 7% đáy */
-  clip-path: inset(0 0 7% 0);
   animation: dd-run 1.1s ease-in-out infinite;
 }
 

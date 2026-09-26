@@ -1,20 +1,35 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of, tap } from 'rxjs';
-import { Product, ProductCategory, ProductionType } from '../models/product.model';
+import { Product, ProductCategory, ProductionType, SpaceKey } from '../models/product.model';
 import { environment } from '../../../environments/environment';
 import { DEV_MOCK_PRODUCTS } from '../data/product-detail.mock';
 import { MascotService } from './mascot.service';
+import { FlashSaleService } from './flash-sale.service';
+import {
+  findDepartment,
+  findSubcategory,
+  departmentMatches,
+  subcategoryMatches,
+  subcategoriesOf,
+  departmentOf,
+  spacesOf,
+  materialGroupsOf,
+  has3DModel,
+  normalizeText,
+  searchableText,
+} from '../data/catalog-taxonomy';
 
 const BASE = `${environment.apiUrl}/products`;
 
-export type PriceRangeKey = 'under100' | '100to300' | '300to500' | 'over500';
+export type PriceRangeKey = 'under100' | '100to300' | '300to500' | '500to2m' | 'over2m';
 
 export const PRICE_RANGES: { key: PriceRangeKey; label: string; min: number; max: number | null }[] = [
   { key: 'under100', label: 'Dưới 100.000đ', min: 0, max: 100000 },
   { key: '100to300', label: '100.000đ - 300.000đ', min: 100000, max: 300000 },
   { key: '300to500', label: '300.000đ - 500.000đ', min: 300000, max: 500000 },
-  { key: 'over500', label: 'Trên 500.000đ', min: 500000, max: null },
+  { key: '500to2m', label: '500.000đ - 2.000.000đ', min: 500000, max: 2000000 },
+  { key: 'over2m', label: 'Trên 2.000.000đ', min: 2000000, max: null },
 ];
 
 /** Tag suy ra từ cấu hình customization thật của sản phẩm — không phải field lưu riêng. */
@@ -30,7 +45,18 @@ export const CUSTOMIZATION_OPTIONS: { key: CustomizationTag; label: string }[] =
 export type SortKey = 'bestseller' | 'newest' | 'price-asc' | 'price-desc' | 'rating';
 
 export interface ProductFilters {
+  /** Lọc thẳng theo ProductCategory thật (giữ cho các nơi cũ). */
   categories: ProductCategory[];
+  /** Nhóm lớn (Nội thất, Đèn & ánh sáng...) — key trong CATALOG_DEPARTMENTS. */
+  departments: string[];
+  /** Danh mục con (Sofa, Đèn ngủ...) — key trong CATALOG_DEPARTMENTS[].subcategories. */
+  subcategories: string[];
+  spaces: SpaceKey[];
+  /** Nhóm chất liệu (Gỗ, Kim loại...) — key trong MATERIAL_GROUPS. */
+  materialGroups: string[];
+  has3D?: boolean;
+  customizableOnly?: boolean;
+  onSale?: boolean;
   priceRanges: PriceRangeKey[];
   styles: string[];
   colors: string[];
@@ -45,6 +71,10 @@ export interface ProductFilters {
 export function createEmptyFilters(): ProductFilters {
   return {
     categories: [],
+    departments: [],
+    subcategories: [],
+    spaces: [],
+    materialGroups: [],
     priceRanges: [],
     styles: [],
     colors: [],
@@ -62,6 +92,7 @@ export function createEmptyFilters(): ProductFilters {
 export class ProductService {
   private http = inject(HttpClient);
   private mascotService = inject(MascotService);
+  private flashSale = inject(FlashSaleService);
 
   // State signal — nạp từ backend thật (MongoDB), không còn localStorage/mock.
   private productsSignal = signal<Product[]>([]);
@@ -121,10 +152,36 @@ export class ProductService {
     return this.productsSignal().find(p => p.slug === slug);
   }
 
+  /** Gợi ý liên quan: cùng danh mục con > cùng nhóm lớn > cùng không gian sống. */
   getRelatedProducts(product: Product, limit = 4): Product[] {
+    const subKeys = new Set(subcategoriesOf(product).map(s => s.key));
+    const deptKey = departmentOf(product)?.key;
+    const spaces = new Set(spacesOf(product));
+    const score = (p: Product): number => {
+      if (p.category === product.category || subcategoriesOf(p).some(s => subKeys.has(s.key))) return 3;
+      if (deptKey && departmentOf(p)?.key === deptKey) return 2;
+      if (spacesOf(p).some(sp => spaces.has(sp))) return 1;
+      return 0;
+    };
     return this.productsSignal()
-      .filter(p => p.id !== product.id && (p.category === product.category || p.categoryGroup === product.categoryGroup))
-      .slice(0, limit);
+      .filter(p => p.id !== product.id)
+      .map(p => ({ p, s: score(p) }))
+      .filter(x => x.s > 0)
+      .sort((a, b) => b.s - a.s)
+      .slice(0, limit)
+      .map(x => x.p);
+  }
+
+  /** Giá đang áp dụng (tính cả Flash Sale chưa tới giờ) — dùng chung cho card, filter giá, badge Sale. */
+  currentPrice(p: Product): number {
+    return this.flashSale.effectiveBasePrice(p);
+  }
+
+  /** % giảm giá thực tế đang áp dụng, 0 nếu không giảm. */
+  discountPercent(p: Product): number {
+    const price = this.currentPrice(p);
+    if (!p.originalPrice || p.originalPrice <= price) return 0;
+    return Math.round((1 - price / p.originalPrice) * 100);
   }
 
   /** Suy ra tag tùy chỉnh thật từ cấu hình customization của sản phẩm (không lưu field riêng). */
@@ -141,23 +198,53 @@ export class ProductService {
     let result = [...this.productsSignal()];
 
     if (filters.searchQuery?.trim()) {
-      const q = filters.searchQuery.toLowerCase().trim();
-      result = result.filter(p =>
-        p.name.toLowerCase().includes(q) ||
-        p.description.toLowerCase().includes(q) ||
-        p.categoryName.toLowerCase().includes(q)
-      );
+      // Không dấu + hiểu danh mục mới/không gian/phong cách: "giuong", "phong khach", "sofa"...
+      const terms = normalizeText(filters.searchQuery).split(/\s+/).filter(Boolean);
+      result = result.filter(p => {
+        const text = searchableText(p);
+        return terms.every(t => text.includes(t));
+      });
     }
 
     if (filters.categories?.length) {
       result = result.filter(p => filters.categories.includes(p.category));
     }
 
+    // Nhóm lớn + danh mục con: danh mục con đã chọn thì thu hẹp trong nhóm lớn tương ứng.
+    if (filters.subcategories?.length) {
+      const subs = filters.subcategories.map(k => findSubcategory(k)?.sub).filter(s => !!s);
+      result = result.filter(p => subs.some(sub => subcategoryMatches(sub!, p)));
+    } else if (filters.departments?.length) {
+      const depts = filters.departments.map(k => findDepartment(k)).filter(d => !!d);
+      result = result.filter(p => depts.some(d => departmentMatches(d!, p)));
+    }
+
+    if (filters.spaces?.length) {
+      result = result.filter(p => spacesOf(p).some(sp => filters.spaces.includes(sp)));
+    }
+
+    if (filters.materialGroups?.length) {
+      result = result.filter(p => materialGroupsOf(p).some(g => filters.materialGroups.includes(g)));
+    }
+
+    if (filters.has3D) {
+      result = result.filter(p => has3DModel(p));
+    }
+
+    if (filters.customizableOnly) {
+      result = result.filter(p => p.customizable);
+    }
+
+    if (filters.onSale) {
+      result = result.filter(p => this.discountPercent(p) > 0);
+    }
+
     if (filters.priceRanges?.length) {
       result = result.filter(p => filters.priceRanges.some(key => {
         const range = PRICE_RANGES.find(r => r.key === key);
         if (!range) return false;
-        return p.basePrice >= range.min && (range.max === null || p.basePrice < range.max);
+        const price = this.currentPrice(p);
+        return price >= range.min && (range.max === null || price < range.max);
       }));
     }
 
@@ -190,10 +277,10 @@ export class ProductService {
 
     switch (filters.sortBy) {
       case 'price-asc':
-        result.sort((a, b) => a.basePrice - b.basePrice);
+        result.sort((a, b) => this.currentPrice(a) - this.currentPrice(b));
         break;
       case 'price-desc':
-        result.sort((a, b) => b.basePrice - a.basePrice);
+        result.sort((a, b) => this.currentPrice(b) - this.currentPrice(a));
         break;
       case 'rating':
         result.sort((a, b) => b.rating - a.rating);

@@ -1,20 +1,61 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-  <!-- Callout: Tùy Biến In 3D là danh mục riêng -->
-  <a
-    routerLink="/customizer-3d"
-    class="flex items-center justify-between gap-4 p-4 mb-6 rounded-2xl bg-gradient-to-r from-amber-500/15 to-transparent border border-amber-500/30 hover:border-amber-400 transition group">
-    <div class="flex items-center gap-3.5">
-      <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-400 to-amber-600 flex items-center justify-center text-white shadow-[0_0_15px_rgba(163, 21, 45,0.4)] flex-shrink-0">
-        <app-icon name="sliders" [size]="18"></app-icon>
+  <!-- Breadcrumb -->
+  <nav class="cg_crumb" aria-label="Breadcrumb">
+    <a routerLink="/">Trang chủ</a>
+    <app-icon name="chevron-right" [size]="12"></app-icon>
+    <a routerLink="/catalog">Sản phẩm</a>
+    <ng-container *ngIf="pageTitle !== 'Tất cả sản phẩm'">
+      <app-icon name="chevron-right" [size]="12"></app-icon>
+      <span class="cg_crumb__current">{{ pageTitle }}</span>
+    </ng-container>
+  </nav>
+
+  <!-- DẢI DANH MỤC CÓ ẢNH: trong 1 nhóm lớn → các danh mục con cùng nhóm; chưa chọn nhóm → các nhóm lớn -->
+  <nav class="cg_strip" aria-label="Danh mục sản phẩm">
+    <ng-container *ngIf="stripDepartment as dept; else deptStrip">
+      <button type="button" class="cg_strip__back" (click)="clearDepartments()">
+        <app-icon name="chevron-left" [size]="14"></app-icon>
+        <span>Tất cả danh mục</span>
+      </button>
+      <div class="cg_strip__row">
+        <button
+          type="button"
+          class="cg_tile"
+          [class.cg_tile--active]="selectedSubcategories.size === 0"
+          [attr.aria-pressed]="selectedSubcategories.size === 0"
+          (click)="selectOnlyDepartment(dept.key)">
+          <span class="cg_tile__img"><img [src]="dept.image" alt="" loading="lazy"></span>
+          <span class="cg_tile__label">Tất cả {{ dept.label | lowercase }}</span>
+        </button>
+        <button
+          *ngFor="let sub of dept.subcategories"
+          type="button"
+          class="cg_tile"
+          [class.cg_tile--active]="isSubSelected(sub)"
+          [attr.aria-pressed]="isSubSelected(sub)"
+          (click)="selectOnlySubcategory(sub.key)">
+          <span class="cg_tile__img"><img [src]="sub.image" alt="" loading="lazy"></span>
+          <span class="cg_tile__label">{{ sub.label }}</span>
+        </button>
       </div>
-      <div>
-        <div class="text-sm font-bold text-neutral-900">Muốn một món đồ độc bản, tự thiết kế màu/kích thước/khắc chữ?</div>
-        <div class="text-xs text-neutral-600 mt-0.5">Ghé danh mục riêng "Tùy Biến In 3D" — sản phẩm in theo yêu cầu, xem trước trực quan trên mô hình 3D.</div>
+    </ng-container>
+
+    <ng-template #deptStrip>
+      <div class="cg_strip__row">
+        <button
+          *ngFor="let dept of departments"
+          type="button"
+          class="cg_tile cg_tile--dept"
+          [class.cg_tile--active]="selectedDepartments.has(dept.key)"
+          [attr.aria-pressed]="selectedDepartments.has(dept.key)"
+          (click)="selectOnlyDepartment(dept.key)">
+          <span class="cg_tile__img"><img [src]="dept.image" alt="" loading="lazy"></span>
+          <span class="cg_tile__label">{{ dept.label }}</span>
+        </button>
       </div>
-    </div>
-    <app-icon name="chevron-right" [size]="18" class="text-amber-500 flex-shrink-0 group-hover:translate-x-1 transition-transform"></app-icon>
-  </a>
+    </ng-template>
+  </nav>
 
   <!-- Mobile: nút mở bộ lọc -->
   <button
@@ -35,22 +76,23 @@
     <!-- ============ MAIN CONTENT ============ -->
     <div class="cg_main min-w-0">
 
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+      <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-5">
         <div>
-          <h1 class="font-serif text-xl sm:text-2xl font-bold text-amber-800">Danh Sách Sản Phẩm</h1>
-          <p class="text-xs text-neutral-600 mt-1">Khám phá các sản phẩm decor mini 3D được thiết kế và in theo phong cách riêng.</p>
+          <h1 class="cg_title">{{ pageTitle }}</h1>
+          <p class="cg_subtitle">{{ pageSubtitle }}</p>
         </div>
+        <span class="cg_count">{{ filteredProducts.length }} sản phẩm</span>
       </div>
 
       <!-- Search + Sorting + View toggle -->
-      <div class="cg_toolbar bg-white rounded-2xl p-3 border border-neutral-200 shadow-soft flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between mb-5">
+      <div class="cg_toolbar bg-white rounded-2xl p-3 border border-neutral-200 shadow-soft flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between mb-4">
         <div class="relative flex-1 max-w-xs">
           <input
             type="text"
             [(ngModel)]="searchQuery"
             (ngModelChange)="onSearchChange()"
-            placeholder="Tìm kiếm sản phẩm..."
-            class="w-full pl-9 pr-3 py-2 rounded-xl border border-neutral-300 bg-neutral-100 text-neutral-800 placeholder:text-neutral-500 text-xs focus:outline-none focus:border-amber-400 transition">
+            placeholder="Tìm sofa, đèn ngủ, phòng khách..."
+            class="w-full pl-9 pr-3 py-2 rounded-xl border border-neutral-300 bg-neutral-100 text-neutral-800 placeholder:text-neutral-500 text-xs focus:outline-none focus:border-neutral-500 transition">
           <app-icon name="search" [size]="14" class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500"></app-icon>
         </div>
 
@@ -73,12 +115,21 @@
         </div>
       </div>
 
+      <!-- Bộ lọc đang áp dụng -->
+      <div *ngIf="activeChips.length > 0" class="cg_chips">
+        <button *ngFor="let chip of activeChips" type="button" class="cg_chip" (click)="chip.remove()" [attr.aria-label]="'Bỏ lọc ' + chip.label">
+          <span>{{ chip.label }}</span>
+          <app-icon name="x" [size]="12"></app-icon>
+        </button>
+        <button type="button" class="cg_chip cg_chip--clear" (click)="resetFilters()">Xóa tất cả</button>
+      </div>
+
       <!-- Results -->
       <div
         *ngIf="filteredProducts.length > 0"
         class="grid gap-5"
         [class.grid-cols-1]="viewMode === 'list'"
-        [class.sm:grid-cols-2]="viewMode === 'grid'"
+        [class.grid-cols-2]="viewMode === 'grid'"
         [class.lg:grid-cols-3]="viewMode === 'grid'">
         <app-product-card
           *ngFor="let p of filteredProducts"
@@ -88,14 +139,28 @@
       </div>
 
       <!-- Empty State -->
-      <div *ngIf="filteredProducts.length === 0" class="text-center py-16 bg-white rounded-3xl border border-neutral-200 shadow-soft p-8 space-y-4">
-        <p class="text-sm text-neutral-600">Không tìm thấy sản phẩm nào phù hợp với bộ lọc.</p>
-        <button
-          (click)="resetFilters()"
-          class="px-5 py-2 rounded-full border border-amber-400 text-amber-400 text-xs font-bold hover:bg-amber-400 hover:text-white transition">
-          Xóa bộ lọc
-        </button>
+      <div *ngIf="filteredProducts.length === 0" class="cg_empty">
+        <app-icon name="search" [size]="22"></app-icon>
+        <p class="cg_empty__title">Chưa có sản phẩm phù hợp</p>
+        <p class="cg_empty__desc">
+          Danh mục này đang được Luméa cập nhật thêm sản phẩm. Bạn có thể bỏ bớt bộ lọc,
+          hoặc gửi yêu cầu thiết kế riêng để được sản xuất theo kích thước mong muốn.
+        </p>
+        <div class="cg_empty__actions">
+          <button type="button" (click)="resetFilters()" class="cg_empty__btn">Xóa bộ lọc</button>
+          <a routerLink="/custom-request/new" class="cg_empty__btn cg_empty__btn--ghost">Gửi yêu cầu thiết kế riêng</a>
+        </div>
       </div>
+
+      <!-- Nhánh 3D & Custom: lối vào trình tùy biến, không chiếm vị trí đầu trang -->
+      <a routerLink="/customizer-3d" class="cg_custom-cta">
+        <span class="cg_custom-cta__icon"><app-icon name="sliders" [size]="18"></app-icon></span>
+        <span class="cg_custom-cta__text">
+          <strong>Muốn một món đồ độc bản?</strong>
+          <span>Tùy biến màu sắc, chất liệu, kích thước hoặc khắc tên — xem trước trực quan trên mô hình 3D.</span>
+        </span>
+        <app-icon name="chevron-right" [size]="18"></app-icon>
+      </a>
 
     </div>
   </div>
@@ -105,7 +170,7 @@
 <div class="cg_overlay lg:hidden" *ngIf="mobileFiltersOpen" (click)="closeMobileFilters()"></div>
 <aside class="cg_drawer lg:hidden" [class.cg_drawer--open]="mobileFiltersOpen">
   <div class="cg_drawer__head">
-    <span class="font-bold text-sm text-neutral-900">Bộ lọc nâng cao</span>
+    <span class="font-bold text-sm text-neutral-900">Bộ lọc</span>
     <button type="button" (click)="closeMobileFilters()" aria-label="Đóng">
       <app-icon name="x" [size]="18"></app-icon>
     </button>
@@ -124,41 +189,68 @@
 <ng-template #sidebarContent>
   <div class="cg_sidebar__title">
     <app-icon name="sliders" [size]="15"></app-icon>
-    <span>Bộ lọc nâng cao</span>
+    <span>Bộ lọc</span>
   </div>
 
-  <!-- LOẠI SẢN PHẨM -->
+  <!-- DANH MỤC (nhóm lớn) -->
   <div class="cg_group">
-    <button type="button" class="cg_group__head" (click)="toggleGroup('category')">
-      <span>Loại Sản Phẩm</span>
-      <app-icon name="chevron-down" [size]="14" [class.cg_group__arrow--open]="isGroupExpanded('category')"></app-icon>
+    <button type="button" class="cg_group__head" (click)="toggleGroup('department')">
+      <span>Danh Mục</span>
+      <app-icon name="chevron-down" [size]="14" [class.cg_group__arrow--open]="isGroupExpanded('department')"></app-icon>
     </button>
-    <div class="cg_group__body" *ngIf="isGroupExpanded('category')">
+    <div class="cg_group__body" *ngIf="isGroupExpanded('department')">
       <label class="cg_checkbox">
-        <input type="checkbox" [checked]="selectedCategoryKeys.size === 0" (change)="clearCategoryFilter()">
+        <input type="checkbox" [checked]="selectedDepartments.size === 0" (change)="clearDepartments()">
         <span>Tất cả</span>
       </label>
-      <label class="cg_checkbox" *ngFor="let group of visibleCategoryGroups()">
-        <input type="checkbox" [checked]="selectedCategoryKeys.has(group.key)" (change)="toggleCategory(group.key)">
-        <span>{{ group.label }}</span>
+      <label class="cg_checkbox" *ngFor="let dept of departments">
+        <input type="checkbox" [checked]="selectedDepartments.has(dept.key)" (change)="toggleDepartment(dept.key)">
+        <span>{{ dept.label }}</span>
       </label>
-      <button type="button" class="cg_see-more" (click)="toggleSeeMore('category')" *ngIf="categoryGroups.length > seeMoreThreshold">
-        <app-icon [name]="isSeeMoreExpanded('category') ? 'chevron-down' : 'chevron-right'" [size]="12"></app-icon>
-        {{ isSeeMoreExpanded('category') ? 'Thu gọn' : 'Xem thêm' }}
-      </button>
+    </div>
+  </div>
+
+  <!-- LOẠI SẢN PHẨM (danh mục con, nhóm theo danh mục lớn) -->
+  <div class="cg_group">
+    <button type="button" class="cg_group__head" (click)="toggleGroup('subcategory')">
+      <span>Loại Sản Phẩm</span>
+      <app-icon name="chevron-down" [size]="14" [class.cg_group__arrow--open]="isGroupExpanded('subcategory')"></app-icon>
+    </button>
+    <div class="cg_group__body" *ngIf="isGroupExpanded('subcategory')">
+      <div *ngFor="let dept of visibleSubcategoryGroups" class="cg_subgroup">
+        <span class="cg_subgroup__title">{{ dept.label }}</span>
+        <label class="cg_checkbox" *ngFor="let sub of dept.subcategories">
+          <input type="checkbox" [checked]="isSubSelected(sub)" (change)="toggleSubcategory(sub.key)">
+          <span>{{ sub.label }}</span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- KHÔNG GIAN -->
+  <div class="cg_group">
+    <button type="button" class="cg_group__head" (click)="toggleGroup('space')">
+      <span>Không Gian</span>
+      <app-icon name="chevron-down" [size]="14" [class.cg_group__arrow--open]="isGroupExpanded('space')"></app-icon>
+    </button>
+    <div class="cg_group__body" *ngIf="isGroupExpanded('space')">
+      <label class="cg_checkbox" *ngFor="let space of spaces">
+        <input type="checkbox" [checked]="selectedSpaces.has(space.key)" (change)="toggleSpace(space.key)">
+        <span>{{ space.label }}</span>
+      </label>
     </div>
   </div>
 
   <!-- GIÁ BÁN -->
   <div class="cg_group">
     <button type="button" class="cg_group__head" (click)="toggleGroup('price')">
-      <span>Giá Bán</span>
+      <span>Giá</span>
       <app-icon name="chevron-down" [size]="14" [class.cg_group__arrow--open]="isGroupExpanded('price')"></app-icon>
     </button>
     <div class="cg_group__body" *ngIf="isGroupExpanded('price')">
       <label class="cg_radio">
         <input type="radio" name="priceRange" [checked]="selectedPriceRange === null" (change)="setPriceRange(null)">
-        <span>Tất Cả</span>
+        <span>Tất cả</span>
       </label>
       <label class="cg_radio" *ngFor="let range of priceRanges">
         <input type="radio" name="priceRange" [checked]="selectedPriceRange === range.key" (change)="setPriceRange(range.key)">
@@ -167,25 +259,33 @@
     </div>
   </div>
 
-  <!-- PHONG CÁCH -->
+  <!-- TÍNH NĂNG: tùy biến / 3D / giảm giá / in 3D -->
   <div class="cg_group">
-    <button type="button" class="cg_group__head" (click)="toggleGroup('style')">
-      <span>Phong Cách</span>
-      <app-icon name="chevron-down" [size]="14" [class.cg_group__arrow--open]="isGroupExpanded('style')"></app-icon>
+    <button type="button" class="cg_group__head" (click)="toggleGroup('feature')">
+      <span>Tính Năng & Ưu Đãi</span>
+      <app-icon name="chevron-down" [size]="14" [class.cg_group__arrow--open]="isGroupExpanded('feature')"></app-icon>
     </button>
-    <div class="cg_group__body" *ngIf="isGroupExpanded('style')">
+    <div class="cg_group__body" *ngIf="isGroupExpanded('feature')">
       <label class="cg_checkbox">
-        <input type="checkbox" [checked]="selectedStyles.size === 0" (change)="clearStyleFilter()">
-        <span>Tất cả</span>
+        <input type="checkbox" [checked]="customizableOnly" (change)="toggleFlag('customizableOnly')">
+        <span>Có thể tùy biến</span>
       </label>
-      <label class="cg_checkbox" *ngFor="let style of visibleStyleOptions()">
-        <input type="checkbox" [checked]="selectedStyles.has(style)" (change)="toggleStyle(style)">
-        <span>{{ style }}</span>
+      <label class="cg_checkbox">
+        <input type="checkbox" [checked]="has3DOnly" (change)="toggleFlag('has3DOnly')">
+        <span>Có mô hình 3D</span>
       </label>
-      <button type="button" class="cg_see-more" (click)="toggleSeeMore('style')" *ngIf="styleOptions.length > seeMoreThreshold">
-        <app-icon [name]="isSeeMoreExpanded('style') ? 'chevron-down' : 'chevron-right'" [size]="12"></app-icon>
-        {{ isSeeMoreExpanded('style') ? 'Thu gọn' : 'Xem thêm' }}
-      </button>
+      <label class="cg_checkbox">
+        <input type="checkbox" [checked]="onSaleOnly" (change)="toggleFlag('onSaleOnly')">
+        <span>Đang giảm giá</span>
+      </label>
+      <label class="cg_checkbox">
+        <input type="checkbox" [checked]="printOnDemandOnly" (change)="toggleFlag('printOnDemandOnly')">
+        <span>In 3D theo yêu cầu</span>
+      </label>
+      <label class="cg_checkbox">
+        <input type="checkbox" [checked]="readyStockOnly" (change)="toggleFlag('readyStockOnly')">
+        <span>Hàng có sẵn</span>
+      </label>
     </div>
   </div>
 
@@ -196,10 +296,6 @@
       <app-icon name="chevron-down" [size]="14" [class.cg_group__arrow--open]="isGroupExpanded('color')"></app-icon>
     </button>
     <div class="cg_group__body" *ngIf="isGroupExpanded('color')">
-      <label class="cg_checkbox">
-        <input type="checkbox" [checked]="selectedColors.size === 0" (change)="clearColorFilter()">
-        <span>Tất cả</span>
-      </label>
       <label class="cg_checkbox" *ngFor="let color of visibleColorOptions()">
         <input type="checkbox" [checked]="selectedColors.has(color)" (change)="toggleColor(color)">
         <span>{{ color }}</span>
@@ -211,17 +307,39 @@
     </div>
   </div>
 
-  <!-- CHẤT LIỆU IN -->
+  <!-- CHẤT LIỆU -->
   <div class="cg_group">
     <button type="button" class="cg_group__head" (click)="toggleGroup('material')">
-      <span>Chất Liệu In</span>
+      <span>Chất Liệu</span>
       <app-icon name="chevron-down" [size]="14" [class.cg_group__arrow--open]="isGroupExpanded('material')"></app-icon>
     </button>
     <div class="cg_group__body" *ngIf="isGroupExpanded('material')">
-      <label class="cg_checkbox" *ngFor="let material of materialOptions">
-        <input type="checkbox" [checked]="selectedMaterials.has(material)" (change)="toggleMaterial(material)">
-        <span>{{ material }}</span>
+      <label class="cg_checkbox" *ngFor="let group of visibleMaterialGroups()">
+        <input type="checkbox" [checked]="selectedMaterialGroups.has(group.key)" (change)="toggleMaterialGroup(group.key)">
+        <span>{{ group.label }}</span>
       </label>
+      <button type="button" class="cg_see-more" (click)="toggleSeeMore('material')" *ngIf="materialGroups.length > seeMoreThreshold">
+        <app-icon [name]="isSeeMoreExpanded('material') ? 'chevron-down' : 'chevron-right'" [size]="12"></app-icon>
+        {{ isSeeMoreExpanded('material') ? 'Thu gọn' : 'Xem thêm' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- PHONG CÁCH -->
+  <div class="cg_group">
+    <button type="button" class="cg_group__head" (click)="toggleGroup('style')">
+      <span>Phong Cách</span>
+      <app-icon name="chevron-down" [size]="14" [class.cg_group__arrow--open]="isGroupExpanded('style')"></app-icon>
+    </button>
+    <div class="cg_group__body" *ngIf="isGroupExpanded('style')">
+      <label class="cg_checkbox" *ngFor="let style of visibleStyleOptions()">
+        <input type="checkbox" [checked]="selectedStyles.has(style)" (change)="toggleStyle(style)">
+        <span>{{ style }}</span>
+      </label>
+      <button type="button" class="cg_see-more" (click)="toggleSeeMore('style')" *ngIf="styleOptions.length > seeMoreThreshold">
+        <app-icon [name]="isSeeMoreExpanded('style') ? 'chevron-down' : 'chevron-right'" [size]="12"></app-icon>
+        {{ isSeeMoreExpanded('style') ? 'Thu gọn' : 'Xem thêm' }}
+      </button>
     </div>
   </div>
 
@@ -239,10 +357,10 @@
     </div>
   </div>
 
-  <!-- TÙY CHỈNH -->
+  <!-- KIỂU TÙY BIẾN (chi tiết) -->
   <div class="cg_group">
     <button type="button" class="cg_group__head" (click)="toggleGroup('customization')">
-      <span>Tùy Chỉnh</span>
+      <span>Kiểu Tùy Biến</span>
       <app-icon name="chevron-down" [size]="14" [class.cg_group__arrow--open]="isGroupExpanded('customization')"></app-icon>
     </button>
     <div class="cg_group__body" *ngIf="isGroupExpanded('customization')">

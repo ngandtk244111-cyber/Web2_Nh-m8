@@ -24,7 +24,7 @@
       <button type="submit" class="hd_m__search-icon-btn" aria-label="Tìm kiếm">
         <img src="assets/mascot/goh-search.png" alt="Tìm kiếm" class="hd_m__search-icon-img">
       </button>
-      <input #mobileSearchInput type="text" class="hd_m__search-input" placeholder="Tìm kiếm đèn, kệ, bình hoa...">
+      <input #mobileSearchInput type="text" class="hd_m__search-input" placeholder="Tìm sofa, giường, đèn, decor...">
     </form>
   </div>
 
@@ -55,14 +55,23 @@
     </button>
 
     <nav class="hd_drawer__nav">
-      <div class="hd_drawer__accordion" *ngFor="let group of megaMenuGroups">
-        <button type="button" class="hd_drawer__accordion-head" (click)="toggleMobileGroup(group.title)" [class.hd_drawer__accordion-head--open]="expandedMobileGroup === group.title">
-          <span>{{ group.title }}</span>
+      <div class="hd_drawer__group-title">Danh mục sản phẩm</div>
+      <div class="hd_drawer__accordion" *ngFor="let section of megaMenuSections">
+        <button type="button" class="hd_drawer__accordion-head" (click)="toggleMobileGroup(section.key)" [class.hd_drawer__accordion-head--open]="expandedMobileGroup === section.key">
+          <span>{{ section.title }}</span>
           <app-icon name="chevron-down" [size]="15"></app-icon>
         </button>
-        <div class="hd_drawer__accordion-body" *ngIf="expandedMobileGroup === group.title">
+        <div class="hd_drawer__accordion-body" *ngIf="expandedMobileGroup === section.key">
           <a
-            *ngFor="let item of group.items"
+            *ngIf="section.viewAll"
+            [routerLink]="section.viewAll.link"
+            [queryParams]="section.viewAll.queryParams"
+            (click)="mobileMenuOpen = false"
+            class="hd_drawer__item hd_drawer__item--all">
+            Xem tất cả {{ section.viewAll.link === '/catalog' ? section.title : section.viewAll.label }}
+          </a>
+          <a
+            *ngFor="let item of section.items"
             [routerLink]="item.link || '/catalog'"
             [queryParams]="item.queryParams"
             (click)="mobileMenuOpen = false"
@@ -93,7 +102,7 @@
   <!-- ============ TẦNG 1: TOP STRIP ============ -->
   <div class="hd_top">
     <div class="hd_container hd_top__inner">
-      <a routerLink="/" class="hd_top__left">Tìm hiểu về LUMÉA</a>
+      <a routerLink="/ve-lumea" class="hd_top__left">Tìm hiểu về LUMÉA</a>
       <a href="tel:18006928" class="hd_top__right">Hỗ trợ: 1800 6928</a>
     </div>
   </div>
@@ -118,7 +127,7 @@
           <button type="submit" class="hd_search__icon-btn" aria-label="Tìm kiếm">
             <img src="assets/mascot/goh-search.png" alt="Tìm kiếm" class="hd_search__icon-img">
           </button>
-          <input #searchInput type="text" class="hd_search__input" placeholder="Tìm kiếm đèn, kệ, bình hoa..." (focus)="openSearchSuggestions()">
+          <input #searchInput type="text" class="hd_search__input" placeholder="Tìm sofa, giường, đèn, decor..." (focus)="openSearchSuggestions()">
         </form>
 
         <div class="hd_search-suggest" *ngIf="searchSuggestionsOpen" (click)="$event.stopPropagation()">
@@ -237,9 +246,17 @@
   <!-- ============ TẦNG 3: UTILITY BAR (menu | vị trí giao hàng) ============ -->
   <div class="hd_utility" (mouseleave)="onMegaMenuAreaLeave()">
     <div class="hd_container hd_utility__inner">
-      <button type="button" class="hd_menu-btn" (click)="toggleMegaMenu()" [class.hd_menu-btn--active]="megaMenuOpen">
+      <button
+        type="button"
+        class="hd_menu-btn"
+        (click)="toggleMegaMenu()"
+        (mouseenter)="onMegaMenuTriggerEnter()"
+        (mouseleave)="onMegaMenuTriggerLeave()"
+        [class.hd_menu-btn--active]="megaMenuOpen"
+        [attr.aria-expanded]="megaMenuOpen"
+        aria-haspopup="true">
         <app-icon name="menu" [size]="15"></app-icon>
-        <span>Menu</span>
+        <span>Danh mục sản phẩm</span>
       </button>
 
       <app-announcement-ticker class="hd_utility__ticker" [compact]="isScrolled"></app-announcement-ticker>
@@ -262,29 +279,69 @@
       *ngIf="megaMenuOpen || megaMenuClosing">
       <div class="hd_container hd_megamenu__inner">
 
-        <div class="hd_megamenu__columns">
-          <div class="hd_megamenu__col" *ngFor="let col of megaMenuColumns; let i = index" [style.--col-index]="i">
-            <div class="hd_megamenu__group" *ngFor="let group of col">
-              <div class="hd_megamenu__title">{{ group.title }}</div>
-              <a
-                *ngFor="let item of group.items"
-                [routerLink]="item.link || '/catalog'"
-                [queryParams]="item.queryParams"
-                (click)="closeMenus()"
-                class="hd_megamenu__link">
-                {{ item.label }}
-              </a>
+        <!-- Cột trái: nhóm lớn — hover để xem danh mục con -->
+        <nav class="hd_mega-rail" aria-label="Nhóm danh mục">
+          <a
+            *ngFor="let section of megaMenuSections; let i = index"
+            [routerLink]="section.railLink?.link || null"
+            [queryParams]="section.railLink?.queryParams"
+            (mouseenter)="setActiveMegaSection(section.key)"
+            (focus)="setActiveMegaSection(section.key)"
+            (click)="section.railLink ? closeMenus() : setActiveMegaSection(section.key)"
+            class="hd_mega-rail__item"
+            [class.hd_mega-rail__item--active]="activeMegaSectionKey === section.key"
+            [class.hd_mega-rail__item--divider]="i === 4"
+            tabindex="0">
+            <span class="hd_mega-rail__text">{{ section.title }}</span>
+            <app-icon name="chevron-right" [size]="14"></app-icon>
+          </a>
+        </nav>
+
+        <!-- Nội dung nhóm đang chọn -->
+        <div class="hd_mega-panel" *ngFor="let section of [activeMegaSection]; trackBy: trackSection">
+          <div class="hd_mega-panel__head">
+            <div>
+              <h3 class="hd_mega-panel__title">{{ section.title }}</h3>
+              <p class="hd_mega-panel__desc">{{ section.description }}</p>
             </div>
+            <a
+              *ngIf="section.viewAll"
+              [routerLink]="section.viewAll.link"
+              [queryParams]="section.viewAll.queryParams"
+              (click)="closeMenus()"
+              class="hd_mega-panel__all">
+              {{ section.viewAll.link === '/catalog' ? 'Xem tất cả' : section.viewAll.label }}
+              <app-icon name="chevron-right" [size]="13"></app-icon>
+            </a>
+          </div>
+
+          <div class="hd_mega-tiles" [style.--cols]="section.items.length <= 4 ? section.items.length : 3">
+            <a
+              *ngFor="let item of section.items; let i = index"
+              [routerLink]="item.link || '/catalog'"
+              [queryParams]="item.queryParams"
+              (click)="closeMenus()"
+              class="hd_mega-tile"
+              [style.--i]="i">
+              <span class="hd_mega-tile__img">
+                <img *ngIf="item.image" [src]="item.image" [alt]="" loading="lazy">
+              </span>
+              <span class="hd_mega-tile__label">
+                <span class="hd_mega-tile__text">{{ item.label }}</span>
+                <app-icon name="chevron-right" [size]="13"></app-icon>
+              </span>
+            </a>
           </div>
         </div>
 
         <a
           [routerLink]="megaMenuBanner.link"
           class="hd_megamenu__banner"
-          [style.background]="megaMenuBanner.gradient"
           (click)="closeMenus()">
+          <img [src]="megaMenuBanner.image" alt="" class="hd_megamenu__banner-img" loading="lazy">
+          <span class="hd_megamenu__banner-shade"></span>
           <div class="hd_megamenu__banner-icon">
-            <app-icon [name]="megaMenuBanner.icon" [size]="30"></app-icon>
+            <app-icon [name]="megaMenuBanner.icon" [size]="24"></app-icon>
           </div>
           <h4 class="hd_megamenu__banner-title">{{ megaMenuBanner.title }}</h4>
           <p class="hd_megamenu__banner-desc">{{ megaMenuBanner.description }}</p>

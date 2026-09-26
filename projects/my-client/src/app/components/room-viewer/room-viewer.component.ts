@@ -22,7 +22,6 @@ import { Product } from '../../core/models/product.model';
 import { ProductService } from '../../core/services/product.service';
 import { CartService } from '../../core/services/cart.service';
 import { MascotService } from '../../core/services/mascot.service';
-import { ToastService } from '../../core/services/toast.service';
 import { AppIconComponent } from '../icon/icon.component';
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
 import { ViewerRuntime } from '../../shared/three/viewer-runtime';
@@ -73,8 +72,7 @@ export class RoomViewerComponent implements OnInit, AfterViewInit, OnChanges, On
     private cartService: CartService,
     private router: Router,
     private ngZone: NgZone,
-    private mascotService: MascotService,
-    private toastService: ToastService
+    private mascotService: MascotService
   ) {}
 
   private debugPointerStart: { x: number; y: number } | null = null;
@@ -294,7 +292,6 @@ export class RoomViewerComponent implements OnInit, AfterViewInit, OnChanges, On
 
   addToCart(product: Product): void {
     this.cartService.addToCart(product, 1);
-    this.toastService.success(`Đã thêm "${product.name}" vào giỏ hàng`);
     this.mascotService.react('happy');
   }
 

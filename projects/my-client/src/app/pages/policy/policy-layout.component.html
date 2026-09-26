@@ -1,0 +1,43 @@
+<div class="pl-bar">
+  <div class="pl-bar__inner">
+    <nav class="pl-crumb" aria-label="Breadcrumb">
+      <a routerLink="/" class="pl-crumb__link">Trang chủ</a>
+      <app-icon name="chevron-right" [size]="12"></app-icon>
+      <span class="pl-crumb__section">Hỗ trợ &amp; Chính sách</span>
+      <ng-container *ngIf="currentLabel()">
+        <app-icon name="chevron-right" [size]="12"></app-icon>
+        <span class="pl-crumb__current">{{ currentLabel() }}</span>
+      </ng-container>
+    </nav>
+
+    <button
+      type="button"
+      class="pl-menu-btn"
+      [class.pl-menu-btn--open]="menuOpen()"
+      (click)="toggleMenu()"
+      [attr.aria-expanded]="menuOpen()"
+      aria-controls="policy-menu-panel">
+      <app-icon [name]="menuOpen() ? 'x' : 'menu'" [size]="16"></app-icon>
+      <span>Menu chính sách</span>
+    </button>
+  </div>
+
+  <div id="policy-menu-panel" class="pl-panel" [class.pl-panel--open]="menuOpen()">
+    <div class="pl-panel__inner">
+      <div *ngFor="let group of menu" class="pl-group">
+        <h3 class="pl-group__title">{{ group.title }}</h3>
+        <a
+          *ngFor="let item of group.items"
+          class="pl-link"
+          [routerLink]="['/chinh-sach', item.slug]"
+          routerLinkActive="pl-link--active"
+          [tabindex]="menuOpen() ? 0 : -1">
+          <span class="pl-link__icon"><app-icon [name]="item.icon" [size]="15"></app-icon></span>
+          <span>{{ item.label }}</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<router-outlet></router-outlet>

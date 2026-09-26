@@ -1,16 +1,28 @@
 export type CategoryGroup = 'FURNITURE' | 'DECOR';
 
+/**
+ * Loại vật thể thật của sản phẩm (lưu ở DB). Cây danh mục hiển thị cho người dùng
+ * (Nội thất › Sofa, Ánh sáng › Đèn ngủ...) nằm ở core/data/catalog-taxonomy.ts và map về các giá trị này.
+ */
 export type FurnitureCategory =
-  | 'lamp'          // Đèn bàn / Đèn ngủ
-  | 'bookshelf'     // Kệ sách / Kệ treo tường
+  | 'sofa'          // Sofa / ghế băng
+  | 'bed'           // Giường
+  | 'table'         // Bàn ăn / bàn trà / bàn làm việc
   | 'side_table'    // Bàn phụ / side table
+  | 'chair'         // Ghế ăn / ghế làm việc / armchair
   | 'stool'         // Ghế đôn
+  | 'cabinet'       // Tủ quần áo / tủ kệ / tủ giày
+  | 'bookshelf'     // Kệ sách / Kệ treo tường
+  | 'lamp'          // Đèn (dữ liệu cũ, chưa phân loại chi tiết)
+  | 'desk_lamp'     // Đèn bàn
+  | 'night_lamp'    // Đèn ngủ
+  | 'pendant_lamp'  // Đèn thả / đèn cây trang trí
   | 'organizer';    // Khay bàn, Hộp đựng, Organizer để bàn
 
 export type DecorCategory =
   | 'plant_pot'     // Chậu cây
   | 'vase'          // Bình hoa / Lọ decor
-  | 'sculpture'     // Tượng trang trí / Decor hình học / abstract
+  | 'sculpture'     // Tượng trang trí / Figure / Mô hình
   | 'clock'         // Đồng hồ để bàn
   | 'frame'         // Khung ảnh
   | 'candle_holder' // Đế nến
@@ -18,6 +30,9 @@ export type DecorCategory =
   | 'bookend';      // Giá đỡ sách / Bookend
 
 export type ProductCategory = FurnitureCategory | DecorCategory;
+
+/** Không gian sống phù hợp — dùng chung cho menu, filter, product detail. */
+export type SpaceKey = 'phong-khach' | 'phong-ngu' | 'phong-lam-viec' | 'phong-hoc' | 'goc-chill';
 
 export type ProductionType = 'READY_STOCK' | 'PRINT_ON_DEMAND';
 
@@ -27,7 +42,7 @@ export type ProductColor = 'Trắng' | 'Đen' | 'Xám' | 'Be' | 'Pastel' | 'Xanh
 
 export type PrintMaterial = 'PLA' | 'PETG' | 'Resin' | 'Wood PLA' | 'Nhựa tái chế';
 
-export type SizeCategory = 'Mini' | 'Nhỏ' | 'Trung bình' | 'Theo yêu cầu';
+export type SizeCategory = 'Mini' | 'Nhỏ' | 'Trung bình' | 'Lớn' | 'Theo yêu cầu';
 
 export interface ColorOption {
   name: string;
@@ -143,6 +158,8 @@ export interface Product {
   color?: ProductColor;
   printMaterial?: PrintMaterial;
   sizeCategory?: SizeCategory;
+  /** Không gian phù hợp. Không có thì suy ra mặc định theo category (xem spacesOf trong catalog-taxonomy.ts). */
+  spaces?: SpaceKey[];
   /** Trả về sẵn từ Mongoose timestamps — dùng cho sắp xếp "Mới nhất". */
   createdAt?: string;
 }

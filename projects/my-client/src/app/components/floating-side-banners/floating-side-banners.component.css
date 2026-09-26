@@ -137,7 +137,8 @@
   }
 }
 
-@media (max-width: 1200px) {
+/* Nội dung chính rộng tối đa 1280px + 2 banner ~130px mỗi bên — hẹp hơn thì ẩn để không đè nội dung. */
+@media (max-width: 1599px) {
   .fsb {
     display: none;
   }

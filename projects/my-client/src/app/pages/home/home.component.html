@@ -25,14 +25,14 @@
       <!-- 1. DECOR DEALS -->
       <app-decor-deals appScrollReveal="up"></app-decor-deals>
 
-      <!-- 2. DANH MỤC SẢN PHẨM: 8 thẻ đồng nhất, minh họa 3D cùng phong cách (4 × 2 desktop) -->
+      <!-- 2. DANH MỤC SẢN PHẨM: nội thất chính + đèn/decor + 3D & Custom (ảnh từ cây danh mục chung) -->
       <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" appScrollReveal="up">
         <div class="cat-panel">
           <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-6 mb-6 sm:mb-8">
             <div>
               <p class="cat-eyebrow">Khám phá theo danh mục</p>
               <h2 class="cat-title">Danh Mục Sản Phẩm</h2>
-              <p class="cat-sub">Khám phá các danh mục sản phẩm đa dạng, phù hợp với mọi phong cách và không gian sống.</p>
+              <p class="cat-sub">Sofa, giường, bàn ghế, tủ kệ cho không gian sống — cùng đèn, decor và sản phẩm 3D tuỳ biến theo phong cách riêng.</p>
             </div>
             <a routerLink="/catalog" class="cat-viewall" aria-label="Xem toàn bộ danh mục sản phẩm">
               <span>Xem toàn bộ danh mục</span>
@@ -47,12 +47,34 @@
               [queryParams]="cat.queryParams"
               class="cat-card"
               [attr.aria-label]="'Xem danh mục ' + cat.label">
-              <span class="cat-card__art print-layer">
+              <span class="cat-card__art">
                 <img [src]="cat.image" [alt]="" aria-hidden="true" loading="lazy" draggable="false">
               </span>
               <span class="cat-card__name">{{ cat.label }}</span>
             </a>
           </div>
+        </div>
+      </section>
+
+      <!-- 2b. MUA THEO KHÔNG GIAN -->
+      <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" appScrollReveal="up">
+        <div class="flex items-end justify-between gap-4 mb-5">
+          <div>
+            <h2 class="sec-title">Mua Theo Không Gian</h2>
+            <p class="text-xs sm:text-sm text-neutral-600 mt-1">Nội thất và decor phù hợp cho từng căn phòng của bạn.</p>
+          </div>
+          <a routerLink="/shop-the-room" class="text-sm text-neutral-700 hover:text-neutral-900 transition flex-shrink-0">Phòng mẫu 3D &rsaquo;</a>
+        </div>
+        <div class="sp-row" appScrollReveal="stagger">
+          <a
+            *ngFor="let space of spaceTiles"
+            [routerLink]="space.link"
+            [queryParams]="space.queryParams"
+            class="sp-tile"
+            [attr.aria-label]="'Xem sản phẩm cho ' + space.label">
+            <img [src]="space.image" [alt]="space.label" loading="lazy">
+            <span class="sp-tile__label">{{ space.label }}</span>
+          </a>
         </div>
       </section>
 
@@ -222,54 +244,55 @@
               </div>
             </div>
 
-            <img src="assets/mascot/goh-mascot.png" alt="" class="ai-cta__goh">
+            <img src="assets/mascot/lumea-mascot.png" alt="" class="ai-cta__goh">
           </div>
 
         </div>
       </section>
 
-      <!-- 8. TIN TỨC (bố cục theo mục "暮らしのヒント" của Nitori: tiêu đề + "Xem tất cả", hàng ô vuông) -->
-      <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" appScrollReveal="up">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="sec-title">Tin Tức</h2>
-          <a routerLink="/news" class="text-sm text-neutral-700 hover:text-amber-600 transition">Xem tất cả &rsaquo;</a>
-        </div>
-
-        <div class="nt-row" appScrollReveal="stagger">
-          <a
-            *ngFor="let article of newsArticles"
-            [routerLink]="['/news', article.slug]"
-            class="nt-tile nt-tile--square">
-            <img class="print-layer" [src]="article.coverImage" [alt]="article.title" loading="lazy">
-            <span class="nt-tile__cap line-clamp-2">{{ article.title }}</span>
-          </a>
-        </div>
-      </section>
-
-      <!-- 9. MẸO SỐNG -->
-      <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" *ngIf="lifeTipsArticles.length > 0" appScrollReveal="up">
+      <!-- 8. TIN TỨC & MẸO SỐNG (Luméa Living): gộp Tin tức + Mẹo sống, lọc theo chuyên mục ngay tại section -->
+      <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" *ngIf="livingArticlesAll.length > 0" appScrollReveal="up">
         <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-6 gap-4">
           <div class="flex items-center gap-2">
             <span class="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_6px_#CD818E]"></span>
             <div>
-              <h2 class="sec-title">Mẹo Sống</h2>
+              <h2 class="sec-title">Tin tức &amp; Mẹo sống</h2>
               <p class="text-xs sm:text-sm text-neutral-600 mt-1">
-                Mẹo sắp xếp không gian, chăm sóc góc học tập/làm việc và decor đời sống hằng ngày
+                Luméa Living — xu hướng, mẹo sống, phong cách, phong thủy, cảm hứng và câu chuyện thiết kế 3D
               </p>
             </div>
           </div>
-          <a routerLink="/news" class="text-xs font-semibold text-amber-600 hover:text-amber-700 flex items-center gap-1 self-start sm:self-auto">
+          <a routerLink="/news" [queryParams]="livingCategory === 'ALL' ? {} : { category: livingCategory }" class="text-xs font-semibold text-amber-600 hover:text-amber-700 flex items-center gap-1 self-start sm:self-auto">
             <span>Xem tất cả →</span>
           </a>
         </div>
 
+        <div class="flex flex-wrap gap-2 mb-6" role="tablist" aria-label="Chuyên mục Luméa Living">
+          <button
+            *ngFor="let cat of livingFilters"
+            type="button"
+            role="tab"
+            [attr.aria-selected]="livingCategory === cat.value"
+            (click)="selectLivingCategory(cat.value)"
+            [class]="livingCategory === cat.value
+              ? 'bg-gradient-to-r from-amber-400 to-amber-600 text-white font-extrabold shadow-md'
+              : 'bg-[#FFFFFF] border border-neutral-200 text-neutral-700 hover:border-amber-500/40 font-bold'"
+            class="px-3.5 py-2.5 rounded-xl text-xs transition">
+            {{ cat.label }}
+          </button>
+        </div>
+
+        <div *ngIf="livingArticles.length === 0" class="text-center py-16 text-neutral-500 text-sm">
+          Chưa có bài viết nào trong chuyên mục này.
+        </div>
+
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-6" appScrollReveal="stagger">
           <a
-            *ngFor="let article of lifeTipsArticles"
+            *ngFor="let article of livingArticles; trackBy: trackArticle"
             [routerLink]="['/news', article.slug]"
             class="rounded-2xl overflow-hidden border border-neutral-200 hover:border-amber-500/30 bg-[#FFFFFF] shadow-soft transition group">
             <div class="relative aspect-video overflow-hidden print-layer">
-              <img [src]="article.coverImage" [alt]="article.title" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+              <img [src]="article.coverImage" [alt]="article.title" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
               <span class="absolute top-3 left-3 bg-white text-amber-700 text-[10px] font-extrabold px-2 py-0.5 rounded-md shadow">
                 {{ article.category }}
               </span>

@@ -1,9 +1,5 @@
 <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
 
-  <a routerLink="/" class="text-xs font-semibold text-neutral-600 hover:text-amber-600 flex items-center gap-1 mb-6 transition">
-    ← Về trang chủ
-  </a>
-
   <ng-container *ngIf="page; else notFound">
     <div class="border-b border-neutral-200 pb-6 mb-8">
       <h1 class="font-serif text-3xl font-extrabold text-amber-800">{{ page.title }}</h1>
@@ -21,6 +17,19 @@
           </li>
         </ul>
       </section>
+    </div>
+
+    <div *ngIf="page.actions?.length" class="mt-10 flex flex-wrap gap-3">
+      <ng-container *ngFor="let action of page.actions">
+        <a *ngIf="action.link" [routerLink]="action.link"
+           class="inline-flex items-center px-5 py-2.5 rounded-full bg-[#6C0E1E] text-white text-sm font-semibold hover:bg-[#4E0A16] transition">
+          {{ action.label }}
+        </a>
+        <a *ngIf="action.href" [href]="action.href"
+           class="inline-flex items-center px-5 py-2.5 rounded-full border border-[#6C0E1E] text-[#6C0E1E] text-sm font-semibold hover:bg-[#6C0E1E] hover:text-white transition">
+          {{ action.label }}
+        </a>
+      </ng-container>
     </div>
 
     <div class="mt-12 p-5 rounded-2xl bg-neutral-100 border border-neutral-200 text-xs text-neutral-600">

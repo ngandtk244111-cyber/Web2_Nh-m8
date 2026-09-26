@@ -26,16 +26,16 @@
           aria-hidden="true"
           class="pc__photo pc__photo--alt absolute inset-0 w-full h-full object-cover">
 
-        <!-- Badges -->
+        <!-- Badges: tối đa 3 nhãn gọn — Sale / 3D / Custom -->
         <div class="absolute top-2.5 left-2.5 flex flex-col gap-1 items-start">
-          <span *ngIf="product.productionType === 'PRINT_ON_DEMAND'" class="pc__tag pc__tag--dark">
+          <span *ngIf="discountPercent > 0" class="pc__tag pc__tag--sale">-{{ discountPercent }}%</span>
+          <span *ngIf="has3D" class="pc__tag pc__tag--dark" title="Có mô hình 3D xem trực tiếp">
             <app-icon name="cube" [size]="11"></app-icon>
-            <span>In 3D</span>
+            <span>3D</span>
           </span>
-          <span *ngIf="product.productionType === 'READY_STOCK'" class="pc__tag">Có sẵn</span>
-          <span *ngIf="product.customizable" class="pc__tag pc__tag--accent">
+          <span *ngIf="product.customizable" class="pc__tag" title="Có thể tùy biến màu, chất liệu, kích thước">
             <app-icon name="sliders" [size]="11"></app-icon>
-            <span>Tùy biến 3D</span>
+            <span>Custom</span>
           </span>
         </div>
 
@@ -56,14 +56,14 @@
         </button>
 
         <!-- Hover actions -->
-        <div class="pc__actions absolute inset-x-0 bottom-0 p-2.5 flex items-center justify-center gap-2">
+        <div class="pc__actions absolute inset-x-0 bottom-0 p-2.5 flex items-center justify-center gap-2 flex-wrap">
           <a
-            *ngIf="product.customizable"
-            [routerLink]="['/customizer-3d']"
-            [queryParams]="{ productId: product.id }"
-            class="pc__btn pc__btn--solid">
-            <app-icon name="sliders" [size]="13"></app-icon>
-            <span>Tùy biến 3D</span>
+            *ngIf="has3D"
+            [routerLink]="['/product', product.slug]"
+            [queryParams]="{ view: '3d' }"
+            class="pc__btn">
+            <app-icon name="cube" [size]="13"></app-icon>
+            <span>Xem 3D</span>
           </a>
           <button type="button" (click)="openQuickView()" class="pc__btn">
             <app-icon name="eye" [size]="13"></app-icon>
@@ -75,7 +75,7 @@
       <!-- Content -->
       <div class="pc__body flex-1 flex flex-col min-w-0" [class.pt-3.5]="layout === 'grid'">
         <div class="flex items-center justify-between gap-2 pc__meta">
-          <span class="pc__cat truncate">{{ product.categoryName }}</span>
+          <span class="pc__cat truncate">{{ categoryLabel }}</span>
           <span class="pc-rating flex items-center gap-1 flex-shrink-0">
             <app-icon name="star" [size]="11" [filled]="true"></app-icon>
             <span>{{ product.rating }}</span>
@@ -91,8 +91,8 @@
 
         <div class="pc__foot mt-auto flex items-end justify-between gap-2">
           <div class="flex items-baseline flex-wrap gap-x-2">
-            <span class="pc__price">{{ product.basePrice | vnd }}</span>
-            <span *ngIf="product.originalPrice" class="pc__old">{{ product.originalPrice | vnd }}</span>
+            <span class="pc__price">{{ price | vnd }}</span>
+            <span *ngIf="discountPercent > 0" class="pc__old">{{ product.originalPrice | vnd }}</span>
           </div>
 
           <button
@@ -110,9 +110,9 @@
             [routerLink]="['/customizer-3d']"
             [queryParams]="{ productId: product.id }"
             class="pc__custom"
-            title="Tùy biến 3D">
+            title="Tùy biến 3D rồi thêm vào giỏ">
+            <app-icon name="sliders" [size]="14"></app-icon>
             <span>Tùy biến</span>
-            <span aria-hidden="true">→</span>
           </a>
         </div>
       </div>

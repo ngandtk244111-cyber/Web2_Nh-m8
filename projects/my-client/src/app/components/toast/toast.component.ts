@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ToastService } from '../../core/services/toast.service';
 import { AppIconComponent } from '../icon/icon.component';
@@ -11,5 +11,8 @@ import { AppIconComponent } from '../icon/icon.component';
   styleUrl: './toast.component.css'
 })
 export class ToastComponent {
+  readonly generalToasts = computed(() => this.toastService.toasts().filter(t => t.type !== 'cart'));
+  readonly cartToasts = computed(() => this.toastService.toasts().filter(t => t.type === 'cart'));
+
   constructor(public toastService: ToastService) {}
 }

@@ -690,7 +690,7 @@ export const MOCK_NEWS_ARTICLES: NewsArticle[] = [
     excerpt: 'Hiểu rõ đặc tính cơ lý, độ an toàn sức khỏe và thẩm mỹ bề mặt của từng loại vật liệu sợi nhựa in 3D trước khi lựa chọn sản phẩm trang trí không gian sống.',
     coverImage: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1000&q=80',
     videoUrl: 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ', // Mock embed
-    category: 'Kiến thức In 3D',
+    category: '3D & Design',
     readTime: '5 phút đọc',
     publishedAt: '14/09/2026',
     author: {
@@ -724,7 +724,7 @@ Bằng cách phối hợp một lượng nhỏ chất đàn hồi đặc biệt,
     slug: '5-xu-huong-decor-ban-lam-viec-nam-2026',
     excerpt: 'Từ phong cách Japandi ấm áp đến xu hướng cá nhân hóa phụ kiện in 3D khắc tên, khám phá các bí quyết nâng tầm góc làm việc truyền cảm hứng mỗi ngày.',
     coverImage: 'https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?auto=format&fit=crop&w=1000&q=80',
-    category: 'Xu hướng Decor',
+    category: 'Xu hướng',
     readTime: '4 phút đọc',
     publishedAt: '10/09/2026',
     author: {

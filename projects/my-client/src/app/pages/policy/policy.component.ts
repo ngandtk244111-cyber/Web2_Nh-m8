@@ -7,11 +7,19 @@ interface PolicySection {
   body: string[];
 }
 
+interface PolicyAction {
+  label: string;
+  link?: string;
+  href?: string;
+}
+
 interface PolicyPage {
   title: string;
   updatedAt: string;
   intro: string;
   sections: PolicySection[];
+  /** Nút hành động cuối trang (vd. dẫn tới công cụ tra cứu bảo hành). */
+  actions?: PolicyAction[];
 }
 
 const POLICY_PAGES: Record<string, PolicyPage> = {
@@ -113,6 +121,65 @@ const POLICY_PAGES: Record<string, PolicyPage> = {
           'Toàn bộ giao dịch chuyển khoản/ví điện tử được xử lý qua cổng thanh toán của đối tác (MoMo, ZaloPay, ngân hàng), Luméa không lưu trữ thông tin thẻ/tài khoản ngân hàng của khách hàng.',
         ],
       },
+    ],
+  },
+  'bao-hanh': {
+    title: 'Chính Sách Bảo Hành',
+    updatedAt: '26/09/2026',
+    intro: 'Mỗi sản phẩm Luméa đều đi kèm phiếu bảo hành có mã riêng. Quý khách có thể tra cứu và gửi yêu cầu bảo hành trực tuyến bằng mã này.',
+    sections: [
+      {
+        heading: '1. Thời hạn bảo hành',
+        body: [
+          'Sản phẩm được bảo hành kỹ thuật 12 tháng kể từ ngày mua (ngày hết hạn cụ thể hiển thị khi tra cứu bằng mã bảo hành).',
+        ],
+      },
+      {
+        heading: '2. Phạm vi bảo hành',
+        body: [
+          'Áp dụng cho lỗi phát sinh từ quá trình sản xuất/in 3D: nứt, tách lớp, cong vênh, bong tróc lớp hoàn thiện trong điều kiện sử dụng bình thường.',
+          'Không áp dụng cho hư hỏng do va đập, rơi vỡ, tiếp xúc nhiệt độ cao, hoá chất hoặc tự ý sửa chữa, thay đổi sản phẩm sau khi nhận hàng.',
+          'Hư hỏng do vận chuyển khi nhận hàng được xử lý theo Chính sách đổi trả.',
+        ],
+      },
+      {
+        heading: '3. Cách yêu cầu bảo hành',
+        body: [
+          'Vào mục "Tra cứu bảo hành", nhập mã bảo hành (in trên phiếu đi kèm sản phẩm) và số điện thoại đặt hàng để kiểm tra tình trạng.',
+          'Nếu bảo hành còn hiệu lực, mô tả tình trạng sản phẩm và gửi yêu cầu ngay trên trang tra cứu. Đội ngũ Luméa sẽ liên hệ để hướng dẫn sửa chữa, in lại hoặc đổi mới.',
+        ],
+      },
+    ],
+    actions: [{ label: 'Tra cứu bảo hành', link: '/warranty-lookup' }],
+  },
+  'lien-he': {
+    title: 'Liên Hệ',
+    updatedAt: '26/09/2026',
+    intro: 'Luméa luôn sẵn sàng hỗ trợ quý khách về đơn hàng, sản phẩm, tuỳ biến 3D và các chính sách mua sắm.',
+    sections: [
+      {
+        heading: '1. Hotline',
+        body: [
+          'Gọi 1800 6928 (miễn phí) để được tư vấn đặt hàng, hỗ trợ đơn hàng, đổi trả và bảo hành.',
+        ],
+      },
+      {
+        heading: '2. Chat hỗ trợ trực tuyến',
+        body: [
+          'Bấm vào khung chat hỗ trợ ở góc màn hình để trò chuyện trực tiếp với đội ngũ Luméa, hoặc hỏi Trợ Lý AI để được gợi ý kích thước, phối màu nội thất.',
+        ],
+      },
+      {
+        heading: '3. Đặt thiết kế riêng',
+        body: [
+          'Muốn một mẫu decor chưa có sẵn trên website? Gửi yêu cầu tại mục "Thiết kế riêng" kèm mô tả và ảnh tham khảo, Luméa sẽ phản hồi báo giá và thời gian sản xuất.',
+        ],
+      },
+    ],
+    actions: [
+      { label: 'Gọi 1800 6928', href: 'tel:18006928' },
+      { label: 'Tra cứu đơn hàng', link: '/orders/track' },
+      { label: 'Gửi yêu cầu thiết kế riêng', link: '/custom-request/new' },
     ],
   },
   'bao-mat': {

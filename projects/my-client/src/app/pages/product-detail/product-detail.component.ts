@@ -17,6 +17,19 @@ import { VndPipe } from '../../shared/pipes/vnd.pipe';
 import { ToastService } from '../../core/services/toast.service';
 import { MascotService } from '../../core/services/mascot.service';
 import { FlashSaleService, FlashSlot } from '../../core/services/flash-sale.service';
+import { RoomService } from '../../core/services/room.service';
+import {
+  CatalogDepartment,
+  CatalogLink,
+  CatalogSubcategory,
+  departmentLink,
+  departmentOf,
+  findSpace,
+  spaceLink,
+  spacesOf,
+  subcategoriesOf,
+  subcategoryLink,
+} from '../../core/data/catalog-taxonomy';
 
 type ReviewFilter = 'all' | 'with-images' | '5' | '4' | 'low';
 type InfoPanel = 'dimensions' | 'details' | 'delivery' | 'care';
@@ -38,36 +51,52 @@ interface FaqItem {
   answer: string;
 }
 
+interface FaqCategory {
+  title: string;
+  items: FaqItem[];
+}
+
 /** Vuốt ngang tối thiểu (px) trên carousel để chuyển slide. */
 const SWIPE_THRESHOLD = 40;
 const REVIEWS_PER_PAGE = 6;
 
-/** Trích từ trang FAQ / chính sách hiện có — không phát sinh chính sách mới. */
-const PRODUCT_FAQ: FaqItem[] = [
+/** Trích từ trang FAQ / chính sách hiện có — không phát sinh chính sách mới.
+ *  Chia nhóm theo 2 cột giống trang FAQ chính. */
+const PRODUCT_FAQ: FaqCategory[] = [
   {
-    id: 'ship-time',
-    question: 'Thời gian giao hàng mất bao lâu?',
-    answer: 'Sản phẩm có sẵn thường được giao trong 2-4 ngày làm việc tuỳ khu vực. Với sản phẩm in theo yêu cầu, thời gian giao sẽ cộng thêm thời gian sản xuất được ghi rõ ở trên.',
+    title: 'Vận chuyển & Giao hàng',
+    items: [
+      {
+        id: 'ship-time',
+        question: 'Thời gian giao hàng mất bao lâu?',
+        answer: 'Sản phẩm có sẵn thường được giao trong 2-4 ngày làm việc tuỳ khu vực. Với sản phẩm in theo yêu cầu, thời gian giao sẽ cộng thêm thời gian sản xuất được ghi rõ ở trên.',
+      },
+      {
+        id: 'ship-fee',
+        question: 'Phí vận chuyển được tính như thế nào?',
+        answer: 'Miễn phí vận chuyển cho đơn hàng từ 500.000₫ trở lên. Đơn dưới 500.000₫ áp dụng phí đồng giá 30.000₫ toàn quốc.',
+      },
+    ],
   },
   {
-    id: 'ship-fee',
-    question: 'Phí vận chuyển được tính như thế nào?',
-    answer: 'Miễn phí vận chuyển cho đơn hàng từ 500.000₫ trở lên. Đơn dưới 500.000₫ áp dụng phí đồng giá 30.000₫ toàn quốc.',
-  },
-  {
-    id: 'return',
-    question: 'Chính sách đổi trả sản phẩm áp dụng như thế nào?',
-    answer: 'Sản phẩm có sẵn được đổi trả trong 7 ngày nếu lỗi sản xuất, hư hỏng khi vận chuyển hoặc giao sai mẫu. Sản phẩm in theo yêu cầu hoặc tuỳ biến 3D chỉ đổi trả khi lỗi thuộc về sản xuất.',
-  },
-  {
-    id: 'broken',
-    question: 'Sản phẩm bị nứt, vỡ khi nhận hàng thì tôi phải làm gì?',
-    answer: 'Vui lòng quay video lúc mở hộp và chụp ảnh sản phẩm, sau đó liên hệ Luméa trong vòng 48 giờ kể từ khi nhận hàng. Chúng tôi sẽ in lại hoặc đổi mới sản phẩm miễn phí cho bạn.',
-  },
-  {
-    id: 'custom',
-    question: 'Sản phẩm nào có thể tuỳ biến 3D?',
-    answer: 'Chỉ những sản phẩm được đánh dấu "Có thể tùy biến" mới hỗ trợ đổi màu, chất liệu, kích thước hoặc khắc tên thông qua trình tùy biến 3D.',
+    title: 'Đổi trả & Tuỳ biến',
+    items: [
+      {
+        id: 'return',
+        question: 'Chính sách đổi trả sản phẩm áp dụng như thế nào?',
+        answer: 'Sản phẩm có sẵn được đổi trả trong 7 ngày nếu lỗi sản xuất, hư hỏng khi vận chuyển hoặc giao sai mẫu. Sản phẩm in theo yêu cầu hoặc tuỳ biến 3D chỉ đổi trả khi lỗi thuộc về sản xuất.',
+      },
+      {
+        id: 'broken',
+        question: 'Sản phẩm bị nứt, vỡ khi nhận hàng thì tôi phải làm gì?',
+        answer: 'Vui lòng quay video lúc mở hộp và chụp ảnh sản phẩm, sau đó liên hệ Luméa trong vòng 48 giờ kể từ khi nhận hàng. Chúng tôi sẽ in lại hoặc đổi mới sản phẩm miễn phí cho bạn.',
+      },
+      {
+        id: 'custom',
+        question: 'Sản phẩm nào có thể tuỳ biến 3D?',
+        answer: 'Chỉ những sản phẩm được đánh dấu "Có thể tùy biến" mới hỗ trợ đổi màu, chất liệu, kích thước hoặc khắc tên thông qua trình tùy biến 3D.',
+      },
+    ],
   },
 ];
 
@@ -96,7 +125,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
   private touchStartX: number | null = null;
   openPanel: InfoPanel | null = null;
   openFaqId: string | null = null;
-  readonly faqItems = PRODUCT_FAQ;
+  readonly faqCategories = PRODUCT_FAQ;
 
   quantity = 1;
   previewColorHex = '#FDFBF7';
@@ -126,8 +155,51 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     private toastService: ToastService,
     private authService: AuthService,
     private mascotService: MascotService,
-    private flash: FlashSaleService
+    private flash: FlashSaleService,
+    private roomService: RoomService
   ) {}
+
+  // ---------- Danh mục / không gian theo cây danh mục chung ----------
+
+  get department(): CatalogDepartment | undefined {
+    return this.product ? departmentOf(this.product) : undefined;
+  }
+
+  get subcategory(): CatalogSubcategory | undefined {
+    return this.product ? subcategoriesOf(this.product)[0] : undefined;
+  }
+
+  get departmentLink(): CatalogLink | undefined {
+    return this.department ? departmentLink(this.department) : undefined;
+  }
+
+  /** Link "Xem thêm": ưu tiên danh mục con, rồi nhóm lớn, cuối cùng là category cũ. */
+  get categoryLink(): CatalogLink {
+    if (this.subcategory) return subcategoryLink(this.subcategory);
+    if (this.departmentLink) return this.departmentLink;
+    return { label: this.product?.categoryName ?? '', link: '/catalog', queryParams: { category: this.product?.category ?? '' } };
+  }
+
+  get spaceLinks(): CatalogLink[] {
+    if (!this.product) return [];
+    return spacesOf(this.product)
+      .map(k => findSpace(k))
+      .filter(sp => !!sp)
+      .map(sp => spaceLink(sp!));
+  }
+
+  /** Sản phẩm có mặt trong phòng mẫu 3D nào không — chỉ khi có mới hiện "Space Builder". */
+  get isInShowroom(): boolean {
+    const id = this.product?.id;
+    return !!id && this.roomService.rooms().some(r => r.hotspots.some(h => h.productId === id));
+  }
+
+  /** Nút "Xem 3D" ở buy box: chuyển carousel tới slide 3D và cuộn lên. */
+  view3D(carousel: HTMLElement): void {
+    if (!this.has3D) return;
+    this.goToSlide(this.galleryImages.length);
+    carousel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
 
   ngOnDestroy(): void {
     this.flash.release();
@@ -317,9 +389,17 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
   get specRows(): SpecRow[] {
     if (!this.product) return [];
     const p = this.product;
-    const rows: SpecRow[] = [
-      { label: 'Chất liệu', value: p.materialInfo },
-    ];
+    const rows: SpecRow[] = [];
+    const typeLabel = [this.department?.label, this.subcategory?.label].filter(Boolean).join(' › ');
+    if (typeLabel) rows.push({ label: 'Loại sản phẩm', value: typeLabel });
+    if (p.dimensions) rows.push({ label: 'Kích thước', value: p.dimensions });
+    rows.push({ label: 'Chất liệu', value: p.materialInfo });
+    if (p.style) rows.push({ label: 'Phong cách', value: p.style });
+    if (!p.customization?.colors?.length && p.color) rows.push({ label: 'Màu sắc', value: p.color });
+    const spaces = this.spaceLinks.map(sp => sp.label);
+    if (spaces.length) rows.push({ label: 'Không gian phù hợp', value: spaces.join(', ') });
+    if (p.customizable) rows.push({ label: 'Tùy chọn custom', value: this.customOptionsLabel(p) });
+    if (p.threeModelType) rows.push({ label: 'Mô hình 3D', value: 'Có — xoay, phóng to trực tiếp trên trang' });
     if (p.printTechnology) rows.push({ label: 'Công nghệ in 3D', value: p.printTechnology });
     if (p.customization?.colors?.length) {
       rows.push({ label: 'Màu sắc', value: p.customization.colors.map(c => c.name).join(', ') });
@@ -331,6 +411,18 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
       rows.push({ label: 'Hoàn thiện', value: p.customization.finishes.map(f => f.label).join(', ') });
     }
     return rows;
+  }
+
+  private customOptionsLabel(p: Product): string {
+    const c = p.customization;
+    const opts: string[] = [];
+    if (c?.colors?.length) opts.push('màu sắc');
+    if (c?.materials?.length) opts.push('chất liệu');
+    if (c?.sizes?.length) opts.push('kích thước');
+    if (c?.finishes?.length) opts.push('hoàn thiện');
+    if (c?.textOption?.enabled) opts.push('khắc chữ');
+    if (c?.accessories?.length) opts.push('phụ kiện');
+    return opts.length ? 'Đổi ' + opts.join(', ') : 'Theo yêu cầu';
   }
 
   get filteredReviews(): ProductReview[] {
@@ -424,7 +516,6 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
       return;
     }
     this.cartService.addToCart(p, 1);
-    this.toastService.success(`Đã thêm "${p.name}" vào giỏ hàng`);
     this.mascotService.react('happy');
   }
 
@@ -441,7 +532,6 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
   addToCart(): void {
     if (!this.product) return;
     this.cartService.addToCart(this.product, this.quantity);
-    this.toastService.success(`Đã thêm "${this.product.name}" vào giỏ hàng`);
     this.mascotService.react('happy');
   }
 

@@ -1,0 +1,75 @@
+<div class="ab">
+
+  <!-- 1. Tuyên ngôn -->
+  <section class="ab_hero">
+    <p class="ab_eyebrow">Câu chuyện Luméa</p>
+    <h1 class="ab_hero__title">
+      Chúng tôi tin rằng một món đồ decor đẹp nhất
+      là món đồ được làm ra <em>dành riêng cho bạn</em>.
+    </h1>
+    <p class="ab_hero__lead">
+      Luméa kết hợp thiết kế nội thất, công nghệ in 3D và trí tuệ nhân tạo để mỗi góc nhà
+      mang đúng dấu ấn của người sống trong đó — từ chiếc đèn ngủ đầu giường đến khay bàn làm việc.
+    </p>
+  </section>
+
+  <!-- 2. Điều khác biệt -->
+  <section class="ab_diff">
+    <div class="ab_diff__head">
+      <h2 class="ab_h2">Điều khiến Luméa khác biệt? Đó là sự <em>tỉ mỉ</em>.</h2>
+      <p class="ab_diff__text">
+        Chúng tôi để tâm đến những chi tiết nhỏ mà ít ai để ý: độ cong của một chụp đèn, kích thước vừa khít
+        một góc bàn, màu sắc hợp với ánh nắng trong phòng bạn. Thay vì sản xuất hàng loạt rồi chờ người mua,
+        Luméa chỉ làm ra những gì bạn thật sự cần.
+      </p>
+    </div>
+
+    <div class="ab_values">
+      <div class="ab_value" *ngFor="let v of values">
+        <span class="ab_value__icon"><app-icon [name]="v.icon" [size]="20"></app-icon></span>
+        <h3 class="ab_value__title">{{ v.title }}</h3>
+        <p class="ab_value__text">{{ v.text }}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Video -->
+  <section class="ab_video">
+    <h2 class="ab_h2 ab_video__title">Từ ý tưởng đến món đồ trong tay bạn</h2>
+    <div class="ab_video__frame">
+      <video
+        #player
+        class="ab_video__el"
+        [poster]="video.poster"
+        [controls]="playing"
+        playsinline
+        preload="metadata"
+        (play)="playing = true"
+        (ended)="playing = false">
+        <source [src]="video.webm" type="video/webm">
+        <source [src]="video.mp4" type="video/mp4">
+      </video>
+      <button
+        *ngIf="!playing"
+        type="button"
+        class="ab_video__play"
+        aria-label="Phát video"
+        (click)="player.play()">
+        <app-icon name="play" [size]="28"></app-icon>
+      </button>
+    </div>
+  </section>
+
+  <!-- 4. Thẻ dẫn hướng -->
+  <section class="ab_cards">
+    <a class="ab_card" *ngFor="let c of cards" [routerLink]="c.link">
+      <div class="ab_card__media">
+        <img [src]="c.image" [alt]="c.title" loading="lazy">
+      </div>
+      <p class="ab_card__eyebrow">{{ c.eyebrow }}</p>
+      <h3 class="ab_card__title">{{ c.title }}</h3>
+      <span class="ab_card__cta">{{ c.cta }} <span aria-hidden="true">→</span></span>
+    </a>
+  </section>
+
+</div>

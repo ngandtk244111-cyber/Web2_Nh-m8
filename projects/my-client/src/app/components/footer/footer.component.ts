@@ -38,27 +38,27 @@ export class FooterComponent {
 
   readonly shopLinks: FooterLink[] = [
     { label: 'Tất cả sản phẩm', link: '/catalog' },
-    { label: 'Decor bàn làm việc', link: '/catalog', queryParams: { category: 'organizer' } },
-    { label: 'Decor phòng ngủ', link: '/catalog', queryParams: { category: 'lamp' } },
-    { label: 'Decor phòng khách', link: '/catalog', queryParams: { category: 'bookshelf' } },
-    { label: 'Đèn & phụ kiện decor', link: '/catalog', queryParams: { category: 'lamp' } },
-    { label: 'Tượng & mô hình', link: '/catalog', queryParams: { category: 'sculpture' } },
-    { label: 'Kệ & đồ trang trí', link: '/catalog', queryParams: { category: 'tray' } },
-    { label: 'Sản phẩm mới', link: '/catalog' },
+    { label: 'Nội thất', link: '/catalog', queryParams: { dept: 'noi-that' } },
+    { label: 'Đèn & ánh sáng', link: '/catalog', queryParams: { dept: 'anh-sang' } },
+    { label: 'Decor', link: '/catalog', queryParams: { dept: 'decor' } },
+    { label: 'Đồ dùng & phụ kiện', link: '/catalog', queryParams: { dept: 'do-dung' } },
+    { label: 'Sản phẩm 3D & Custom', link: '/catalog', queryParams: { custom: '1' } },
+    { label: 'Flash Sale', link: '/flash-sale' },
   ];
 
   readonly exploreLinks: FooterLink[] = [
+    { label: 'Về Luméa', link: '/ve-lumea' },
     { label: '3D Studio', link: '/customizer-3d' },
     { label: 'Tạo sản phẩm riêng', link: '/custom-request/new' },
     { label: 'Decor Community', link: '/community' },
     { label: 'Cảm hứng decor', link: '/shop-the-room' },
-    { label: 'Tin tức & xu hướng', link: '/news' },
+    { label: 'Tin tức & Mẹo sống', link: '/news' },
     { label: 'Sản phẩm nổi bật', link: '/catalog' },
   ];
 
   readonly supportLinks: FooterLink[] = [
     { label: 'Theo dõi đơn hàng', link: '/orders/track' },
-    { label: 'Chính sách bảo hành', link: '/warranty-lookup' },
+    { label: 'Chính sách bảo hành', link: '/chinh-sach/bao-hanh' },
   ];
 
   constructor(
@@ -87,7 +87,7 @@ export class FooterComponent {
           this.toastService.success(
             userId && !res.alreadySubscribed
               ? 'Cảm ơn bạn đã đăng ký! Bạn vừa nhận thêm Xu Luméa.'
-              : 'Cảm ơn bạn đã đăng ký! Mini 3D Studio sẽ gửi cảm hứng decor mới nhất tới email của bạn.'
+              : 'Cảm ơn bạn đã đăng ký! Luméa sẽ gửi cảm hứng nội thất & decor mới nhất tới email của bạn.'
           );
           this.newsletterEmail = '';
         } else {

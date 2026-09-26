@@ -4,7 +4,6 @@ import { Router, RouterLink } from '@angular/router';
 import { FavoriteService } from '../../core/services/favorite.service';
 import { ProductService } from '../../core/services/product.service';
 import { CartService } from '../../core/services/cart.service';
-import { ToastService } from '../../core/services/toast.service';
 import { Product } from '../../core/models/product.model';
 import { AppIconComponent } from '../../components/icon/icon.component';
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
@@ -27,7 +26,6 @@ export class FavoritesComponent {
     public favoriteService: FavoriteService,
     private productService: ProductService,
     private cartService: CartService,
-    private toastService: ToastService,
     private router: Router
   ) {
     // Tự chọn sẵn sản phẩm mới được thêm vào yêu thích, giữ lựa chọn cũ khi sản phẩm còn tồn tại.
@@ -99,14 +97,12 @@ export class FavoritesComponent {
 
   addToCart(product: Product): void {
     this.cartService.addToCart(product, 1);
-    this.toastService.success(`Đã thêm "${product.name}" vào giỏ hàng`);
   }
 
   addSelectedToCart(): void {
     const products = this.selectedProducts();
     if (products.length === 0) return;
     for (const p of products) this.cartService.addToCart(p, 1);
-    this.toastService.success(`Đã thêm ${products.length} sản phẩm vào giỏ hàng`);
   }
 
   buyNowSelected(): void {

@@ -9,6 +9,16 @@ import { LoginModalService } from '../../core/services/login-modal.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { FavoriteService } from '../../core/services/favorite.service';
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
+import {
+  CATALOG_DEPARTMENTS,
+  CATALOG_SPACES,
+  THREE_D_CUSTOM_LINKS,
+  DEAL_LINKS,
+  CatalogLink,
+  departmentLink,
+  subcategoryLink,
+  spaceLink,
+} from '../../core/data/catalog-taxonomy';
 
 
 export interface SearchSuggestion {
@@ -21,10 +31,17 @@ export interface MegaMenuSubItem {
   label: string;
   link?: string;
   queryParams?: Record<string, string>;
+  image?: string;
 }
 
-export interface MegaMenuGroup {
+export interface MegaMenuSection {
+  key: string;
   title: string;
+  description: string;
+  /** Link "Xem tất cả" của nhóm lớn (nếu có). */
+  viewAll?: CatalogLink;
+  /** Click vào tên nhóm ở cột trái sẽ đi tới đâu (chỉ nhóm sản phẩm) — các nhóm khác chỉ mở panel. */
+  railLink?: CatalogLink;
   items: MegaMenuSubItem[];
 }
 
@@ -56,14 +73,14 @@ export class HeaderComponent implements OnDestroy {
     if (scrolled !== this.isScrolled) this.isScrolled = scrolled;
   }
 
-  /** Từ khoá/danh mục người dùng thường tìm — map thẳng sang catalog thật (giống mega menu). */
+  /** Từ khoá/danh mục người dùng thường tìm — map thẳng sang catalog thật (cùng taxonomy với mega menu). */
   readonly searchSuggestions: SearchSuggestion[] = [
-    { label: 'Decor bàn', queryParams: { category: 'tray' } },
-    { label: 'Tượng decor', queryParams: { category: 'sculpture' } },
-    { label: 'Đèn 3D', queryParams: { category: 'lamp' } },
-    { label: 'Chậu cây', queryParams: { category: 'plant_pot' } },
-    { label: 'Mô hình 3D', queryParams: { q: 'Mô hình 3D' } },
-    { label: 'Decor phòng ngủ', link: '/shop-the-room' },
+    { label: 'Sofa', queryParams: { cat: 'sofa' } },
+    { label: 'Giường', queryParams: { cat: 'giuong' } },
+    { label: 'Đèn ngủ', queryParams: { cat: 'den-ngu' } },
+    { label: 'Decor phòng khách', queryParams: { space: 'phong-khach' } },
+    { label: 'Sản phẩm 3D', queryParams: { has3d: '1' } },
+    { label: 'Có thể tùy biến', queryParams: { custom: '1' } },
   ];
 
   readonly exploreMenu: { label: string; link: string }[] = [
@@ -75,122 +92,53 @@ export class HeaderComponent implements OnDestroy {
     { label: 'Insights', link: '/news' },
   ];
 
-  private readonly decorBanGroup: MegaMenuGroup = {
-    title: 'Decor Bàn',
-    items: [
-      { label: 'Tượng decor', queryParams: { category: 'sculpture' } },
-      { label: 'Mô hình decor', queryParams: { q: 'Mô hình decor' } },
-      { label: 'Đồ trang trí bàn', queryParams: { q: 'Đồ trang trí bàn' } },
-      { label: 'Khay decor', queryParams: { category: 'tray' } },
-      { label: 'Hộp đựng đồ', queryParams: { category: 'organizer' } },
-      { label: 'Phụ kiện bàn', queryParams: { category: 'organizer' } },
-    ],
-  };
-
-  private readonly tuongMoHinhGroup: MegaMenuGroup = {
-    title: 'Tượng & Mô Hình',
-    items: [
-      { label: 'Tượng nghệ thuật', queryParams: { category: 'sculpture' } },
-      { label: 'Tượng động vật', queryParams: { q: 'Tượng động vật' } },
-      { label: 'Mô hình nhân vật', queryParams: { q: 'Mô hình nhân vật' } },
-      { label: 'Mô hình 3D', queryParams: { q: 'Mô hình 3D' } },
-      { label: 'Figurine', queryParams: { q: 'Figurine' } },
-    ],
-  };
-
-  private readonly denChieuSangGroup: MegaMenuGroup = {
-    title: 'Đèn & Chiếu Sáng',
-    items: [
-      { label: 'Đèn bàn', queryParams: { category: 'lamp' } },
-      { label: 'Đèn ngủ', queryParams: { category: 'lamp' } },
-      { label: 'Đèn decor', queryParams: { category: 'lamp' } },
-      { label: 'Đèn ambient', queryParams: { category: 'lamp' } },
-      { label: 'Đèn 3D', queryParams: { category: 'lamp' } },
-    ],
-  };
-
-  private readonly chauCayGroup: MegaMenuGroup = {
-    title: 'Chậu & Cây Decor',
-    items: [
-      { label: 'Chậu cây', queryParams: { category: 'plant_pot' } },
-      { label: 'Chậu 3D', queryParams: { category: 'plant_pot' } },
-      { label: 'Cây mini', queryParams: { category: 'plant_pot' } },
-      { label: 'Cây giả decor', queryParams: { category: 'plant_pot' } },
-      { label: 'Terrarium', queryParams: { category: 'plant_pot' } },
-    ],
-  };
-
-  private readonly phuKienGroup: MegaMenuGroup = {
-    title: 'Phụ Kiện',
-    items: [
-      { label: 'Móc khóa', queryParams: { q: 'Móc khóa' } },
-      { label: 'Phụ kiện bàn', queryParams: { category: 'organizer' } },
-      { label: 'Giá đỡ', queryParams: { category: 'bookend' } },
-      { label: 'Khay đựng', queryParams: { category: 'tray' } },
-      { label: 'Đồ dùng decor', queryParams: { q: 'Đồ dùng decor' } },
-    ],
-  };
-
-  private readonly phongCachGroup: MegaMenuGroup = {
-    title: 'Decor Theo Phong Cách',
-    items: [
-      { label: 'Minimal', queryParams: { q: 'Minimal' } },
-      { label: 'Modern', queryParams: { q: 'Modern' } },
-      { label: 'Cute', queryParams: { q: 'Cute' } },
-      { label: 'Vintage', queryParams: { q: 'Vintage' } },
-      { label: 'Industrial', queryParams: { q: 'Industrial' } },
-      { label: 'Scandinavian', queryParams: { q: 'Scandinavian' } },
-    ],
-  };
-
-  private readonly khongGianGroup: MegaMenuGroup = {
-    title: 'Decor Theo Không Gian',
-    items: [
-      { label: 'Phòng ngủ', link: '/shop-the-room' },
-      { label: 'Bàn làm việc', link: '/shop-the-room' },
-      { label: 'Phòng khách', link: '/shop-the-room' },
-      { label: 'Góc học tập', link: '/shop-the-room' },
-      { label: 'Setup gaming', link: '/shop-the-room' },
-      { label: 'Văn phòng', link: '/shop-the-room' },
-    ],
-  };
-
-  private readonly threeDCustomGroup: MegaMenuGroup = {
-    title: '3D & Custom',
-    items: [
-      { label: 'Tùy biến 3D', link: '/customizer-3d' },
-      { label: 'Thiết kế riêng', link: '/custom-request' },
-      { label: 'In 3D theo yêu cầu', link: '/customizer-3d' },
-      { label: 'Custom sản phẩm', link: '/customizer-3d' },
-    ],
-  };
-
-  /** Danh sách phẳng — dùng cho accordion mobile. */
-  readonly megaMenuGroups: MegaMenuGroup[] = [
-    this.decorBanGroup,
-    this.tuongMoHinhGroup,
-    this.denChieuSangGroup,
-    this.chauCayGroup,
-    this.phuKienGroup,
-    this.phongCachGroup,
-    this.khongGianGroup,
-    this.threeDCustomGroup,
+  /**
+   * Mega menu dựng từ core/data/catalog-taxonomy.ts (nguồn dữ liệu chung với catalog/filter/trang chủ):
+   * Nội thất, Đèn, Decor, Đồ dùng (nhóm sản phẩm) → Không gian → 3D & Custom → Deal.
+   */
+  readonly megaMenuSections: MegaMenuSection[] = [
+    ...CATALOG_DEPARTMENTS.map(dept => ({
+      key: dept.key,
+      title: dept.label,
+      description: dept.description,
+      viewAll: departmentLink(dept),
+      railLink: departmentLink(dept),
+      items: dept.subcategories.map(sub => ({ ...subcategoryLink(sub), image: sub.image })),
+    })),
+    {
+      key: 'khong-gian',
+      title: 'Không gian',
+      description: 'Chọn theo căn phòng — nội thất và decor phù hợp cho từng không gian sống.',
+      viewAll: { label: 'Phòng mẫu 3D', link: '/shop-the-room' },
+      items: CATALOG_SPACES.map(space => ({ ...spaceLink(space), image: space.image })),
+    },
+    {
+      key: '3d-custom',
+      title: '3D & Custom',
+      description: 'Xem trước mô hình 3D, tùy biến màu/chất liệu hoặc đặt thiết kế riêng.',
+      items: THREE_D_CUSTOM_LINKS,
+    },
+    {
+      key: 'deal',
+      title: 'Deal',
+      description: 'Flash Sale mỗi ngày và các sản phẩm đang giảm giá.',
+      items: DEAL_LINKS,
+    },
   ];
 
-  /** Chia cột — dùng cho mega menu desktop (2 nhóm/cột). */
-  readonly megaMenuColumns: MegaMenuGroup[][] = [
-    [this.decorBanGroup, this.tuongMoHinhGroup],
-    [this.denChieuSangGroup, this.chauCayGroup],
-    [this.phuKienGroup, this.phongCachGroup],
-    [this.khongGianGroup, this.threeDCustomGroup],
-  ];
+  /** Nhóm đang được hover/chọn trong mega menu desktop. */
+  activeMegaSectionKey = this.megaMenuSections[0].key;
+
+  get activeMegaSection(): MegaMenuSection {
+    return this.megaMenuSections.find(s => s.key === this.activeMegaSectionKey) ?? this.megaMenuSections[0];
+  }
 
   readonly megaMenuBanner = {
     icon: 'room',
     title: 'Thiết Kế Không Gian Theo Cách Của Bạn',
-    description: 'Khám phá bộ sưu tập phòng mẫu 360° và tự tay phối decor theo phong cách riêng của bạn.',
+    description: 'Khám phá phòng mẫu 3D, phối nội thất & decor theo phong cách riêng rồi mua trọn bộ.',
     ctaLabel: 'Khám phá ngay',
-    gradient: 'linear-gradient(160deg, #E3D5BA 0%, #E2B4BC 55%, #A3152D 100%)',
+    image: 'https://images.unsplash.com/photo-1600121848594-d8644e57abab?auto=format&fit=crop&w=520&q=70',
     link: '/shop-the-room',
   };
 
@@ -206,6 +154,7 @@ export class HeaderComponent implements OnDestroy {
 
   ngOnDestroy(): void {
     this.cancelMegaMenuCloseTimer();
+    this.onMegaMenuTriggerLeave();
   }
 
   @HostListener('document:click', ['$event'])
@@ -233,21 +182,64 @@ export class HeaderComponent implements OnDestroy {
   }
 
   toggleMegaMenu(): void {
-    if (this.megaMenuOpen) {
+    if (this.megaMenuHoverTimer) {
+      // Click ngay sau khi hover: coi như mở.
+      this.onMegaMenuTriggerLeave();
+      this.openMegaMenu();
+      return;
+    }
+    if (this.megaMenuOpen && !this.megaMenuClosing) {
+      // Vừa mở bằng hover thì cú click liền sau không được đóng lại ngay.
+      if (Date.now() - this.megaMenuOpenedAt < 500) return;
       this.startCloseMegaMenu();
       return;
     }
-    this.cancelMegaMenuCloseTimer();
-    this.megaMenuOpen = true;
-    this.megaMenuClosing = false;
-    this.notificationsOpen = false;
-    this.cartPreviewOpen = false;
+    this.openMegaMenu();
   }
 
   toggleNotifications(): void {
     this.notificationsOpen = !this.notificationsOpen;
     if (this.megaMenuOpen) this.startCloseMegaMenu();
     this.searchSuggestionsOpen = false;
+    this.cartPreviewOpen = false;
+  }
+
+  /** Hover vào nút "Danh mục sản phẩm" → mở mega menu (click vẫn bật/tắt như cũ, dùng cho cảm ứng). */
+  private megaMenuHoverTimer: ReturnType<typeof setTimeout> | null = null;
+  private megaMenuOpenedAt = 0;
+
+  onMegaMenuTriggerEnter(): void {
+    if (this.megaMenuHoverTimer) clearTimeout(this.megaMenuHoverTimer);
+    // Trễ nhẹ để lướt chuột ngang qua không vô tình bật menu.
+    this.megaMenuHoverTimer = setTimeout(() => {
+      this.megaMenuHoverTimer = null;
+      this.openMegaMenu();
+    }, 120);
+  }
+
+  onMegaMenuTriggerLeave(): void {
+    if (this.megaMenuHoverTimer) {
+      clearTimeout(this.megaMenuHoverTimer);
+      this.megaMenuHoverTimer = null;
+    }
+  }
+
+  setActiveMegaSection(key: string): void {
+    this.activeMegaSectionKey = key;
+  }
+
+  /** Đổi nhóm → panel dựng lại để chạy hiệu ứng xuất hiện của các thẻ. */
+  trackSection(_: number, section: MegaMenuSection): string {
+    return section.key;
+  }
+
+  private openMegaMenu(): void {
+    this.cancelMegaMenuCloseTimer();
+    if (this.megaMenuOpen && !this.megaMenuClosing) return;
+    this.megaMenuOpenedAt = Date.now();
+    this.megaMenuOpen = true;
+    this.megaMenuClosing = false;
+    this.notificationsOpen = false;
     this.cartPreviewOpen = false;
   }
 

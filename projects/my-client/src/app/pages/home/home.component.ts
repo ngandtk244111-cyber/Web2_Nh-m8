@@ -2,15 +2,24 @@ import { Component, OnInit, ViewChild, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ProductService } from '../../core/services/product.service';
-import { Product, ProductCategory } from '../../core/models/product.model';
+import { Product } from '../../core/models/product.model';
+import {
+  CATALOG_DEPARTMENTS,
+  CATALOG_SPACES,
+  CatalogLink,
+  departmentLink,
+  findSubcategory,
+  spaceLink,
+  subcategoryLink,
+} from '../../core/data/catalog-taxonomy';
 import { Room } from '../../core/models/room.model';
 import { CartService } from '../../core/services/cart.service';
-import { ToastService } from '../../core/services/toast.service';
 import { MascotService } from '../../core/services/mascot.service';
 import { RoomService } from '../../core/services/room.service';
 import { AiAssistantService } from '../../core/services/ai-assistant.service';
 import { CommunityService } from '../../core/services/community.service';
 import { NewsService } from '../../core/services/news.service';
+import { ARTICLE_CATEGORIES, ArticleCategory, NewsArticle } from '../../core/models/news.model';
 import { ProductCarouselComponent } from '../../components/product-carousel/product-carousel.component';
 import { RoomViewerComponent } from '../../components/room-viewer/room-viewer.component';
 import { RecentlyViewedSectionComponent } from '../../components/recently-viewed-section/recently-viewed-section.component';
@@ -59,40 +68,44 @@ export class HomeComponent implements OnInit {
   roomProducts: { product: Product; note: string; pin: number }[] = [];
   @ViewChild(RoomViewerComponent) roomViewer?: RoomViewerComponent;
   communityPosts: any[] = [];
-  newsArticles: any[] = [];
-  /** "Mẹo Sống": bài viết thật thuộc chuyên mục Xu hướng Decor (tips sắp xếp/chăm sóc không gian sống). */
-  lifeTipsArticles: any[] = [];
+  /** "Tin tức & Mẹo sống" (Luméa Living): toàn bộ bài + bài nổi bật đang hiển thị theo chuyên mục đã chọn. */
+  livingArticlesAll: NewsArticle[] = [];
+  livingArticles: NewsArticle[] = [];
+  livingCategory: ArticleCategory | 'ALL' = 'ALL';
+  readonly livingFilters: { label: string; value: ArticleCategory | 'ALL' }[] = [
+    { label: 'Tất cả', value: 'ALL' },
+    ...ARTICLE_CATEGORIES.map(c => ({ label: c, value: c })),
+  ];
+  private readonly livingLimit = 6;
 
   /** Dải chữ chạy ngang giữa trang — không ghi số tiền/mốc freeship để tránh lệch với trang chính sách. */
   readonly marqueeItems = [
-    'Mini 3D Printed Decor',
-    'In theo yêu cầu',
+    'Nội thất & Decor',
+    'Sofa · Giường · Bàn · Ghế · Tủ · Kệ',
+    'Sản phẩm in 3D theo yêu cầu',
     'Tuỳ biến màu sắc & kích thước',
     'Xem trước mô hình 3D',
     'Thiết kế cùng trợ lý AI',
     'Giao hàng toàn quốc',
   ];
 
-  /** Đồng bộ 100% với các nhóm chính của Mega Menu (xem header.component.ts). */
-  private readonly categoryDefs: { label: string; illustration: string; categoryId?: ProductCategory; link?: string; queryParams?: Record<string, string> }[] = [
-    { label: 'Decor Bàn', illustration: 'decor-ban', categoryId: 'tray', queryParams: { category: 'tray' } },
-    { label: 'Tượng & Mô Hình', illustration: 'tuong-mo-hinh', categoryId: 'sculpture', queryParams: { category: 'sculpture' } },
-    { label: 'Đèn & Chiếu Sáng', illustration: 'den-chieu-sang', categoryId: 'lamp', queryParams: { category: 'lamp' } },
-    { label: 'Chậu & Cây Decor', illustration: 'chau-cay', categoryId: 'plant_pot', queryParams: { category: 'plant_pot' } },
-    { label: 'Phụ Kiện', illustration: 'phu-kien', categoryId: 'organizer', queryParams: { category: 'organizer' } },
-    { label: 'Decor Theo Phong Cách', illustration: 'phong-cach', link: '/catalog' },
-    { label: 'Decor Theo Không Gian', illustration: 'khong-gian', link: '/shop-the-room' },
-    { label: '3D & Custom', illustration: '3d-custom', link: '/customizer-3d' },
+  /**
+   * Danh mục trang chủ — lấy từ cây danh mục chung (core/data/catalog-taxonomy.ts), cùng nguồn với
+   * mega menu & bộ lọc: 6 nhóm nội thất chính trước, sau đó Đèn, Decor, 3D & Custom.
+   */
+  readonly categories: { label: string; image: string; link: string; queryParams?: Record<string, string> }[] = [
+    ...['sofa', 'giuong', 'ban', 'ghe', 'tu', 'ke'].map(key => {
+      const sub = findSubcategory(key)!.sub;
+      return { ...subcategoryLink(sub), image: sub.image! };
+    }),
+    ...CATALOG_DEPARTMENTS.filter(d => d.key !== 'noi-that')
+      .map(d => ({ ...departmentLink(d), image: d.image })),
+    { label: '3D & Custom', image: 'assets/hero-banner/hero-print-3d.png', link: '/catalog', queryParams: { custom: '1' } },
   ];
 
-  /** Thẻ danh mục dùng minh họa 3D đồng nhất (assets/categories) — điều hướng vẫn theo link/queryParams của categoryDefs. */
-  readonly categories: { label: string; image: string; link?: string; queryParams?: Record<string, string> }[] =
-    this.categoryDefs.map(def => ({
-      label: def.label,
-      image: `assets/categories/${def.illustration}.png`,
-      link: def.link,
-      queryParams: def.queryParams,
-    }));
+  /** Mua theo không gian sống — dẫn tới catalog đã lọc theo không gian. */
+  readonly spaceTiles: (CatalogLink & { image: string })[] =
+    CATALOG_SPACES.map(space => ({ ...spaceLink(space), image: space.image }));
 
   constructor(
     private productService: ProductService,
@@ -101,7 +114,6 @@ export class HomeComponent implements OnInit {
     private communityService: CommunityService,
     private newsService: NewsService,
     private cartService: CartService,
-    private toastService: ToastService,
     private mascotService: MascotService
   ) {
     // Dữ liệu giờ nạp bất đồng bộ từ backend — dùng effect() để tự cập nhật khi signal đổi,
@@ -123,8 +135,8 @@ export class HomeComponent implements OnInit {
       this.communityPosts = this.communityService.posts().slice(0, 5);
     });
     effect(() => {
-      this.newsArticles = this.newsService.articles().slice(0, 5);
-      this.lifeTipsArticles = this.newsService.getArticlesByCategory('Xu hướng Decor').slice(0, 3);
+      this.livingArticlesAll = this.newsService.articles();
+      this.updateLivingArticles();
     });
   }
 
@@ -134,6 +146,19 @@ export class HomeComponent implements OnInit {
     if (room.id === this.activeRoom?.id) return;
     this.activeRoom = room;
     this.updateRoomProducts();
+  }
+
+  selectLivingCategory(category: ArticleCategory | 'ALL'): void {
+    this.livingCategory = category;
+    this.updateLivingArticles();
+  }
+
+  private updateLivingArticles(): void {
+    this.livingArticles = this.newsService.getHighlightedArticles(this.livingCategory, this.livingLimit);
+  }
+
+  trackArticle(_: number, a: NewsArticle): string {
+    return a.id;
   }
 
   private updateRoomProducts(): void {
@@ -158,7 +183,6 @@ export class HomeComponent implements OnInit {
   addRoomLookToCart(): void {
     if (this.roomProducts.length === 0) return;
     this.roomProducts.forEach(x => this.cartService.addToCart(x.product, 1));
-    this.toastService.success(`Đã thêm ${this.roomProducts.length} sản phẩm của "${this.activeRoom?.name}" vào giỏ hàng`);
     this.mascotService.react('happy');
   }
 

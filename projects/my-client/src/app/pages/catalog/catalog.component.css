@@ -1,7 +1,7 @@
 .cg_layout {
   display: grid;
-  grid-template-columns: 176px 1fr;
-  gap: 24px;
+  grid-template-columns: 220px 1fr;
+  gap: 28px;
   align-items: start;
 }
 
@@ -14,6 +14,8 @@
 .cg_sidebar {
   position: sticky;
   top: 88px;
+  max-height: calc(100vh - 104px);
+  overflow-y: auto;
   background: #ffffff;
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 16px;
@@ -264,4 +266,321 @@
   font-weight: 800;
   font-size: 13px;
   cursor: pointer;
+}
+
+/* ---------- Breadcrumb + tiêu đề ---------- */
+.cg_crumb {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+  font-size: 12px;
+  color: #93877E;
+}
+
+.cg_crumb a {
+  color: #93877E;
+  text-decoration: none;
+}
+
+.cg_crumb a:hover {
+  color: #1F1712;
+}
+
+.cg_crumb__current {
+  color: #1F1712;
+  font-weight: 600;
+}
+
+.cg_title {
+  margin: 0;
+  font-size: clamp(22px, 2.4vw, 30px);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #1F1712;
+}
+
+.cg_subtitle {
+  margin: 6px 0 0;
+  max-width: 560px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #7A6F67;
+}
+
+.cg_count {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: #93877E;
+}
+
+/* ---------- Dải danh mục có ảnh ---------- */
+.cg_strip {
+  margin-bottom: 28px;
+}
+
+.cg_strip__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 12px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: #7A6F67;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.cg_strip__back app-icon {
+  transition: transform 0.2s ease;
+}
+
+.cg_strip__back:hover {
+  color: #A3152D;
+}
+
+.cg_strip__back:hover app-icon {
+  transform: translateX(-3px);
+}
+
+.cg_strip__row {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(128px, 160px);
+  gap: 14px;
+  padding: 4px 2px 6px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+}
+
+.cg_tile {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  scroll-snap-align: start;
+}
+
+.cg_tile__img {
+  display: block;
+  aspect-ratio: 4 / 3;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #EFE8DD;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  transition: outline-color 0.2s ease, transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.cg_tile__img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s cubic-bezier(0.2, 1, 0.3, 1);
+}
+
+.cg_tile__label {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #1F1712;
+  transition: color 0.2s ease;
+}
+
+.cg_tile:hover .cg_tile__img {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px -12px rgba(163, 21, 45, 0.5);
+}
+
+.cg_tile:hover .cg_tile__img img {
+  transform: scale(1.06);
+}
+
+.cg_tile:hover .cg_tile__label,
+.cg_tile--active .cg_tile__label {
+  color: #A3152D;
+}
+
+.cg_tile--active .cg_tile__img {
+  outline-color: #A3152D;
+}
+
+.cg_tile:focus-visible .cg_tile__img {
+  outline-color: #A3152D;
+}
+
+.cg_tile--dept {
+  min-width: 0;
+}
+
+@media (min-width: 1024px) {
+  /* Nhóm lớn: 4 thẻ trải đều hàng */
+  .cg_strip__row:has(.cg_tile--dept) {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .cg_strip__row:has(.cg_tile--dept) .cg_tile__img {
+    aspect-ratio: 16 / 7;
+  }
+}
+
+/* ---------- Loại sản phẩm: tiêu đề nhóm lớn ---------- */
+.cg_subgroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cg_subgroup + .cg_subgroup {
+  margin-top: 6px;
+}
+
+.cg_subgroup__title {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #93877E;
+}
+
+/* ---------- Chip bộ lọc đang áp dụng ---------- */
+.cg_chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.cg_chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(31, 23, 18, 0.14);
+  background: #F7F4EF;
+  color: #1F1712;
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.cg_chip:hover {
+  border-color: #1F1712;
+}
+
+.cg_chip--clear {
+  background: transparent;
+  border-color: transparent;
+  color: #891226;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ---------- Empty state ---------- */
+.cg_empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 56px 24px;
+  border-radius: 20px;
+  border: 1px dashed rgba(31, 23, 18, 0.18);
+  background: #FBFAF8;
+  color: #7A6F67;
+  text-align: center;
+}
+
+.cg_empty__title {
+  margin: 4px 0 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1F1712;
+}
+
+.cg_empty__desc {
+  margin: 0;
+  max-width: 420px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.cg_empty__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.cg_empty__btn {
+  padding: 9px 18px;
+  border-radius: 999px;
+  border: 1px solid #1F1712;
+  background: #1F1712;
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.cg_empty__btn--ghost {
+  background: transparent;
+  color: #1F1712;
+}
+
+/* ---------- Lối vào nhánh 3D & Custom ---------- */
+.cg_custom-cta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 40px;
+  padding: 16px 18px;
+  border-radius: 16px;
+  border: 1px solid rgba(31, 23, 18, 0.1);
+  background: #F7F4EF;
+  color: #1F1712;
+  text-decoration: none;
+  transition: border-color 0.2s ease;
+}
+
+.cg_custom-cta:hover {
+  border-color: #1F1712;
+}
+
+.cg_custom-cta__icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1F1712;
+  color: #fff;
+}
+
+.cg_custom-cta__text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12.5px;
+  color: #7A6F67;
+}
+
+.cg_custom-cta__text strong {
+  font-size: 14px;
+  color: #1F1712;
 }

@@ -87,4 +87,23 @@ const orderSchema = new mongoose.Schema({
   paymentTransactionId: { type: String, default: '' },
 }, { timestamps: true });
 
+// Realtime: mọi thay đổi đơn hàng (route orders/payments, dù dùng save() hay findOneAndUpdate)
+// đều được đẩy tới trang Tra cứu đơn đang mở mã đơn đó — không phải thêm lệnh emit ở từng route.
+const { emitOrderUpdated } = require('../realtime');
+
+orderSchema.post('save', function (doc) {
+  emitOrderUpdated(doc);
+});
+
+orderSchema.post('findOneAndUpdate', async function (doc) {
+  if (!doc) return;
+  try {
+    // Hook nhận bản trước khi sửa nếu route không truyền { new: true } — đọc lại bản mới nhất.
+    const fresh = await this.model.findOne({ orderNumber: doc.orderNumber });
+    emitOrderUpdated(fresh || doc);
+  } catch (err) {
+    console.error('order realtime emit error', err);
+  }
+});
+
 module.exports = mongoose.model('Order', orderSchema);

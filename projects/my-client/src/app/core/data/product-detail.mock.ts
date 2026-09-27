@@ -2,11 +2,11 @@ import { Product, ProductReview } from '../models/product.model';
 import { MOCK_PRODUCTS } from './mock-data';
 
 /**
- * Mock data TẠM THỜI để test giao diện (đặc biệt trang chi tiết sản phẩm) khi chưa nối MongoDB.
- * Chỉ được dùng khi environment.useMockProducts = true — xem ProductService.refresh().
+ * Dữ liệu NGUỒN để seed MongoDB — FE không import file này nữa (sản phẩm luôn nạp qua API).
+ * server/seed/convert-mock-data.js transpile file này sang product-detail.generated.js, rồi
+ * seed.js / seed-missing.js nạp DEV_MOCK_PRODUCTS vào collection Product.
  * Các sản phẩm ở đây cố ý có nhiều ảnh, nhiều review (có ảnh), badge, story... để phủ hết các khối UI:
  * lưới gallery + "Xem toàn bộ ảnh", phân trang review, các hàng gợi ý cuộn ngang.
- * Khi đã có data thật: tắt cờ trong environment rồi xoá file này.
  */
 
 const img = (id: string, w = 1000) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${w}&q=80`;

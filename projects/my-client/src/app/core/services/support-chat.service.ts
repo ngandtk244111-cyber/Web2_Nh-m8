@@ -1,7 +1,8 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { io, Socket } from 'socket.io-client';
 import { AuthService } from './auth.service';
+import { ChatPanelService } from './chat-panel.service';
 import { environment } from '../../../environments/environment';
 
 export interface ChatMessage {
@@ -18,11 +19,12 @@ const SESSION_KEY = 'deco3d_chat_session';
 export class SupportChatService {
   private http = inject(HttpClient);
   private authService = inject(AuthService);
+  private chatPanel = inject(ChatPanelService);
 
   private socket: Socket | null = null;
   private historyLoaded = false;
   readonly messages = signal<ChatMessage[]>([]);
-  readonly isOpen = signal(false);
+  readonly isOpen = computed(() => this.chatPanel.active() === 'support');
   readonly sessionId: string;
 
   constructor() {
@@ -74,11 +76,11 @@ export class SupportChatService {
 
   open(): void {
     this.ensureConnected();
-    this.isOpen.set(true);
+    this.chatPanel.open('support');
   }
 
   close(): void {
-    this.isOpen.set(false);
+    this.chatPanel.close('support');
   }
 
   sendMessage(text: string): void {

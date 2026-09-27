@@ -1,16 +1,19 @@
-import { Injectable, signal, inject } from '@angular/core';
+import { Injectable, signal, inject, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { DesignBrief } from '../models/custom-request.model';
 import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { MascotService } from './mascot.service';
+import { ChatPanelService } from './chat-panel.service';
 
+/** Sản phẩm thật server đã dò lại từ gợi ý của AI (slug -> tên -> từ khoá -> nổi bật). */
 export interface AiSuggestedProduct {
   id: string;
   name: string;
   slug: string;
-  basePrice: number;
-  images: string[];
+  image: string;
+  price: number;
+  originalPrice?: number | null;
 }
 
 export interface AiChatMessage {
@@ -27,7 +30,7 @@ interface AiAssistantResponse {
   reply: string;
   quickReplies: string[];
   brief: Partial<DesignBrief> | null;
-  suggestedProducts: AiSuggestedProduct[];
+  products: AiSuggestedProduct[];
   error?: string;
 }
 
@@ -39,9 +42,10 @@ const BASE = `${environment.apiUrl}/ai`;
 export class AiAssistantService {
   private http = inject(HttpClient);
   private mascotService = inject(MascotService);
+  private chatPanel = inject(ChatPanelService);
 
-  private isOpenSignal = signal<boolean>(false);
-  readonly isOpen = this.isOpenSignal.asReadonly();
+  readonly isOpen = computed(() => this.chatPanel.active() === 'ai');
+  private readonly sessionId = `goh_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
   // Conversation history — tin nhắn chào ban đầu tạo qua hàm dùng chung với resetChat().
   private messagesSignal = signal<AiChatMessage[]>([this.buildWelcomeMessage()]);
@@ -61,15 +65,20 @@ export class AiAssistantService {
   constructor(private router: Router) {}
 
   openModal(): void {
-    this.isOpenSignal.set(true);
+    this.chatPanel.open('ai');
   }
 
   closeModal(): void {
-    this.isOpenSignal.set(false);
+    this.chatPanel.close('ai');
   }
 
   sendMessage(userText: string): void {
-    if (!userText.trim()) return;
+    if (!userText.trim() || this.isThinkingSignal()) return;
+
+    // Lịch sử gửi lên là các tin TRƯỚC tin hiện tại (tin hiện tại đi riêng trong userText), bỏ lời chào mặc định.
+    const history = this.messagesSignal()
+      .filter(m => m.id !== 'ai-init')
+      .map(m => ({ sender: m.sender, text: m.text }));
 
     const userMsg: AiChatMessage = {
       id: 'msg-' + Date.now(),
@@ -81,12 +90,11 @@ export class AiAssistantService {
     this.isThinkingSignal.set(true);
     this.mascotService.startThinking();
 
-    const history = this.messagesSignal().map(m => ({ sender: m.sender, text: m.text }));
-
     this.http.post<AiAssistantResponse>(`${BASE}/assistant`, {
       userText,
       history,
       currentBrief: this.currentBriefSignal(),
+      sessionId: this.sessionId,
     }).subscribe({
       next: (res) => this.applyResponse(res),
       error: () => this.applyResponse({
@@ -94,7 +102,7 @@ export class AiAssistantService {
         reply: 'Xin lỗi, mình đang gặp sự cố kết nối AI. Bạn thử gửi lại tin nhắn sau ít phút nhé.',
         quickReplies: [],
         brief: null,
-        suggestedProducts: [],
+        products: [],
       }),
     });
   }
@@ -124,7 +132,7 @@ export class AiAssistantService {
       text: res.reply,
       time: this.now(),
       quickReplies: res.quickReplies,
-      suggestedProducts: res.suggestedProducts,
+      suggestedProducts: res.products ?? [],
     };
     this.messagesSignal.update(msgs => [...msgs, aiMsg]);
     this.isThinkingSignal.set(false);

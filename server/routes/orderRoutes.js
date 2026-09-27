@@ -47,7 +47,7 @@ router.post('/', attachUserId, async (req, res) => {
       return res.status(400).json({ success: false, error: priceErr.message });
     }
 
-    const discount = resolveDiscount(subtotal, couponCode);
+    const discount = await resolveDiscount(subtotal, couponCode);
     const shippingFee = resolveShippingFee(subtotal);
     const total = Math.max(0, subtotal - discount + shippingFee);
 

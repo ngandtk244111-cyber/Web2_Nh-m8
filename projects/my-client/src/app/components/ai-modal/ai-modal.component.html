@@ -31,7 +31,7 @@
         </header>
 
         <!-- Conversation -->
-        <div class="aic_body">
+        <div class="aic_body" #body>
           <p class="aic_hint">Trợ lý phát triển ý tưởng &amp; phác thảo thiết kế đồ decor in 3D</p>
 
           <div *ngFor="let msg of aiService.messages()" class="aic_row" [class.aic_row--user]="msg.sender === 'USER'">
@@ -44,7 +44,7 @@
                 class="aic_msg__av"
                >
               <div class="aic_msg__col">
-                <div class="aic_bubble" [class.aic_bubble--user]="msg.sender === 'USER'">{{ msg.text }}</div>
+                <div class="aic_bubble" [class.aic_bubble--user]="msg.sender === 'USER'"><ng-container *ngFor="let r of runs(msg.text)"><strong *ngIf="r.bold">{{ r.text }}</strong><ng-container *ngIf="!r.bold">{{ r.text }}</ng-container></ng-container></div>
                 <span class="aic_time">{{ msg.time }}</span>
               </div>
             </div>
@@ -62,17 +62,26 @@
 
             <!-- Suggested products -->
             <div *ngIf="msg.suggestedProducts && msg.suggestedProducts.length > 0" class="aic_products">
-              <a
+              <button
                 *ngFor="let p of msg.suggestedProducts"
-                [routerLink]="['/product', p.slug]"
-                (click)="aiService.closeModal()"
+                type="button"
+                (click)="openProduct(p)"
                 class="aic_prod">
-                <img [src]="p.images[0]" [alt]="p.name">
-                <div class="min-w-0">
+                <img *ngIf="p.image; else noImg" [src]="p.image" [alt]="p.name" loading="lazy">
+                <ng-template #noImg><span class="aic_prod__noimg"><app-icon name="box" [size]="18"></app-icon></span></ng-template>
+                <div class="aic_prod__info">
                   <div class="aic_prod__name">{{ p.name }}</div>
-                  <div class="aic_prod__price">{{ p.basePrice | vnd }}</div>
+                  <div *ngIf="p.price > 0; else findCta" class="aic_prod__pricing">
+                    <span class="aic_prod__price">{{ p.price | vnd }}</span>
+                    <ng-container *ngIf="discountPercent(p) > 0">
+                      <span class="aic_prod__old">{{ (p.originalPrice || 0) | vnd }}</span>
+                      <span class="aic_prod__off">-{{ discountPercent(p) }}%</span>
+                    </ng-container>
+                  </div>
+                  <ng-template #findCta><div class="aic_prod__cta">Tìm sản phẩm →</div></ng-template>
                 </div>
-              </a>
+                <span class="aic_prod__arrow" aria-hidden="true"><app-icon name="chevron-right" [size]="16"></app-icon></span>
+              </button>
             </div>
           </div>
 
@@ -125,13 +134,13 @@
 
         <!-- Input -->
         <form (ngSubmit)="sendUserMessage()" class="aic_input">
-          <input
-            type="text"
+          <textarea
+            rows="1"
             [(ngModel)]="userInput"
             name="aiPrompt"
             autocomplete="off"
-            placeholder="Nhập mô tả ý tưởng của bạn..."
-            [disabled]="aiService.isThinking()">
+            placeholder="Hỏi sản phẩm hoặc mô tả ý tưởng của bạn..."
+            (keydown.enter)="onEnter($event)"></textarea>
           <button
             type="submit"
             class="aic_send"

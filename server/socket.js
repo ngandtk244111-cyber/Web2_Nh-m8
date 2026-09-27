@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const { Server } = require('socket.io');
 const ChatMessage = require('./models/ChatMessage');
 const Admin = require('./models/Admin');
+const { setIO, orderRoom } = require('./realtime');
 
 // Phòng chung của nhân viên my-admin: nhận mọi tin nhắn của mọi cuộc chat để cập nhật hộp thư.
 const STAFF_ROOM = 'staff';
@@ -16,8 +17,19 @@ function attachSocket(httpServer, corsOrigins) {
   const io = new Server(httpServer, {
     cors: { origin: corsOrigins, methods: ['GET', 'POST'] },
   });
+  setIO(io);
 
   io.on('connection', (socket) => {
+    // Trang Tra cứu đơn: theo dõi trực tiếp 1 mã đơn (cùng mức công khai với GET /orders/by-number/:orderNumber).
+    socket.on('order:watch', (orderNumber) => {
+      const code = String(orderNumber || '').trim().toUpperCase();
+      if (code) socket.join(orderRoom(code));
+    });
+    socket.on('order:unwatch', (orderNumber) => {
+      const code = String(orderNumber || '').trim().toUpperCase();
+      if (code) socket.leave(orderRoom(code));
+    });
+
     // Khách (my-client) vào phòng của cuộc chat mình.
     socket.on('chat:join', (sessionId) => {
       if (sessionId) socket.join(sessionId);

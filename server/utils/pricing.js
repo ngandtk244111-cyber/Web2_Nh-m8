@@ -1,4 +1,4 @@
-const { MOCK_COUPONS } = require('../seed/mock-data.generated');
+const Coupon = require('../models/Coupon');
 
 const SHIPPING_FEE = 30000;
 const FREE_SHIPPING_THRESHOLD = 500000;
@@ -74,11 +74,10 @@ function resolveUnitPrice(product, selectedCustomization) {
   return Math.round(base * scaleMultiplier);
 }
 
-// Coupon vẫn là MOCK_COUPONS tĩnh (chưa có collection Promotion riêng) — tái dùng đúng file
-// mock-data.generated.js mà server/seed/seed.js đã dùng, để không phải định nghĩa lại danh sách.
-function resolveDiscount(subtotal, couponCode) {
+// Tra mã giảm giá THẬT trong collection Coupon — không tin discount client gửi lên.
+async function resolveDiscount(subtotal, couponCode) {
   if (!couponCode) return 0;
-  const coupon = MOCK_COUPONS.find(c => c.code === couponCode);
+  const coupon = await Coupon.findOne({ code: String(couponCode).trim().toUpperCase(), active: true }).lean();
   if (!coupon || subtotal < coupon.minSpend) return 0;
   const calc = (subtotal * coupon.discountPercent) / 100;
   return Math.min(calc, coupon.maxDiscount);

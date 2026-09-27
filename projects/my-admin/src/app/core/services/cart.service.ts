@@ -1,12 +1,15 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, catchError, map, of } from 'rxjs';
 import { CartItem, Coupon } from '../models/cart.model';
 import { Product, SelectedCustomization } from '../models/product.model';
-import { MOCK_COUPONS } from '../data/mock-data';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CartService {
+  private readonly http = inject(HttpClient);
   private readonly storageKey = 'deco3d_cart';
 
   // Signals
@@ -171,20 +174,23 @@ export class CartService {
     this.appliedCouponSignal.set(null);
   }
 
-  applyCoupon(code: string): { success: boolean; message: string } {
+  /** Tra mã giảm giá trong MongoDB (GET /api/coupons/:code); điều kiện minSpend kiểm theo giỏ hiện tại. */
+  applyCoupon(code: string): Observable<{ success: boolean; message: string }> {
     const cleanCode = code.trim().toUpperCase();
-    const found = MOCK_COUPONS.find(c => c.code === cleanCode);
-    if (!found) {
-      return { success: false, message: 'Mã giảm giá không hợp lệ hoặc đã hết hạn.' };
-    }
-    if (this.subtotal() < found.minSpend) {
-      return { 
-        success: false, 
-        message: `Mã này chỉ áp dụng cho đơn hàng từ ${found.minSpend.toLocaleString('vi-VN')}đ trở lên.` 
-      };
-    }
-    this.appliedCouponSignal.set(found);
-    return { success: true, message: `Áp dụng thành công mã ${found.code}!` };
+    return this.http.get<{ success: boolean; coupon: Coupon }>(`${environment.apiUrl}/coupons/${encodeURIComponent(cleanCode)}`).pipe(
+      map(res => {
+        const found = res.coupon;
+        if (this.subtotal() < found.minSpend) {
+          return {
+            success: false,
+            message: `Mã này chỉ áp dụng cho đơn hàng từ ${found.minSpend.toLocaleString('vi-VN')}đ trở lên.`
+          };
+        }
+        this.appliedCouponSignal.set(found);
+        return { success: true, message: `Áp dụng thành công mã ${found.code}!` };
+      }),
+      catchError(() => of({ success: false, message: 'Mã giảm giá không hợp lệ hoặc đã hết hạn.' }))
+    );
   }
 
   removeCoupon(): void {

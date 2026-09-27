@@ -3,10 +3,10 @@
       <!-- Page Title -->
       <div class="text-center space-y-2">
         <h1 class="font-serif text-3xl font-extrabold text-amber-800">
-          Tra Cứu Tiến Độ Đơn Hàng In 3D
+          Tra Cứu Đơn Hàng
         </h1>
         <p class="text-xs sm:text-sm text-neutral-600 max-w-md mx-auto">
-          Nhập mã đơn hàng của bạn để kiểm tra quy trình slicing, in 3D và tiến độ đóng gói theo thời gian thực.
+          Nhập mã đơn hàng để xem tình trạng đơn. Trang sẽ tự cập nhật trực tiếp mỗi khi Luméa xác nhận, sản xuất hay giao hàng.
         </p>
       </div>
 
@@ -33,8 +33,22 @@
       <!-- Active Order Details -->
       <div *ngIf="currentOrder" class="space-y-6">
         
+        <!-- Trạng thái theo dõi trực tiếp -->
+        <div class="ot-live" [class.ot-live--off]="!orderService.liveConnected() && !isFinal">
+          <ng-container *ngIf="isFinal; else liveState">
+            <app-icon name="check" [size]="14"></app-icon>
+            <span>Đơn hàng đã kết thúc — không còn cập nhật mới.</span>
+          </ng-container>
+          <ng-template #liveState>
+            <span class="ot-live__dot"></span>
+            <span *ngIf="orderService.liveConnected()">Đang theo dõi trực tiếp — trang tự cập nhật khi Luméa xử lý đơn, không cần tải lại.</span>
+            <span *ngIf="!orderService.liveConnected()">Đang kết nối lại để theo dõi trực tiếp...</span>
+          </ng-template>
+          <span *ngIf="lastUpdatedAt" class="ot-live__time">Cập nhật lúc {{ lastUpdatedAt | date:'HH:mm:ss' }}</span>
+        </div>
+
         <!-- Header status card -->
-        <div class="bg-[#FFFFFF] rounded-3xl p-6 sm:p-8 border border-neutral-200 shadow-xl space-y-4">
+        <div class="ot-card bg-[#FFFFFF] rounded-3xl p-6 sm:p-8 border border-neutral-200 shadow-xl space-y-4" [class.ot-card--updated]="justUpdated">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-neutral-200 pb-4">
             <div>
               <span class="text-xs font-mono font-bold text-neutral-600">MÃ ĐƠN HÀNG</span>
@@ -50,6 +64,21 @@
               </span>
             </div>
           </div>
+
+          <!-- Tiến trình tổng quát của đơn -->
+          <ol *ngIf="currentOrder.status !== 'CANCELLED' && currentOrder.status !== 'RETURNED'" class="ot-steps" aria-label="Tiến trình đơn hàng">
+            <li
+              *ngFor="let step of statusSteps"
+              class="ot-step"
+              [class.ot-step--done]="step.reached"
+              [class.ot-step--current]="step.current"
+              [attr.aria-current]="step.current ? 'step' : null">
+              <span class="ot-step__dot">
+                <app-icon *ngIf="step.reached && !step.current" name="check" [size]="12"></app-icon>
+              </span>
+              <span class="ot-step__label">{{ step.label }}</span>
+            </li>
+          </ol>
 
           <!-- Vận đơn: hãng vận chuyển + mã tra cứu -->
           <div *ngIf="currentOrder.shipment" class="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-2xl bg-[#F6F5F2] border border-neutral-200 px-4 py-3 text-xs text-neutral-700">

@@ -1,6 +1,7 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map, tap, catchError, of } from 'rxjs';
+import { io, Socket } from 'socket.io-client';
 import { Order, OrderStatus, ProductionStep, ProductionProgress, ShippingAddress } from '../models/order.model';
 import { CartItem } from '../models/cart.model';
 import { environment } from '../../../environments/environment';
@@ -27,6 +28,13 @@ export class OrderService {
 
   private ordersSignal = signal<Order[]>([]);
   readonly orders = this.ordersSignal.asReadonly();
+
+  // ---------- Theo dõi trực tiếp (socket.io, cùng server với chat hỗ trợ) ----------
+  private socket: Socket | null = null;
+  private watcherCount = 0;
+  private readonly liveConnectedSignal = signal(false);
+  /** true khi kết nối realtime đang hoạt động — trang Tra cứu đơn hiển thị trạng thái "Trực tiếp". */
+  readonly liveConnected = this.liveConnectedSignal.asReadonly();
 
   // orderNumber là khoá tự nhiên (unique) của đơn hàng ở backend thật, dùng luôn làm `id`
   // ở phía FE để không phải sửa template/tra cứu đang dùng order.id.
@@ -122,6 +130,60 @@ export class OrderService {
     };
     const status: OrderStatus = nextStep === 'DISPATCHED' ? 'SHIPPED' : 'IN_PRODUCTION';
     this.updateOrderStatus(orderNumber, status, progress).subscribe();
+  }
+
+  /**
+   * Theo dõi trực tiếp 1 đơn: phát bản mới nhất mỗi khi nhân viên cập nhật (xác nhận, sản xuất,
+   * giao hàng, thanh toán...). Khi mất kết nối rồi nối lại sẽ tự tải lại đơn để không lỡ thay đổi.
+   * Huỷ subscribe = rời phòng theo dõi; hết người theo dõi thì đóng socket.
+   */
+  watchOrder(orderNumber: string): Observable<Order> {
+    return new Observable<Order>(subscriber => {
+      const socket = this.acquireSocket();
+      const join = () => socket.emit('order:watch', orderNumber);
+      const onUpdate = (order: Order & { _id?: string }) => {
+        if (order?.orderNumber === orderNumber) subscriber.next(this.normalize(order));
+      };
+      let firstConnect = true;
+      const onConnect = () => {
+        join();
+        // Lần kết nối lại: đồng bộ các thay đổi có thể đã lỡ trong lúc mất mạng.
+        if (!firstConnect) {
+          this.getOrderByNumber(orderNumber).subscribe(order => order && subscriber.next(order));
+        }
+        firstConnect = false;
+      };
+
+      socket.on('order:updated', onUpdate);
+      socket.on('connect', onConnect);
+      if (socket.connected) onConnect();
+
+      return () => {
+        socket.emit('order:unwatch', orderNumber);
+        socket.off('order:updated', onUpdate);
+        socket.off('connect', onConnect);
+        this.releaseSocket();
+      };
+    });
+  }
+
+  private acquireSocket(): Socket {
+    this.watcherCount++;
+    if (!this.socket) {
+      this.socket = io(environment.socketUrl);
+      this.socket.on('connect', () => this.liveConnectedSignal.set(true));
+      this.socket.on('disconnect', () => this.liveConnectedSignal.set(false));
+    }
+    return this.socket;
+  }
+
+  private releaseSocket(): void {
+    this.watcherCount = Math.max(0, this.watcherCount - 1);
+    if (this.watcherCount === 0 && this.socket) {
+      this.socket.disconnect();
+      this.socket = null;
+      this.liveConnectedSignal.set(false);
+    }
   }
 
   private replaceInSignal(updated: Order): void {

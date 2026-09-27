@@ -28,6 +28,8 @@ interface GameInfo {
 const DEFAULT_SCHEDULE = [100, 100, 100, 100, 100, 100, 300];
 const DEFAULT_WHEEL_PRIZES = [10, 50, 20, 200, 10, 100, 30, 20];
 const BANNER_INTERVAL_MS = 5000;
+const VN_OFFSET_MS = 7 * 60 * 60 * 1000;
+const DAY_MS = 24 * 60 * 60 * 1000;
 const FEED_SIZE = 16;
 
 const GAMES: GameInfo[] = [
@@ -68,6 +70,10 @@ export class CoinsComponent implements AfterViewInit, OnDestroy {
   private browseClaiming = false;
   private bannerTimer: ReturnType<typeof setInterval> | null = null;
   private popTimer: ReturnType<typeof setTimeout> | null = null;
+  private midnightTimer: ReturnType<typeof setTimeout> | null = null;
+
+  /** Ngày hiện tại theo giờ Việt Nam — đổi lúc 0:00 để lượt chơi/điểm danh reset ngay trên trang đang mở. */
+  readonly todayKey = signal(this.vnDateKey(new Date()));
 
   readonly isLoggedIn = computed(() => !!this.authService.currentUser());
   readonly rewards = computed(() => this.coinService.rewards());
@@ -97,7 +103,7 @@ export class CoinsComponent implements AfterViewInit, OnDestroy {
 
   /** Tổng xu nhận được trong ngày (giờ Việt Nam) — tính từ lịch sử giao dịch. */
   readonly earnedToday = computed(() => {
-    const today = this.vnDateKey(new Date());
+    const today = this.todayKey();
     return this.coinService.transactions()
       .filter(t => this.vnDateKey(new Date(t.createdAt)) === today)
       .reduce((sum, t) => sum + t.amount, 0);
@@ -134,11 +140,15 @@ export class CoinsComponent implements AfterViewInit, OnDestroy {
       window.addEventListener('resize', this.onScroll, { passive: true });
     });
     this.onScroll();
+    this.scheduleMidnightReset();
+    document.addEventListener('visibilitychange', this.checkDayRollover);
   }
 
   ngOnDestroy(): void {
     if (this.bannerTimer) clearInterval(this.bannerTimer);
     if (this.popTimer) clearTimeout(this.popTimer);
+    if (this.midnightTimer) clearTimeout(this.midnightTimer);
+    document.removeEventListener('visibilitychange', this.checkDayRollover);
     window.removeEventListener('scroll', this.onScroll);
     window.removeEventListener('resize', this.onScroll);
   }
@@ -258,7 +268,32 @@ export class CoinsComponent implements AfterViewInit, OnDestroy {
     this.popTimer = setTimeout(() => this.rewardPop.set(null), 2200);
   }
 
+  /** Hẹn giờ tới đúng 0:00 giờ Việt Nam kế tiếp (+1s dư cho lệch đồng hồ với server). */
+  private scheduleMidnightReset(): void {
+    if (this.midnightTimer) clearTimeout(this.midnightTimer);
+    const vnNow = Date.now() + VN_OFFSET_MS;
+    const msToMidnight = DAY_MS - (vnNow % DAY_MS) + 1000;
+    this.midnightTimer = setTimeout(() => this.checkDayRollover(), msToMidnight);
+  }
+
+  /**
+   * Sang ngày mới thì tải lại lượt chơi/điểm danh/lịch sử từ server (server tự reset theo ngày).
+   * Gọi cả khi quay lại tab, vì timer ở tab nền hoặc lúc máy ngủ có thể bị trễ.
+   */
+  private readonly checkDayRollover = (): void => {
+    if (document.visibilityState === 'hidden') return;
+    const key = this.vnDateKey(new Date());
+    if (key !== this.todayKey()) {
+      this.todayKey.set(key);
+      if (this.isLoggedIn()) {
+        this.coinService.loadRewards();
+        this.coinService.refresh();
+      }
+    }
+    this.scheduleMidnightReset();
+  };
+
   private vnDateKey(date: Date): string {
-    return new Date(date.getTime() + 7 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    return new Date(date.getTime() + VN_OFFSET_MS).toISOString().slice(0, 10);
   }
 }

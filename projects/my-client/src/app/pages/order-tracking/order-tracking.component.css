@@ -1,0 +1,155 @@
+:host {
+  display: block;
+}
+
+/* ---------- Dải trạng thái "Đang theo dõi trực tiếp" ---------- */
+.ot-live {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(45, 106, 79, 0.25);
+  background: #EDF7F1;
+  color: #2D6A4F;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.ot-live--off {
+  border-color: rgba(163, 21, 45, 0.25);
+  background: #FBF1F2;
+  color: #A3152D;
+}
+
+.ot-live__dot {
+  position: relative;
+  flex-shrink: 0;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.ot-live__dot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: currentColor;
+  animation: ot-ping 1.6s ease-out infinite;
+}
+
+@keyframes ot-ping {
+  from { transform: scale(1); opacity: 0.6; }
+  to { transform: scale(2.6); opacity: 0; }
+}
+
+.ot-live__time {
+  margin-left: auto;
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+/* ---------- Làm nổi thẻ khi có cập nhật mới ---------- */
+.ot-card {
+  transition: box-shadow 0.4s ease, border-color 0.4s ease;
+}
+
+.ot-card--updated {
+  border-color: #A3152D !important;
+  box-shadow: 0 0 0 4px rgba(163, 21, 45, 0.12), 0 20px 40px -20px rgba(163, 21, 45, 0.35) !important;
+}
+
+/* ---------- Tiến trình tổng quát ---------- */
+.ot-steps {
+  display: flex;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ot-step {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+
+/* Đường nối giữa các mốc */
+.ot-step + .ot-step::before {
+  content: '';
+  position: absolute;
+  top: 11px;
+  right: 50%;
+  width: 100%;
+  height: 2px;
+  background: #E8DEC9;
+  transition: background 0.4s ease;
+}
+
+.ot-step--done + .ot-step--done::before {
+  background: #A3152D;
+}
+
+.ot-step__dot {
+  position: relative;
+  z-index: 1;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #E8DEC9;
+  background: #fff;
+  color: #fff;
+  transition: background 0.4s ease, border-color 0.4s ease;
+}
+
+.ot-step--done .ot-step__dot {
+  border-color: #A3152D;
+  background: #A3152D;
+}
+
+.ot-step--current .ot-step__dot {
+  background: #fff;
+  box-shadow: 0 0 0 5px rgba(163, 21, 45, 0.15);
+}
+
+.ot-step--current .ot-step__dot::after {
+  content: '';
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #A3152D;
+}
+
+.ot-step__label {
+  font-size: 11.5px;
+  color: #93877E;
+}
+
+.ot-step--done .ot-step__label {
+  color: #3C332D;
+  font-weight: 600;
+}
+
+.ot-step--current .ot-step__label {
+  color: #A3152D;
+  font-weight: 700;
+}
+
+@media (max-width: 480px) {
+  .ot-step__label {
+    font-size: 10.5px;
+  }
+
+  .ot-live__time {
+    margin-left: 0;
+  }
+}

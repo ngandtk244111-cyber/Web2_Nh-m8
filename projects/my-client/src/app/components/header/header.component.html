@@ -277,7 +277,7 @@
       class="hd_megamenu"
       [class.hd_megamenu--closing]="megaMenuClosing"
       *ngIf="megaMenuOpen || megaMenuClosing">
-      <div class="hd_container hd_megamenu__inner">
+      <div class="hd_container hd_megamenu__inner" [class.hd_megamenu__inner--preview]="megaPreview">
 
         <!-- Cột trái: nhóm lớn — hover để xem danh mục con -->
         <nav class="hd_mega-rail" aria-label="Nhóm danh mục">
@@ -321,7 +321,10 @@
               [routerLink]="item.link || '/catalog'"
               [queryParams]="item.queryParams"
               (click)="closeMenus()"
+              (mouseenter)="previewMegaItem(item)"
+              (focus)="previewMegaItem(item)"
               class="hd_mega-tile"
+              [class.hd_mega-tile--active]="megaPreview?.item === item"
               [style.--i]="i">
               <span class="hd_mega-tile__img">
                 <img *ngIf="item.image" [src]="item.image" [alt]="" loading="lazy">
@@ -334,6 +337,42 @@
           </div>
         </div>
 
+        <!-- Cột phải: hover danh mục con → xem trước sản phẩm, còn lại hiện banner -->
+        <div class="hd_mega-preview" *ngIf="megaPreview as preview; else megaBanner">
+          <p class="hd_mega-preview__eyebrow">Nổi bật trong</p>
+          <h4 class="hd_mega-preview__title">{{ preview.item.label }}</h4>
+
+          <div class="hd_mega-preview__list" *ngIf="preview.products.length; else megaPreviewEmpty">
+            <a
+              *ngFor="let p of preview.products; let i = index"
+              [routerLink]="['/product', p.slug]"
+              (click)="closeMenus()"
+              class="hd_mega-preview__item"
+              [style.--i]="i">
+              <span class="hd_mega-preview__img">
+                <img *ngIf="p.images?.[0]" [src]="p.images[0]" [alt]="p.name" loading="lazy">
+              </span>
+              <span class="hd_mega-preview__info">
+                <span class="hd_mega-preview__name">{{ p.name }}</span>
+                <span class="hd_mega-preview__price">{{ productService.currentPrice(p) | vnd }}</span>
+              </span>
+            </a>
+          </div>
+          <ng-template #megaPreviewEmpty>
+            <p class="hd_mega-preview__empty">Sản phẩm của mục này đang được cập nhật.</p>
+          </ng-template>
+
+          <a
+            [routerLink]="preview.item.link || '/catalog'"
+            [queryParams]="preview.item.queryParams"
+            (click)="closeMenus()"
+            class="hd_mega-preview__all">
+            Xem tất cả {{ preview.item.label }}
+            <app-icon name="chevron-right" [size]="13"></app-icon>
+          </a>
+        </div>
+
+        <ng-template #megaBanner>
         <a
           [routerLink]="megaMenuBanner.link"
           class="hd_megamenu__banner"
@@ -347,6 +386,7 @@
           <p class="hd_megamenu__banner-desc">{{ megaMenuBanner.description }}</p>
           <span class="hd_megamenu__banner-cta">{{ megaMenuBanner.ctaLabel }} <app-icon name="chevron-right" [size]="13"></app-icon></span>
         </a>
+        </ng-template>
 
       </div>
     </div>

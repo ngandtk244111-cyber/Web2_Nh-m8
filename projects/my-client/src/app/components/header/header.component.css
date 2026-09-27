@@ -1042,6 +1042,141 @@
   transform: translateX(0);
 }
 
+/* Ô đang được xem trước sản phẩm ở cột phải — giữ trạng thái như hover */
+.hd_mega-tile--active .hd_mega-tile__img {
+  box-shadow: 0 0 0 2px #A3152D, 0 10px 22px -12px rgba(163, 21, 45, 0.55);
+}
+
+.hd_mega-tile--active .hd_mega-tile__label {
+  color: #A3152D;
+}
+
+.hd_mega-tile--active .hd_mega-tile__text {
+  background-size: 100% 1.5px;
+}
+
+/* Cột phải: xem trước sản phẩm của danh mục con đang hover */
+.hd_mega-preview {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 18px 16px 16px;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid rgba(31, 23, 18, 0.08);
+  animation: hd-col-in 0.25s ease both;
+}
+
+.hd_mega-preview__eyebrow {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #93877E;
+}
+
+.hd_mega-preview__title {
+  margin: 2px 0 12px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1F1712;
+}
+
+.hd_mega-preview__list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hd_mega-preview__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px;
+  margin: 0 -6px;
+  border-radius: 10px;
+  color: #1F1712;
+  text-decoration: none;
+  transition: background 0.2s ease;
+  animation: hd-tile-in 0.3s cubic-bezier(0.2, 1, 0.3, 1) both;
+  animation-delay: calc(var(--i, 0) * 40ms);
+}
+
+.hd_mega-preview__item:hover {
+  background: #FAF6EF;
+}
+
+.hd_mega-preview__img {
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #EFE8DD;
+}
+
+.hd_mega-preview__img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.hd_mega-preview__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.hd_mega-preview__name {
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: color 0.2s ease;
+}
+
+.hd_mega-preview__item:hover .hd_mega-preview__name {
+  color: #A3152D;
+}
+
+.hd_mega-preview__price {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #A3152D;
+}
+
+.hd_mega-preview__empty {
+  margin: 0;
+  font-size: 12.5px;
+  color: #7A6F67;
+}
+
+.hd_mega-preview__all {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: auto;
+  padding-top: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #A3152D;
+  text-decoration: none;
+}
+
+.hd_mega-preview__all app-icon {
+  transition: transform 0.2s ease;
+}
+
+.hd_mega-preview__all:hover app-icon {
+  transform: translateX(4px);
+}
+
 .hd_megamenu__link {
   padding: 6px 10px;
   margin: 0 -10px;
@@ -1141,6 +1276,12 @@
 
   .hd_megamenu__banner {
     display: none;
+  }
+
+  /* Banner bị ẩn ở màn hẹp, nhưng cột xem trước sản phẩm vẫn hiện khi hover danh mục con */
+  .hd_megamenu__inner--preview {
+    grid-template-columns: 210px minmax(0, 1fr) 220px;
+    gap: 24px;
   }
 }
 

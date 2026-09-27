@@ -11,6 +11,7 @@ const CustomRequest = require('../models/CustomRequest');
 const CommunityPost = require('../models/CommunityPost');
 const NewsArticle = require('../models/NewsArticle');
 const Admin = require('../models/Admin');
+const Coupon = require('../models/Coupon');
 
 const {
   MOCK_PRODUCTS,
@@ -18,7 +19,10 @@ const {
   MOCK_CUSTOM_REQUESTS,
   MOCK_COMMUNITY_POSTS,
   MOCK_NEWS_ARTICLES,
+  MOCK_COUPONS,
 } = require('./mock-data.generated');
+// Bộ sản phẩm mẫu đầy đủ (nhiều ảnh, review...) + MOCK_PRODUCTS — xem convert-mock-data.js.
+const { DEV_MOCK_PRODUCTS } = require('./product-detail.generated');
 
 async function seedCollection(Model, data, label) {
   const count = await Model.countDocuments();
@@ -52,11 +56,12 @@ async function seedDefaultAdmin() {
 async function run() {
   await connectDB();
 
-  await seedCollection(Product, MOCK_PRODUCTS, 'Product');
+  await seedCollection(Product, DEV_MOCK_PRODUCTS, 'Product');
   await seedCollection(Room, MOCK_ROOMS, 'Room');
   await seedCollection(CustomRequest, MOCK_CUSTOM_REQUESTS, 'CustomRequest');
   await seedCollection(CommunityPost, MOCK_COMMUNITY_POSTS, 'CommunityPost');
   await seedCollection(NewsArticle, MOCK_NEWS_ARTICLES, 'NewsArticle');
+  await seedCollection(Coupon, MOCK_COUPONS, 'Coupon');
   await seedDefaultAdmin();
 
   await mongoose.connection.close();

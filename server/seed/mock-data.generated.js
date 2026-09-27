@@ -222,7 +222,7 @@ const MOCK_PRODUCTS = exports.MOCK_PRODUCTS = [
     reviewCount: 19,
     inStock: 8,
     images: [
-      'https://images.unsplash.com/photo-1533090161767-e6ffed986c88?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1611486212557-88be5ff6f941?auto=format&fit=crop&w=800&q=80',
     ],
     dimensions: 'Đường kính 40cm x Cao 48cm',
     materialInfo: 'Gỗ sồi (Oak) tự nhiên 100%',

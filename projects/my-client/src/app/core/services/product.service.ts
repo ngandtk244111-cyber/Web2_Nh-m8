@@ -1,9 +1,8 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of, tap } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { Product, ProductCategory, ProductionType, SpaceKey } from '../models/product.model';
 import { environment } from '../../../environments/environment';
-import { DEV_MOCK_PRODUCTS } from '../data/product-detail.mock';
 import { MascotService } from './mascot.service';
 import { FlashSaleService } from './flash-sale.service';
 import {
@@ -125,11 +124,6 @@ export class ProductService {
   }
 
   refresh(): void {
-    // TẠM THỜI: dùng mock để test UI khi chưa có data MongoDB (clone để không mutate hằng số mock).
-    if (environment.useMockProducts) {
-      this.productsSignal.set(structuredClone(DEV_MOCK_PRODUCTS));
-      return;
-    }
     this.mascotService.beginLoading();
     this.http.get<{ success: boolean; products: Product[] }>(BASE).subscribe({
       next: (res) => {
@@ -326,20 +320,6 @@ export class ProductService {
     comment: string;
     images?: string[];
   }): Observable<{ success: boolean; product: Product; review: Product['reviews'][number] }> {
-    if (environment.useMockProducts) {
-      const product = this.getProductById(productId)!;
-      const review: Product['reviews'][number] = {
-        id: `mock-rev-${Date.now()}`,
-        author: payload.author,
-        avatar: '',
-        rating: payload.rating,
-        date: new Date().toLocaleDateString('vi-VN'),
-        comment: payload.comment,
-        verifiedPurchase: false,
-        images: payload.images,
-      };
-      return of({ success: true, product, review });
-    }
     return this.http.post<{ success: boolean; product: Product; review: Product['reviews'][number] }>(
       `${BASE}/${productId}/reviews`,
       payload

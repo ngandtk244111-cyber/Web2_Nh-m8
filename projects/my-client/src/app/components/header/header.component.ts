@@ -8,6 +8,8 @@ import { AuthService } from '../../core/services/auth.service';
 import { LoginModalService } from '../../core/services/login-modal.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { FavoriteService } from '../../core/services/favorite.service';
+import { ProductService } from '../../core/services/product.service';
+import { Product } from '../../core/models/product.model';
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
 import {
   CATALOG_DEPARTMENTS,
@@ -18,6 +20,8 @@ import {
   departmentLink,
   subcategoryLink,
   spaceLink,
+  findSubcategory,
+  subcategoryMatches,
 } from '../../core/data/catalog-taxonomy';
 
 
@@ -32,6 +36,14 @@ export interface MegaMenuSubItem {
   link?: string;
   queryParams?: Record<string, string>;
   image?: string;
+  /** Chỉ có ở danh mục con sản phẩm — dùng để xem trước sản phẩm khi hover ô. */
+  subKey?: string;
+}
+
+/** Cột xem trước sản phẩm thay cho banner khi hover một danh mục con. */
+export interface MegaMenuPreview {
+  item: MegaMenuSubItem;
+  products: Product[];
 }
 
 export interface MegaMenuSection {
@@ -103,7 +115,7 @@ export class HeaderComponent implements OnDestroy {
       description: dept.description,
       viewAll: departmentLink(dept),
       railLink: departmentLink(dept),
-      items: dept.subcategories.map(sub => ({ ...subcategoryLink(sub), image: sub.image })),
+      items: dept.subcategories.map(sub => ({ ...subcategoryLink(sub), image: sub.image, subKey: sub.key })),
     })),
     {
       key: 'khong-gian',
@@ -142,7 +154,12 @@ export class HeaderComponent implements OnDestroy {
     link: '/shop-the-room',
   };
 
+  /** Danh mục con đang hover trong mega menu — null thì cột phải hiện banner. */
+  megaPreview: MegaMenuPreview | null = null;
+  private readonly MEGA_PREVIEW_LIMIT = 4;
+
   constructor(
+    public productService: ProductService,
     public cartService: CartService,
     private router: Router,
     public authService: AuthService,
@@ -225,7 +242,20 @@ export class HeaderComponent implements OnDestroy {
   }
 
   setActiveMegaSection(key: string): void {
+    if (key !== this.activeMegaSectionKey) this.megaPreview = null;
     this.activeMegaSectionKey = key;
+  }
+
+  /** Hover ô danh mục con → cột phải hiện vài sản phẩm nổi bật (nhiều đánh giá nhất) của mục đó. */
+  previewMegaItem(item: MegaMenuSubItem): void {
+    if (!item.subKey || this.megaPreview?.item === item) return;
+    const found = findSubcategory(item.subKey);
+    if (!found) return;
+    const products = this.productService.products()
+      .filter(p => subcategoryMatches(found.sub, p))
+      .sort((a, b) => (b.reviewCount || 0) - (a.reviewCount || 0))
+      .slice(0, this.MEGA_PREVIEW_LIMIT);
+    this.megaPreview = { item, products };
   }
 
   /** Đổi nhóm → panel dựng lại để chạy hiệu ứng xuất hiện của các thẻ. */
@@ -237,6 +267,7 @@ export class HeaderComponent implements OnDestroy {
     this.cancelMegaMenuCloseTimer();
     if (this.megaMenuOpen && !this.megaMenuClosing) return;
     this.megaMenuOpenedAt = Date.now();
+    this.megaPreview = null;
     this.megaMenuOpen = true;
     this.megaMenuClosing = false;
     this.notificationsOpen = false;

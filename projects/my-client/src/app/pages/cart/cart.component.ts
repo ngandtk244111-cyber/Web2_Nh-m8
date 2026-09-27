@@ -141,13 +141,14 @@ export class CartComponent implements OnInit {
 
   applyCoupon(): void {
     if (!this.couponCodeInput.trim()) return;
-    const res = this.cartService.applyCoupon(this.couponCodeInput);
-    this.couponSuccess = res.success;
-    this.couponMessage = res.message;
-    if (res.success) {
-      this.couponCodeInput = '';
-      this.showCouponInput = false;
-    }
+    this.cartService.applyCoupon(this.couponCodeInput).subscribe(res => {
+      this.couponSuccess = res.success;
+      this.couponMessage = res.message;
+      if (res.success) {
+        this.couponCodeInput = '';
+        this.showCouponInput = false;
+      }
+    });
   }
 
   /**

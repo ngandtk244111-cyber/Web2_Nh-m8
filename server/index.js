@@ -31,6 +31,7 @@ app.use('/api/videos', require('./routes/videoRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/newsletter', require('./routes/newsletterRoutes'));
 app.use('/api/coupons', require('./routes/couponRoutes'));
+app.use('/api/ai/conversations', require('./routes/aiConversationRoutes'));
 app.use('/api/ai', require('./routes/aiRoutes'));
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }));

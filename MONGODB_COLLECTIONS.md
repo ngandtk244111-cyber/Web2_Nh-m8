@@ -240,6 +240,7 @@ Các collection này được tạo khi người dùng thao tác trên web. Thê
 | `newscomments` | `NewsComment` | Bạn đọc bình luận dưới bài viết |
 | `newslettersubscribers` | `NewsletterSubscriber` | Đăng ký nhận bản tin |
 | `otpcodes` | `OtpCode` | Mã OTP (tự xoá khi hết hạn) |
+| `aiconversations` | `AiConversation` | Khách đã đăng nhập chat với trợ lý AI Goh (`id`, `userId`, `title`, `messages`, `brief`, `conceptImage`). Khách chưa đăng nhập lưu ở localStorage |
 
 ---
 

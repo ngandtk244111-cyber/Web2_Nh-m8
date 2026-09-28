@@ -22,19 +22,54 @@
               {{ aiService.isThinking() ? 'Đang suy nghĩ...' : 'Đang hoạt động' }}
             </p>
           </div>
-          <button type="button" (click)="aiService.resetChat()" title="Làm mới cuộc trò chuyện" aria-label="Làm mới cuộc trò chuyện" class="aic_icon">
-            <app-icon name="rotate" [size]="16"></app-icon>
+          <button type="button" (click)="toggleHistory()" title="Lịch sử trò chuyện" aria-label="Lịch sử trò chuyện" class="aic_icon" [class.aic_icon--on]="showHistory()">
+            <app-icon name="history" [size]="17"></app-icon>
+          </button>
+          <button type="button" (click)="newChat()" title="Cuộc trò chuyện mới" aria-label="Cuộc trò chuyện mới" class="aic_icon">
+            <app-icon name="plus" [size]="18"></app-icon>
           </button>
           <button type="button" (click)="aiService.closeModal()" aria-label="Đóng" class="aic_icon">
             <app-icon name="x" [size]="20"></app-icon>
           </button>
         </header>
 
+        <!-- Lịch sử trò chuyện -->
+        <div *ngIf="showHistory()" class="aic_history" aria-label="Lịch sử trò chuyện">
+          <div class="aic_history__head">
+            <h4>Lịch sử trò chuyện</h4>
+            <button type="button" class="aic_history__new" (click)="newChat()">
+              <app-icon name="plus" [size]="14"></app-icon> Cuộc trò chuyện mới
+            </button>
+          </div>
+          <p *ngIf="aiService.conversations().length === 0" class="aic_history__empty">
+            Chưa có cuộc trò chuyện nào được lưu.
+          </p>
+          <ul class="aic_history__list">
+            <li *ngFor="let c of aiService.conversations()">
+              <button
+                type="button"
+                class="aic_history__item"
+                [class.aic_history__item--active]="c.id === aiService.activeConversationId()"
+                (click)="openConversation(c.id)">
+                <app-icon name="message" [size]="15"></app-icon>
+                <span class="aic_history__title">{{ c.title }}</span>
+                <span class="aic_history__date">{{ formatDate(c.updatedAt) }}</span>
+              </button>
+              <button type="button" class="aic_history__del" title="Xoá" aria-label="Xoá cuộc trò chuyện" (click)="deleteConversation($event, c.id)">
+                <app-icon name="trash" [size]="14"></app-icon>
+              </button>
+            </li>
+          </ul>
+          <p class="aic_history__note">
+            {{ aiService.isLoggedIn() ?'Lưu theo tài khoản của bạn.' : 'Đang lưu trên trình duyệt này — đăng nhập để lưu theo tài khoản.' }}
+          </p>
+        </div>
+
         <!-- Conversation -->
         <div class="aic_body" #body>
           <p class="aic_hint">Trợ lý phát triển ý tưởng &amp; phác thảo thiết kế đồ decor in 3D</p>
 
-          <div *ngFor="let msg of aiService.messages()" class="aic_row" [class.aic_row--user]="msg.sender === 'USER'">
+          <div *ngFor="let msg of aiService.messages(); let isLast = last" class="aic_row" [class.aic_row--user]="msg.sender === 'USER'">
 
             <div class="aic_msg" [class.aic_msg--user]="msg.sender === 'USER'">
               <img
@@ -44,13 +79,53 @@
                 class="aic_msg__av"
                >
               <div class="aic_msg__col">
-                <div class="aic_bubble" [class.aic_bubble--user]="msg.sender === 'USER'"><ng-container *ngFor="let r of runs(msg.text)"><strong *ngIf="r.bold">{{ r.text }}</strong><ng-container *ngIf="!r.bold">{{ r.text }}</ng-container></ng-container></div>
-                <span class="aic_time">{{ msg.time }}</span>
+                <!-- Đang sửa tin của khách -->
+                <div *ngIf="editingId() === msg.id; else bubble" class="aic_edit">
+                  <textarea
+                    [(ngModel)]="editText"
+                    name="editText"
+                    rows="2"
+                    aria-label="Sửa tin nhắn"
+                    (keydown)="onEditKeydown($event, msg)"></textarea>
+                  <div class="aic_edit__btns">
+                    <button type="button" class="aic_edit__cancel" (click)="cancelEdit()">Huỷ</button>
+                    <button type="button" class="aic_edit__save" [disabled]="!editText.trim()" (click)="submitEdit(msg)">Gửi</button>
+                  </div>
+                </div>
+
+                <ng-template #bubble>
+                  <!-- Thẻ lỗi kết nối -->
+                  <div *ngIf="msg.error; else normalBubble" class="aic_bubble aic_bubble--error" role="alert">
+                    {{ msg.text }}
+                    <button *ngIf="isLast" type="button" class="aic_retry" [disabled]="aiService.isBusy()" (click)="aiService.regenerate()">
+                      <app-icon name="rotate" [size]="13"></app-icon> Gửi lại
+                    </button>
+                  </div>
+                  <ng-template #normalBubble>
+                    <div class="aic_bubble" [class.aic_bubble--user]="msg.sender === 'USER'"><ng-container *ngFor="let r of runs(aiService.displayText(msg))"><strong *ngIf="r.bold">{{ r.text }}</strong><ng-container *ngIf="!r.bold">{{ r.text }}</ng-container></ng-container><span *ngIf="aiService.typingId() === msg.id" class="aic_caret" aria-hidden="true"></span></div>
+                  </ng-template>
+
+                  <div class="aic_meta">
+                    <span class="aic_time">{{ msg.time }}</span>
+                    <!-- Thanh thao tác (kiểu Chatbox) -->
+                    <div *ngIf="!msg.error && msg.id !== 'ai-init' && aiService.typingId() !== msg.id" class="aic_actions">
+                      <button type="button" (click)="copy(msg)" [title]="copiedId() === msg.id ? 'Đã sao chép' : 'Sao chép'" aria-label="Sao chép">
+                        <app-icon [name]="copiedId() === msg.id ? 'check' : 'copy'" [size]="13"></app-icon>
+                      </button>
+                      <button *ngIf="msg.sender === 'USER'" type="button" (click)="startEdit(msg)" [disabled]="aiService.isBusy()" title="Sửa & gửi lại" aria-label="Sửa tin nhắn">
+                        <app-icon name="pencil" [size]="13"></app-icon>
+                      </button>
+                      <button *ngIf="canRegenerate(msg, isLast)" type="button" (click)="aiService.regenerate()" title="Trả lời lại" aria-label="Trả lời lại">
+                        <app-icon name="rotate" [size]="13"></app-icon>
+                      </button>
+                    </div>
+                  </div>
+                </ng-template>
               </div>
             </div>
 
             <!-- Quick replies -->
-            <div *ngIf="msg.quickReplies && msg.quickReplies.length > 0 && !aiService.isThinking()" class="aic_qr">
+            <div *ngIf="isLast && msg.quickReplies && msg.quickReplies.length > 0 && !aiService.isBusy()" class="aic_qr">
               <button
                 *ngFor="let qr of msg.quickReplies"
                 type="button"
@@ -61,7 +136,7 @@
             </div>
 
             <!-- Suggested products -->
-            <div *ngIf="msg.suggestedProducts && msg.suggestedProducts.length > 0" class="aic_products">
+            <div *ngIf="msg.suggestedProducts && msg.suggestedProducts.length > 0 && aiService.typingId() !== msg.id" class="aic_products">
               <button
                 *ngFor="let p of msg.suggestedProducts"
                 type="button"
@@ -133,21 +208,29 @@
         </div>
 
         <!-- Input -->
-        <form (ngSubmit)="sendUserMessage()" class="aic_input">
+        <form (ngSubmit)="onSubmit()" class="aic_input">
           <textarea
             rows="1"
             [(ngModel)]="userInput"
             name="aiPrompt"
             autocomplete="off"
             placeholder="Hỏi sản phẩm hoặc mô tả ý tưởng của bạn..."
-            (keydown.enter)="onEnter($event)"></textarea>
+            (keydown.enter)="onEnter($event)"
+            (keydown.arrowup)="onInputArrow($event, 'up')"
+            (keydown.arrowdown)="onInputArrow($event, 'down')"></textarea>
           <button
+            *ngIf="!aiService.isBusy(); else stopBtn"
             type="submit"
             class="aic_send"
             aria-label="Gửi"
-            [disabled]="!userInput.trim() || aiService.isThinking()">
+            [disabled]="!userInput.trim()">
             <app-icon name="send" [size]="18"></app-icon>
           </button>
+          <ng-template #stopBtn>
+            <button type="submit" class="aic_send aic_send--stop" title="Dừng trả lời" aria-label="Dừng trả lời">
+              <app-icon name="stop" [size]="16" [filled]="true"></app-icon>
+            </button>
+          </ng-template>
         </form>
 
       </section>

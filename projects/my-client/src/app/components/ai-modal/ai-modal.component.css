@@ -48,7 +48,7 @@
   display: flex; align-items: flex-end; justify-content: flex-end; padding: 20px;
 }
 .aic {
-  width: 420px; max-width: 100%; height: min(720px, calc(100vh - 40px));
+  position: relative; width: 420px; max-width: 100%; height: min(720px, calc(100vh - 40px));
   display: flex; flex-direction: column; overflow: hidden;
   background: #FBF7EE; border-radius: 22px;
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
@@ -171,3 +171,82 @@
 }
 .aic_send:hover:not(:disabled) { background: #891226; }
 .aic_send:disabled { opacity: 0.45; cursor: default; }
+
+/* ===== Thanh thao tác tin nhắn (copy / sửa / trả lời lại) ===== */
+.aic_icon--on { background: rgba(255, 255, 255, 0.22); }
+.aic_meta { display: flex; align-items: center; gap: 8px; margin-top: 3px; }
+.aic_msg--user .aic_meta { flex-direction: row-reverse; }
+.aic_meta .aic_time { margin-top: 0; }
+.aic_actions { display: flex; gap: 2px; opacity: 0; transition: opacity 0.15s ease; }
+.aic_row:hover .aic_actions, .aic_actions:focus-within { opacity: 1; }
+@media (hover: none) { .aic_actions { opacity: 1; } }
+.aic_actions button {
+  width: 24px; height: 24px; display: grid; place-items: center; border: 0; border-radius: 7px; cursor: pointer;
+  background: transparent; color: #93877E; transition: background 0.15s ease, color 0.15s ease;
+}
+.aic_actions button:hover:not(:disabled) { background: #EFE4D6; color: #A3152D; }
+.aic_actions button:disabled { opacity: 0.4; cursor: default; }
+
+/* Con trỏ nhấp nháy khi chữ đang hiện dần */
+.aic_caret { display: inline-block; width: 2px; height: 1em; margin-left: 2px; vertical-align: text-bottom; background: #A3152D; animation: aic-caret 0.9s steps(1) infinite; }
+@keyframes aic-caret { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .aic_caret { animation: none; } }
+
+/* Thẻ lỗi + nút Gửi lại */
+.aic_bubble--error { background: #FDF0F1; color: #8A1C2C; border: 1px solid #F2C4CB; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.aic_retry {
+  display: inline-flex; align-items: center; gap: 5px; padding: 6px 12px; border-radius: 999px; cursor: pointer;
+  border: 1px solid #A3152D; background: #fff; color: #A3152D; font-size: 12px; font-weight: 700;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.aic_retry:hover:not(:disabled) { background: #A3152D; color: #fff; }
+.aic_retry:disabled { opacity: 0.5; cursor: default; }
+
+/* Sửa tin của khách */
+.aic_edit { width: min(300px, 70vw); display: flex; flex-direction: column; gap: 6px; }
+.aic_edit textarea {
+  width: 100%; padding: 10px 12px; border-radius: 14px; border: 1px solid #A3152D; outline: none;
+  font: inherit; font-size: 14px; line-height: 1.45; resize: vertical; background: #fff; color: #3C332D;
+}
+.aic_edit__btns { display: flex; justify-content: flex-end; gap: 6px; }
+.aic_edit__btns button { padding: 6px 14px; border-radius: 999px; font-size: 12px; font-weight: 700; cursor: pointer; }
+.aic_edit__cancel { border: 1px solid #D9CBB8; background: #fff; color: #6B5D52; }
+.aic_edit__save { border: 0; background: #A3152D; color: #fff; }
+.aic_edit__save:disabled { opacity: 0.45; cursor: default; }
+
+/* Nút Dừng */
+.aic_send--stop { background: #3C332D; }
+.aic_send--stop:hover { background: #1F1712 !important; }
+
+/* ===== Panel lịch sử trò chuyện ===== */
+.aic_history {
+  position: absolute; top: 74px; left: 0; right: 0; bottom: 0; z-index: 2;
+  display: flex; flex-direction: column; gap: 10px; padding: 16px;
+  background: #FBF7EE; overflow-y: auto; animation: aic-in 0.18s ease both;
+}
+.aic_history__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.aic_history__head h4 { margin: 0; font-family: 'Cormorant Garamond', serif; font-size: 19px; font-weight: 700; color: #3B2418; }
+.aic_history__new {
+  display: inline-flex; align-items: center; gap: 5px; padding: 7px 12px; border-radius: 999px; border: 0; cursor: pointer;
+  background: #A3152D; color: #fff; font-size: 12px; font-weight: 700; white-space: nowrap;
+}
+.aic_history__new:hover { background: #891226; }
+.aic_history__empty { margin: 24px 0; text-align: center; font-size: 13px; color: #93877E; }
+.aic_history__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.aic_history__list li { display: flex; align-items: center; gap: 4px; }
+.aic_history__item {
+  flex: 1; min-width: 0; display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: 10px; align-items: center;
+  padding: 10px 12px; border-radius: 12px; border: 1px solid #EFE4D6; background: #fff; cursor: pointer; text-align: left; color: #6B5D52;
+  transition: border-color 0.15s ease;
+}
+.aic_history__item app-icon { grid-row: span 2; }
+.aic_history__item:hover { border-color: rgba(163, 21, 45, 0.35); }
+.aic_history__item--active { border-color: #A3152D; background: #FDF6F7; }
+.aic_history__title { font-size: 13px; font-weight: 600; color: #3C332D; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.aic_history__date { font-size: 11px; color: #93877E; }
+.aic_history__del {
+  width: 32px; height: 32px; flex-shrink: 0; display: grid; place-items: center; border: 0; border-radius: 10px; cursor: pointer;
+  background: transparent; color: #93877E;
+}
+.aic_history__del:hover { background: #F2DEE2; color: #A3152D; }
+.aic_history__note { margin: auto 0 0; padding-top: 8px; text-align: center; font-size: 11px; color: #93877E; }

@@ -1,8 +1,8 @@
-import { AfterViewChecked, Component, ElementRef, effect, HostListener, OnDestroy, ViewChild } from '@angular/core';
+import { AfterViewChecked, Component, ElementRef, effect, HostListener, OnDestroy, ViewChild, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { AiAssistantService, AiSuggestedProduct } from '../../core/services/ai-assistant.service';
+import { AiAssistantService, AiChatMessage, AiSuggestedProduct } from '../../core/services/ai-assistant.service';
 import { MascotService } from '../../core/services/mascot.service';
 import { AppIconComponent } from '../icon/icon.component';
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
@@ -21,6 +21,18 @@ interface TextRun {
 })
 export class AiModalComponent implements AfterViewChecked, OnDestroy {
   userInput = '';
+
+  /** Panel danh sách hội thoại đã lưu. */
+  readonly showHistory = signal(false);
+  /** Tin của khách đang được sửa (id) + nội dung đang sửa. */
+  readonly editingId = signal<string | null>(null);
+  editText = '';
+  /** Tin vừa bấm Copy — đổi icon thành dấu tick trong chốc lát. */
+  readonly copiedId = signal<string | null>(null);
+
+  /** Vị trí đang duyệt trong các tin đã gửi khi bấm ↑/↓ ở ô nhập (-1 = không duyệt). */
+  private inputHistoryIndex = -1;
+  private copiedTimer: ReturnType<typeof setTimeout> | null = null;
 
   @ViewChild('body') private bodyEl?: ElementRef<HTMLDivElement>;
 
@@ -68,21 +80,118 @@ export class AiModalComponent implements AfterViewChecked, OnDestroy {
 
   @HostListener('document:keydown.escape')
   onEscapePress(): void {
-    if (this.aiService.isOpen()) {
-      this.aiService.closeModal();
-    }
+    if (!this.aiService.isOpen()) return;
+    if (this.showHistory()) this.showHistory.set(false);
+    else this.aiService.closeModal();
   }
 
   ngOnDestroy(): void {
     if (typeof document !== 'undefined') {
       document.body.style.overflow = '';
     }
+    if (this.copiedTimer) clearTimeout(this.copiedTimer);
   }
 
   sendUserMessage(): void {
-    if (!this.userInput.trim()) return;
+    if (!this.userInput.trim() || this.aiService.isBusy()) return;
     this.aiService.sendMessage(this.userInput);
     this.userInput = '';
+    this.inputHistoryIndex = -1;
+  }
+
+  /** Nút gửi đổi thành nút Dừng khi AI đang trả lời. */
+  onSubmit(): void {
+    if (this.aiService.isBusy()) this.aiService.stop();
+    else this.sendUserMessage();
+  }
+
+  // ===== Thao tác trên tin nhắn =====
+
+  /** Tin AI có câu trả lời thật (không phải lời chào mặc định) và là tin cuối -> cho Thử lại. */
+  canRegenerate(msg: AiChatMessage, isLast: boolean): boolean {
+    return isLast && msg.sender === 'AI' && msg.id !== 'ai-init' && !this.aiService.isBusy();
+  }
+
+  async copy(msg: AiChatMessage): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(msg.text.replace(/\*\*/g, ''));
+      this.copiedId.set(msg.id);
+      if (this.copiedTimer) clearTimeout(this.copiedTimer);
+      this.copiedTimer = setTimeout(() => this.copiedId.set(null), 1500);
+    } catch { /* trình duyệt chặn clipboard — bỏ qua */ }
+  }
+
+  startEdit(msg: AiChatMessage): void {
+    if (this.aiService.isBusy()) return;
+    this.editingId.set(msg.id);
+    this.editText = msg.text;
+  }
+
+  cancelEdit(): void {
+    this.editingId.set(null);
+    this.editText = '';
+  }
+
+  submitEdit(msg: AiChatMessage): void {
+    if (!this.editText.trim()) return;
+    this.aiService.editMessage(msg.id, this.editText);
+    this.cancelEdit();
+  }
+
+  onEditKeydown(event: KeyboardEvent, msg: AiChatMessage): void {
+    if (event.key === 'Escape') {
+      event.stopPropagation();
+      this.cancelEdit();
+    } else if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
+      event.preventDefault();
+      this.submitEdit(msg);
+    }
+  }
+
+  // ===== Lịch sử hội thoại =====
+
+  toggleHistory(): void {
+    const next = !this.showHistory();
+    if (next) this.aiService.loadConversations();
+    this.showHistory.set(next);
+  }
+
+  openConversation(id: string): void {
+    this.cancelEdit();
+    this.aiService.openConversation(id);
+    this.showHistory.set(false);
+    this.scrollTarget = 'bottom';
+  }
+
+  newChat(): void {
+    this.cancelEdit();
+    this.aiService.newChat();
+    this.showHistory.set(false);
+  }
+
+  deleteConversation(event: Event, id: string): void {
+    event.stopPropagation();
+    this.aiService.deleteConversation(id);
+  }
+
+  formatDate(iso: string): string {
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return '';
+    return d.toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' });
+  }
+
+  /** ↑/↓ ở ô nhập (khi ô trống hoặc đang duyệt) để lấy lại các tin đã gửi, giống Chatbox. */
+  onInputArrow(event: Event, direction: 'up' | 'down'): void {
+    const sent = this.aiService.messages().filter(m => m.sender === 'USER').map(m => m.text).reverse();
+    if (!sent.length) return;
+    if (this.inputHistoryIndex === -1 && (direction === 'down' || this.userInput.trim())) return;
+
+    event.preventDefault();
+    const next = direction === 'up'
+      ? Math.min(this.inputHistoryIndex + 1, sent.length - 1)
+      : this.inputHistoryIndex - 1;
+    this.inputHistoryIndex = next;
+    this.userInput = next === -1 ? '' : sent[next];
   }
 
   sendQuickReply(reply: string): void {

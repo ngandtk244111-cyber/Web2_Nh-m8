@@ -2,7 +2,7 @@ const express = require('express');
 const User = require('../models/User');
 const CoinTransaction = require('../models/CoinTransaction');
 const { requireUserId } = require('../middleware/auth');
-const { awardCoins } = require('../utils/coins');
+const { awardCoins, expireCoins, expiringSoon, expiryOf, COIN_TTL_DAYS } = require('../utils/coins');
 
 const router = express.Router();
 
@@ -40,11 +40,19 @@ router.get('/me', requireUserId, async (req, res) => {
     const birthdayReward = await checkAndAwardBirthday(user);
     if (birthdayReward) user.coins = birthdayReward.coins;
 
-    const transactions = await CoinTransaction.find({ user: user._id }).sort({ createdAt: -1 }).limit(50);
+    // Trừ xu quá hạn trước khi trả số dư.
+    const expiredAmount = await expireCoins(user._id);
+    if (expiredAmount > 0) user.coins = Math.max(0, user.coins - expiredAmount);
+
+    const transactions = (await CoinTransaction.find({ user: user._id }).sort({ createdAt: -1 }).limit(50).lean())
+      .map(tx => (tx.amount > 0 ? { ...tx, expiresAt: expiryOf(tx).toISOString() } : tx));
     res.json({
       success: true,
       coins: user.coins,
       transactions,
+      coinTtlDays: COIN_TTL_DAYS,
+      expiringSoon: await expiringSoon(user._id),
+      ...(expiredAmount > 0 ? { expiredAmount } : {}),
       ...(birthdayReward ? { birthdayReward: { amount: birthdayReward.amount } } : {}),
     });
   } catch (err) {

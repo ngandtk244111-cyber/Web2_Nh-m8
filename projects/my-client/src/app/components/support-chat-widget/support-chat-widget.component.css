@@ -1,0 +1,85 @@
+/* ===== Nút mở chat ===== */
+.scw_fab {
+  position: fixed; right: 20px; bottom: 20px; z-index: 40;
+  width: 56px; height: 56px; border-radius: 999px; border: 0; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  background: #A3152D; color: #fff;
+  box-shadow: 0 8px 24px rgba(163, 21, 45, 0.35);
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.scw_fab:hover { background: #891226; transform: scale(1.05); }
+.scw_fab:active { transform: scale(0.95); }
+
+/* ===== Khung chat ===== */
+.scw {
+  position: fixed; right: 20px; bottom: 20px; z-index: 40;
+  width: min(380px, calc(100vw - 32px)); height: min(520px, calc(100vh - 40px));
+  display: flex; flex-direction: column; overflow: hidden;
+  background: #FBF7EE; border-radius: 22px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
+  animation: scw-in 0.2s ease both;
+}
+@keyframes scw-in { from { opacity: 0; transform: translateY(14px) scale(0.98); } to { opacity: 1; transform: none; } }
+@media (max-width: 640px) {
+  .scw { right: 0; bottom: 0; width: 100%; height: 100%; border-radius: 0; }
+}
+
+.scw_head { display: flex; align-items: center; gap: 12px; padding: 12px 12px 12px 16px; background: #A3152D; color: #fff; }
+.scw_avatar {
+  position: relative; width: 40px; height: 40px; flex-shrink: 0; border-radius: 999px;
+  display: grid; place-items: center; background: #F7F2E7; color: #A3152D;
+}
+/* Chấm trạng thái ở góc avatar: xanh = có nhân viên trực, xám = ngoại tuyến. */
+.scw_presence {
+  position: absolute; right: -1px; bottom: -1px; width: 12px; height: 12px; border-radius: 999px;
+  background: #B8AA9C; border: 2px solid #A3152D; transition: background 0.2s ease;
+}
+.scw_presence--on { background: #34D399; }
+.scw_who { flex: 1; min-width: 0; }
+.scw_name { margin: 0; font-size: 14.5px; font-weight: 700; line-height: 1.2; }
+.scw_status { margin: 2px 0 0; display: flex; align-items: center; gap: 6px; font-size: 12px; opacity: 0.9; }
+.scw_dot { width: 7px; height: 7px; border-radius: 999px; background: #D9CBB8; flex-shrink: 0; }
+.scw_dot--on { background: #34D399; box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.6); animation: scw-pulse 2s ease-out infinite; }
+@keyframes scw-pulse { 0% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.6); } 70%, 100% { box-shadow: 0 0 0 6px rgba(52, 211, 153, 0); } }
+.scw_close {
+  width: 34px; height: 34px; border: 0; border-radius: 999px; cursor: pointer;
+  display: grid; place-items: center; background: transparent; color: #fff; transition: background 0.15s ease;
+}
+.scw_close:hover { background: rgba(255, 255, 255, 0.18); }
+
+.scw_body { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+.scw_empty { margin: 24px 8px 0; text-align: center; font-size: 12.5px; color: #93877E; }
+
+.scw_msg {
+  align-self: flex-start; max-width: 80%; padding: 9px 13px;
+  font-size: 13.5px; line-height: 1.45; white-space: pre-line; overflow-wrap: anywhere;
+  background: #fff; color: #3C332D; border-radius: 16px 16px 16px 4px;
+  box-shadow: 0 1px 2px rgba(60, 51, 45, 0.08);
+}
+.scw_msg--me { align-self: flex-end; background: #A3152D; color: #fff; border-radius: 16px 16px 4px 16px; }
+
+/* Ba chấm "đang soạn tin" */
+.scw_typing { display: inline-flex; gap: 4px; padding: 12px 15px; }
+.scw_typing span { width: 7px; height: 7px; border-radius: 999px; background: #B7485B; animation: scw-bounce 1.1s infinite ease-in-out; }
+.scw_typing span:nth-child(2) { animation-delay: 0.15s; }
+.scw_typing span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes scw-bounce { 0%, 80%, 100% { transform: translateY(0); opacity: 0.5; } 40% { transform: translateY(-5px); opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .scw_dot--on, .scw_typing span { animation: none; }
+}
+
+.scw_input { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: #fff; border-top: 1px solid #E3D5BA; }
+.scw_input input {
+  flex: 1; min-width: 0; padding: 10px 14px; border-radius: 999px; outline: none;
+  font: inherit; font-size: 13.5px; background: #F7F2E7; border: 1px solid transparent; color: #3C332D;
+  transition: border-color 0.15s ease;
+}
+.scw_input input:focus { border-color: #A3152D; }
+.scw_input input::placeholder { color: #93877E; }
+.scw_send {
+  width: 40px; height: 40px; flex-shrink: 0; border: 0; border-radius: 999px; cursor: pointer;
+  display: grid; place-items: center; background: #A3152D; color: #fff; transition: background 0.15s ease, opacity 0.15s ease;
+}
+.scw_send:hover:not(:disabled) { background: #891226; }
+.scw_send:disabled { opacity: 0.45; cursor: default; }

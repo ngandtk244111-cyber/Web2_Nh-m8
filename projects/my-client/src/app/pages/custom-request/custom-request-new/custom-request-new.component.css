@@ -1,0 +1,187 @@
+/* ---------- Khung quy tắc in 3D ---------- */
+.crn-rules {
+  padding: 22px 24px;
+  border-radius: 24px;
+  background: #F7F2E7;
+  border: 1px solid rgba(120, 90, 60, 0.15);
+}
+
+.crn-rules__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 14px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #4E0A16;
+}
+
+.crn-rules__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px 28px;
+}
+
+@media (min-width: 768px) {
+  .crn-rules__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.crn-rules__sub {
+  margin: 4px 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #6B5A4E;
+}
+
+.crn-rules__list {
+  margin: 0 0 12px;
+  padding-left: 18px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: #3C332D;
+  list-style: disc;
+}
+
+.crn-rules__list--no {
+  list-style: none;
+  padding-left: 0;
+}
+
+.crn-rules__list--no li::before {
+  content: '✕';
+  margin-right: 8px;
+  font-weight: 700;
+  color: #A3152D;
+}
+
+.crn-rules__list--steps {
+  list-style: decimal;
+}
+
+/* ---------- Lỗi kiểm tra ---------- */
+.crn-error {
+  margin: 6px 0 0;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #A3152D;
+}
+
+.crn-summary {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #F9F1F2;
+  border: 1px solid #E2B4BC;
+  font-size: 12.5px;
+}
+
+.crn-invalid {
+  border-color: #A3152D !important;
+  background: #FDF6F7 !important;
+}
+
+/* ---------- Kích thước 3 chiều ---------- */
+.crn-dims {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.crn-dims input {
+  flex: 1;
+  min-width: 0;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  background: #F6F5F2;
+  color: #1F1712;
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.crn-dims input:focus {
+  border-color: #A3152D;
+}
+
+.crn-dims span {
+  font-size: 13px;
+  color: #93877E;
+}
+
+.crn-dims__unit {
+  font-weight: 600;
+}
+
+.crn-dims--invalid input {
+  border-color: #A3152D;
+  background: #FDF6F7;
+}
+
+/* ---------- Ngân sách ---------- */
+.crn-budget {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.crn-budget__opt {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  background: #F6F5F2;
+  font-size: 12px;
+  color: #3C332D;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.crn-budget__opt input {
+  accent-color: #A3152D;
+}
+
+.crn-budget__opt--on {
+  border-color: #A3152D;
+  background: #F9F1F2;
+  color: #4E0A16;
+  font-weight: 600;
+}
+
+.crn-budget--invalid .crn-budget__opt {
+  border-color: #E2B4BC;
+}
+
+/* ---------- Đồng ý quy tắc ---------- */
+.crn-agree {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: #FBF7EE;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: #3C332D;
+  cursor: pointer;
+}
+
+.crn-agree input {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  accent-color: #A3152D;
+}
+
+.crn-agree--invalid {
+  border-color: #A3152D;
+  background: #FDF6F7;
+}

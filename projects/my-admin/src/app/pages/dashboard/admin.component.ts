@@ -218,6 +218,7 @@ export class AdminComponent implements OnInit, OnDestroy {
     image1: '',
     image2: '',
     threeModelType: '',
+    modelUrl: '',
   };
 
   // 3. Categories State
@@ -554,9 +555,10 @@ export class AdminComponent implements OnInit, OnDestroy {
     effect(() => {
       this.reviews = this.reviewService.reviews();
     });
-    // Có tin mới trong hội thoại đang mở thì cuộn xuống cuối (chờ Angular vẽ tin mới xong).
+    // Có tin mới / khách bắt đầu gõ trong hội thoại đang mở thì cuộn xuống cuối (chờ Angular vẽ xong).
     effect(() => {
       this.chatService.activeMessages();
+      this.chatService.activeTyping();
       setTimeout(() => {
         const el = this.chatScroll?.nativeElement;
         if (el) el.scrollTop = el.scrollHeight;
@@ -967,6 +969,7 @@ export class AdminComponent implements OnInit, OnDestroy {
       image1: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=800&q=80',
       image2: 'https://images.unsplash.com/photo-1532274402911-5a369e4c4bb5?auto=format&fit=crop&w=800&q=80',
       threeModelType: 'moon_lamp',
+      modelUrl: '',
     };
     this.showProductModal = true;
   }
@@ -992,6 +995,7 @@ export class AdminComponent implements OnInit, OnDestroy {
       image1: product.images?.[0] || '',
       image2: product.images?.[1] || '',
       threeModelType: product.threeModelType || '',
+      modelUrl: product.modelUrl || '',
     };
     this.showProductModal = true;
   }
@@ -1020,6 +1024,7 @@ export class AdminComponent implements OnInit, OnDestroy {
       badge: this.productForm.badge,
       images: [this.productForm.image1, this.productForm.image2].filter(Boolean),
       threeModelType: this.productForm.threeModelType || undefined,
+      modelUrl: this.productForm.modelUrl.trim() || null,
       rating: this.editingProduct ? this.editingProduct.rating : 5.0,
       reviewCount: this.editingProduct ? this.editingProduct.reviewCount : 0,
     };

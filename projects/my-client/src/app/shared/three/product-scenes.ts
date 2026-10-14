@@ -4,6 +4,8 @@ import { TextCanvasTexturePool } from './resource-manager';
 
 export interface ProductSceneContext {
   modelType: string;
+  /** File GLB/GLTF riêng của sản phẩm (Product.modelUrl) — ưu tiên hơn assets/models/<modelType>.glb. */
+  modelUrl?: string | null;
   colorHex: string;
   roughness: number;
   metalness: number;
@@ -20,6 +22,15 @@ export interface ProductSceneContext {
  */
 const REAL_MODEL_BASE_PATH = 'assets/models';
 
+/**
+ * File GLB riêng (modelUrl) được dựng theo kích thước thật (mét) nên to/nhỏ tuỳ sản phẩm — chuẩn hoá về
+ * cùng khung với mô hình dựng sẵn: cạnh dài nhất ~1.5 đơn vị, tâm ở gốc, đáy chạm mặt sàn bóng đổ.
+ */
+const NORMALIZED_MAX_SIZE = 1.5;
+export const PRODUCT_FLOOR_Y = -0.55;
+
+type VariantsExtension = { variants: { name: string }[] };
+
 export class ProductSceneManager {
   readonly rootGroup = new THREE.Group();
   private customizableMesh: THREE.Mesh | null = null;
@@ -33,11 +44,19 @@ export class ProductSceneManager {
   private readonly gltfLoader = new GLTFLoader();
   private loadToken = 0;
 
+  // KHR_materials_variants của file GLB đang hiển thị (nếu có).
+  private gltf: GLTF | null = null;
+  private variantsExt: VariantsExtension | null = null;
+
   constructor() {
     this.rootGroup.add(this.accessoriesGroup);
   }
 
-  buildModel(ctx: ProductSceneContext, textPool: TextCanvasTexturePool, onReady?: () => void): void {
+  /**
+   * @param onError gọi khi file modelUrl không tải được và sản phẩm không có mô hình dựng sẵn để thay
+   *                thế. (Không có modelUrl thì vẫn như cũ: thiếu file <modelType>.glb -> dựng bằng code.)
+   */
+  buildModel(ctx: ProductSceneContext, textPool: TextCanvasTexturePool, onReady?: () => void, onError?: (err: unknown) => void): void {
     // Clear root and accessories
     while (this.rootGroup.children.length > 0) {
       this.rootGroup.remove(this.rootGroup.children[0]);
@@ -52,6 +71,8 @@ export class ProductSceneManager {
     this.textAnchor = null;
     this.realAccessoryNodes = [];
     this.currentModelType = ctx.modelType;
+    this.gltf = null;
+    this.variantsExt = null;
 
     // Create shared customizable material
     this.customizableMaterial = new THREE.MeshStandardMaterial({
@@ -61,23 +82,57 @@ export class ProductSceneManager {
     });
 
     const token = ++this.loadToken;
-    const modelUrl = `${REAL_MODEL_BASE_PATH}/${ctx.modelType}.glb`;
+    const ownModel = !!ctx.modelUrl;
+    const modelUrl = ctx.modelUrl || `${REAL_MODEL_BASE_PATH}/${ctx.modelType}.glb`;
 
     this.gltfLoader.load(
       modelUrl,
       (gltf) => {
         if (token !== this.loadToken) return; // a newer buildModel() call superseded this one
-        this.applyRealModel(gltf);
+        this.applyRealModel(gltf, ownModel);
         this.finishBuild(ctx, textPool, onReady);
       },
       undefined,
-      () => {
-        // Không tìm thấy / lỗi tải file .glb thật -> dùng hình khối dựng bằng code
+      (err) => {
         if (token !== this.loadToken) return;
+        if (ownModel && !ctx.modelType) {
+          console.error(`Không tải được mô hình 3D ${modelUrl}`, err);
+          onError?.(err);
+          return;
+        }
+        // Không tìm thấy / lỗi tải file .glb thật -> dùng hình khối dựng bằng code
         this.buildProceduralModel(ctx.modelType, this.customizableMaterial!);
         this.finishBuild(ctx, textPool, onReady);
       }
     );
+  }
+
+  /** Tên các phiên bản màu/chất liệu khai báo trong file GLB (KHR_materials_variants), rỗng nếu không có. */
+  getVariantNames(): string[] {
+    return this.variantsExt?.variants.map(v => v.name) ?? [];
+  }
+
+  /** Đổi phiên bản vật liệu theo KHR_materials_variants; null = vật liệu mặc định của file. */
+  async selectVariant(name: string | null): Promise<void> {
+    const gltf = this.gltf;
+    const ext = this.variantsExt;
+    if (!gltf || !ext) return;
+    const variantIndex = name === null ? -1 : ext.variants.findIndex(v => v.name === name);
+    const meshes: THREE.Mesh[] = [];
+    gltf.scene.traverse(obj => {
+      if ((obj as THREE.Mesh).isMesh && obj.userData['gltfExtensions']?.['KHR_materials_variants']) meshes.push(obj as THREE.Mesh);
+    });
+    await Promise.all(meshes.map(async mesh => {
+      if (!mesh.userData['originalMaterial']) mesh.userData['originalMaterial'] = mesh.material;
+      const mappings: { material: number; variants: number[] }[] = mesh.userData['gltfExtensions']['KHR_materials_variants'].mappings;
+      const mapping = mappings.find(m => m.variants.includes(variantIndex));
+      if (mapping) {
+        mesh.material = await gltf.parser.getDependency('material', mapping.material);
+        gltf.parser.assignFinalMaterial(mesh);
+      } else {
+        mesh.material = mesh.userData['originalMaterial'];
+      }
+    }));
   }
 
   private finishBuild(ctx: ProductSceneContext, textPool: TextCanvasTexturePool, onReady?: () => void): void {
@@ -93,8 +148,25 @@ export class ProductSceneManager {
    * - "Accessories": node/group phụ kiện, sẽ ẩn/hiện theo tuỳ chọn "Hiện phụ kiện".
    * - "TextAnchor": vị trí đặt tấm khắc tên tuỳ chỉnh (nếu sản phẩm hỗ trợ khắc tên).
    */
-  private applyRealModel(gltf: GLTF): void {
+  private applyRealModel(gltf: GLTF, normalize = false): void {
     const modelRoot = gltf.scene;
+    this.gltf = gltf;
+    this.variantsExt = (gltf.userData?.['gltfExtensions']?.['KHR_materials_variants'] as VariantsExtension) ?? null;
+
+    if (normalize) {
+      // Bỏ đèn nhúng trong file (KHR_lights_punctual) — viewer đã có hệ đèn riêng.
+      const embeddedLights: THREE.Object3D[] = [];
+      modelRoot.traverse(obj => { if ((obj as THREE.Light).isLight) embeddedLights.push(obj); });
+      embeddedLights.forEach(l => l.parent?.remove(l));
+
+      const box = new THREE.Box3().setFromObject(modelRoot);
+      const size = box.getSize(new THREE.Vector3());
+      const center = box.getCenter(new THREE.Vector3());
+      const scale = NORMALIZED_MAX_SIZE / Math.max(size.x, size.y, size.z, 1e-6);
+      modelRoot.scale.multiplyScalar(scale);
+      modelRoot.position.set(-center.x * scale, PRODUCT_FLOOR_Y - box.min.y * scale, -center.z * scale);
+    }
+
     this.rootGroup.add(modelRoot);
 
     modelRoot.traverse((obj) => {

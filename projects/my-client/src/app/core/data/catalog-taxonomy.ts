@@ -229,8 +229,9 @@ export function materialGroupsOf(p: Product): string[] {
   return MATERIAL_GROUPS.filter(g => g.keywords.some(k => containsWord(text, k))).map(g => g.key);
 }
 
+/** Có mô hình 3D để xem: file GLB/GLTF riêng (modelUrl) hoặc mô hình dựng sẵn theo loại (threeModelType). */
 export function has3DModel(p: Product): boolean {
-  return !!p.threeModelType;
+  return !!(p.modelUrl || p.threeModelType);
 }
 
 /** Văn bản dùng cho tìm kiếm: tên + mô tả + danh mục (cũ & mới) + không gian + phong cách + chất liệu. */
@@ -262,6 +263,15 @@ export function selectionForLegacyCategory(category: string): { dept?: Departmen
   if (subs.length) return { subs };
   const dept = CATALOG_DEPARTMENTS.find(d => d.subcategories.some(s => s.legacy?.categories.includes(category as ProductCategory)));
   return { dept: dept?.key, subs: [] };
+}
+
+/** Link + tên hiển thị cho một ProductCategory cũ (vd. 'lamp', 'vase') theo cây danh mục mới. */
+export function legacyCategoryLink(category: string): CatalogLink {
+  const sub = ALL_SUBCATEGORIES.find(x => x.sub.categories.includes(category as ProductCategory))?.sub;
+  if (sub) return { ...subcategoryLink(sub), image: sub.image };
+  const dept = CATALOG_DEPARTMENTS.find(d => d.subcategories.some(s => s.legacy?.categories.includes(category as ProductCategory)));
+  if (dept) return { ...departmentLink(dept), image: dept.image };
+  return { label: 'Tất cả sản phẩm', link: '/catalog', queryParams: { category } };
 }
 
 export function departmentLink(dept: CatalogDepartment): CatalogLink {

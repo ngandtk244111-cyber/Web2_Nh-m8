@@ -294,12 +294,12 @@ export class FlashSaleComponent implements OnInit, OnDestroy {
       this.toastService.info(`Bạn đã có tối đa số lượng còn lại của "${d.product.name}" trong giỏ`);
       return;
     }
-    this.cartService.addToCart(d.product, 1);
-    this.mascotService.react('happy');
+    if (this.cartService.addToCart(d.product, 1)) this.mascotService.react('happy');
   }
 
   buyNow(d: DealVM): void {
     if (!this.canBuy(d)) return;
+    if (!this.cartService.ensureLoggedIn()) return;
     if (this.qtyInCart(d.product.id) < d.product.inStock) {
       this.cartService.addToCart(d.product, 1);
     }

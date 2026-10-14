@@ -99,6 +99,11 @@ export class ProductService {
   // Public readonly signals
   readonly products = this.productsSignal.asReadonly();
 
+  /** true sau lần tải danh sách đầu tiên (thành công hoặc lỗi) — trang mở trực tiếp bằng URL dùng để
+   *  phân biệt "đang tải" với "không tìm thấy sản phẩm". */
+  private loadedSignal = signal(false);
+  readonly loaded = this.loadedSignal.asReadonly();
+
   readonly customizableProducts = computed(() =>
     this.productsSignal().filter(p => p.customizable)
   );
@@ -128,10 +133,12 @@ export class ProductService {
     this.http.get<{ success: boolean; products: Product[] }>(BASE).subscribe({
       next: (res) => {
         if (res.success) this.productsSignal.set(res.products);
+        this.loadedSignal.set(true);
         this.mascotService.endLoading();
       },
       error: (err) => {
         console.warn('Failed to load products from backend', err);
+        this.loadedSignal.set(true);
         // Không tải được danh sách sản phẩm = lỗi hệ thống thật -> angry (dùng tiết chế).
         this.mascotService.endLoading('angry');
       },

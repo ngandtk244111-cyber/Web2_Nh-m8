@@ -1,6 +1,7 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 import { AuthApiService, AuthApiResponse } from './auth-api.service';
+import { ConfirmDialogService } from './confirm-dialog.service';
 import { Address } from '../models/address.model';
 import { environment } from '../../../environments/environment';
 
@@ -33,6 +34,7 @@ export interface LoggedUser {
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private authApi = inject(AuthApiService);
+  private confirmDialog = inject(ConfirmDialogService);
 
   readonly currentUser = signal<LoggedUser | null>(null);
 
@@ -87,6 +89,20 @@ export class AuthService {
   logout(): void {
     this.currentUser.set(null);
     this.persistUser(null);
+  }
+
+  /** Hỏi lại trước khi đăng xuất — trả về true nếu người dùng đã xác nhận và đã đăng xuất. */
+  async confirmLogout(): Promise<boolean> {
+    const ok = await this.confirmDialog.confirm({
+      title: 'Bạn có chắc chắn muốn đăng xuất không?',
+      message: 'Bạn sẽ cần đăng nhập lại để mua hàng, xem đơn hàng và dùng xu thưởng.',
+      confirmLabel: 'Đăng xuất',
+      cancelLabel: 'Ở lại',
+      danger: true,
+      icon: 'log-out',
+    });
+    if (ok) this.logout();
+    return ok;
   }
 
   /** Avatar backend trả về đường dẫn tương đối (vd: /uploads/avatars/x.png) — ghép với host

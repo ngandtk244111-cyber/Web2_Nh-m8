@@ -49,7 +49,10 @@ export class ProductQuickViewComponent {
     const product = this.quickViewService.activeProduct();
     if (!product) return;
     if (product.inStock <= 0) return;
-    this.cartService.addToCart(product, Math.min(this.quantity, product.inStock));
+    if (!this.cartService.addToCart(product, Math.min(this.quantity, product.inStock))) {
+      this.quickViewService.close();
+      return;
+    }
     this.quickViewService.close();
   }
 }

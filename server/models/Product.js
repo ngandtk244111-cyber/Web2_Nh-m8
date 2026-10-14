@@ -28,6 +28,9 @@ const productSchema = new mongoose.Schema({
   reviews: { type: [mongoose.Schema.Types.Mixed], default: [] },
   customization: { type: mongoose.Schema.Types.Mixed, default: null },
   threeModelType: { type: String, default: null },
+  // File mô hình 3D thật (GLB/GLTF) của riêng sản phẩm — đường dẫn tương đối tới assets của my-client
+  // hoặc URL tuyệt đối. Có modelUrl thì ưu tiên hơn threeModelType (mô hình dựng sẵn theo loại).
+  modelUrl: { type: String, default: null },
   productionTime: { type: String, default: null },
   printTechnology: { type: String, default: null },
   // Gán sản phẩm vào 1 trong 3 khung Flash Sale đang xoay vòng theo ngày thực

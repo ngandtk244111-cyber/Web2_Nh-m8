@@ -101,6 +101,7 @@ export class ShopTheRoomComponent implements OnInit {
   }
 
   addSelectedToCart(): void {
+    if (!this.cartService.ensureLoggedIn()) return;
     for (const p of this.roomProducts) {
       if (this.selectedProductIds.has(p.id)) {
         this.cartService.addToCart(p, 1);

@@ -28,6 +28,7 @@ import { PromoCardsComponent } from '../../components/promo-cards/promo-cards.co
 import { PromoBannerGridComponent } from '../../components/promo-banner-grid/promo-banner-grid.component';
 import { DecorDealsComponent } from '../../components/decor-deals/decor-deals.component';
 import { TipPopupComponent } from '../../components/tip-popup/tip-popup.component';
+import { PosterPopupComponent } from '../../components/poster-popup/poster-popup.component';
 import { FavoriteStylesComponent } from '../../components/favorite-styles/favorite-styles.component';
 import { VideoTopicsComponent } from '../../components/video-topics/video-topics.component';
 import { AppIconComponent } from '../../components/icon/icon.component';
@@ -48,6 +49,7 @@ import { ScrollRevealDirective } from '../../shared/directives/scroll-reveal.dir
     PromoBannerGridComponent,
     DecorDealsComponent,
     TipPopupComponent,
+    PosterPopupComponent,
     FavoriteStylesComponent,
     VideoTopicsComponent,
     AppIconComponent,
@@ -182,6 +184,7 @@ export class HomeComponent implements OnInit {
 
   addRoomLookToCart(): void {
     if (this.roomProducts.length === 0) return;
+    if (!this.cartService.ensureLoggedIn()) return;
     this.roomProducts.forEach(x => this.cartService.addToCart(x.product, 1));
     this.mascotService.react('happy');
   }

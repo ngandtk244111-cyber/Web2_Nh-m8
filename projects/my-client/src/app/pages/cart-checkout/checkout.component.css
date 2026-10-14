@@ -26,3 +26,37 @@
   font-size: 30px; font-weight: 700; line-height: 1; letter-spacing: 0;
 }
 :host .text-neutral-600.text-xs, :host .text-xs.text-neutral-600 { font-size: 13px; }
+
+/* ===== Trạng thái chưa có sản phẩm để thanh toán =====
+   Class riêng để không dính rule chung ở trên (a[routerLink="/catalog"].text-xs tô chữ nâu làm chìm chữ trên nút đỏ). */
+:host .ck-empty__title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #3B2418;
+}
+
+:host .ck-empty__desc {
+  font-size: 14px;
+  color: #6B5A4E;
+}
+
+:host .ck-empty__btn {
+  display: inline-block;
+  padding: 11px 26px;
+  border-radius: 999px;
+  background: linear-gradient(to right, #B7485B, #891226);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  box-shadow: 0 6px 16px rgba(137, 18, 38, 0.25);
+  transition: filter 0.2s ease, transform 0.2s ease;
+}
+
+:host .ck-empty__btn:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}

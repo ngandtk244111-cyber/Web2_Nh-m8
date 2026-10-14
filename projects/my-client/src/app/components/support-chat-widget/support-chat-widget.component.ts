@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { AfterViewChecked, Component, ElementRef, ViewChild, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SupportChatService } from '../../core/services/support-chat.service';
@@ -11,10 +11,28 @@ import { AppIconComponent } from '../icon/icon.component';
   templateUrl: './support-chat-widget.component.html',
   styleUrl: './support-chat-widget.component.css'
 })
-export class SupportChatWidgetComponent {
+export class SupportChatWidgetComponent implements AfterViewChecked {
   draft = '';
 
-  constructor(public chatService: SupportChatService) {}
+  @ViewChild('body') private bodyEl?: ElementRef<HTMLDivElement>;
+  private scrollPending = false;
+
+  constructor(public chatService: SupportChatService) {
+    // Tin mới / ba chấm xuất hiện / vừa mở khung -> cuộn xuống cuối.
+    effect(() => {
+      this.chatService.messages();
+      this.chatService.staffTyping();
+      this.chatService.isOpen();
+      this.scrollPending = true;
+    });
+  }
+
+  ngAfterViewChecked(): void {
+    const el = this.bodyEl?.nativeElement;
+    if (!this.scrollPending || !el) return;
+    this.scrollPending = false;
+    el.scrollTop = el.scrollHeight;
+  }
 
   toggle(): void {
     if (this.chatService.isOpen()) {
@@ -22,6 +40,10 @@ export class SupportChatWidgetComponent {
     } else {
       this.chatService.open();
     }
+  }
+
+  onDraftChange(): void {
+    if (this.draft.trim()) this.chatService.notifyTyping();
   }
 
   send(): void {

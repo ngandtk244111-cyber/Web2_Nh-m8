@@ -61,14 +61,16 @@
   opacity: 0.85;
 }
 
-/* Viền ngoài có chấm đèn */
+/* Viền ngoài có chấm đèn.
+   Gradient phải dùng "closest-side" để 100% = đúng bán kính bánh xe; mặc định (farthest-corner) tính tới góc khung
+   vuông nên viền + đèn bị vẽ lọt vào giữa bánh xe, đè lên chữ. */
 .lw__rim {
   position: absolute;
   inset: 0;
   border-radius: 50%;
   pointer-events: none;
   background:
-    radial-gradient(circle, transparent 0 calc(50% - 14px), #3C0A12 calc(50% - 14px) calc(50% - 11px), #840B1E calc(50% - 11px) 50%, transparent 50%);
+    radial-gradient(circle closest-side, transparent 0 calc(100% - 14px), #3C0A12 calc(100% - 14px) calc(100% - 11px), #840B1E calc(100% - 11px) 100%, transparent 100%);
   box-shadow: 0 18px 40px rgba(60, 10, 18, 0.28);
 }
 
@@ -78,8 +80,8 @@
   inset: 5px;
   border-radius: 50%;
   background: repeating-conic-gradient(#FFE9A8 0deg 4deg, transparent 4deg 22.5deg);
-  -webkit-mask: radial-gradient(circle, transparent 0 calc(50% - 4px), #000 calc(50% - 4px) 50%, transparent 50%);
-  mask: radial-gradient(circle, transparent 0 calc(50% - 4px), #000 calc(50% - 4px) 50%, transparent 50%);
+  -webkit-mask: radial-gradient(circle closest-side, transparent 0 calc(100% - 4px), #000 calc(100% - 4px) 100%, transparent 100%);
+  mask: radial-gradient(circle closest-side, transparent 0 calc(100% - 4px), #000 calc(100% - 4px) 100%, transparent 100%);
 }
 
 .lw__pointer {

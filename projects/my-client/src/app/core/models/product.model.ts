@@ -147,6 +147,12 @@ export interface Product {
    * code (xem product-scenes.ts). Không cần field model3D riêng vì cơ chế này đã tồn tại sẵn.
    */
   threeModelType?: 'moon_lamp' | 'geometric_vase' | 'desk_organizer' | 'cube_stool' | 'wall_shelf' | 'abstract_sculpture';
+  /**
+   * File mô hình 3D thật (GLB/GLTF) của riêng sản phẩm — đường dẫn trong assets (vd
+   * "assets/models/products/glam-velvet-sofa.glb") hoặc URL tuyệt đối. Ưu tiên hơn threeModelType;
+   * nếu file có KHR_materials_variants thì các phiên bản màu/chất liệu được lấy thẳng từ file.
+   */
+  modelUrl?: string | null;
   /** Thời gian sản xuất dự kiến — chỉ có ý nghĩa với PRINT_ON_DEMAND. */
   productionTime?: string;
   /** Công nghệ in 3D thật của sản phẩm (vd: "FDM 0.16mm, PLA") — chỉ có ý nghĩa với PRINT_ON_DEMAND. */

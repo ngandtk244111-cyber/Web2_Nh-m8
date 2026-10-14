@@ -1,5 +1,5 @@
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-      
+
       <!-- Back Link & Header -->
       <div>
         <a routerLink="/custom-request" class="text-xs font-semibold text-neutral-600 hover:text-amber-400 flex items-center gap-1 mb-2 transition">
@@ -19,6 +19,7 @@
           <app-icon name="sparkles" [size]="18" class="text-amber-400 flex-shrink-0"></app-icon>
           <span>
             Thông tin bên dưới đã được tự động điền từ <strong class="text-amber-400">Design Brief</strong> của cuộc trò chuyện với AI Idea Assistant!
+            Vui lòng kiểm tra lại phần quy cách in 3D.
           </span>
         </div>
         <span class="text-[10px] font-bold uppercase bg-gradient-to-r from-amber-400 to-amber-600 text-white px-2 py-0.5 rounded shadow-sm">
@@ -26,9 +27,43 @@
         </span>
       </div>
 
+      <!-- Quy tắc in 3D: đọc trước khi điền -->
+      <section class="crn-rules" aria-labelledby="crn-rules-title">
+        <h2 id="crn-rules-title" class="crn-rules__title">
+          <app-icon name="cube" [size]="18"></app-icon>
+          Quy tắc nhận yêu cầu in 3D
+        </h2>
+
+        <div class="crn-rules__grid">
+          <div>
+            <h3 class="crn-rules__sub">Quy cách</h3>
+            <ul class="crn-rules__list">
+              <li>Mỗi chiều từ <strong>{{ limits.minCm }}–{{ limits.maxCm }} cm</strong> (Resin tối đa 20 cm). Lớn hơn sẽ in ghép nhiều phần — vui lòng ghi chú.</li>
+              <li>Khắc chữ tối đa <strong>{{ limits.engraveMaxChars }} ký tự</strong>, chỉ chữ & số, chữ cao tối thiểu 5 mm.</li>
+              <li>Mô tả ý tưởng tối thiểu {{ limits.ideaMinChars }} ký tự; nên kèm ảnh tham khảo để báo giá chính xác.</li>
+              <li *ngFor="let m of allMaterials"><strong>{{ m.label }}:</strong> {{ m.description }}</li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="crn-rules__sub">Luméa không nhận in</h3>
+            <ul class="crn-rules__list crn-rules__list--no">
+              <li *ngFor="let item of prohibited">{{ item }}</li>
+            </ul>
+            <h3 class="crn-rules__sub">Quy trình</h3>
+            <ol class="crn-rules__list crn-rules__list--steps">
+              <li *ngFor="let step of process">{{ step }}</li>
+            </ol>
+          </div>
+        </div>
+      </section>
+
       <!-- Main Form Card -->
-      <form (ngSubmit)="submitRequest()" class="bg-[#FFFFFF] rounded-3xl p-6 sm:p-10 border border-neutral-200 shadow-xl space-y-8">
-        
+      <form (ngSubmit)="submitRequest()" novalidate class="bg-[#FFFFFF] rounded-3xl p-6 sm:p-10 border border-neutral-200 shadow-xl space-y-8">
+
+        <div *ngIf="submitted && errorCount > 0" class="crn-summary crn-error" role="alert">
+          Còn {{ errorCount }} mục chưa đúng quy tắc in 3D — vui lòng kiểm tra các ô được đánh dấu đỏ.
+        </div>
+
         <!-- Section 1: Customer Info -->
         <div class="space-y-4">
           <h3 class="font-serif text-lg font-bold text-amber-800 border-b border-neutral-200 pb-2">
@@ -38,34 +73,41 @@
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Họ và tên *</label>
-              <input 
-                type="text" 
-                [(ngModel)]="customerName" 
-                name="cName" 
-                required 
-                placeholder="Nguyễn Văn A" 
+              <input
+                type="text"
+                [(ngModel)]="customerName"
+                (ngModelChange)="revalidate()"
+                name="cName"
+                placeholder="Nguyễn Văn A"
+                [class.crn-invalid]="errors.customerName"
                 class="w-full text-xs rounded-xl border border-neutral-300 p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500 transition">
+              <p *ngIf="errors.customerName" class="crn-error">{{ errors.customerName }}</p>
             </div>
 
             <div>
               <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Email nhận báo giá *</label>
-              <input 
-                type="email" 
-                [(ngModel)]="customerEmail" 
-                name="cEmail" 
-                required 
-                placeholder="email@example.com" 
+              <input
+                type="email"
+                [(ngModel)]="customerEmail"
+                (ngModelChange)="revalidate()"
+                name="cEmail"
+                placeholder="email@example.com"
+                [class.crn-invalid]="errors.customerEmail"
                 class="w-full text-xs rounded-xl border border-neutral-300 p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500 transition">
+              <p *ngIf="errors.customerEmail" class="crn-error">{{ errors.customerEmail }}</p>
             </div>
 
             <div>
-              <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Số điện thoại (Zalo)</label>
-              <input 
-                type="text" 
-                [(ngModel)]="customerPhone" 
-                name="cPhone" 
-                placeholder="0912 345 678" 
+              <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Số điện thoại (Zalo) *</label>
+              <input
+                type="tel"
+                [(ngModel)]="customerPhone"
+                (ngModelChange)="revalidate()"
+                name="cPhone"
+                placeholder="0912 345 678"
+                [class.crn-invalid]="errors.customerPhone"
                 class="w-full text-xs rounded-xl border border-neutral-300 p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500 transition">
+              <p *ngIf="errors.customerPhone" class="crn-error">{{ errors.customerPhone }}</p>
             </div>
           </div>
         </div>
@@ -73,111 +115,149 @@
         <!-- Section 2: Request Brief Details -->
         <div class="space-y-4">
           <h3 class="font-serif text-lg font-bold text-amber-800 border-b border-neutral-200 pb-2">
-            2. Chi Tiết Ý Tưởng & Quy Cách (Design Brief)
+            2. Chi Tiết Ý Tưởng & Quy Cách In 3D
           </h3>
 
           <div class="space-y-4">
             <div>
               <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Tiêu đề yêu cầu *</label>
-              <input 
-                type="text" 
-                [(ngModel)]="title" 
-                name="rTitle" 
-                required 
-                placeholder="Ví dụ: Đèn ngủ mini hình mèo con cuộn tròn" 
+              <input
+                type="text"
+                [(ngModel)]="title"
+                (ngModelChange)="revalidate()"
+                name="rTitle"
+                placeholder="Ví dụ: Đèn ngủ mini hình mèo con cuộn tròn"
+                [class.crn-invalid]="errors.title"
                 class="w-full text-xs rounded-xl border border-neutral-300 p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500 transition">
+              <p *ngIf="errors.title" class="crn-error">{{ errors.title }}</p>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Loại sản phẩm</label>
-                <input 
-                  type="text" 
-                  [(ngModel)]="brief.productType" 
-                  name="bProductType" 
-                  placeholder="Đèn ngủ, bình hoa, khay đựng, tượng..." 
+                <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Loại sản phẩm *</label>
+                <select
+                  [(ngModel)]="brief.productType"
+                  (ngModelChange)="onProductTypeChange()"
+                  name="bProductType"
+                  [class.crn-invalid]="errors.productType"
                   class="w-full text-xs rounded-xl border border-neutral-300 p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500 transition">
+                  <option value="" disabled>Chọn loại sản phẩm</option>
+                  <option *ngFor="let t of productTypes" [value]="t.label">{{ t.label }}</option>
+                </select>
+                <p *ngIf="errors.productType" class="crn-error">{{ errors.productType }}</p>
               </div>
 
               <div>
-                <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Chủ đề & Cảm hứng</label>
-                <input 
-                  type="text" 
-                  [(ngModel)]="brief.theme" 
-                  name="bTheme" 
-                  placeholder="Hình chú mèo, núi Phú Sĩ, hoa tulip..." 
+                <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Chất liệu in *</label>
+                <select
+                  [(ngModel)]="material"
+                  (ngModelChange)="revalidate()"
+                  name="bMaterial"
+                  [class.crn-invalid]="errors.material"
                   class="w-full text-xs rounded-xl border border-neutral-300 p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500 transition">
+                  <option value="" disabled>Chọn chất liệu</option>
+                  <option *ngFor="let m of materialOptions" [value]="m.key">{{ m.label }}</option>
+                </select>
+                <p *ngIf="errors.material" class="crn-error">{{ errors.material }}</p>
+              </div>
+
+              <!-- Kích thước: 3 ô số thay cho chữ tự do -->
+              <div class="sm:col-span-2">
+                <label class="block text-xs font-semibold text-neutral-700 mb-1.5">
+                  Kích thước (cm) * <span class="font-normal text-neutral-500">— mỗi chiều {{ limits.minCm }}–{{ maxCm }} cm</span>
+                </label>
+                <div class="crn-dims" [class.crn-dims--invalid]="errors.lengthCm">
+                  <input type="number" inputmode="decimal" [min]="limits.minCm" [max]="maxCm" step="0.5" [(ngModel)]="lengthCm" (ngModelChange)="revalidate()" name="dimL" placeholder="Dài" aria-label="Chiều dài (cm)">
+                  <span aria-hidden="true">×</span>
+                  <input type="number" inputmode="decimal" [min]="limits.minCm" [max]="maxCm" step="0.5" [(ngModel)]="widthCm" (ngModelChange)="revalidate()" name="dimW" placeholder="Rộng" aria-label="Chiều rộng (cm)">
+                  <span aria-hidden="true">×</span>
+                  <input type="number" inputmode="decimal" [min]="limits.minCm" [max]="maxCm" step="0.5" [(ngModel)]="heightCm" (ngModelChange)="revalidate()" name="dimH" placeholder="Cao" aria-label="Chiều cao (cm)">
+                  <span class="crn-dims__unit">cm</span>
+                </div>
+                <p *ngIf="errors.lengthCm" class="crn-error">{{ errors.lengthCm }}</p>
+              </div>
+
+              <div class="sm:col-span-2">
+                <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Chủ đề & Cảm hứng *</label>
+                <input
+                  type="text"
+                  [(ngModel)]="brief.theme"
+                  (ngModelChange)="revalidate()"
+                  name="bTheme"
+                  placeholder="Hình chú mèo cuộn tròn ngủ trên mặt trăng, đuôi quấn quanh đế..."
+                  [class.crn-invalid]="errors.theme"
+                  class="w-full text-xs rounded-xl border border-neutral-300 p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500 transition">
+                <p *ngIf="errors.theme" class="crn-error">{{ errors.theme }}</p>
               </div>
 
               <div>
                 <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Phong cách thiết kế</label>
-                <input 
-                  type="text" 
-                  [(ngModel)]="brief.style" 
-                  name="bStyle" 
-                  placeholder="Minimalist, Cute, Geometric, Cyberpunk..." 
+                <input
+                  type="text"
+                  [(ngModel)]="brief.style"
+                  name="bStyle"
+                  placeholder="Minimalist, Cute, Geometric, Cyberpunk..."
                   class="w-full text-xs rounded-xl border border-neutral-300 p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500 transition">
               </div>
 
               <div>
                 <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Màu sắc mong muốn</label>
-                <input 
-                  type="text" 
-                  [(ngModel)]="brief.color" 
-                  name="bColor" 
-                  placeholder="Trắng ngà, xanh rêu sage, pastel..." 
-                  class="w-full text-xs rounded-xl border border-neutral-300 p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500 transition">
-              </div>
-
-              <div>
-                <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Kích thước dự kiến</label>
-                <input 
-                  type="text" 
-                  [(ngModel)]="brief.size" 
-                  name="bSize" 
-                  placeholder="Khoảng 18cm x 15cm" 
+                <input
+                  type="text"
+                  [(ngModel)]="brief.color"
+                  name="bColor"
+                  placeholder="Trắng ngà, xanh rêu sage, pastel..."
                   class="w-full text-xs rounded-xl border border-neutral-300 p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500 transition">
               </div>
 
               <div>
                 <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Mục đích sử dụng</label>
-                <input 
-                  type="text" 
-                  [(ngModel)]="brief.usage" 
-                  name="bUsage" 
-                  placeholder="Đèn ngủ đầu giường, đựng bút bàn làm việc..." 
+                <input
+                  type="text"
+                  [(ngModel)]="brief.usage"
+                  name="bUsage"
+                  placeholder="Đèn ngủ đầu giường, đựng bút bàn làm việc..."
                   class="w-full text-xs rounded-xl border border-neutral-300 p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500 transition">
               </div>
 
               <div>
-                <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Khắc chữ / Tên / Ngày tháng</label>
-                <input 
-                  type="text" 
-                  [(ngModel)]="brief.customText" 
-                  name="bCustomText" 
-                  placeholder="Ví dụ: Luna, 2026..." 
+                <label class="block text-xs font-semibold text-neutral-700 mb-1.5">
+                  Khắc chữ / Tên / Ngày tháng
+                  <span class="font-normal text-neutral-500">({{ (brief.customText || '').length }}/{{ limits.engraveMaxChars }})</span>
+                </label>
+                <input
+                  type="text"
+                  [(ngModel)]="brief.customText"
+                  (ngModelChange)="revalidate()"
+                  name="bCustomText"
+                  [attr.maxlength]="limits.engraveMaxChars"
+                  placeholder="Ví dụ: Luna 2026"
+                  [class.crn-invalid]="errors.customText"
                   class="w-full text-xs rounded-xl border border-neutral-300 p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500 transition">
+                <p *ngIf="errors.customText" class="crn-error">{{ errors.customText }}</p>
               </div>
 
-              <div>
-                <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Ngân sách dự kiến</label>
-                <input 
-                  type="text" 
-                  [(ngModel)]="brief.estimatedBudget" 
-                  name="bBudget" 
-                  placeholder="Ví dụ: 300.000đ - 500.000đ" 
-                  class="w-full text-xs rounded-xl border border-neutral-300 p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500 transition">
+              <div class="sm:col-span-2">
+                <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Ngân sách dự kiến *</label>
+                <div class="crn-budget" role="radiogroup" [class.crn-budget--invalid]="errors.estimatedBudget">
+                  <label *ngFor="let b of budgetOptions" class="crn-budget__opt" [class.crn-budget__opt--on]="brief.estimatedBudget === b">
+                    <input type="radio" name="bBudget" [value]="b" [(ngModel)]="brief.estimatedBudget" (ngModelChange)="revalidate()">
+                    {{ b }}
+                  </label>
+                </div>
+                <p *ngIf="errors.estimatedBudget" class="crn-error">{{ errors.estimatedBudget }}</p>
               </div>
             </div>
 
             <!-- Notes -->
             <div>
               <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Ghi chú thêm cho shop</label>
-              <textarea 
-                [(ngModel)]="brief.notes" 
-                name="bNotes" 
-                rows="3" 
-                placeholder="Bất kỳ yêu cầu nào khác về độ hoàn thiện, màu ánh sáng đèn, hoặc cách đóng gói quà tặng..." 
+              <textarea
+                [(ngModel)]="brief.notes"
+                (ngModelChange)="revalidate()"
+                name="bNotes"
+                rows="3"
+                placeholder="Độ hoàn thiện (nhám/bóng), màu ánh sáng đèn, chia phần in ghép, cách đóng gói quà tặng..."
                 class="w-full text-xs rounded-xl border border-neutral-300 p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500 transition"></textarea>
             </div>
           </div>
@@ -197,27 +277,44 @@
 
           <div>
             <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Link ảnh tham khảo (Pinterest, Unsplash hoặc Google Drive)</label>
-            <input 
-              type="text" 
-              [(ngModel)]="referenceImageUrl" 
-              name="refImg" 
-              placeholder="https://images.unsplash.com/..." 
+            <input
+              type="url"
+              [(ngModel)]="referenceImageUrl"
+              (ngModelChange)="revalidate()"
+              name="refImg"
+              placeholder="https://images.unsplash.com/..."
+              [class.crn-invalid]="errors.referenceImageUrl"
               class="w-full text-xs rounded-xl border border-neutral-300 p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500 transition">
+            <p *ngIf="errors.referenceImageUrl" class="crn-error">{{ errors.referenceImageUrl }}</p>
           </div>
         </div>
 
+        <!-- Đồng ý quy tắc -->
+        <div>
+          <label class="crn-agree" [class.crn-agree--invalid]="errors.agreeRules">
+            <input type="checkbox" [(ngModel)]="agreeRules" (ngModelChange)="revalidate()" name="agreeRules">
+            <span>
+              Tôi đã đọc và đồng ý với <strong>Quy tắc nhận yêu cầu in 3D</strong> ở trên: yêu cầu không thuộc danh mục không nhận in,
+              sản phẩm độc bản không áp dụng đổi trả (trừ lỗi in/hư hỏng khi giao).
+            </span>
+          </label>
+          <p *ngIf="errors.agreeRules" class="crn-error">{{ errors.agreeRules }}</p>
+        </div>
+
+        <p *ngIf="serverError" class="crn-summary crn-error" role="alert">{{ serverError }}</p>
+
         <!-- Submit Button -->
-        <div class="pt-4 border-t border-neutral-200 flex items-center justify-between">
+        <div class="pt-4 border-t border-neutral-200 flex items-center justify-between gap-4">
           <p class="text-[11px] text-neutral-600">
             Shop sẽ phản hồi và gửi báo giá trong vòng 24h làm việc.
           </p>
 
-          <button 
-            type="submit" 
-            [disabled]="!title || !customerName || !customerEmail"
+          <button
+            type="submit"
+            [disabled]="sending"
             class="px-8 py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 disabled:opacity-50 text-white font-extrabold text-sm shadow-[0_4px_25px_rgba(205, 129, 142,0.35)] transition flex items-center gap-2">
             <app-icon name="send" [size]="16"></app-icon>
-            <span>Gửi Yêu Cầu Thiết Kế</span>
+            <span>{{ sending ? 'Đang gửi...' : 'Gửi Yêu Cầu Thiết Kế' }}</span>
           </button>
         </div>
 

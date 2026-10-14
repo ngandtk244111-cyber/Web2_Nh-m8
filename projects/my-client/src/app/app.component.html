@@ -1,14 +1,18 @@
 <div class="min-h-screen flex flex-col bg-neutral-50 text-neutral-900 selection:bg-amber-500/30 selection:text-amber-900">
-  <!-- Sticky Global Header -->
-  <app-header></app-header>
+  @if (!bare()) {
+    <!-- Sticky Global Header -->
+    <app-header></app-header>
+  }
 
   <!-- Page Route Content -->
   <main class="flex-1 route-fade" [class.route-fade--leaving]="routeLeaving()">
     <router-outlet></router-outlet>
   </main>
 
-  <!-- Global Footer -->
-  <app-footer></app-footer>
+  @if (!bare()) {
+    <!-- Global Footer -->
+    <app-footer></app-footer>
+  }
 
   <!-- Slide-over Cart Drawer -->
   <app-cart-drawer></app-cart-drawer>
@@ -19,8 +23,10 @@
   <!-- Login Modal (OTP) -->
   <app-login-modal></app-login-modal>
 
-  <!-- Support Chat Widget (realtime) -->
-  <app-support-chat-widget></app-support-chat-widget>
+  @if (!bare()) {
+    <!-- Support Chat Widget (realtime) -->
+    <app-support-chat-widget></app-support-chat-widget>
+  }
 
   <!-- Product Quick View Modal -->
   <app-product-quick-view></app-product-quick-view>
@@ -28,15 +34,20 @@
   <!-- Global Toast Notifications -->
   <app-toast></app-toast>
 
-  <!-- Floating Side Banners (desktop only) -->
-  <app-floating-side-banners></app-floating-side-banners>
+  <!-- Hộp thoại xác nhận dùng chung (đăng xuất...) -->
+  <app-confirm-dialog></app-confirm-dialog>
 
-  <!-- Floating Mascot Sticker (desktop only) -->
-  <app-floating-mascot></app-floating-mascot>
+  @if (!bare()) {
+    <!-- Floating Side Banners (desktop only) -->
+    <app-floating-side-banners></app-floating-side-banners>
 
-  <!-- Túi Xu Luméa nổi góc màn hình -->
-  <app-floating-coin-widget></app-floating-coin-widget>
+    <!-- Floating Mascot Sticker (desktop only) -->
+    <app-floating-mascot></app-floating-mascot>
 
-  <!-- Nút lên đầu trang (góc phải dưới) -->
-  <app-scroll-to-top></app-scroll-to-top>
+    <!-- Túi Xu Luméa nổi góc màn hình -->
+    <app-floating-coin-widget></app-floating-coin-widget>
+
+    <!-- Nút lên đầu trang (góc phải dưới) -->
+    <app-scroll-to-top></app-scroll-to-top>
+  }
 </div>

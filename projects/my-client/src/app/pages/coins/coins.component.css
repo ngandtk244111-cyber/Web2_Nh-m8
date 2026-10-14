@@ -1231,3 +1231,19 @@
     transition: none;
   }
 }
+
+/* Hạn sử dụng xu */
+.xu-hero__expiring {
+  display: inline-block;
+  margin: 10px 0 0;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(255, 233, 168, 0.95);
+  color: #6B3E07;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.xu-history__amount--neg {
+  color: #93877E;
+}

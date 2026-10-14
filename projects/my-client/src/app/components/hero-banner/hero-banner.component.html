@@ -1,19 +1,56 @@
 <section class="hb" (mouseenter)="onMouseEnter()" (mouseleave)="onMouseLeave()">
+  <div class="hb_frame">
   <div class="hb_slides">
     <div
       *ngFor="let item of tickerService.items; let i = index"
       class="hb_slide"
       [class.hb_slide--active]="i === tickerService.activeIndex()">
 
-      <!-- Nền tách lớp riêng để zoom chậm (Ken Burns) mà không kéo theo chữ -->
+      <!-- Nền gradient tươi theo slide + ảnh phòng mờ dần ở nửa phải (zoom chậm) -->
+      <div class="hb_slide__tint" [style.background]="item.art.bg"></div>
       <div class="hb_slide__bg" [style.background-image]="'url(' + item.image + ')'"></div>
+      <span class="hb_blob hb_blob--1" aria-hidden="true"></span>
+      <span class="hb_blob hb_blob--2" aria-hidden="true"></span>
+
+      <!-- Cụm sản phẩm thật ở giữa banner -->
+      <div class="hb_products" *ngIf="picks()[item.art.picks] as list" [class.hb_products--empty]="!list.length" aria-hidden="true">
+        <div *ngFor="let p of list; let k = index" [class]="'hb_prod hb_prod--' + k">
+          <img [src]="p.images[0]" alt="" loading="lazy" draggable="false">
+          <span class="hb_prod__tag" *ngIf="discountOf(p) as d; else priceTag">-{{ d }}%</span>
+          <ng-template #priceTag><span class="hb_prod__price">{{ p.basePrice | vnd }}</span></ng-template>
+        </div>
+      </div>
+
+      <!-- Mascot Luméa đứng góc phải, nhún nhẹ + sao lấp lánh -->
+      <div class="hb_mascot" aria-hidden="true">
+        <span class="hb_spark hb_spark--1">✦</span>
+        <span class="hb_spark hb_spark--2">✦</span>
+        <span class="hb_spark hb_spark--3">✧</span>
+        <img [src]="item.art.mascot" alt="" class="hb_mascot__img" [attr.loading]="i === 0 ? null : 'lazy'">
+      </div>
 
       <div class="hb_slide__inner">
-        <div class="hb_slide__icon">
-          <app-icon [name]="item.icon" [size]="40"></app-icon>
+        <!-- Nội dung thật cho trình đọc màn hình / SEO; phần chữ trang trí bên dưới chỉ để nhìn -->
+        <h1 class="hb_sr">{{ item.title }}</h1>
+        <p class="hb_sr">{{ item.subtitle }}</p>
+
+        <div class="hb_art" aria-hidden="true">
+          <span class="hb_kicker"><span>{{ item.art.kicker }}</span></span>
+          <span
+            *ngFor="let line of item.art.lines"
+            class="hb_3d"
+            [class.hb_3d--pink]="line.tone === 'pink'"
+            [attr.data-text]="line.text">{{ line.text }}</span>
+          <!-- Ô thông tin: icon + lợi ích chính + chip phụ -->
+          <span class="hb_info">
+            <span class="hb_info__icon"><app-icon [name]="item.icon" [size]="22"></app-icon></span>
+            <span class="hb_info__text">
+              <strong>{{ item.art.script }}</strong>
+              <small>{{ item.art.perk }}</small>
+            </span>
+            <span class="hb_chip">{{ item.art.chip }}</span>
+          </span>
         </div>
-        <h1 class="hb_slide__title"><span class="hb_mask"><span>{{ item.title }}</span></span></h1>
-        <p class="hb_slide__subtitle">{{ item.subtitle }}</p>
 
         <button
           *ngIf="item.id === 'ai-assistant'; else ctaLink"
@@ -33,14 +70,6 @@
     </div>
   </div>
 
-  <!-- Prev/Next arrows -->
-  <button type="button" class="hb_arrow hb_arrow--prev" aria-label="Banner trước" (click)="goPrev()">
-    <app-icon name="chevron-left" [size]="20"></app-icon>
-  </button>
-  <button type="button" class="hb_arrow hb_arrow--next" aria-label="Banner tiếp theo" (click)="goNext()">
-    <app-icon name="chevron-right" [size]="20"></app-icon>
-  </button>
-
   <!-- Thanh tiến trình: phần tử được tạo lại mỗi chu kỳ autoplay (cycle) nên animation luôn chạy lại từ 0 -->
   <div class="hb_progress" [class.hb_progress--paused]="tickerService.isPaused()" aria-hidden="true">
     <span
@@ -50,7 +79,7 @@
     </span>
   </div>
 
-  <!-- Indicators -->
+  <!-- Indicators (nằm trong khung banner) -->
   <div class="hb_dots">
     <button
       type="button"
@@ -61,4 +90,14 @@
       (click)="tickerService.setActive(i)">
     </button>
   </div>
+  </div>
+
+  <!-- Prev/Next arrows: nút tròn trắng đè lên mép khung -->
+  <button type="button" class="hb_arrow hb_arrow--prev" aria-label="Banner trước" (click)="goPrev()">
+    <app-icon name="chevron-left" [size]="20"></app-icon>
+  </button>
+  <button type="button" class="hb_arrow hb_arrow--next" aria-label="Banner tiếp theo" (click)="goNext()">
+    <app-icon name="chevron-right" [size]="20"></app-icon>
+  </button>
+
 </section>

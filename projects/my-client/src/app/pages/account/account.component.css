@@ -1,0 +1,21 @@
+
+/* Nút đăng xuất: viền đỏ rõ ràng thay cho chữ xám nhỏ khó thấy */
+.acc-logout {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  border-radius: 999px;
+  border: 1.5px solid #A3152D;
+  background: #ffffff;
+  color: #A3152D;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.acc-logout:hover {
+  background: #A3152D;
+  color: #ffffff;
+}

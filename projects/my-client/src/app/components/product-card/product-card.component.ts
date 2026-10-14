@@ -9,7 +9,7 @@ import { QuickViewService } from '../../core/services/quick-view.service';
 import { FavoriteService } from '../../core/services/favorite.service';
 import { MascotService } from '../../core/services/mascot.service';
 import { ProductService } from '../../core/services/product.service';
-import { departmentOf, subcategoriesOf } from '../../core/data/catalog-taxonomy';
+import { departmentOf, has3DModel, subcategoriesOf } from '../../core/data/catalog-taxonomy';
 import { AppIconComponent } from '../icon/icon.component';
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
 
@@ -46,7 +46,7 @@ export class ProductCardComponent {
   }
 
   get has3D(): boolean {
-    return !!this.product.threeModelType;
+    return has3DModel(this.product);
   }
 
   /** Nhãn danh mục theo cây danh mục mới (vd. "Sofa", "Đèn ngủ"), fallback về categoryName cũ. */
@@ -55,7 +55,7 @@ export class ProductCardComponent {
   }
 
   quickAddToCart(): void {
-    this.cartService.addToCart(this.product, 1);
+    if (!this.cartService.addToCart(this.product, 1)) return;
     if (this.cardImg) {
       this.cartFlyService.flyToCart(this.product.images[0], this.cardImg.nativeElement);
     }

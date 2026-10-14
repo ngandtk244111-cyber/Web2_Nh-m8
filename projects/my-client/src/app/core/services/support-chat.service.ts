@@ -27,6 +27,15 @@ export class SupportChatService {
   readonly isOpen = computed(() => this.chatPanel.active() === 'support');
   readonly sessionId: string;
 
+  /** Có nhân viên đang mở trang quản trị (phòng "staff" của socket) — chấm xanh trên khung chat. */
+  readonly staffOnline = signal(false);
+  /** Nhân viên đang gõ trả lời — hiện bong bóng ba chấm. */
+  readonly staffTyping = signal(false);
+
+  private typingSent = false;
+  private typingStopTimer: ReturnType<typeof setTimeout> | null = null;
+  private staffTypingTimer: ReturnType<typeof setTimeout> | null = null;
+
   constructor() {
     this.sessionId = this.loadOrCreateSessionId();
   }
@@ -51,8 +60,43 @@ export class SupportChatService {
     this.socket.on('connect', () => {
       this.socket?.emit('chat:join', this.sessionId);
     });
-    this.socket.on('chat:message', (message: ChatMessage) => this.appendMessage(message));
+    this.socket.on('disconnect', () => this.staffOnline.set(false));
+    this.socket.on('chat:message', (message: ChatMessage) => {
+      if (message.sender === 'staff') this.setStaffTyping(false);
+      this.appendMessage(message);
+    });
+    this.socket.on('chat:staff-status', ({ online }: { online: boolean }) => {
+      this.staffOnline.set(!!online);
+      if (!online) this.setStaffTyping(false);
+    });
+    this.socket.on('chat:typing', ({ typing }: { typing: boolean }) => this.setStaffTyping(!!typing));
     this.loadHistory();
+  }
+
+  /** Tự tắt ba chấm sau 6s nếu không nhận được tín hiệu dừng (mất mạng giữa chừng...). */
+  private setStaffTyping(typing: boolean): void {
+    if (this.staffTypingTimer) clearTimeout(this.staffTypingTimer);
+    this.staffTypingTimer = typing ? setTimeout(() => this.staffTyping.set(false), 6000) : null;
+    this.staffTyping.set(typing);
+  }
+
+  /** Gọi mỗi khi khách gõ: báo "đang gõ" 1 lần, tự báo dừng sau 2.5s không gõ thêm. */
+  notifyTyping(): void {
+    if (!this.socket) return;
+    if (!this.typingSent) {
+      this.typingSent = true;
+      this.socket.emit('chat:typing', { sessionId: this.sessionId, typing: true });
+    }
+    if (this.typingStopTimer) clearTimeout(this.typingStopTimer);
+    this.typingStopTimer = setTimeout(() => this.stopTyping(), 2500);
+  }
+
+  private stopTyping(): void {
+    if (this.typingStopTimer) clearTimeout(this.typingStopTimer);
+    this.typingStopTimer = null;
+    if (!this.typingSent) return;
+    this.typingSent = false;
+    this.socket?.emit('chat:typing', { sessionId: this.sessionId, typing: false });
   }
 
   /** Nạp lại tin cũ (kể cả câu trả lời nhân viên gửi khi khách đã đóng trang). */
@@ -80,12 +124,14 @@ export class SupportChatService {
   }
 
   close(): void {
+    this.stopTyping();
     this.chatPanel.close('support');
   }
 
   sendMessage(text: string): void {
     if (!text.trim()) return;
     this.ensureConnected();
+    this.stopTyping();
     // Khách đã đăng nhập thì gửi kèm tên/SĐT để nhân viên biết đang nói chuyện với ai.
     const user = this.authService.currentUser();
     this.socket?.emit('chat:message', {

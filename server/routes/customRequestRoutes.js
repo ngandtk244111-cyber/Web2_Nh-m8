@@ -1,4 +1,5 @@
 const express = require('express');
+const { validatePrintRequest } = require('../utils/print-request-rules');
 const CustomRequest = require('../models/CustomRequest');
 const { requireAdminId } = require('../middleware/auth');
 
@@ -30,6 +31,9 @@ router.get('/:id', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
+    const ruleError = validatePrintRequest(req.body);
+    if (ruleError) return res.status(400).json({ success: false, error: ruleError });
+
     const dateStr = nowLabel();
     const codeNum = Math.floor(100 + Math.random() * 900);
     const request = await CustomRequest.create({

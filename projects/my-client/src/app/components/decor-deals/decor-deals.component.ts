@@ -130,10 +130,11 @@ export class DecorDealsComponent implements OnInit, OnDestroy {
 
   get reminderBusy() { return this.notificationService.reminderBusy; }
 
-  readonly countdown = computed<CountdownState>(() => {
+  /** Đếm ngược tới lúc bắt đầu (nếu sắp diễn ra) hoặc kết thúc (nếu đang diễn ra) của một khung. */
+  private countdownFor(slot: SlotIndex): CountdownState {
     const now = this.now();
-    const slotDate = this.slotDates()[this.displaySlot()];
-    const status = this.activeSlotStatus();
+    const slotDate = this.slotDates()[slot];
+    const status = this.slotStatuses()[slot];
 
     let target: Date;
     let label: string;
@@ -159,6 +160,26 @@ export class DecorDealsComponent implements OnInit, OnDestroy {
       seconds: Math.floor((diffMs % 60_000) / 1000),
       ended: false,
     };
+  }
+
+  /** Đếm ngược của tab đang xem (khối bên dưới banner). */
+  readonly countdown = computed<CountdownState>(() => this.countdownFor(this.displaySlot()));
+
+  /** Khung "gần nhất" chưa kết thúc — banner luôn đếm theo khung này, không phụ thuộc tab đang chọn. */
+  private readonly liveSlot = computed<SlotIndex>(() => {
+    const next = this.slotStatuses().findIndex(s => s !== 'Đã kết thúc');
+    return (next === -1 ? 2 : next) as SlotIndex;
+  });
+
+  readonly liveCountdown = computed<CountdownState>(() => this.countdownFor(this.liveSlot()));
+
+  /** Mức giảm cao nhất của khung gần nhất — hiển thị "Giảm đến X%" trên banner (mặc định 40%). */
+  readonly liveMaxDiscount = computed<number>(() => {
+    const slot = this.liveSlot();
+    const pcts = this.productService.products()
+      .filter(p => p.flashSaleSlot === slot && !!p.originalPrice && p.originalPrice > p.basePrice)
+      .map(p => Math.round((1 - p.basePrice / p.originalPrice!) * 100));
+    return pcts.length ? Math.max(...pcts) : 40;
   });
 
   /** Sản phẩm Flash Sale thật của đúng slot (ngày) đang hiển thị — dữ liệu backend (flashSaleSlot + originalPrice). */

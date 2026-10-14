@@ -105,7 +105,7 @@ export class CoinsComponent implements AfterViewInit, OnDestroy {
   readonly earnedToday = computed(() => {
     const today = this.todayKey();
     return this.coinService.transactions()
-      .filter(t => this.vnDateKey(new Date(t.createdAt)) === today)
+      .filter(t => t.amount > 0 && this.vnDateKey(new Date(t.createdAt)) === today)
       .reduce((sum, t) => sum + t.amount, 0);
   });
 

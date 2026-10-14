@@ -15,7 +15,8 @@
   <div *ngIf="authService.currentUser() as user" class="space-y-6">
     <div class="flex items-center justify-between">
       <h1 class="font-serif text-2xl sm:text-3xl font-extrabold text-amber-800">Tài Khoản Của Tôi</h1>
-      <button (click)="logout()" class="text-xs font-semibold text-neutral-500 hover:text-red-500 flex items-center gap-1">
+      <button type="button" (click)="logout()" class="acc-logout">
+        <app-icon name="log-out" [size]="16"></app-icon>
         <span>Đăng xuất</span>
       </button>
     </div>

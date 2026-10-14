@@ -1,0 +1,114 @@
+<div class="qv3">
+  <ng-container [ngSwitch]="route.status()">
+
+    <div *ngSwitchCase="'loading'" class="qv3__center">
+      <span class="qv3__spinner" aria-hidden="true"></span>
+      <span>Đang mở phòng xem nhanh 3D…</span>
+    </div>
+
+    <div *ngSwitchCase="'not-found'" class="qv3__center qv3__center--msg">
+      <app-icon name="cube" [size]="30"></app-icon>
+      <h1>Không tìm thấy sản phẩm</h1>
+      <p>Sản phẩm có mã "{{ route.id() }}" không tồn tại hoặc đã ngừng kinh doanh.</p>
+      <a routerLink="/catalog" class="qv3__btn qv3__btn--primary">Xem sản phẩm khác</a>
+    </div>
+
+    <ng-container *ngSwitchCase="'ready'">
+      <ng-container *ngIf="route.product() as p">
+
+        <!-- Sân khấu 3D -->
+        <section class="qv3__stage" aria-label="Mô hình 3D sản phẩm">
+          <header class="qv3__brand">
+            <a routerLink="/" class="qv3__logo">LUMÉA</a>
+            <span class="qv3__brand-sep"></span>
+            <span class="qv3__brand-label">Xem nhanh 3D</span>
+          </header>
+
+          <app-product-model-stage
+            [product]="p"
+            [autoRotate]="autoRotate"
+            (stateChange)="stageState = $event">
+          </app-product-model-stage>
+
+          <div *ngIf="stageState === 'ready'" class="qv3__hint">
+            <app-icon name="rotate" [size]="13"></app-icon>
+            <span class="qv3__hint-desktop">Kéo để xoay 360° · Cuộn để phóng to</span>
+            <span class="qv3__hint-touch">1 ngón xoay · 2 ngón phóng to</span>
+          </div>
+
+          <div *ngIf="stageState === 'ready'" class="qv3__zoom" role="group" aria-label="Phóng to thu nhỏ">
+            <button type="button" (click)="zoom(0.8)" aria-label="Phóng to" title="Phóng to"><app-icon name="plus" [size]="16"></app-icon></button>
+            <button type="button" (click)="zoom(1.25)" aria-label="Thu nhỏ" title="Thu nhỏ"><app-icon name="minus" [size]="16"></app-icon></button>
+          </div>
+        </section>
+
+        <!-- Thông tin & điều khiển -->
+        <aside class="qv3__panel">
+          <div class="qv3__panel-top">
+            <span class="qv3__cat">{{ department() }}</span>
+            <button type="button" class="qv3__close" (click)="closeTab()" aria-label="Đóng tab" title="Đóng tab">
+              <app-icon name="x" [size]="16"></app-icon>
+            </button>
+          </div>
+
+          <h1 class="qv3__name">{{ p.name }}</h1>
+
+          <div class="qv3__rating">
+            <app-icon name="star" [size]="13" [filled]="true"></app-icon>
+            <span>{{ p.rating }}</span>
+            <span class="qv3__muted">· {{ p.reviewCount }} đánh giá</span>
+          </div>
+
+          <div class="qv3__price">
+            <strong>{{ price(p) | vnd }}</strong>
+            <s *ngIf="discount(p) > 0">{{ p.originalPrice | vnd }}</s>
+            <span *ngIf="discount(p) > 0" class="qv3__off">-{{ discount(p) }}%</span>
+          </div>
+
+          <p class="qv3__summary">{{ summary() }}</p>
+
+          <dl class="qv3__specs">
+            <div *ngIf="p.dimensions"><dt>Kích thước</dt><dd>{{ p.dimensions }}</dd></div>
+            <div *ngIf="p.materialInfo"><dt>Chất liệu</dt><dd>{{ p.materialInfo }}</dd></div>
+          </dl>
+
+          <div class="qv3__controls" *ngIf="stageState === 'ready'">
+            <span class="qv3__label">Góc nhìn</span>
+            <div class="qv3__angles">
+              <button
+                *ngFor="let a of angles"
+                type="button"
+                class="qv3__chip"
+                [class.qv3__chip--active]="activeAngle === a.key"
+                (click)="setAngle(a.key)">{{ a.label }}</button>
+            </div>
+            <div class="qv3__toggles">
+              <button type="button" class="qv3__chip" [class.qv3__chip--active]="autoRotate" (click)="toggleRotate()" [attr.aria-pressed]="autoRotate">
+                <app-icon [name]="autoRotate ? 'stop' : 'play'" [size]="12"></app-icon>
+                Xoay tự động
+              </button>
+              <button type="button" class="qv3__chip" (click)="reset()">
+                <app-icon name="rotate" [size]="12"></app-icon>
+                Đặt lại góc nhìn
+              </button>
+            </div>
+          </div>
+
+          <div class="qv3__actions">
+            <a [routerLink]="['/product', p.slug]" class="qv3__btn qv3__btn--primary">
+              Xem chi tiết sản phẩm
+              <app-icon name="chevron-right" [size]="15"></app-icon>
+            </a>
+            <a [routerLink]="['/phong-3d', p.id]" class="qv3__btn qv3__btn--ghost">
+              <app-icon name="cube" [size]="14"></app-icon>
+              Xem phiên bản màu trong phòng 3D
+            </a>
+          </div>
+
+          <p *ngIf="credit()" class="qv3__credit">{{ credit() }}</p>
+        </aside>
+
+      </ng-container>
+    </ng-container>
+  </ng-container>
+</div>

@@ -89,6 +89,7 @@
       <div class="hd_drawer__group-title">Khác</div>
       <a *ngIf="authService.currentUser()" routerLink="/account" (click)="mobileMenuOpen = false" class="hd_drawer__item">Tài khoản của tôi</a>
       <a routerLink="/orders/track" (click)="mobileMenuOpen = false" class="hd_drawer__item">Tra cứu đơn hàng</a>
+      <button *ngIf="authService.currentUser()" type="button" (click)="logout()" class="hd_drawer__item hd_drawer__item--logout">Đăng xuất</button>
     </nav>
 
     <div class="hd_drawer__bottom">
@@ -127,10 +128,33 @@
           <button type="submit" class="hd_search__icon-btn" aria-label="Tìm kiếm">
             <img src="assets/mascot/goh-search.png" alt="Tìm kiếm" class="hd_search__icon-img">
           </button>
-          <input #searchInput type="text" class="hd_search__input" placeholder="Tìm sofa, giường, đèn, decor..." (focus)="openSearchSuggestions()">
+          <input #searchInput type="search" name="q" autocomplete="off" class="hd_search__input" placeholder="Tìm sofa, giường, đèn, decor..." (focus)="openSearchSuggestions()" (input)="onSearchInput(searchInput.value)">
         </form>
 
         <div class="hd_search-suggest" *ngIf="searchSuggestionsOpen" (click)="$event.stopPropagation()">
+          <!-- Kết quả khớp ngay khi gõ -->
+          <ng-container *ngIf="searchText.trim()">
+            <div class="hd_search-results" *ngIf="searchResults.length; else noSearchResults">
+              <a
+                *ngFor="let p of searchResults"
+                [routerLink]="['/product', p.slug]"
+                (click)="closeMenus()"
+                class="hd_search-result">
+                <span class="hd_search-result__img">
+                  <img *ngIf="p.images?.[0]" [src]="p.images[0]" [alt]="p.name" loading="lazy">
+                </span>
+                <span class="hd_search-result__name">{{ p.name }}</span>
+                <span class="hd_search-result__price">{{ productService.currentPrice(p) | vnd }}</span>
+              </a>
+            </div>
+            <ng-template #noSearchResults>
+              <p class="hd_search-results__empty">Không tìm thấy sản phẩm cho “{{ searchText.trim() }}”.</p>
+            </ng-template>
+            <button type="button" class="hd_search-results__all" (click)="search(searchInput.value)">
+              Xem tất cả kết quả cho “{{ searchText.trim() }}” →
+            </button>
+          </ng-container>
+
           <span class="hd_search-suggest__label">Tìm kiếm phổ biến</span>
           <div class="hd_search-suggest__chips">
             <button
@@ -145,10 +169,50 @@
       </div>
 
       <div class="hd_actions">
-        <a *ngIf="authService.currentUser() as user" routerLink="/account" [title]="user.fullName || user.phoneNumber" class="hd_action hd_action--login">
-          <app-icon name="user" [size]="16"></app-icon>
-          <span class="hd_action__text">{{ user.fullName || user.phoneNumber }}</span>
-        </a>
+        <!-- Tài khoản: bấm mở dropdown (hồ sơ, đơn hàng, xu, đăng xuất...) -->
+        <div class="hd_account-wrap" *ngIf="authService.currentUser() as user">
+          <button
+            type="button"
+            class="hd_action hd_action--login"
+            [class.hd_action--open]="accountMenuOpen"
+            [title]="user.fullName || user.phoneNumber"
+            aria-haspopup="menu"
+            [attr.aria-expanded]="accountMenuOpen"
+            (click)="toggleAccountMenu()">
+            <app-icon name="user" [size]="16"></app-icon>
+            <span class="hd_action__text">{{ user.fullName || user.phoneNumber }}</span>
+            <app-icon name="chevron-down" [size]="14" class="hd_account-caret"></app-icon>
+          </button>
+
+          <div class="hd_account-menu" *ngIf="accountMenuOpen" role="menu" (click)="$event.stopPropagation()">
+            <div class="hd_account-menu__head">
+              <span class="hd_account-menu__avatar">
+                <img *ngIf="authService.getAvatarUrl(user.avatar) as src; else avatarIcon" [src]="src" alt="">
+                <ng-template #avatarIcon><app-icon name="user" [size]="18"></app-icon></ng-template>
+              </span>
+              <span class="hd_account-menu__who">
+                <strong>{{ user.fullName || 'Chưa đặt tên' }}</strong>
+                <small>{{ user.phoneNumber }}</small>
+              </span>
+            </div>
+
+            <a
+              *ngFor="let item of accountMenuItems"
+              role="menuitem"
+              class="hd_account-menu__item"
+              [routerLink]="item.link"
+              [queryParams]="item.queryParams"
+              (click)="accountMenuOpen = false">
+              <app-icon [name]="item.icon" [size]="16"></app-icon>
+              <span>{{ item.label }}</span>
+            </a>
+
+            <button type="button" role="menuitem" class="hd_account-menu__item hd_account-menu__item--logout" (click)="logout()">
+              <app-icon name="log-out" [size]="16"></app-icon>
+              <span>Đăng xuất</span>
+            </button>
+          </div>
+        </div>
         <button *ngIf="!authService.currentUser()" type="button" (click)="loginModalService.open()" class="hd_action hd_action--login">
           <app-icon name="user" [size]="16"></app-icon>
           <span class="hd_action__text">Đăng nhập</span>

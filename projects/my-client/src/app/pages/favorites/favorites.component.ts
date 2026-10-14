@@ -102,12 +102,14 @@ export class FavoritesComponent {
   addSelectedToCart(): void {
     const products = this.selectedProducts();
     if (products.length === 0) return;
+    if (!this.cartService.ensureLoggedIn()) return;
     for (const p of products) this.cartService.addToCart(p, 1);
   }
 
   buyNowSelected(): void {
     const products = this.selectedProducts();
     if (products.length === 0) return;
+    if (!this.cartService.ensureLoggedIn()) return;
     for (const p of products) this.cartService.addToCart(p, 1);
 
     const productIds = new Set(products.map(p => p.id));

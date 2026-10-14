@@ -1,0 +1,16 @@
+<div
+  class="pp_overlay"
+  *ngIf="visible()"
+  [class.pp_overlay--closing]="closing()"
+  (click)="close()">
+
+  <div class="pp_popup" [class.pp_popup--closing]="closing()" (click)="$event.stopPropagation()">
+    <button type="button" class="pp_close" (click)="close()" aria-label="Đóng">
+      <app-icon name="x" [size]="18"></app-icon>
+    </button>
+
+    <a [routerLink]="link" class="pp_link" (click)="close()" aria-label="Minimalist Furniture — Shop now">
+      <img [src]="image" alt="Minimalist Furniture — Luméa" class="pp_image" draggable="false">
+    </a>
+  </div>
+</div>

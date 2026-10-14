@@ -5,7 +5,8 @@ const Product = require('../models/Product');
 const router = express.Router();
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
+const GEMINI_FALLBACK_MODEL = process.env.GEMINI_FALLBACK_MODEL || 'gemini-3.1-flash-lite';
 
 // Cơ chế theo AruBot của AuraPC-main (server/routes/chatRoutes.js):
 //   1) Nạp TOÀN BỘ catalog (nhóm theo danh mục, lấy mẫu đều, cache 10 phút) vào system prompt
@@ -285,8 +286,8 @@ router.post('/assistant', async (req, res) => {
       `Khách: ${userText}\nGoh (trả JSON, không markdown):`,
     ].filter(Boolean).join('\n');
 
-    const geminiRes = await axios.post(
-      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
+    const callGemini = (model) => axios.post(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`,
       {
         systemInstruction: { parts: [{ text: systemPrompt }] },
         contents: [{ role: 'user', parts: [{ text: conversationText }] }],
@@ -294,6 +295,17 @@ router.post('/assistant', async (req, res) => {
       },
       { timeout: 60000 }
     );
+
+    // Model chính quá tải (503) / hết hạn mức (429) -> gọi lại bằng model dự phòng nhẹ hơn.
+    let geminiRes;
+    try {
+      geminiRes = await callGemini(GEMINI_MODEL);
+    } catch (err) {
+      const status = err.response?.status;
+      if ((status !== 503 && status !== 429) || GEMINI_FALLBACK_MODEL === GEMINI_MODEL) throw err;
+      console.warn(`[aiRoutes] ${GEMINI_MODEL} trả ${status}, chuyển sang ${GEMINI_FALLBACK_MODEL}`);
+      geminiRes = await callGemini(GEMINI_FALLBACK_MODEL);
+    }
 
     const rawText = geminiRes.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
     const parsed = extractJSON(rawText);

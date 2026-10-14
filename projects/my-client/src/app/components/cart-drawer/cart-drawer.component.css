@@ -352,3 +352,10 @@
     max-width: 110px;
   }
 }
+
+/* Khối ưu đãi + chi tiết thanh toán nằm trong vùng cuộn, ngay dưới danh sách sản phẩm */
+.cd_summary {
+  margin-top: 8px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  background: #FBF7EE;
+}

@@ -26,7 +26,8 @@
                 <ng-container *ngIf="is3DSlide(i); else photoSlide">
                   <app-three-viewer
                     *ngIf="i === slideIndex"
-                    [modelType]="product.threeModelType!"
+                    [modelType]="product.threeModelType || ''"
+                    [modelUrl]="product.modelUrl"
                     [colorHex]="previewColorHex"
                     [roughness]="0.8"
                     [metalness]="0.1">
@@ -71,6 +72,23 @@
               </button>
             </div>
           </div>
+
+          <!-- AR (theo bố cục Nitori: ngay dưới khu vực ảnh). Giai đoạn này chỉ mở phòng xem 3D ở tab mới —
+               không dùng camera, không đặt sản phẩm vào không gian thật. -->
+          <a
+            *ngIf="has3D"
+            [routerLink]="['/phong-3d', product.id]"
+            target="_blank"
+            rel="noopener"
+            class="pd_ar"
+            aria-label="AR — mở phòng xem 3D của sản phẩm (tab mới)">
+            <span class="pd_ar__icon" aria-hidden="true">AR</span>
+            <span class="pd_ar__text">
+              <strong>Xem sản phẩm trong phòng 3D</strong>
+              <small>Xoay 360°, phóng to và đổi phiên bản màu / chất liệu</small>
+            </span>
+            <app-icon name="chevron-right" [size]="16"></app-icon>
+          </a>
 
           <!-- PHẦN DƯỚI: lưới ảnh thường (ảnh studio + lifestyle), cuộn xuống xem hết -->
           <div *ngIf="galleryImages.length > 1" class="pd_gallery" aria-label="Tất cả ảnh sản phẩm">
@@ -284,15 +302,16 @@
                 <app-icon name="minus" [size]="13"></app-icon>
               </button>
               <span class="pd_qty__value">{{ quantity }}</span>
-              <button type="button" (click)="quantity = quantity + 1" class="pd_qty__btn" aria-label="Tăng số lượng">
+              <button type="button" (click)="quantity = quantity < maxQuantity ? quantity + 1 : maxQuantity" [disabled]="isSoldOut || quantity >= maxQuantity" class="pd_qty__btn" aria-label="Tăng số lượng">
                 <app-icon name="plus" [size]="13"></app-icon>
               </button>
             </div>
-            <button type="button" (click)="addToCart()" class="pd_btn pd_btn--primary">
-              Thêm vào giỏ · {{ displayPrice * quantity | vnd }}
+            <button type="button" (click)="addToCart()" [disabled]="isSoldOut" class="pd_btn pd_btn--primary">
+              <ng-container *ngIf="!isSoldOut; else soldOutLabel">Thêm vào giỏ · {{ displayPrice * quantity | vnd }}</ng-container>
+              <ng-template #soldOutLabel>Tạm hết hàng</ng-template>
             </button>
           </div>
-          <button type="button" (click)="buyNow()" class="pd_btn pd_btn--ghost">Mua ngay</button>
+          <button type="button" (click)="buyNow()" [disabled]="isSoldOut" class="pd_btn pd_btn--ghost">Mua ngay</button>
 
           <p class="pd_eta">
             <ng-container *ngIf="deliveryRange; else podEta">Dự kiến nhận hàng: <strong>{{ deliveryRange }}</strong></ng-container>
@@ -350,67 +369,21 @@
         </aside>
       </div>
 
-      <!-- ===== Câu chuyện sản phẩm ===== -->
-      <section class="pd_band">
-        <div class="pd_container pd_story">
-          <div class="pd_story__text">
-            <h2 class="pd_h2">Câu chuyện sản phẩm</h2>
-            <p>{{ product.story || product.description }}</p>
-          </div>
-          <div class="pd_story__img">
-            <img [src]="storyImage" [alt]="product.name" loading="lazy">
-          </div>
-        </div>
-      </section>
-
-      <!-- ===== Vì sao bạn sẽ thích ===== -->
-      <section *ngIf="featureHighlights.length" class="pd_container pd_section">
+      <!-- ===== Vì sao bạn sẽ thích: thẻ nhỏ có ảnh minh hoạ + dải lợi ích, gọn diện tích ===== -->
+      <section *ngIf="featureHighlights.length || productPerks.length" class="pd_container pd_section pd_why">
         <h2 class="pd_h2">Vì sao bạn sẽ thích</h2>
-        <div class="pd_features" [class.pd_features--single]="featureHighlights.length === 1">
-          <div *ngFor="let f of featureHighlights" class="pd_feature">
-            <div class="pd_feature__img"><img [src]="f.image" [alt]="f.title" loading="lazy"></div>
-            <h3>{{ f.title }}</h3>
+        <div class="pd_why__grid" *ngIf="featureHighlights.length">
+          <div *ngFor="let f of featureHighlights" class="pd_why__card">
+            <span class="pd_why__img"><img [src]="f.image" [alt]="f.title" loading="lazy"></span>
+            <p class="pd_why__title">{{ f.title }}</p>
           </div>
         </div>
-      </section>
-
-      <!-- ===== Các hàng gợi ý sản phẩm ===== -->
-      <section *ngFor="let row of pickRows" class="pd_container pd_section">
-        <h2 class="pd_h2">{{ row.title }}</h2>
-        <div class="pd_picks" #track (scroll)="onPickScroll(row.key, track)">
-          <div *ngFor="let p of row.products" class="pd_pick">
-            <a [routerLink]="['/product', p.slug]" class="pd_pick__img">
-              <span *ngIf="p.badge" class="pd_label pd_pick__badge">{{ p.badge }}</span>
-              <img [src]="p.images[0]" [alt]="p.name" loading="lazy">
-            </a>
-            <a [routerLink]="['/product', p.slug]" class="pd_pick__name">{{ p.name }}</a>
-            <div class="pd_pick__price">
-              <span [class.pd_pick__price--sale]="p.originalPrice">{{ p.basePrice | vnd }}</span>
-              <s *ngIf="p.originalPrice">{{ p.originalPrice | vnd }}</s>
-            </div>
-            <div class="pd_pick__actions">
-              <button type="button" class="pd_mini-btn" (click)="addPickToCart(p)" [attr.aria-label]="p.customizable ? 'Xem tùy chọn' : 'Thêm vào giỏ'" [title]="p.customizable ? 'Xem tùy chọn' : 'Thêm vào giỏ'">
-                <app-icon [name]="p.customizable ? 'sliders' : 'cart'" [size]="13"></app-icon>
-              </button>
-              <button
-                type="button"
-                class="pd_mini-btn"
-                [class.pd_mini-btn--active]="favoriteService.isFavorite(p.id)"
-                (click)="togglePickFavorite(p)"
-                [attr.aria-pressed]="favoriteService.isFavorite(p.id)"
-                aria-label="Yêu thích">
-                <app-icon name="heart" [size]="13" [filled]="favoriteService.isFavorite(p.id)"></app-icon>
-              </button>
-            </div>
-          </div>
-        </div>
-        <div class="pd_progress">
-          <div
-            class="pd_progress__thumb"
-            [style.left.%]="scrollProgress[row.key]?.left ?? 0"
-            [style.width.%]="scrollProgress[row.key]?.width ?? 20">
-          </div>
-        </div>
+        <ul class="pd_why__perks" *ngIf="productPerks.length">
+          <li *ngFor="let perk of productPerks">
+            <span class="pd_why__perk-icon"><app-icon [name]="perk.icon" [size]="16"></app-icon></span>
+            <span><strong>{{ perk.title }}</strong><small>{{ perk.text }}</small></span>
+          </li>
+        </ul>
       </section>
 
       <!-- ===== Đánh giá ===== -->
@@ -520,6 +493,45 @@
             <app-icon name="chevron-right" [size]="14"></app-icon>
           </button>
         </nav>
+      </section>
+
+      <!-- ===== Các hàng gợi ý sản phẩm ===== -->
+      <section *ngFor="let row of pickRows" class="pd_container pd_section">
+        <h2 class="pd_h2">{{ row.title }}</h2>
+        <div class="pd_picks" #track (scroll)="onPickScroll(row.key, track)">
+          <div *ngFor="let p of row.products" class="pd_pick">
+            <a [routerLink]="['/product', p.slug]" class="pd_pick__img">
+              <span *ngIf="p.badge" class="pd_label pd_pick__badge">{{ p.badge }}</span>
+              <img [src]="p.images[0]" [alt]="p.name" loading="lazy">
+            </a>
+            <a [routerLink]="['/product', p.slug]" class="pd_pick__name">{{ p.name }}</a>
+            <div class="pd_pick__price">
+              <span [class.pd_pick__price--sale]="p.originalPrice">{{ p.basePrice | vnd }}</span>
+              <s *ngIf="p.originalPrice">{{ p.originalPrice | vnd }}</s>
+            </div>
+            <div class="pd_pick__actions">
+              <button type="button" class="pd_mini-btn" (click)="addPickToCart(p)" [attr.aria-label]="p.customizable ? 'Xem tùy chọn' : 'Thêm vào giỏ'" [title]="p.customizable ? 'Xem tùy chọn' : 'Thêm vào giỏ'">
+                <app-icon [name]="p.customizable ? 'sliders' : 'cart'" [size]="13"></app-icon>
+              </button>
+              <button
+                type="button"
+                class="pd_mini-btn"
+                [class.pd_mini-btn--active]="favoriteService.isFavorite(p.id)"
+                (click)="togglePickFavorite(p)"
+                [attr.aria-pressed]="favoriteService.isFavorite(p.id)"
+                aria-label="Yêu thích">
+                <app-icon name="heart" [size]="13" [filled]="favoriteService.isFavorite(p.id)"></app-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="pd_progress">
+          <div
+            class="pd_progress__thumb"
+            [style.left.%]="scrollProgress[row.key]?.left ?? 0"
+            [style.width.%]="scrollProgress[row.key]?.width ?? 20">
+          </div>
+        </div>
       </section>
 
       <!-- ===== Cộng đồng ===== -->

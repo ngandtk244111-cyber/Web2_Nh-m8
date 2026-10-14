@@ -23,6 +23,7 @@ import {
   findDepartment,
   findSpace,
   findSubcategory,
+  has3DModel,
   selectionForLegacyCategory,
 } from '../../core/data/catalog-taxonomy';
 import { ProductCardComponent } from '../../components/product-card/product-card.component';
@@ -53,6 +54,8 @@ export class CatalogComponent implements OnInit {
   readonly departments = CATALOG_DEPARTMENTS;
   readonly spaces = CATALOG_SPACES;
   readonly materialGroups = MATERIAL_GROUPS;
+  /** Nút "Xem nhanh 3D" dưới thẻ sản phẩm chỉ hiện khi sản phẩm có mô hình 3D. */
+  readonly has3D = has3DModel;
   readonly priceRanges = PRICE_RANGES;
   readonly styleOptions = STYLE_OPTIONS;
   readonly colorOptions = COLOR_OPTIONS;

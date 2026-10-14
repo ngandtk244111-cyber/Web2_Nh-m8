@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AuthService } from '../../core/services/auth.service';
 import { LoginModalService } from '../../core/services/login-modal.service';
 import { AppIconComponent } from '../../components/icon/icon.component';
@@ -34,8 +35,11 @@ export class AccountComponent {
     private router: Router,
     private route: ActivatedRoute
   ) {
-    const tab = this.route.snapshot.queryParamMap.get('tab') as AccountTab | null;
-    if (tab && this.tabs.some(t => t.id === tab)) this.activeTab = tab;
+    // Theo dõi ?tab liên tục — dropdown tài khoản ở header có thể đổi tab khi đang ở sẵn trang này.
+    this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe(params => {
+      const tab = params.get('tab') as AccountTab | null;
+      if (tab && this.tabs.some(t => t.id === tab)) this.activeTab = tab;
+    });
   }
 
   switchTab(tab: AccountTab): void {
@@ -43,8 +47,7 @@ export class AccountComponent {
     this.router.navigate([], { relativeTo: this.route, queryParams: { tab }, queryParamsHandling: 'merge', replaceUrl: true });
   }
 
-  logout(): void {
-    this.authService.logout();
-    this.router.navigate(['/']);
+  async logout(): Promise<void> {
+    if (await this.authService.confirmLogout()) this.router.navigate(['/']);
   }
 }

@@ -8,6 +8,10 @@ export interface DesignBrief {
   customText?: string;
   estimatedBudget?: string;
   notes?: string;
+  /** Quy cách in 3D (xem core/data/print-request-rules.ts). */
+  printMaterial?: 'PLA' | 'PETG' | 'RESIN' | '';
+  dimensionsCm?: { length: number | null; width: number | null; height: number | null };
+  agreedPrintRules?: boolean;
 }
 
 export type CustomRequestStatus =

@@ -194,7 +194,7 @@ export class Customizer3dComponent implements OnInit {
 
   addCustomizedToCart(): void {
     if (!this.selectedProduct || !this.selectedConfig) return;
-    this.cartService.addToCart(this.selectedProduct, 1, this.selectedConfig);
+    if (!this.cartService.addToCart(this.selectedProduct, 1, this.selectedConfig)) return;
     // Hoàn thành tùy biến 3D là một cột mốc lớn hơn "thêm giỏ hàng" thường —
     // biểu cảm tự tin thay vì chỉ cười thường.
     this.mascotService.react('confident');

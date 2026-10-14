@@ -1,0 +1,240 @@
+:host {
+  display: block;
+}
+
+.ct {
+  width: min(1280px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 28px 0 80px;
+}
+
+/* ---------- Tiêu đề ---------- */
+.ct_crumb {
+  display: flex;
+  gap: 8px;
+  font-size: 12.5px;
+  color: #7A6558;
+}
+
+.ct_crumb a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.ct_crumb a:hover {
+  color: #A3152D;
+}
+
+.ct_title {
+  margin: 10px 0 0;
+  font-size: clamp(28px, 3.4vw, 40px);
+  font-weight: 700;
+  line-height: 1.15;
+  color: #3B2418;
+}
+
+.ct_sub {
+  margin: 8px 0 0;
+  max-width: 640px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #7A6558;
+}
+
+.ct_jump {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.ct_jump__chip {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(120, 90, 60, 0.18);
+  background: #FBF6EF;
+  color: #3B2418;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.ct_jump__chip:hover {
+  border-color: #A3152D;
+  color: #A3152D;
+}
+
+.ct_jump__chip--all {
+  background: #A3152D;
+  border-color: #A3152D;
+  color: #ffffff;
+}
+
+.ct_jump__chip--all:hover {
+  background: #891226;
+  color: #ffffff;
+}
+
+/* ---------- Nhóm lớn ---------- */
+.ct_dept {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  margin-top: 40px;
+  scroll-margin-top: 140px;
+}
+
+@media (min-width: 900px) {
+  .ct_dept {
+    grid-template-columns: 320px minmax(0, 1fr);
+    gap: 20px;
+  }
+}
+
+.ct_dept__hero {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  min-height: 220px;
+  border-radius: 22px;
+  overflow: hidden;
+  text-decoration: none;
+  background: #E9DFD2;
+}
+
+.ct_dept__hero img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.ct_dept__hero:hover img {
+  transform: scale(1.05);
+}
+
+.ct_dept__shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(24, 16, 12, 0.85) 0%, rgba(24, 16, 12, 0.25) 60%, rgba(24, 16, 12, 0) 100%);
+}
+
+.ct_dept__text {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 22px;
+  color: #ffffff;
+}
+
+.ct_dept__name {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.ct_dept__desc {
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.ct_dept__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* ---------- Lưới danh mục con ---------- */
+.ct_grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  align-content: start;
+}
+
+@media (min-width: 640px) {
+  .ct_grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1100px) {
+  .ct_grid--wide {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+.ct_card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 8px 14px;
+  border-radius: 20px;
+  background: #FBF6EF;
+  border: 1px solid rgba(120, 90, 60, 0.1);
+  text-decoration: none;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.ct_card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(120, 90, 60, 0.2);
+  box-shadow: 0 14px 28px -14px rgba(80, 55, 30, 0.3);
+}
+
+.ct_card__img {
+  display: block;
+  aspect-ratio: 4 / 3;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #F2EBE0;
+  margin-bottom: 6px;
+}
+
+.ct_card__img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.ct_card__name {
+  padding: 0 6px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #3B2418;
+}
+
+.ct_card__count {
+  padding: 0 6px;
+  font-size: 12.5px;
+  color: #7A6558;
+}
+
+/* ---------- Khối phụ ---------- */
+.ct_block {
+  margin-top: 56px;
+  scroll-margin-top: 140px;
+}
+
+.ct_h2 {
+  margin: 0 0 16px;
+  font-size: clamp(22px, 2.4vw, 28px);
+  font-weight: 700;
+  color: #3B2418;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ct_card,
+  .ct_dept__hero img {
+    transition: none;
+  }
+}

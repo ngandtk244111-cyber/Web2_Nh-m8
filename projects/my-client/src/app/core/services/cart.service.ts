@@ -6,6 +6,8 @@ import { Product, SelectedCustomization } from '../models/product.model';
 import { environment } from '../../../environments/environment';
 import { FlashSaleService } from './flash-sale.service';
 import { ToastService } from './toast.service';
+import { AuthService } from './auth.service';
+import { LoginModalService } from './login-modal.service';
 
 @Injectable({
   providedIn: 'root'
@@ -14,6 +16,8 @@ export class CartService {
   private readonly http = inject(HttpClient);
   private readonly flashSale = inject(FlashSaleService);
   private readonly toast = inject(ToastService);
+  private readonly auth = inject(AuthService);
+  private readonly loginModal = inject(LoginModalService);
 
   // Gom các lần thêm giỏ trong cùng một lượt xử lý (vd. "thêm tất cả") thành một thông báo duy nhất.
   private pendingAddedNames: string[] = [];
@@ -176,7 +180,26 @@ export class CartService {
     return Math.round(base * scaleMultiplier);
   }
 
-  addToCart(product: Product, quantity = 1, customization?: SelectedCustomization): void {
+  /**
+   * Chỉ khách đã đăng nhập mới được thêm vào giỏ — chưa đăng nhập thì mở popup đăng nhập và trả về false.
+   * Nơi thêm nhiều sản phẩm một lúc nên gọi hàm này trước vòng lặp để chỉ nhắc 1 lần.
+   */
+  ensureLoggedIn(): boolean {
+    if (this.auth.currentUser()) return true;
+    this.toast.info('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.');
+    this.loginModal.open();
+    return false;
+  }
+
+  /** Trả về false nếu không thêm được (chưa đăng nhập) — nơi gọi dừng hiệu ứng/điều hướng tiếp theo. */
+  addToCart(product: Product, quantity = 1, customization?: SelectedCustomization): boolean {
+    if (!this.ensureLoggedIn()) return false;
+    // Hàng có sẵn (READY_STOCK) bị giới hạn theo tồn kho; hàng in theo đơn không giới hạn.
+    const limited = product.productionType === 'READY_STOCK';
+    if (limited && product.inStock <= 0) {
+      this.toast.error(`"${product.name}" đã hết hàng.`);
+      return false;
+    }
     const current = [...this.itemsSignal()];
     const unitPrice = this.calculateUnitPrice(product, customization);
 
@@ -203,6 +226,16 @@ export class CartService {
       return itemConfigHash === configHash;
     });
 
+    if (limited) {
+      const alreadyInCart = current.filter(i => i.product.id === product.id).reduce((n, i) => n + i.quantity, 0);
+      const room = product.inStock - alreadyInCart;
+      if (room <= 0) {
+        this.toast.info(`Giỏ hàng đã có tối đa số lượng còn lại của "${product.name}".`);
+        return false;
+      }
+      quantity = Math.min(quantity, room);
+    }
+
     if (existingIndex > -1) {
       const existing = current[existingIndex];
       const newQty = existing.quantity + quantity;
@@ -226,6 +259,7 @@ export class CartService {
     this.saveCart(current);
     this.openCart();
     this.notifyAdded(product.name);
+    return true;
   }
 
   private notifyAdded(productName: string): void {

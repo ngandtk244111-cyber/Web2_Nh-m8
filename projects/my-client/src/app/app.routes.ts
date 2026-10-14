@@ -10,6 +10,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/catalog/catalog.component').then(m => m.CatalogComponent),
   },
   {
+    path: 'danh-muc',
+    loadComponent: () => import('./pages/categories/categories.component').then(m => m.CategoriesComponent),
+  },
+  {
     path: 'product/:slug',
     loadComponent: () => import('./pages/product-detail/product-detail.component').then(m => m.ProductDetailComponent),
   },
@@ -124,6 +128,17 @@ export const routes: Routes = [
   {
     path: 'notifications',
     loadComponent: () => import('./pages/notifications/notifications.component').then(m => m.NotificationsComponent),
+  },
+  // Phòng xem 3D — mở ở tab mới, toàn màn hình (data.bare: ẩn header/footer/widget nổi của site).
+  {
+    path: 'xem-nhanh-3d/:id',
+    data: { bare: true },
+    loadComponent: () => import('./pages/viewer-3d/quick-view-3d/quick-view-3d.component').then(m => m.QuickView3dComponent),
+  },
+  {
+    path: 'phong-3d/:id',
+    data: { bare: true },
+    loadComponent: () => import('./pages/viewer-3d/showroom-3d/showroom-3d.component').then(m => m.Showroom3dComponent),
   },
   {
     path: '**',

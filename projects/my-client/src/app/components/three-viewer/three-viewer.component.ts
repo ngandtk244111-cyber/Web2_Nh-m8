@@ -30,6 +30,8 @@ export class ThreeViewerComponent implements OnInit, OnChanges, OnDestroy {
   @ViewChild('canvasContainer', { static: true }) canvasContainer!: ElementRef<HTMLDivElement>;
 
   @Input() modelType: string = 'moon_lamp';
+  /** File GLB riêng của sản phẩm (Product.modelUrl) — có thì ưu tiên hơn modelType. */
+  @Input() modelUrl: string | null | undefined = null;
   @Input() colorHex: string = '#FDFBF7';
   @Input() roughness: number = 0.85;
   @Input() metalness: number = 0.05;
@@ -82,7 +84,7 @@ export class ThreeViewerComponent implements OnInit, OnChanges, OnDestroy {
 
     if (!this.runtime) return;
 
-    if (changes['modelType'] && !changes['modelType'].firstChange) {
+    if ((changes['modelType'] && !changes['modelType'].firstChange) || (changes['modelUrl'] && !changes['modelUrl'].firstChange)) {
       this.rebuildScene();
     } else {
       if (changes['colorHex'] || changes['roughness'] || changes['metalness']) {
@@ -192,6 +194,7 @@ export class ThreeViewerComponent implements OnInit, OnChanges, OnDestroy {
     this.setMascotLoading(true);
     this.productScenes.buildModel({
       modelType: this.modelType,
+      modelUrl: this.modelUrl,
       colorHex: this.colorHex,
       roughness: this.roughness,
       metalness: this.metalness,
@@ -204,6 +207,10 @@ export class ThreeViewerComponent implements OnInit, OnChanges, OnDestroy {
       if (this.runtime) {
         this.runtime.requestRender(5);
       }
+    }, () => {
+      this.isLoading = false;
+      this.hasError = true;
+      this.setMascotLoading(false);
     });
   }
 

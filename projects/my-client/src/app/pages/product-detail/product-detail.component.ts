@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, effect, signal, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -25,6 +25,7 @@ import {
   departmentLink,
   departmentOf,
   findSpace,
+  has3DModel,
   spaceLink,
   spacesOf,
   subcategoriesOf,
@@ -157,7 +158,22 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     private mascotService: MascotService,
     private flash: FlashSaleService,
     private roomService: RoomService
-  ) {}
+  ) {
+    // Mở trực tiếp bằng link / F5: danh sách sản phẩm chưa tải xong lúc đọc slug — chờ signal có dữ liệu
+    // rồi mới hiển thị (trước đây trang trống). Cùng sản phẩm chỉ cập nhật dữ liệu, không reset lựa chọn.
+    effect(() => {
+      const slug = this.slug();
+      const found = slug ? this.productService.products().find(p => p.slug === slug) : undefined;
+      untracked(() => {
+        if (!found) return;
+        if (found.id === this.product?.id) this.product = found;
+        else this.showProduct(found);
+      });
+    });
+  }
+
+  /** Slug trên URL hiện tại. */
+  private readonly slug = signal<string | null>(null);
 
   // ---------- Danh mục / không gian theo cây danh mục chung ----------
 
@@ -209,28 +225,32 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     this.flash.acquire();
     this.route.paramMap.subscribe(params => {
       const slug = params.get('slug');
-      if (slug) {
-        this.product = this.productService.getProductBySlug(slug);
-        if (this.product) {
-          this.slideIndex = this.route.snapshot.queryParamMap.get('view') === '3d' && this.has3D
-            ? this.galleryImages.length
-            : 0;
-          this.openPanel = null;
-          this.reviewFilter = 'all';
-          this.reviewPage = 1;
-          this.quantity = 1;
-          if (this.product.customization?.colors?.[0]) {
-            this.previewColorHex = this.product.customization.colors[0].hex;
-            this.selectedColorName = this.product.customization.colors[0].name;
-          }
-          this.selectedSizeId = this.product.customization?.sizes?.[0]?.id;
-          this.selectedFinishId = this.product.customization?.finishes?.[0]?.id;
-          this.recentlyViewedService.recordView(this.product.id);
-          this.buildPickRows(this.product);
-          this.loadTaggedCommunityPosts();
-        }
-      }
+      this.slug.set(slug);
+      // Đã có danh sách (điều hướng trong app) thì hiện ngay; chưa có thì effect ở constructor lo.
+      const found = slug ? this.productService.getProductBySlug(slug) : undefined;
+      if (found) this.showProduct(found);
+      else this.product = undefined;
     });
+  }
+
+  private showProduct(product: Product): void {
+    this.product = product;
+    this.slideIndex = this.route.snapshot.queryParamMap.get('view') === '3d' && this.has3D
+      ? this.galleryImages.length
+      : 0;
+    this.openPanel = null;
+    this.reviewFilter = 'all';
+    this.reviewPage = 1;
+    this.quantity = 1;
+    if (product.customization?.colors?.[0]) {
+      this.previewColorHex = product.customization.colors[0].hex;
+      this.selectedColorName = product.customization.colors[0].name;
+    }
+    this.selectedSizeId = product.customization?.sizes?.[0]?.id;
+    this.selectedFinishId = product.customization?.finishes?.[0]?.id;
+    this.recentlyViewedService.recordView(product.id);
+    this.buildPickRows(product);
+    this.loadTaggedCommunityPosts();
   }
 
   private buildPickRows(product: Product): void {
@@ -272,7 +292,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
   }
 
   get has3D(): boolean {
-    return !!this.product?.threeModelType;
+    return !!this.product && has3DModel(this.product);
   }
 
   get galleryImages(): string[] {
@@ -323,20 +343,32 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     carousel.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
-  /** Ảnh dùng cho khối "Câu chuyện sản phẩm" — ưu tiên ảnh thứ 2 để không trùng ảnh chính. */
-  get storyImage(): string {
-    const imgs = this.product?.images ?? [];
-    return imgs[1] || imgs[0] || '';
-  }
-
-  /** Ghép tối đa 2 điểm nổi bật với ảnh sản phẩm cho khối "Vì sao bạn sẽ thích". */
+  /** Ưu điểm nổi bật cho khối "Vì sao bạn sẽ thích" — mỗi ưu điểm ghép 1 ảnh sản phẩm làm minh hoạ. */
   get featureHighlights(): { title: string; image: string }[] {
     if (!this.product) return [];
     const imgs = this.product.images;
-    return this.product.features.slice(0, 2).map((title, i) => ({
+    return this.product.features.slice(0, 6).map((title, i) => ({
       title,
-      image: imgs[(i + 2) % imgs.length] || imgs[0],
+      image: imgs[(i + 1) % imgs.length] || imgs[0],
     }));
+  }
+
+  /** Lợi ích suy ra từ dữ liệu sản phẩm (chất liệu, 3D, tuỳ biến, đánh giá...) — hiển thị dạng dải icon gọn. */
+  get productPerks(): { icon: string; title: string; text: string }[] {
+    const p = this.product;
+    if (!p) return [];
+    const perks: { icon: string; title: string; text: string }[] = [];
+    if (p.materialInfo) perks.push({ icon: 'shield', title: 'Chất liệu', text: p.materialInfo });
+    if (p.productionType === 'PRINT_ON_DEMAND') {
+      perks.push({ icon: 'cube', title: 'In 3D theo đơn', text: p.productionTime ? `Sản xuất trong ${p.productionTime}` : 'Làm riêng cho bạn' });
+    } else if (p.inStock > 0) {
+      perks.push({ icon: 'truck', title: 'Có sẵn', text: 'Giao hàng nhanh toàn quốc' });
+    }
+    if (p.customizable) perks.push({ icon: 'sliders', title: 'Tuỳ biến', text: 'Chọn màu, chất liệu, kích thước' });
+    if (p.modelUrl || p.threeModelType) perks.push({ icon: 'rotate', title: 'Xem 3D', text: 'Xoay 360° trước khi mua' });
+    if (p.reviewCount > 0) perks.push({ icon: 'star', title: `${p.rating.toFixed(1)}/5 sao`, text: `Từ ${p.reviewCount} đánh giá` });
+    perks.push({ icon: 'rotate', title: 'Đổi trả 7 ngày', text: 'Kiểm tra hàng trước khi nhận' });
+    return perks.slice(0, 5);
   }
 
   /** Khung Flash Sale của sản phẩm này (null nếu không phải hàng Flash Sale). */
@@ -399,7 +431,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     const spaces = this.spaceLinks.map(sp => sp.label);
     if (spaces.length) rows.push({ label: 'Không gian phù hợp', value: spaces.join(', ') });
     if (p.customizable) rows.push({ label: 'Tùy chọn custom', value: this.customOptionsLabel(p) });
-    if (p.threeModelType) rows.push({ label: 'Mô hình 3D', value: 'Có — xoay, phóng to trực tiếp trên trang' });
+    if (has3DModel(p)) rows.push({ label: 'Mô hình 3D', value: 'Có — xoay, phóng to trực tiếp trên trang' });
     if (p.printTechnology) rows.push({ label: 'Công nghệ in 3D', value: p.printTechnology });
     if (p.customization?.colors?.length) {
       rows.push({ label: 'Màu sắc', value: p.customization.colors.map(c => c.name).join(', ') });
@@ -515,8 +547,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
       this.router.navigate(['/product', p.slug]);
       return;
     }
-    this.cartService.addToCart(p, 1);
-    this.mascotService.react('happy');
+    if (this.cartService.addToCart(p, 1)) this.mascotService.react('happy');
   }
 
   share(): void {
@@ -530,14 +561,26 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
   }
 
   addToCart(): void {
-    if (!this.product) return;
-    this.cartService.addToCart(this.product, this.quantity);
-    this.mascotService.react('happy');
+    if (!this.product || this.isSoldOut) return;
+    if (this.cartService.addToCart(this.product, this.quantity)) this.mascotService.react('happy');
+  }
+
+  /** Hàng có sẵn đã hết tồn kho → khoá nút mua. */
+  get isSoldOut(): boolean {
+    return !!this.product && this.product.productionType === 'READY_STOCK' && this.product.inStock <= 0;
+  }
+
+  /** Số lượng tối đa được chọn: theo tồn kho với hàng có sẵn. */
+  get maxQuantity(): number {
+    return this.product?.productionType === 'READY_STOCK' ? Math.max(this.product.inStock, 1) : 99;
   }
 
   buyNow(): void {
-    if (!this.product) return;
-    this.cartService.addToCart(this.product, this.quantity);
+    if (!this.product || this.isSoldOut) return;
+    if (!this.cartService.ensureLoggedIn()) return;
+    // Đã có sẵn trong giỏ đủ tồn kho thì không thêm nữa, chỉ mang sang thanh toán.
+    const inCart = this.cartService.items().some(i => i.product.id === this.product!.id && !i.selectedCustomization);
+    if (!this.cartService.addToCart(this.product, this.quantity) && !inCart) return;
     // Chỉ mang đúng sản phẩm vừa bấm "Mua ngay" sang Checkout, không kéo theo các sản phẩm khác đang có sẵn trong giỏ.
     const item = this.cartService.items().find(i => i.product.id === this.product!.id && !i.selectedCustomization);
     if (item) {

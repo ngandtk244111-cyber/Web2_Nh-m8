@@ -22,19 +22,37 @@
 
     <div class="space-y-24 pb-20 pt-16">
 
+      <!-- 0. SẢN PHẨM NỔI BẬT: đặt lên đầu để khách thấy ngay sau phần khuyến mãi -->
+      <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" appScrollReveal="up">
+
+        <div class="ps-head">
+          <div>
+            <p class="ps-eyebrow lm-kicker"><span class="ps-eyebrow__icon"><app-icon name="truck" [size]="14"></app-icon></span>Giao hỏa tốc</p>
+            <h2 class="ps-title lm-3d" data-text="Sản Phẩm Nổi Bật">Sản Phẩm Nổi Bật</h2>
+            <p class="ps-sub">Bàn phụ gỗ sồi, kệ sách, đồng hồ xi măng và bình hoa gốm thủ công – đóng gói và giao ngay trong ngày.</p>
+          </div>
+          <a routerLink="/catalog" [queryParams]="{ productionType: 'READY_STOCK' }" class="ps-link">
+            <span>Xem tất cả</span><span class="ps-link__arrow" aria-hidden="true">→</span>
+          </a>
+        </div>
+
+        <app-product-carousel appScrollReveal="stagger" [products]="readyStockProducts"></app-product-carousel>
+
+      </section>
+
       <!-- 1. DECOR DEALS -->
       <app-decor-deals appScrollReveal="up"></app-decor-deals>
 
       <!-- 2. DANH MỤC SẢN PHẨM: nội thất chính + đèn/decor + 3D & Custom (ảnh từ cây danh mục chung) -->
-      <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" appScrollReveal="up">
+      <section class="cat-section mx-auto px-4 sm:px-6 lg:px-8" appScrollReveal="up">
         <div class="cat-panel">
           <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-6 mb-6 sm:mb-8">
             <div>
-              <p class="cat-eyebrow">Khám phá theo danh mục</p>
-              <h2 class="cat-title">Danh Mục Sản Phẩm</h2>
+              <p class="cat-eyebrow lm-kicker">Khám phá theo danh mục</p>
+              <h2 class="cat-title lm-3d" data-text="Danh Mục Sản Phẩm">Danh Mục Sản Phẩm</h2>
               <p class="cat-sub">Sofa, giường, bàn ghế, tủ kệ cho không gian sống — cùng đèn, decor và sản phẩm 3D tuỳ biến theo phong cách riêng.</p>
             </div>
-            <a routerLink="/catalog" class="cat-viewall" aria-label="Xem toàn bộ danh mục sản phẩm">
+            <a routerLink="/danh-muc" class="cat-viewall" aria-label="Xem toàn bộ danh mục sản phẩm">
               <span>Xem toàn bộ danh mục</span>
               <span aria-hidden="true">→</span>
             </a>
@@ -60,7 +78,7 @@
       <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" appScrollReveal="up">
         <div class="flex items-end justify-between gap-4 mb-5">
           <div>
-            <h2 class="sec-title">Mua Theo Không Gian</h2>
+            <h2 class="sec-title lm-3d" data-text="Mua Theo Không Gian">Mua Theo Không Gian</h2>
             <p class="text-xs sm:text-sm text-neutral-600 mt-1">Nội thất và decor phù hợp cho từng căn phòng của bạn.</p>
           </div>
           <a routerLink="/shop-the-room" class="text-sm text-neutral-700 hover:text-neutral-900 transition flex-shrink-0">Phòng mẫu 3D &rsaquo;</a>
@@ -81,35 +99,17 @@
       <!-- 3. THƯƠNG HIỆU ƯA THÍCH -->
       <app-favorite-styles appScrollReveal="up"></app-favorite-styles>
 
-      <!-- 4. SẢN PHẨM NỔI BẬT -->
-      <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" appScrollReveal="up">
-
-        <div class="ps-head">
-          <div>
-            <p class="ps-eyebrow"><span class="ps-eyebrow__icon"><app-icon name="truck" [size]="14"></app-icon></span>Giao hỏa tốc</p>
-            <h2 class="ps-title">Sản Phẩm Nổi Bật</h2>
-            <p class="ps-sub">Bàn phụ gỗ sồi, kệ sách, đồng hồ xi măng và bình hoa gốm thủ công – đóng gói và giao ngay trong ngày.</p>
-          </div>
-          <a routerLink="/catalog" [queryParams]="{ productionType: 'READY_STOCK' }" class="ps-link">
-            <span>Xem tất cả</span><span class="ps-link__arrow" aria-hidden="true">→</span>
-          </a>
-        </div>
-
-        <app-product-carousel appScrollReveal="stagger" [products]="readyStockProducts"></app-product-carousel>
-
-      </section>
-
       <!-- 5. SHOP THE ROOM -->
       <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" appScrollReveal="up">
         <div class="str">
 
           <!-- Tiêu đề + chọn phòng -->
           <header class="str_head">
-            <p class="str_eyebrow">
+            <p class="str_eyebrow lm-kicker">
               <span class="str_eyebrow__icon"><app-icon name="room" [size]="14"></app-icon></span>
               Trải nghiệm độc quyền
             </p>
-            <h2 class="str_title">Shop The Room</h2>
+            <h2 class="str_title lm-3d" data-text="Shop The Room">Shop The Room</h2>
             <p class="str_lead">Dạo quanh không gian 3D Luméa phối sẵn — chạm vào từng món để xem giá và mua ngay.</p>
 
             <div *ngIf="showcaseRooms.length > 1" class="str_tabs" role="tablist" aria-label="Chọn không gian">
@@ -186,8 +186,8 @@
 
         <div class="ps-head">
           <div>
-            <p class="ps-eyebrow"><span class="ps-eyebrow__icon"><app-icon name="cube" [size]="14"></app-icon></span>Cá nhân hóa trực quan</p>
-            <h2 class="ps-title">Sản Phẩm In 3D Có Thể Tùy Biến</h2>
+            <p class="ps-eyebrow lm-kicker"><span class="ps-eyebrow__icon"><app-icon name="cube" [size]="14"></app-icon></span>Cá nhân hóa trực quan</p>
+            <h2 class="ps-title lm-3d" data-text="Sản Phẩm In 3D Có Thể Tùy Biến">Sản Phẩm In 3D Có Thể Tùy Biến</h2>
             <p class="ps-sub">Xem trước 3D ngay trên web: đổi màu sắc, chất liệu mờ/bóng, kích thước và khắc tên theo ý thích.</p>
           </div>
           <a routerLink="/catalog" [queryParams]="{ customizableOnly: true }" class="ps-link">
@@ -261,7 +261,7 @@
           <div class="flex items-center gap-2">
             <span class="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_6px_#CD818E]"></span>
             <div>
-              <h2 class="sec-title">Tin tức &amp; Mẹo sống</h2>
+              <h2 class="sec-title lm-3d" data-text="Tin tức &amp; Mẹo sống">Tin tức &amp; Mẹo sống</h2>
               <p class="text-xs sm:text-sm text-neutral-600 mt-1">
                 Luméa Living — xu hướng, mẹo sống, phong cách, phong thủy, cảm hứng và câu chuyện thiết kế 3D
               </p>
@@ -316,7 +316,7 @@
       <!-- 10. Ý TƯỞNG PHỐI ĐỒ (bố cục theo mục "コーディネートアイデア" của Nitori: hàng ô ngang, không chú thích rời) -->
       <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" appScrollReveal="up">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="sec-title">Ý Tưởng Phối Đồ</h2>
+          <h2 class="sec-title lm-3d" data-text="Ý Tưởng Phối Đồ">Ý Tưởng Phối Đồ</h2>
           <a routerLink="/coordinate" class="text-sm text-neutral-700 hover:text-amber-600 transition">Xem tất cả &rsaquo;</a>
         </div>
 
@@ -334,7 +334,7 @@
       <!-- 10b. DECOR COMMUNITY (bài đăng của cộng đồng) -->
       <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" *ngIf="communityPosts.length > 0" appScrollReveal="up">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="sec-title">Decor Community</h2>
+          <h2 class="sec-title lm-3d" data-text="Decor Community">Decor Community</h2>
           <a routerLink="/community" class="text-sm text-neutral-700 hover:text-amber-600 transition">Xem tất cả &rsaquo;</a>
         </div>
 
@@ -356,3 +356,6 @@
 
     <!-- POPUP "Có thể bạn chưa biết?" — mở khi người dùng cuộn qua ~40% trang, dữ liệu từ bài viết Insights nổi bật -->
     <app-tip-popup></app-tip-popup>
+
+    <!-- POPUP POSTER quảng cáo — hiện 1 lần mỗi phiên khi vừa vào trang chủ -->
+    <app-poster-popup></app-poster-popup>

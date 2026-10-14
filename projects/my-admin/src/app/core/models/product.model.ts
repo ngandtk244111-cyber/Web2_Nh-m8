@@ -123,4 +123,6 @@ export interface Product {
   reviews: ProductReview[];
   customization?: CustomizationConfig;
   threeModelType?: 'moon_lamp' | 'geometric_vase' | 'desk_organizer' | 'cube_stool' | 'wall_shelf' | 'abstract_sculpture';
+  /** URL file GLB/GLTF thật của sản phẩm (ưu tiên hơn threeModelType). */
+  modelUrl?: string | null;
 }

@@ -8,7 +8,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { LoginModalService } from '../../core/services/login-modal.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { FavoriteService } from '../../core/services/favorite.service';
-import { ProductService } from '../../core/services/product.service';
+import { ProductService, createEmptyFilters } from '../../core/services/product.service';
 import { Product } from '../../core/models/product.model';
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
 import {
@@ -71,18 +71,25 @@ export class HeaderComponent implements OnDestroy {
   notificationsOpen = false;
   searchSuggestionsOpen = false;
   cartPreviewOpen = false;
+  accountMenuOpen = false;
   expandedMobileGroup: string | null = null;
   private megaMenuCloseTimer: ReturnType<typeof setTimeout> | null = null;
 
-  /** Header rút gọn khi cuộn xuống quá ngưỡng này (px) — ẩn top bar/Menu/vị trí giao hàng. */
-  private readonly SCROLL_COMPACT_THRESHOLD = 80;
+  /**
+   * Header rút gọn khi cuộn xuống quá COMPACT_AT (px) — ẩn top bar/Menu/vị trí giao hàng — và chỉ bung lại khi
+   * về gần đầu trang (EXPAND_AT). Khoảng cách giữa 2 ngưỡng phải lớn hơn phần chiều cao header bị co (~44px):
+   * header là sticky nên khi co lại nội dung bị kéo lên, scrollY tụt theo; dùng 1 ngưỡng duy nhất sẽ khiến
+   * header co/bung liên tục (giựt) quanh ngưỡng, nhất là ở trang ngắn.
+   */
+  private readonly SCROLL_COMPACT_AT = 120;
+  private readonly SCROLL_EXPAND_AT = 20;
   isScrolled = false;
 
   @HostListener('window:scroll')
   onWindowScroll(): void {
     const y = window.scrollY || document.documentElement.scrollTop;
-    const scrolled = y > this.SCROLL_COMPACT_THRESHOLD;
-    if (scrolled !== this.isScrolled) this.isScrolled = scrolled;
+    if (!this.isScrolled && y > this.SCROLL_COMPACT_AT) this.isScrolled = true;
+    else if (this.isScrolled && y < this.SCROLL_EXPAND_AT) this.isScrolled = false;
   }
 
   /** Từ khoá/danh mục người dùng thường tìm — map thẳng sang catalog thật (cùng taxonomy với mega menu). */
@@ -180,6 +187,7 @@ export class HeaderComponent implements OnDestroy {
       this.notificationsOpen = false;
       this.searchSuggestionsOpen = false;
       this.cartPreviewOpen = false;
+      this.accountMenuOpen = false;
     }
   }
 
@@ -187,6 +195,7 @@ export class HeaderComponent implements OnDestroy {
     this.cartPreviewOpen = !this.cartPreviewOpen;
     if (this.cartPreviewOpen) {
       this.notificationsOpen = false;
+      this.accountMenuOpen = false;
       this.searchSuggestionsOpen = false;
       if (this.megaMenuOpen) this.startCloseMegaMenu();
     }
@@ -216,6 +225,7 @@ export class HeaderComponent implements OnDestroy {
 
   toggleNotifications(): void {
     this.notificationsOpen = !this.notificationsOpen;
+    this.accountMenuOpen = false;
     if (this.megaMenuOpen) this.startCloseMegaMenu();
     this.searchSuggestionsOpen = false;
     this.cartPreviewOpen = false;
@@ -301,11 +311,48 @@ export class HeaderComponent implements OnDestroy {
     if (this.megaMenuOpen) this.startCloseMegaMenu();
     this.notificationsOpen = false;
     this.cartPreviewOpen = false;
+    this.accountMenuOpen = false;
+  }
+
+  /** Lối tắt trong dropdown tài khoản ở header. */
+  readonly accountMenuItems: { label: string; icon: string; link: string; queryParams?: Record<string, string> }[] = [
+    { label: 'Hồ sơ cá nhân', icon: 'user', link: '/account', queryParams: { tab: 'profile' } },
+    { label: 'Đơn hàng của tôi', icon: 'truck', link: '/account', queryParams: { tab: 'orders' } },
+    { label: 'Sổ địa chỉ', icon: 'map-pin', link: '/account', queryParams: { tab: 'addresses' } },
+    { label: 'Xu thưởng', icon: 'coin', link: '/account', queryParams: { tab: 'coins' } },
+    { label: 'Sản phẩm yêu thích', icon: 'heart', link: '/favorites' },
+  ];
+
+  toggleAccountMenu(): void {
+    const open = !this.accountMenuOpen;
+    this.closeMenus();
+    this.searchSuggestionsOpen = false;
+    this.accountMenuOpen = open;
+  }
+
+  async logout(): Promise<void> {
+    this.accountMenuOpen = false;
+    this.mobileMenuOpen = false;
+    if (await this.authService.confirmLogout()) this.router.navigate(['/']);
   }
 
   openSearchSuggestions(): void {
     this.searchSuggestionsOpen = true;
     this.notificationsOpen = false;
+  }
+
+  /** Nội dung đang gõ ở ô tìm kiếm — dùng để gợi ý sản phẩm khớp ngay khi gõ. */
+  searchText = '';
+  searchResults: Product[] = [];
+  private readonly SEARCH_RESULT_LIMIT = 6;
+
+  onSearchInput(value: string): void {
+    this.searchText = value;
+    this.searchSuggestionsOpen = true;
+    const q = value.trim();
+    this.searchResults = q
+      ? this.productService.filterProducts({ ...createEmptyFilters(), searchQuery: q }).slice(0, this.SEARCH_RESULT_LIMIT)
+      : [];
   }
 
   selectSuggestion(item: SearchSuggestion): void {
@@ -348,6 +395,7 @@ export class HeaderComponent implements OnDestroy {
     const q = (value || '').trim();
     this.mobileMenuOpen = false;
     this.closeMenus();
+    this.searchResults = [];
     this.router.navigate(['/catalog'], q ? { queryParams: { q } } : {});
   }
 }

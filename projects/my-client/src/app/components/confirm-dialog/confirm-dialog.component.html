@@ -1,0 +1,15 @@
+<div class="cd_overlay" *ngIf="dialog.state() as d" (click)="dialog.close(false)">
+  <div class="cd_box" role="alertdialog" aria-modal="true" [attr.aria-label]="d.title" (click)="$event.stopPropagation()">
+    <span class="cd_icon" [class.cd_icon--danger]="d.danger" *ngIf="d.icon">
+      <app-icon [name]="d.icon" [size]="22"></app-icon>
+    </span>
+    <h3 class="cd_title">{{ d.title }}</h3>
+    <p class="cd_message" *ngIf="d.message">{{ d.message }}</p>
+    <div class="cd_actions">
+      <button type="button" class="cd_btn cd_btn--ghost" (click)="dialog.close(false)">{{ d.cancelLabel || 'Huỷ' }}</button>
+      <button type="button" class="cd_btn" [class.cd_btn--danger]="d.danger" (click)="dialog.close(true)">
+        {{ d.confirmLabel || 'Đồng ý' }}
+      </button>
+    </div>
+  </div>
+</div>

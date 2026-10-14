@@ -112,92 +112,95 @@
             </div>
           </div>
 
-        </ng-container>
-      </div>
-
-      <!-- Footer / Summary -->
-      <div *ngIf="cartService.items().length > 0" class="border-t border-neutral-200 bg-[#FBF7EE]">
-
-        <div class="cd_selected-row">
-          <span>Đã chọn ({{ selectedItemCount() }}) sản phẩm</span>
-          <button type="button" class="cd_toggle-handle" (click)="toggleSummary()" [attr.aria-label]="isSummaryExpanded() ? 'Thu gọn' : 'Mở rộng'">
-            <app-icon name="chevron-down" [size]="16" [class.cd_toggle-handle__icon--open]="isSummaryExpanded()"></app-icon>
-          </button>
-        </div>
-
-        <div class="cd_collapsible" [class.cd_collapsible--open]="isSummaryExpanded()">
-          <div class="px-6 space-y-3 pb-3">
-
-            <!-- Coupon -->
-            <button type="button" class="cd_promo-btn" (click)="showCouponInput = !showCouponInput" [class.cd_promo-btn--active]="cartService.appliedCoupon()">
-              <app-icon name="tag" [size]="15"></app-icon>
-              <span class="cd_promo-btn__text">
-                <ng-container *ngIf="cartService.appliedCoupon() as coupon; else noCoupon">
-                  Đã áp dụng mã <strong>{{ coupon.code }}</strong>
-                </ng-container>
-                <ng-template #noCoupon>Nhập mã ưu đãi Luméa để được giảm giá</ng-template>
-              </span>
-              <app-icon name="chevron-right" [size]="14"></app-icon>
-            </button>
-
-            <div *ngIf="showCouponInput" class="flex gap-2">
-              <input
-                type="text"
-                [(ngModel)]="couponCodeInput"
-                placeholder="Ví dụ: LUMÉANEW"
-                class="flex-1 text-xs border border-neutral-300 rounded-xl px-3 py-2 uppercase placeholder:normal-case focus:outline-none focus:border-amber-400 bg-neutral-100 text-neutral-800">
-              <button (click)="applyCoupon()" class="px-3.5 py-2 bg-neutral-200 hover:bg-neutral-300 text-amber-700 text-xs font-semibold rounded-xl border border-neutral-300 transition">
-                Áp dụng
+          <!-- Ưu đãi + chi tiết thanh toán: cuộn cùng danh sách sản phẩm, chỉ phần Thành tiền ở dưới là cố định -->
+          <div class="cd_summary">
+            <div class="cd_selected-row">
+              <span>Đã chọn ({{ selectedItemCount() }}) sản phẩm</span>
+              <button type="button" class="cd_toggle-handle" (click)="toggleSummary()" [attr.aria-label]="isSummaryExpanded() ? 'Thu gọn' : 'Mở rộng'">
+                <app-icon name="chevron-down" [size]="16" [class.cd_toggle-handle__icon--open]="isSummaryExpanded()"></app-icon>
               </button>
             </div>
-            <div *ngIf="couponMessage" [class]="couponSuccess ? 'text-xs text-emerald-400' : 'text-xs text-red-400'">
-              {{ couponMessage }}
-            </div>
 
-            <!-- Xu Luméa -->
-            <div class="cd_coin-row" [class.cd_coin-row--guest]="!authService.currentUser()">
-              <div class="cd_coin-row__left">
-                <app-icon name="coin" [size]="16"></app-icon>
-                <div class="cd_coin-row__meta">
-                  <span>Dùng Xu Luméa</span>
-                  <small>Số dư: {{ coinBalance() }} xu</small>
+            <div class="cd_collapsible" [class.cd_collapsible--open]="isSummaryExpanded()">
+              <div class="px-6 space-y-3 pb-3">
+
+                <!-- Coupon -->
+                <button type="button" class="cd_promo-btn" (click)="showCouponInput = !showCouponInput" [class.cd_promo-btn--active]="cartService.appliedCoupon()">
+                  <app-icon name="tag" [size]="15"></app-icon>
+                  <span class="cd_promo-btn__text">
+                    <ng-container *ngIf="cartService.appliedCoupon() as coupon; else noCoupon">
+                    Đã áp dụng mã <strong>{{ coupon.code }}</strong>
+                  </ng-container>
+                  <ng-template #noCoupon>Nhập mã ưu đãi Luméa để được giảm giá</ng-template>
+                </span>
+                <app-icon name="chevron-right" [size]="14"></app-icon>
+              </button>
+
+              <div *ngIf="showCouponInput" class="flex gap-2">
+                <input
+                  type="text"
+                  [(ngModel)]="couponCodeInput"
+                  placeholder="Ví dụ: LUMÉANEW"
+                  class="flex-1 text-xs border border-neutral-300 rounded-xl px-3 py-2 uppercase placeholder:normal-case focus:outline-none focus:border-amber-400 bg-neutral-100 text-neutral-800">
+                <button (click)="applyCoupon()" class="px-3.5 py-2 bg-neutral-200 hover:bg-neutral-300 text-amber-700 text-xs font-semibold rounded-xl border border-neutral-300 transition">
+                  Áp dụng
+                </button>
+              </div>
+              <div *ngIf="couponMessage" [class]="couponSuccess ? 'text-xs text-emerald-400' : 'text-xs text-red-400'">
+                {{ couponMessage }}
+              </div>
+
+              <!-- Xu Luméa -->
+              <div class="cd_coin-row" [class.cd_coin-row--guest]="!authService.currentUser()">
+                <div class="cd_coin-row__left">
+                  <app-icon name="coin" [size]="16"></app-icon>
+                  <div class="cd_coin-row__meta">
+                    <span>Dùng Xu Luméa</span>
+                    <small>Số dư: {{ coinBalance() }} xu</small>
+                  </div>
+                </div>
+                <div class="cd_coin-row__right">
+                  <span *ngIf="useCoins() && authService.currentUser()" class="cd_coin-row__amount">-{{ coinDiscount() | vnd }}</span>
+                  <label class="cd_switch" [attr.aria-disabled]="!authService.currentUser()">
+                    <input type="checkbox" [checked]="useCoins() && !!authService.currentUser()" [disabled]="!authService.currentUser()" (change)="toggleUseCoins($any($event.target).checked)">
+                    <span class="cd_switch__track"></span>
+                  </label>
                 </div>
               </div>
-              <div class="cd_coin-row__right">
-                <span *ngIf="useCoins() && authService.currentUser()" class="cd_coin-row__amount">-{{ coinDiscount() | vnd }}</span>
-                <label class="cd_switch" [attr.aria-disabled]="!authService.currentUser()">
-                  <input type="checkbox" [checked]="useCoins() && !!authService.currentUser()" [disabled]="!authService.currentUser()" (change)="toggleUseCoins($any($event.target).checked)">
-                  <span class="cd_switch__track"></span>
-                </label>
-              </div>
-            </div>
 
-            <!-- Breakdown -->
-            <div class="space-y-1.5 text-xs text-neutral-600 pt-1">
-              <div class="flex justify-between">
-                <span>Tạm tính</span>
-                <span class="font-medium text-neutral-800">{{ selectedSubtotal() | vnd }}</span>
-              </div>
-              <div class="flex justify-between" [class.text-emerald-400]="selectedCouponDiscount() > 0">
-                <span>Giảm giá voucher</span>
-                <span>-{{ selectedCouponDiscount() | vnd }}</span>
-              </div>
-              <div class="flex justify-between" [class.text-emerald-400]="coinDiscount() > 0">
-                <span>Giảm Xu Luméa</span>
-                <span>-{{ coinDiscount() | vnd }}</span>
-              </div>
-              <div class="flex justify-between">
-                <span>Phí vận chuyển</span>
-                <span class="font-medium text-neutral-800">
-                  {{ selectedShippingFee() === 0 ? 'Miễn phí' : (selectedShippingFee() | vnd) }}
-                </span>
+              <!-- Breakdown -->
+              <div class="space-y-1.5 text-xs text-neutral-600 pt-1">
+                <div class="flex justify-between">
+                  <span>Tạm tính</span>
+                  <span class="font-medium text-neutral-800">{{ selectedSubtotal() | vnd }}</span>
+                </div>
+                <div class="flex justify-between" [class.text-emerald-400]="selectedCouponDiscount() > 0">
+                  <span>Giảm giá voucher</span>
+                  <span>-{{ selectedCouponDiscount() | vnd }}</span>
+                </div>
+                <div class="flex justify-between" [class.text-emerald-400]="coinDiscount() > 0">
+                  <span>Giảm Xu Luméa</span>
+                  <span>-{{ coinDiscount() | vnd }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Phí vận chuyển</span>
+                  <span class="font-medium text-neutral-800">
+                    {{ selectedShippingFee() === 0 ? 'Miễn phí' : (selectedShippingFee() | vnd) }}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+          </div>
 
-        <div class="px-6 pt-2 pb-4 space-y-3">
-          <div class="flex justify-between items-baseline text-sm font-bold text-neutral-900 border-t border-neutral-200 pt-3">
+        </ng-container>
+      </div>
+
+      <!-- Footer cố định: chỉ Thành tiền + nút thanh toán -->
+      <div *ngIf="cartService.items().length > 0" class="border-t border-neutral-200 bg-[#FBF7EE]">
+
+        <div class="px-6 pt-3 pb-4 space-y-3">
+          <div class="flex justify-between items-baseline text-sm font-bold text-neutral-900">
             <span>Thành tiền</span>
             <span class="text-lg font-semibold text-amber-400">{{ selectedTotal() | vnd }}</span>
           </div>

@@ -5,7 +5,10 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "node --watch index.js"
+    "dev": "node --watch index.js",
+    "seed:all": "node seed/seed-all.js",
+    "seed:verify": "node seed/verify-seed.js",
+    "seed:product-content": "node seed/enrich-product-content.js"
   },
   "dependencies": {
     "axios": "^1.7.9",

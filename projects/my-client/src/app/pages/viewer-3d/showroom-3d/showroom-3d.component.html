@@ -1,0 +1,99 @@
+<div #room class="sr">
+  <ng-container [ngSwitch]="route.status()">
+
+    <div *ngSwitchCase="'loading'" class="sr__center">
+      <span class="sr__spinner" aria-hidden="true"></span>
+      <span>Đang mở phòng 3D…</span>
+    </div>
+
+    <div *ngSwitchCase="'not-found'" class="sr__center sr__center--msg">
+      <app-icon name="cube" [size]="30"></app-icon>
+      <h1>Không tìm thấy sản phẩm</h1>
+      <p>Sản phẩm có mã "{{ route.id() }}" không tồn tại hoặc đã ngừng kinh doanh.</p>
+      <a routerLink="/catalog" class="sr__link-btn">Xem sản phẩm khác</a>
+    </div>
+
+    <ng-container *ngSwitchCase="'ready'">
+      <ng-container *ngIf="route.product() as p">
+
+        <!-- Thanh trên -->
+        <header class="sr__bar">
+          <a [routerLink]="['/product', p.slug]" class="sr__back">
+            <app-icon name="chevron-left" [size]="18"></app-icon>
+            <span>Quay lại sản phẩm</span>
+          </a>
+          <div class="sr__title">
+            <span class="sr__mode">Phòng 3D</span>
+            <span class="sr__name">{{ p.name }}</span>
+          </div>
+          <button type="button" class="sr__close" (click)="closeTab()" aria-label="Đóng" title="Đóng">
+            <app-icon name="x" [size]="18"></app-icon>
+          </button>
+        </header>
+
+        <!-- Mô hình -->
+        <main class="sr__stage">
+          <app-product-model-stage
+            [product]="p"
+            [look]="look"
+            [autoRotate]="autoRotate"
+            (stateChange)="onStageState($event)"
+            (variantsChange)="onVariants($event, p)">
+          </app-product-model-stage>
+
+          <div *ngIf="stageState === 'ready'" class="sr__tools" role="toolbar" aria-label="Điều khiển mô hình 3D">
+            <button type="button" (click)="zoom(0.8)" title="Phóng to" aria-label="Phóng to"><app-icon name="plus" [size]="18"></app-icon></button>
+            <button type="button" (click)="zoom(1.25)" title="Thu nhỏ" aria-label="Thu nhỏ"><app-icon name="minus" [size]="18"></app-icon></button>
+            <span class="sr__tools-sep"></span>
+            <button type="button" (click)="autoRotate = !autoRotate" [class.sr__tool--on]="autoRotate" [attr.aria-pressed]="autoRotate" title="Xoay 360°" aria-label="Xoay 360 độ">
+              <span class="sr__360">360°</span>
+            </button>
+            <button type="button" (click)="reset()" title="Đặt lại góc nhìn" aria-label="Đặt lại góc nhìn"><app-icon name="rotate" [size]="17"></app-icon></button>
+            <button type="button" (click)="toggleFullscreen()" [title]="isFullscreen ? 'Thoát toàn màn hình' : 'Toàn màn hình'" aria-label="Toàn màn hình"><app-icon name="maximize" [size]="16"></app-icon></button>
+          </div>
+
+          <p *ngIf="stageState === 'ready'" class="sr__hint">Kéo để xoay 360° · Cuộn hoặc chụm 2 ngón để phóng to</p>
+        </main>
+
+        <!-- Phiên bản màu / chất liệu -->
+        <footer class="sr__variants" *ngIf="options.length || (p.customization?.materials?.length ?? 0) > 1">
+          <div class="sr__variants-head" *ngIf="options.length">
+            <span class="sr__variants-label">Màu sắc / Chất liệu</span>
+            <span class="sr__variants-value">{{ selected?.label }}</span>
+          </div>
+          <div class="sr__thumbs" *ngIf="options.length" role="listbox" aria-label="Chọn phiên bản">
+            <button
+              *ngFor="let o of options"
+              type="button"
+              role="option"
+              class="sr__thumb"
+              [class.sr__thumb--active]="o.key === selectedKey"
+              [attr.aria-selected]="o.key === selectedKey"
+              (click)="select(o.key, p)"
+              [title]="o.label">
+              <span class="sr__thumb-img">
+                <img *ngIf="o.thumb; else swatch" [src]="o.thumb" [alt]="o.label">
+                <ng-template #swatch>
+                  <span class="sr__swatch" [style.background]="o.swatch || '#eee'"></span>
+                </ng-template>
+              </span>
+              <span class="sr__thumb-name">{{ o.label }}</span>
+            </button>
+          </div>
+
+          <div class="sr__materials" *ngIf="(p.customization?.materials?.length ?? 0) > 1 && !p.modelUrl">
+            <span class="sr__variants-label">Bề mặt</span>
+            <button
+              *ngFor="let m of p.customization!.materials; let i = index"
+              type="button"
+              class="sr__mat"
+              [class.sr__mat--active]="i === materialIndex"
+              (click)="selectMaterial(i, p)">{{ m.name }}</button>
+          </div>
+        </footer>
+
+        <p *ngIf="credit(p)" class="sr__credit">{{ credit(p) }}</p>
+      </ng-container>
+    </ng-container>
+  </ng-container>
+</div>

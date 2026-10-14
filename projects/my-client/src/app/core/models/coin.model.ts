@@ -10,7 +10,8 @@ export type CoinRewardReason =
   | 'BROWSE_FEED'
   | 'GAME_WHEEL'
   | 'GAME_GIFT_BOX'
-  | 'GAME_MEMORY';
+  | 'GAME_MEMORY'
+  | 'COIN_EXPIRED';
 
 export interface CoinTransaction {
   _id: string;
@@ -19,6 +20,14 @@ export interface CoinTransaction {
   refId: string | null;
   note: string;
   createdAt: string;
+  /** Hạn sử dụng (chỉ có ở giao dịch cộng xu). */
+  expiresAt?: string | null;
+}
+
+/** Xu sắp hết hạn trong 30 ngày tới. */
+export interface CoinExpiringSoon {
+  amount: number;
+  date: string;
 }
 
 export interface CoinClaimResult {

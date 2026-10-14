@@ -11,7 +11,31 @@ export interface HeroTickerItem {
   ctaLink: string;
   icon: string;
   image: string;
+  /** Phần chữ trang trí kiểu banner khuyến mãi (chữ 3D, chữ viết tay, mascot). title/subtitle vẫn giữ
+   *  cho trình đọc màn hình và ticker ở header. */
+  art: HeroArt;
 }
+
+export interface HeroArt {
+  /** Nhãn pill phía trên, vd "THẬT KHÔNG ĐÙA". */
+  kicker: string;
+  /** Các dòng tiêu đề chữ 3D: cream = vàng kem viền đỏ đô, pink = hồng. */
+  lines: { text: string; tone: 'cream' | 'pink' }[];
+  /** Dòng chữ viết tay nghiêng. */
+  script: string;
+  /** Chip nhỏ cạnh chữ viết tay, vd "QUÁ LÀ XỊN XÒ". */
+  chip: string;
+  /** Ảnh mascot Luméa đứng góc phải banner. */
+  mascot: string;
+  /** Nền gradient tươi của slide (kiểu banner khuyến mãi) — ảnh phòng chỉ mờ dần ở nửa phải. */
+  bg: string;
+  /** Nhóm sản phẩm thật hiển thị thành cụm ở giữa banner. */
+  picks: HeroPicks;
+  /** Dòng lợi ích phụ trong ô thông tin (cạnh chữ viết tay), vd "Freeship tận nhà". */
+  perk: string;
+}
+
+export type HeroPicks = 'has3d' | 'print' | 'ready' | 'top' | 'sale';
 
 export const AUTOPLAY_INTERVAL_MS = 4500;
 
@@ -33,6 +57,16 @@ export class HeroTickerService {
       ctaLink: '/shop-the-room',
       icon: 'room',
       image: 'assets/hero-banner/hero-room-3d.png',
+      art: {
+        kicker: 'Mới toanh',
+        lines: [{ text: 'PHÒNG 3D', tone: 'cream' }, { text: 'XOAY 360°', tone: 'pink' }],
+        script: 'Ngắm trước, mua sau',
+        chip: 'Thấy là mê',
+        mascot: 'assets/mascot/lumea-mascot.png',
+        bg: 'linear-gradient(115deg, #FFF1F3 0%, #F8CDD5 45%, #E3899B 100%)',
+        picks: 'has3d',
+        perk: 'Xem trước khi mua',
+      },
     },
     {
       id: 'print-3d',
@@ -43,6 +77,16 @@ export class HeroTickerService {
       ctaLink: '/customizer-3d',
       icon: 'cube',
       image: 'assets/hero-banner/hero-print-3d.png',
+      art: {
+        kicker: 'Độc bản 100%',
+        lines: [{ text: 'IN 3D', tone: 'cream' }, { text: 'THEO Ý BẠN', tone: 'pink' }],
+        script: 'Khắc tên, chọn màu',
+        chip: 'Xong trong 2–3 ngày',
+        mascot: 'assets/mascot/goh-mascot.png',
+        bg: 'linear-gradient(115deg, #FBF4EC 0%, #EFD9C8 45%, #D49E92 100%)',
+        picks: 'print',
+        perk: 'Độc bản cho riêng bạn',
+      },
     },
     {
       id: 'freeship',
@@ -53,6 +97,16 @@ export class HeroTickerService {
       ctaLink: '/catalog',
       icon: 'truck',
       image: 'assets/hero-banner/hero-freeship.png',
+      art: {
+        kicker: 'Thật không đùa',
+        lines: [{ text: 'FREESHIP', tone: 'cream' }, { text: 'TỪ 500K', tone: 'pink' }],
+        script: 'Giao nhanh toàn quốc',
+        chip: 'Đóng gói siêu kỹ',
+        mascot: 'assets/mascot/goh-confident.png',
+        bg: 'linear-gradient(115deg, #F7F2E7 0%, #EAD9C6 45%, #C9A88A 100%)',
+        picks: 'ready',
+        perk: 'Freeship tận nhà',
+      },
     },
     {
       id: 'ai-assistant',
@@ -63,6 +117,16 @@ export class HeroTickerService {
       ctaLink: '/style-quiz',
       icon: 'sparkles',
       image: 'assets/hero-banner/hero-ai-assistant.png',
+      art: {
+        kicker: 'Trợ lý AI',
+        lines: [{ text: 'GỢI Ý DECOR', tone: 'cream' }, { text: 'SIÊU NHANH', tone: 'pink' }],
+        script: 'Kể mình nghe căn phòng mơ ước',
+        chip: 'Miễn phí',
+        mascot: 'assets/mascot/goh-search.png',
+        bg: 'linear-gradient(115deg, #FAF0F5 0%, #EDD2E1 45%, #C98BA9 100%)',
+        picks: 'top',
+        perk: 'Gợi ý trong vài giây',
+      },
     },
     {
       id: 'deal-today',
@@ -73,6 +137,16 @@ export class HeroTickerService {
       ctaLink: '/flash-sale',
       icon: 'tag',
       image: 'assets/hero-banner/hero-deal-today.png',
+      art: {
+        kicker: 'Săn deal mỗi ngày',
+        lines: [{ text: 'ƯU ĐÃI', tone: 'cream' }, { text: 'HÔM NAY', tone: 'pink' }],
+        script: 'Giá hời cho nhà xinh',
+        chip: 'Số lượng có hạn',
+        mascot: 'assets/mascot/lumea-mascot.png',
+        bg: 'linear-gradient(115deg, #FCECEE 0%, #F2B8C1 45%, #C94B5E 100%)',
+        picks: 'sale',
+        perk: 'Giảm đến 40%',
+      },
     },
   ];
 

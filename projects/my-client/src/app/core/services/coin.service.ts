@@ -4,7 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthService } from './auth.service';
 import { ToastService } from './toast.service';
-import { CoinClaimResult, CoinGameKey, CoinGamePlayResult, CoinRewardReason, CoinRewardsState, CoinTransaction } from '../models/coin.model';
+import { CoinClaimResult, CoinExpiringSoon, CoinGameKey, CoinGamePlayResult, CoinRewardReason, CoinRewardsState, CoinTransaction } from '../models/coin.model';
 
 const BASE = `${environment.apiUrl}/coins`;
 
@@ -16,6 +16,9 @@ export class CoinService {
 
   readonly balance = signal<number>(0);
   readonly transactions = signal<CoinTransaction[]>([]);
+  /** Xu sắp hết hạn (30 ngày tới) và số ngày hiệu lực của mỗi lần nhận xu. */
+  readonly expiringSoon = signal<CoinExpiringSoon | null>(null);
+  readonly coinTtlDays = signal<number>(365);
   /** Trạng thái trang /xu (điểm danh, lượt chơi còn lại...) — null khi chưa đăng nhập/chưa tải. */
   readonly rewards = signal<CoinRewardsState | null>(null);
 
@@ -26,6 +29,7 @@ export class CoinService {
       } else {
         this.balance.set(0);
         this.transactions.set([]);
+        this.expiringSoon.set(null);
         this.rewards.set(null);
       }
     });
@@ -34,11 +38,24 @@ export class CoinService {
   refresh(): void {
     const userId = this.authService.currentUser()?._id;
     if (!userId) return;
-    this.http.get<{ success: boolean; coins: number; transactions: CoinTransaction[]; birthdayReward?: { amount: number } }>(`${BASE}/me`, { params: { userId } }).subscribe({
+    this.http.get<{
+      success: boolean;
+      coins: number;
+      transactions: CoinTransaction[];
+      birthdayReward?: { amount: number };
+      expiringSoon?: CoinExpiringSoon | null;
+      expiredAmount?: number;
+      coinTtlDays?: number;
+    }>(`${BASE}/me`, { params: { userId } }).subscribe({
       next: (res) => {
         if (res.success) {
           this.balance.set(res.coins);
           this.transactions.set(res.transactions);
+          this.expiringSoon.set(res.expiringSoon ?? null);
+          if (res.coinTtlDays) this.coinTtlDays.set(res.coinTtlDays);
+          if (res.expiredAmount) {
+            this.toastService.info(`${res.expiredAmount} xu của bạn đã hết hạn sử dụng.`);
+          }
           if (res.birthdayReward) {
             this.toastService.success(`🎂 Chúc mừng sinh nhật! Luméa tặng bạn ${res.birthdayReward.amount} xu.`);
           }

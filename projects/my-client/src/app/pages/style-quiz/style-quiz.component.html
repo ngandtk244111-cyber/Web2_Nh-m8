@@ -14,7 +14,7 @@
     </p>
 
     <button type="button" class="quiz-btn quiz-btn--primary" (click)="startQuiz()">
-      Bắt Đầu Trắc Nghiệm
+      {{ authService.currentUser() ? 'Bắt Đầu Trắc Nghiệm' : 'Đăng Nhập Để Làm Trắc Nghiệm' }}
     </button>
 
     <div class="quiz-intro__grid">
@@ -62,13 +62,34 @@
         <span class="quiz-palette__swatch" *ngFor="let hex of result.paletteHex" [style.backgroundColor]="hex"></span>
       </div>
 
-      <div class="quiz-result__categories">
-        <a
-          *ngFor="let cat of result.suggestedCategories"
+      <!-- Danh mục gợi ý: bấm chip để xem nhanh sản phẩm ngay tại đây -->
+      <p class="quiz-result__cat-label">Danh mục hợp với phong cách của bạn</p>
+      <div class="quiz-result__categories" role="tablist">
+        <button
+          type="button"
+          role="tab"
+          *ngFor="let cat of suggestedCategories"
           class="quiz-chip"
-          routerLink="/catalog"
-          [queryParams]="{ category: cat }">
-          Khám phá danh mục →
+          [class.quiz-chip--active]="cat === activeCategory"
+          [attr.aria-selected]="cat === activeCategory"
+          (click)="selectCategory(cat)">
+          {{ cat.link.label }}
+        </button>
+      </div>
+
+      <div class="quiz-preview" *ngIf="activeCategory as cat">
+        <div class="quiz-preview__grid" *ngIf="previewProducts.length; else noPreview">
+          <a *ngFor="let p of previewProducts" class="quiz-preview__item" [routerLink]="['/product', p.slug]">
+            <span class="quiz-preview__img"><img [src]="p.images[0]" [alt]="p.name" loading="lazy"></span>
+            <span class="quiz-preview__name">{{ p.name }}</span>
+            <span class="quiz-preview__price">{{ p.basePrice | vnd }}</span>
+          </a>
+        </div>
+        <ng-template #noPreview>
+          <p class="quiz-preview__empty">Chưa có sản phẩm trong danh mục này.</p>
+        </ng-template>
+        <a class="quiz-preview__all" [routerLink]="cat.link.link" [queryParams]="cat.link.queryParams">
+          Xem tất cả {{ cat.link.label }} →
         </a>
       </div>
 

@@ -1,0 +1,20 @@
+<div class="ms">
+  <div #canvasHost class="ms__canvas" [class.ms__canvas--hidden]="state === 'error' || state === 'no-model'"></div>
+
+  <div *ngIf="state === 'loading'" class="ms__overlay" role="status" aria-live="polite">
+    <span class="ms__spinner" aria-hidden="true"></span>
+    <span>Đang tải mô hình 3D…</span>
+  </div>
+
+  <div *ngIf="state === 'error'" class="ms__overlay ms__overlay--msg" role="alert">
+    <app-icon name="cube" [size]="28"></app-icon>
+    <strong>Không tải được mô hình 3D</strong>
+    <span>File mô hình bị lỗi hoặc trình duyệt không hỗ trợ WebGL. Bạn vẫn có thể xem ảnh và đặt hàng ở trang sản phẩm.</span>
+  </div>
+
+  <div *ngIf="state === 'no-model'" class="ms__overlay ms__overlay--msg" role="status">
+    <app-icon name="cube" [size]="28"></app-icon>
+    <strong>Sản phẩm chưa có mô hình 3D</strong>
+    <span>Luméa đang dựng mô hình 3D cho sản phẩm này. Bạn có thể xem ảnh thật ở trang chi tiết sản phẩm.</span>
+  </div>
+</div>

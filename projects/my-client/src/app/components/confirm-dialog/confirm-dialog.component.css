@@ -1,0 +1,96 @@
+.cd_overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(30, 22, 10, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  animation: cd-fade 0.18s ease both;
+}
+
+.cd_box {
+  width: min(380px, 100%);
+  padding: 26px 24px 20px;
+  border-radius: 20px;
+  background: #ffffff;
+  text-align: center;
+  box-shadow: 0 30px 70px rgba(40, 28, 10, 0.3);
+  animation: cd-pop 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.cd_icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 12px;
+  border-radius: 999px;
+  background: #F7F2E7;
+  color: #3C332D;
+}
+
+.cd_icon--danger {
+  background: #F9F1F2;
+  color: #A3152D;
+}
+
+.cd_title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1F1712;
+}
+
+.cd_message {
+  margin: 8px 0 0;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: #6B5A4E;
+}
+
+.cd_actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.cd_btn {
+  flex: 1;
+  padding: 11px 14px;
+  border-radius: 12px;
+  border: none;
+  background: #1F1712;
+  color: #ffffff;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter 0.15s ease;
+}
+
+.cd_btn:hover {
+  filter: brightness(1.1);
+}
+
+.cd_btn--ghost {
+  background: #F2EBE0;
+  color: #3C332D;
+}
+
+.cd_btn--danger {
+  background: #A3152D;
+}
+
+@keyframes cd-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes cd-pop {
+  from { opacity: 0; transform: scale(0.94); }
+  to { opacity: 1; transform: none; }
+}

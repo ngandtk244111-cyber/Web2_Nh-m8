@@ -1,0 +1,65 @@
+<div class="ct">
+  <!-- Tiêu đề + lối tắt tới từng nhóm -->
+  <header class="ct_head">
+    <nav class="ct_crumb" aria-label="Breadcrumb">
+      <a routerLink="/">Trang chủ</a>
+      <span aria-hidden="true">/</span>
+      <span>Danh mục sản phẩm</span>
+    </nav>
+    <h1 class="ct_title">Tất Cả Danh Mục</h1>
+    <p class="ct_sub">Chọn nhóm sản phẩm bạn đang tìm — nội thất, đèn, decor, phụ kiện hay sản phẩm 3D tuỳ biến theo ý bạn.</p>
+
+    <div class="ct_jump">
+      <button *ngFor="let d of departments()" type="button" class="ct_jump__chip" (click)="scrollTo('ct-' + d.dept.key)">
+        {{ d.dept.label }}
+      </button>
+      <button type="button" class="ct_jump__chip" (click)="scrollTo('ct-spaces')">Theo không gian</button>
+      <button type="button" class="ct_jump__chip" (click)="scrollTo('ct-3d')">3D & Custom</button>
+      <a routerLink="/catalog" class="ct_jump__chip ct_jump__chip--all">Xem tất cả sản phẩm →</a>
+    </div>
+  </header>
+
+  <!-- Từng nhóm lớn: thẻ nhóm + lưới danh mục con -->
+  <section *ngFor="let d of departments()" class="ct_dept" [id]="'ct-' + d.dept.key">
+    <a class="ct_dept__hero" [routerLink]="d.link.link" [queryParams]="d.link.queryParams">
+      <img [src]="d.dept.image" [alt]="d.dept.label" loading="lazy">
+      <span class="ct_dept__shade" aria-hidden="true"></span>
+      <span class="ct_dept__text">
+        <span class="ct_dept__name">{{ d.dept.label }}</span>
+        <span class="ct_dept__desc">{{ d.dept.description }}</span>
+        <span class="ct_dept__cta">Xem {{ d.count }} sản phẩm <app-icon name="chevron-right" [size]="14"></app-icon></span>
+      </span>
+    </a>
+
+    <div class="ct_grid">
+      <a *ngFor="let sub of d.subs" class="ct_card" [routerLink]="sub.link" [queryParams]="sub.queryParams">
+        <span class="ct_card__img"><img [src]="sub.image" [alt]="sub.label" loading="lazy"></span>
+        <span class="ct_card__name">{{ sub.label }}</span>
+        <span class="ct_card__count">{{ sub.count }} sản phẩm</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- Mua theo không gian -->
+  <section class="ct_block" id="ct-spaces">
+    <h2 class="ct_h2">Mua theo không gian</h2>
+    <div class="ct_grid ct_grid--wide">
+      <a *ngFor="let sp of spaces()" class="ct_card" [routerLink]="sp.link" [queryParams]="sp.queryParams">
+        <span class="ct_card__img"><img [src]="sp.image" [alt]="sp.label" loading="lazy"></span>
+        <span class="ct_card__name">{{ sp.label }}</span>
+        <span class="ct_card__count">{{ sp.count }} sản phẩm</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- 3D & Custom -->
+  <section class="ct_block" id="ct-3d">
+    <h2 class="ct_h2">3D & Custom</h2>
+    <div class="ct_grid ct_grid--wide">
+      <a *ngFor="let l of threeDLinks" class="ct_card" [routerLink]="l.link" [queryParams]="l.queryParams">
+        <span class="ct_card__img"><img *ngIf="l.image" [src]="l.image" [alt]="l.label" loading="lazy"></span>
+        <span class="ct_card__name">{{ l.label }}</span>
+      </a>
+    </div>
+  </section>
+</div>

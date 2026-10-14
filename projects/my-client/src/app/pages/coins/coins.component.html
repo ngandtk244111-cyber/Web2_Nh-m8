@@ -26,7 +26,10 @@
         <button type="button" class="xu-hero__login" (click)="login()">Đăng nhập để nhận xu</button>
       </ng-template>
 
-      <p class="xu-hero__note">1 xu = 1đ, trừ trực tiếp vào đơn hàng khi thanh toán</p>
+      <p class="xu-hero__note">1 xu = 1đ, trừ trực tiếp vào đơn hàng khi thanh toán · Xu có hạn sử dụng {{ coinService.coinTtlDays() }} ngày kể từ ngày nhận</p>
+      <p class="xu-hero__expiring" *ngIf="isLoggedIn() && coinService.expiringSoon() as soon">
+        ⏳ {{ soon.amount }} xu sẽ hết hạn vào {{ soon.date | date: 'dd/MM/yyyy' }}
+      </p>
     </div>
   </section>
 
@@ -190,9 +193,12 @@
         <div class="xu-history__row" *ngFor="let t of visibleHistory()">
           <div>
             <p class="xu-history__note">{{ t.note }}</p>
-            <p class="xu-history__date">{{ t.createdAt | date: 'HH:mm · dd/MM/yyyy' }}</p>
+            <p class="xu-history__date">
+              {{ t.createdAt | date: 'HH:mm · dd/MM/yyyy' }}
+              <ng-container *ngIf="t.amount > 0 && t.expiresAt"> · HSD {{ t.expiresAt | date: 'dd/MM/yyyy' }}</ng-container>
+            </p>
           </div>
-          <strong class="xu-history__amount">+{{ t.amount }} xu</strong>
+          <strong class="xu-history__amount" [class.xu-history__amount--neg]="t.amount < 0">{{ t.amount > 0 ? '+' : '' }}{{ t.amount }} xu</strong>
         </div>
         <button
           *ngIf="coinService.transactions().length > 6"

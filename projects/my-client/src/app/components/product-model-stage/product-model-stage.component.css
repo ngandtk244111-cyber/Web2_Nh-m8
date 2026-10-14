@@ -1,0 +1,72 @@
+:host {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.ms {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  user-select: none;
+}
+
+.ms__canvas {
+  position: absolute;
+  inset: 0;
+  cursor: grab;
+  touch-action: none;
+}
+
+.ms__canvas:active {
+  cursor: grabbing;
+}
+
+.ms__canvas--hidden {
+  visibility: hidden;
+}
+
+.ms__overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #5c534c;
+  pointer-events: none;
+}
+
+.ms__overlay--msg {
+  padding: 24px;
+  text-align: center;
+  pointer-events: auto;
+}
+
+.ms__overlay--msg strong {
+  font-size: 15px;
+  color: #2a2420;
+}
+
+.ms__overlay--msg span {
+  max-width: 340px;
+  line-height: 1.6;
+}
+
+.ms__spinner {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 0, 0, 0.12);
+  border-top-color: #8b1e2d;
+  animation: ms-spin 0.9s linear infinite;
+}
+
+@keyframes ms-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

@@ -395,3 +395,121 @@
     align-items: flex-start;
   }
 }
+
+/* ---------- Danh mục gợi ý + xem nhanh sản phẩm ---------- */
+.quiz-result__cat-label {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--qz-text);
+  opacity: 0.7;
+}
+
+.quiz-result__categories {
+  margin-bottom: 14px;
+}
+
+.quiz-chip {
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.quiz-chip--active {
+  background: var(--qz-accent-strong);
+  border-color: var(--qz-accent-strong);
+  color: #ffffff;
+}
+
+.quiz-chip--active:hover {
+  color: #ffffff;
+}
+
+.quiz-preview {
+  margin-bottom: 28px;
+  padding: 14px;
+  border-radius: 18px;
+  background: var(--qz-bg-soft);
+}
+
+.quiz-preview__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@media (max-width: 640px) {
+  .quiz-preview__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.quiz-preview__item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 6px 10px;
+  border-radius: 14px;
+  background: #ffffff;
+  text-decoration: none;
+  transition: transform 0.2s ease;
+}
+
+.quiz-preview__item:hover {
+  transform: translateY(-2px);
+}
+
+.quiz-preview__img {
+  aspect-ratio: 1;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #F2EBE0;
+}
+
+.quiz-preview__img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.quiz-preview__name {
+  padding: 0 4px;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--qz-text);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.quiz-preview__price {
+  padding: 0 4px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--qz-accent-strong);
+}
+
+.quiz-preview__empty {
+  margin: 0;
+  font-size: 13px;
+  color: var(--qz-text);
+  opacity: 0.7;
+}
+
+.quiz-preview__all {
+  display: inline-block;
+  margin-top: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--qz-accent-strong);
+  text-decoration: none;
+}
+
+.quiz-preview__all:hover {
+  text-decoration: underline;
+}

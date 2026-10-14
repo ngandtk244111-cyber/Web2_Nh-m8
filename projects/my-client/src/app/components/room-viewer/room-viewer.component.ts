@@ -291,8 +291,7 @@ export class RoomViewerComponent implements OnInit, AfterViewInit, OnChanges, On
   }
 
   addToCart(product: Product): void {
-    this.cartService.addToCart(product, 1);
-    this.mascotService.react('happy');
+    if (this.cartService.addToCart(product, 1)) this.mascotService.react('happy');
   }
 
   /** Chọn điểm đánh dấu từ bên ngoài (vd: danh sách sản phẩm cạnh viewer ở trang chủ). */

@@ -88,7 +88,7 @@ export class CustomRequestService {
       reviews: [],
     };
 
-    this.cartService.addToCart(customProduct, 1);
+    if (!this.cartService.addToCart(customProduct, 1)) return;
     if (request.status !== 'APPROVED' && request.status !== 'CONVERTED_TO_ORDER') {
       this.updateStatus(request.id, 'APPROVED');
     }

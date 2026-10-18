@@ -540,6 +540,13 @@
   color: #1F1712;
 }
 
+/* ---------- Xem thêm sản phẩm ---------- */
+.cg_load-more {
+  display: flex;
+  justify-content: center;
+  margin-top: 28px;
+}
+
 /* ---------- Lối vào nhánh 3D & Custom ---------- */
 .cg_custom-cta {
   display: flex;

@@ -1,4 +1,5 @@
 const express = require('express');
+const { sendError } = require('../utils/http-error');
 const AiConversation = require('../models/AiConversation');
 const { requireUserId } = require('../middleware/auth');
 
@@ -17,7 +18,7 @@ router.get('/', requireUserId, async (req, res) => {
       .lean();
     res.json({ success: true, conversations });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -29,7 +30,7 @@ router.get('/:id', requireUserId, async (req, res) => {
     if (!conversation) return res.status(404).json({ success: false, error: 'Không tìm thấy cuộc trò chuyện' });
     res.json({ success: true, conversation });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -56,7 +57,7 @@ router.put('/:id', requireUserId, async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     if (err.code === 11000) return res.status(409).json({ success: false, error: 'Mã hội thoại đã tồn tại' });
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -65,7 +66,7 @@ router.delete('/:id', requireUserId, async (req, res) => {
     await AiConversation.deleteOne({ id: req.params.id, userId: req.userId });
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 

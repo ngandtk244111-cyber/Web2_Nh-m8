@@ -1,4 +1,5 @@
 const express = require('express');
+const { sendError } = require('../utils/http-error');
 const bcrypt = require('bcryptjs');
 const Admin = require('../models/Admin');
 
@@ -27,7 +28,7 @@ router.post('/login', async (req, res) => {
     res.json({ success: true, admin });
   } catch (err) {
     console.error('admin login error', err);
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 

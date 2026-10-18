@@ -12,19 +12,27 @@
         [class.w-36]="layout === 'list'"
         [class.aspect-square]="layout === 'list'"
         [class.flex-shrink-0]="layout === 'list'">
-        <!-- Ảnh 1: ảnh studio (mặc định). Ảnh 2: ảnh lifestyle, crossfade khi hover; không có ảnh 2 thì giữ ảnh 1. -->
+        <!-- Ảnh 1 (images[0]): ảnh chính. Ảnh 2 (images[1]): ảnh khác của CHÍNH món đó, crossfade khi hover;
+             không có ảnh 2 thì hover phóng to vào ảnh chính (không hiện món khác). -->
+        <a
+          [routerLink]="['/product', product.slug]"
+          [attr.aria-label]="product.name"
+          class="absolute inset-0 block">
         <img
           #cardImg
           [src]="product.images[0]"
           [alt]="product.name"
-          class="pc__photo absolute inset-0 w-full h-full object-cover">
+          class="pc__photo absolute inset-0 w-full h-full object-cover"
+          [class.pc__photo--solo]="!product.images[1]">
         <img
           *ngIf="product.images[1]"
           [src]="product.images[1]"
-          [alt]="product.name + ' trong không gian thực tế'"
+          [alt]="product.name + ' — góc chụp khác'"
           loading="lazy"
           aria-hidden="true"
           class="pc__photo pc__photo--alt absolute inset-0 w-full h-full object-cover">
+
+        </a>
 
         <!-- Badges: tối đa 3 nhãn gọn — Sale / 3D / Custom -->
         <div class="absolute top-2.5 left-2.5 flex flex-col gap-1 items-start">

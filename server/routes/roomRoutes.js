@@ -1,4 +1,5 @@
 const express = require('express');
+const { sendError } = require('../utils/http-error');
 const Room = require('../models/Room');
 const { requireAdminId } = require('../middleware/auth');
 
@@ -9,7 +10,7 @@ router.get('/', async (_req, res) => {
     const rooms = await Room.find().sort({ createdAt: 1 });
     res.json({ success: true, rooms });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -20,7 +21,7 @@ router.post('/', requireAdminId, async (req, res) => {
     res.json({ success: true, room });
   } catch (err) {
     console.error('create room error', err);
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -30,7 +31,7 @@ router.put('/:id', requireAdminId, async (req, res) => {
     if (!room) return res.status(404).json({ success: false, error: 'Không tìm thấy phòng' });
     res.json({ success: true, room });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -39,7 +40,7 @@ router.delete('/:id', requireAdminId, async (req, res) => {
     await Room.deleteOne({ id: req.params.id });
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 

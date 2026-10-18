@@ -1,5 +1,5 @@
 import { Component, signal } from '@angular/core';
-import { ActivatedRouteSnapshot, Router, RouterOutlet, NavigationStart, NavigationEnd, NavigationCancel, NavigationError } from '@angular/router';
+import { ActivatedRouteSnapshot, Router, RouterOutlet, NavigationStart, NavigationEnd, NavigationCancel, NavigationError, Scroll } from '@angular/router';
 import { HeaderComponent } from './components/header/header.component';
 import { FooterComponent } from './components/footer/footer.component';
 import { CartDrawerComponent } from './components/cart-drawer/cart-drawer.component';
@@ -46,6 +46,8 @@ export class AppComponent {
   readonly bare = signal(false);
 
   constructor(router: Router) {
+    // Tắt khôi phục cuộn mặc định của trình duyệt để không giành với restoreScroll() bên dưới.
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
     router.events.subscribe((event) => {
       if (event instanceof NavigationEnd) {
         this.bare.set(this.isBareRoute(router.routerState.snapshot.root));
@@ -59,7 +61,33 @@ export class AppComponent {
       ) {
         setTimeout(() => this.routeLeaving.set(false), 120);
       }
+      if (event instanceof Scroll) {
+        if (event.position) this.restoreScroll(event.position);
+        else if (!event.anchor) window.scrollTo(0, 0);
+      }
     });
+  }
+
+  /**
+   * Back/Forward: cuộn về đúng vị trí cũ. Nội dung trang (sản phẩm từ API...) có thể chưa render kịp nên
+   * thử lại mỗi frame cho tới khi trang đủ dài (tối đa 2.5s); khách tự cuộn thì dừng ngay.
+   */
+  private restoreScroll([x, y]: [number, number]): void {
+    let cancelled = false;
+    const cancel = () => { cancelled = true; };
+    const events = ['wheel', 'touchstart', 'keydown', 'mousedown'] as const;
+    events.forEach(e => window.addEventListener(e, cancel, { once: true, passive: true }));
+    const cleanup = () => events.forEach(e => window.removeEventListener(e, cancel));
+
+    const deadline = performance.now() + 2500;
+    const attempt = () => {
+      if (cancelled) return cleanup();
+      const maxY = document.documentElement.scrollHeight - window.innerHeight;
+      window.scrollTo(x, Math.min(y, maxY));
+      if (maxY >= y || performance.now() > deadline) return cleanup();
+      requestAnimationFrame(attempt);
+    };
+    requestAnimationFrame(attempt);
   }
 
   private isBareRoute(route: ActivatedRouteSnapshot): boolean {

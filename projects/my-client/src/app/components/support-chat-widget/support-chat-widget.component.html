@@ -30,16 +30,27 @@
   </header>
 
   <div class="scw_body" #body>
-    <div *ngIf="chatService.messages().length === 0" class="scw_empty">
-      Chào bạn! Nhắn tin để được đội ngũ Luméa hỗ trợ trực tiếp.
+    <!-- Tin chào luôn có ở đầu cuộc trò chuyện ngay khi mở khung (hiển thị ở client, không lưu DB). -->
+    <div class="scw_msg">
+      <span class="scw_auto">Trợ lý tự động</span>
+      Chào bạn, Luméa rất vui được hỗ trợ bạn! Bạn cần giúp gì? Hãy nhắn câu hỏi hoặc chọn nhanh bên dưới nhé.
+    </div>
+    <div *ngIf="chatService.messages().length === 0" class="scw_links">
+      <button *ngFor="let q of quickReplies" type="button" class="scw_chip" (click)="sendQuick(q)">{{ q }}</button>
     </div>
 
-    <div
-      *ngFor="let msg of chatService.messages()"
-      class="scw_msg"
-      [class.scw_msg--me]="msg.sender === 'customer'">
-      {{ msg.text }}
-    </div>
+    <ng-container *ngFor="let msg of chatService.messages()">
+      <div class="scw_msg" [class.scw_msg--me]="msg.sender === 'customer'">
+        <span *ngIf="msg.auto" class="scw_auto">Trợ lý tự động</span>
+        {{ msg.text }}
+      </div>
+      <div *ngIf="msg.links?.length" class="scw_links">
+        <button *ngFor="let link of msg.links" type="button" class="scw_chip scw_chip--link" (click)="goTo(link.url)">
+          {{ link.label }}
+          <app-icon name="chevron-right" [size]="12"></app-icon>
+        </button>
+      </div>
+    </ng-container>
 
     <!-- Nhân viên đang gõ -->
     <div *ngIf="chatService.staffTyping()" class="scw_msg scw_typing" aria-label="Nhân viên đang soạn tin">

@@ -1,5 +1,7 @@
 const express = require('express');
+const { sendError } = require('../utils/http-error');
 const Warranty = require('../models/Warranty');
+const { requireAdminId } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -8,7 +10,7 @@ function generateWarrantyCode() {
 }
 
 // Admin: issue a warranty card for a shipped order.
-router.post('/', async (req, res) => {
+router.post('/', requireAdminId, async (req, res) => {
   try {
     const { orderNumber, productName, customerName, customerPhone, purchasedAt, warrantyMonths } = req.body;
     if (!orderNumber || !productName || !customerName || !customerPhone) {
@@ -27,7 +29,7 @@ router.post('/', async (req, res) => {
 
     res.json({ success: true, warranty });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -52,7 +54,7 @@ router.get('/lookup', async (req, res) => {
 
     res.json({ success: true, warranty });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -73,7 +75,7 @@ router.post('/:warrantyCode/claim', async (req, res) => {
 
     res.json({ success: true, warranty });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 

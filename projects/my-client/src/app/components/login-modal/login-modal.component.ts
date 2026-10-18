@@ -1,8 +1,9 @@
 import { AfterViewChecked, Component, ElementRef, QueryList, ViewChild, ViewChildren, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Observable } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
-import { AuthApiService } from '../../core/services/auth-api.service';
+import { AuthApiResponse, AuthApiService } from '../../core/services/auth-api.service';
 import { LoginModalService } from '../../core/services/login-modal.service';
 import { ToastService } from '../../core/services/toast.service';
 import { MascotService } from '../../core/services/mascot.service';
@@ -11,9 +12,19 @@ import { environment } from '../../../environments/environment';
 
 declare const google: any;
 
-type Mode = 'login' | 'register' | 'forgot-password' | 'google-phone';
+type Mode = 'login' | 'register' | 'forgot-password';
 
+const PHONE_REGEX = /^0\d{9}$/;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const OTP_SECONDS = 60;
 
+/**
+ * Hộp thoại tài khoản — bố cục tham khảo VitaCare-main (features/accounts/auth): 3 luồng TÁCH RIÊNG
+ *   - Đăng nhập: SĐT/email + mật khẩu (+ Google)
+ *   - Đăng ký: SĐT/email → OTP 6 số → đặt mật khẩu
+ *   - Quên mật khẩu: SĐT/email → OTP 6 số → mật khẩu mới
+ * Server nhận chung 1 trường `identifier` là SĐT hoặc email (server/routes/authRoutes.js).
+ */
 @Component({
   selector: 'app-login-modal',
   standalone: true,
@@ -26,18 +37,18 @@ export class LoginModalComponent implements AfterViewChecked {
   @ViewChild('googleBtnContainer') googleBtnContainer!: ElementRef<HTMLDivElement>;
 
   mode: Mode = 'login';
-  /** register: 1 = nhập SĐT, 2 = nhập OTP, 3 = đặt mật khẩu */
+  /** register: 1 = nhập SĐT/email, 2 = nhập OTP, 3 = đặt mật khẩu */
   registerStep: 1 | 2 | 3 = 1;
-  /** forgot-password: 1 = nhập SĐT, 2 = nhập OTP, 3 = đặt mật khẩu mới */
+  /** forgot-password: 1 = nhập SĐT/email, 2 = nhập OTP, 3 = đặt mật khẩu mới */
   forgotStep: 1 | 2 | 3 = 1;
 
-  phoneNumber = '';
+  /** Số điện thoại hoặc email. */
+  identifier = '';
   password = '';
   confirmPassword = '';
   otpCode = '';
   private submitting = false;
-  /** Mọi luồng gửi form (đăng nhập/đăng ký/OTP/quên mật khẩu) đều đi qua cờ này -> đồng bộ luôn
-   *  trạng thái loading của mascot tại đây thay vì rải lời gọi ở từng luồng. */
+  /** Mọi luồng gửi form đều đi qua cờ này -> đồng bộ luôn trạng thái loading của mascot tại đây. */
   get isSubmitting(): boolean {
     return this.submitting;
   }
@@ -50,13 +61,10 @@ export class LoginModalComponent implements AfterViewChecked {
   showPassword = false;
   showConfirmPassword = false;
 
-  errors: { phone?: string; password?: string; confirmPassword?: string; otp?: string } = {};
+  errors: { identifier?: string; password?: string; confirmPassword?: string; otp?: string } = {};
 
-  otpTimer = 60;
+  otpTimer = OTP_SECONDS;
   private otpInterval: ReturnType<typeof setInterval> | null = null;
-
-  /** userId của tài khoản Google vừa đăng nhập lần đầu, đang chờ gắn SĐT (mode 'google-phone'). */
-  pendingGoogleUserId: string | null = null;
 
   constructor(
     public modalService: LoginModalService,
@@ -76,36 +84,47 @@ export class LoginModalComponent implements AfterViewChecked {
     this.mode = 'login';
     this.registerStep = 1;
     this.forgotStep = 1;
-    this.phoneNumber = '';
-    this.password = '';
-    this.confirmPassword = '';
-    this.otpCode = '';
+    this.identifier = '';
+    this.resetSecrets();
     this.isSubmitting = false;
     this.errors = {};
-    this.pendingGoogleUserId = null;
     this.stopOtpTimer();
   }
 
+  private resetSecrets(): void {
+    this.password = '';
+    this.confirmPassword = '';
+    this.otpCode = '';
+    this.showPassword = false;
+    this.showConfirmPassword = false;
+  }
+
   /**
-   * `<div #googleBtnContainer>` chỉ tồn tại trong DOM khi modal đang mở VÀ mode === 'login'
-   * (bị *ngIf huỷ/tạo lại mỗi lần đóng/mở modal), nên không thể chỉ render 1 lần ở
-   * ngAfterViewInit — phải kiểm tra lại mỗi lần view check và render lại vào container mới
-   * mỗi khi nó xuất hiện rỗng (chưa có nút Google bên trong).
+   * `<div #googleBtnContainer>` chỉ tồn tại khi modal mở VÀ đang ở màn đăng nhập (bị *ngIf huỷ/tạo
+   * lại), nên kiểm tra lại mỗi lần view check và render vào container mới khi nó còn rỗng.
    */
   ngAfterViewChecked(): void {
     const container = this.googleBtnContainer?.nativeElement;
-    if (container && !container.hasChildNodes()) {
+    if (container && !container.hasChildNodes() && !this.googleRenderPending) {
       this.renderGoogleButton();
     }
   }
 
-  /** Google Identity Services script tải async — chờ tới khi `window.google` sẵn sàng rồi mới render nút. */
+  /** Đang chờ thư viện Google tải — tránh mỗi lần view check lại đẻ thêm một chuỗi setTimeout. */
+  private googleRenderPending = false;
+
+  /**
+   * Google Identity Services tải async — chờ `window.google` sẵn sàng rồi render nút chuẩn (rộng bằng khung)
+   * vào lớp trong suốt phủ trên mặt nút tự vẽ.
+   */
   private renderGoogleButton(retriesLeft = 20): void {
     if (typeof google === 'undefined' || !google?.accounts?.id) {
-      if (retriesLeft <= 0) return;
+      if (retriesLeft <= 0) { this.googleRenderPending = false; return; }
+      this.googleRenderPending = true;
       setTimeout(() => this.renderGoogleButton(retriesLeft - 1), 250);
       return;
     }
+    this.googleRenderPending = false;
     const container = this.googleBtnContainer?.nativeElement;
     if (!container) return;
     google.accounts.id.initialize({
@@ -113,12 +132,15 @@ export class LoginModalComponent implements AfterViewChecked {
       callback: (response: { credential: string }) => this.handleGoogleCredential(response.credential),
     });
     google.accounts.id.renderButton(container, {
-      theme: 'outline',
-      size: 'large',
-      shape: 'pill',
-      text: 'continue_with',
-      width: 220,
+      type: 'standard', theme: 'outline', size: 'large', text: 'signin_with', locale: 'vi',
+      width: Math.min(400, Math.max(200, container.offsetWidth || 320)),
     });
+  }
+
+  /** Click rơi xuống mặt nút tự vẽ = nút thật của Google chưa có (script bị chặn / mất mạng). */
+  onGoogleFallbackClick(): void {
+    this.toastService.error('Chưa kết nối được tới Google, vui lòng tải lại trang hoặc đăng nhập bằng SĐT/email.');
+    this.renderGoogleButton();
   }
 
   close(): void {
@@ -132,24 +154,45 @@ export class LoginModalComponent implements AfterViewChecked {
 
   get title(): string {
     if (this.mode === 'forgot-password') {
-      if (this.forgotStep === 1) return 'Quên Mật Khẩu';
-      if (this.forgotStep === 2) return 'Nhập Mã OTP';
-      return 'Đặt Mật Khẩu Mới';
-    }
-    if (this.mode === 'google-phone') {
-      return this.registerStep === 1 ? 'Hoàn Tất Đăng Nhập Google' : 'Nhập Mã OTP';
+      if (this.forgotStep === 1) return 'Quên mật khẩu';
+      if (this.forgotStep === 2) return 'Nhập mã OTP';
+      return 'Đặt mật khẩu mới';
     }
     if (this.mode === 'register') {
-      if (this.registerStep === 1) return 'Đăng Ký Tài Khoản';
-      if (this.registerStep === 2) return 'Nhập Mã OTP';
-      return 'Tạo Mật Khẩu';
+      if (this.registerStep === 1) return 'Đăng ký tài khoản';
+      if (this.registerStep === 2) return 'Nhập mã OTP';
+      return 'Tạo mật khẩu';
     }
-    return 'Đăng Nhập Luméa';
+    return 'Đăng nhập';
+  }
+
+  /** Đang ở bước nhập OTP (của đăng ký hoặc quên mật khẩu) — hiện nút "Quay lại". */
+  get isOtpStep(): boolean {
+    return (this.mode === 'register' && this.registerStep === 2) || (this.mode === 'forgot-password' && this.forgotStep === 2);
   }
 
   // ---------- validate ----------
-  private validatePhone(phone: string): boolean {
-    return /^0\d{9}$/.test(phone.trim());
+  private get cleanIdentifier(): string {
+    const v = this.identifier.trim();
+    return EMAIL_REGEX.test(v) ? v.toLowerCase() : v.replace(/\s/g, '');
+  }
+
+  private validateIdentifier(): boolean {
+    const v = this.cleanIdentifier;
+    if (!v) {
+      this.errors.identifier = 'Vui lòng nhập số điện thoại hoặc email.';
+      return false;
+    }
+    if (!PHONE_REGEX.test(v) && !EMAIL_REGEX.test(v)) {
+      this.errors.identifier = 'Số điện thoại (10 số, bắt đầu bằng 0) hoặc email không hợp lệ.';
+      return false;
+    }
+    return true;
+  }
+
+  /** "số điện thoại 0912…" / "email ten@…" — dùng trong câu "Mã OTP đã được gửi đến …". */
+  get identifierLabel(): string {
+    return EMAIL_REGEX.test(this.cleanIdentifier) ? `email ${this.cleanIdentifier}` : `số điện thoại ${this.cleanIdentifier}`;
   }
 
   private passwordErrorMessage(password: string): string | null {
@@ -159,14 +202,31 @@ export class LoginModalComponent implements AfterViewChecked {
     return null;
   }
 
+  private validateNewPassword(): boolean {
+    const passErr = this.passwordErrorMessage(this.password);
+    if (passErr) {
+      this.errors.password = passErr;
+      return false;
+    }
+    if (this.password !== this.confirmPassword) {
+      this.errors.confirmPassword = 'Mật khẩu nhập lại không khớp.';
+      return false;
+    }
+    return true;
+  }
+
   get isOtpValid(): boolean {
     return this.otpCode.length === 6 && /^\d+$/.test(this.otpCode);
   }
 
-  // ---------- OTP 6-ô ----------
-  onOtpKeypress(e: KeyboardEvent): void {
-    const allowed = ['Backspace', 'Tab', 'ArrowLeft', 'ArrowRight', 'Delete'];
-    if (!/^\d$/.test(e.key) && !allowed.includes(e.key)) e.preventDefault();
+  // ---------- OTP 6 ô ----------
+  onOtpKeypress(e: KeyboardEvent, index: number): void {
+    if (e.key === 'Backspace' && !this.otpCode[index] && index > 0) {
+      this.otpInputs?.get(index - 1)?.nativeElement?.focus();
+      return;
+    }
+    const allowed = ['Backspace', 'Tab', 'ArrowLeft', 'ArrowRight', 'Delete', 'Enter'];
+    if (!/^\d$/.test(e.key) && !allowed.includes(e.key) && !e.ctrlKey && !e.metaKey) e.preventDefault();
   }
 
   onOtpDigitChange(val: string, index: number): void {
@@ -174,6 +234,7 @@ export class LoginModalComponent implements AfterViewChecked {
     const arr = [...this.otpCode.split('')];
     while (arr.length < 6) arr.push('');
     if (digits.length > 1) {
+      // Dán cả mã 6 số vào 1 ô.
       for (let j = 0; j < Math.min(digits.length, 6); j++) arr[j] = digits[j];
       this.otpCode = arr.join('').slice(0, 6);
       const nextIdx = Math.min(digits.length, 6) - 1;
@@ -191,11 +252,12 @@ export class LoginModalComponent implements AfterViewChecked {
 
   private startOtpTimer(): void {
     this.stopOtpTimer();
-    this.otpTimer = 60;
+    this.otpTimer = OTP_SECONDS;
     this.otpInterval = setInterval(() => {
       this.otpTimer--;
       if (this.otpTimer <= 0) this.stopOtpTimer();
     }, 1000);
+    setTimeout(() => this.otpInputs?.first?.nativeElement?.focus(), 50);
   }
 
   private stopOtpTimer(): void {
@@ -205,10 +267,12 @@ export class LoginModalComponent implements AfterViewChecked {
     }
   }
 
-  // ---------- chuyển chế độ ----------
+  // ---------- chuyển màn ----------
   switchToRegister(): void {
     this.mode = 'register';
     this.registerStep = 1;
+    this.resetSecrets();
+    this.stopOtpTimer();
     this.errors = {};
   }
 
@@ -216,6 +280,7 @@ export class LoginModalComponent implements AfterViewChecked {
     this.mode = 'login';
     this.registerStep = 1;
     this.forgotStep = 1;
+    this.resetSecrets();
     this.stopOtpTimer();
     this.errors = {};
   }
@@ -223,299 +288,154 @@ export class LoginModalComponent implements AfterViewChecked {
   switchToForgotPassword(): void {
     this.mode = 'forgot-password';
     this.forgotStep = 1;
+    this.resetSecrets();
     this.errors = {};
+  }
+
+  /** Từ bước OTP quay lại bước nhập SĐT/email. */
+  backFromOtp(): void {
+    this.stopOtpTimer();
+    this.otpCode = '';
+    this.errors = {};
+    if (this.mode === 'register') this.registerStep = 1;
+    else this.forgotStep = 1;
+  }
+
+  // ---------- helper gọi API ----------
+  private run(
+    call: Observable<AuthApiResponse>,
+    field: keyof LoginModalComponent['errors'],
+    fallback: string,
+    onSuccess: (res: AuthApiResponse) => void,
+  ): void {
+    if (this.isSubmitting) return;
+    this.isSubmitting = true;
+    call.subscribe({
+      next: (res) => {
+        this.isSubmitting = false;
+        if (res.success) onSuccess(res);
+        else {
+          this.errors = { ...this.errors, [field]: res.error || fallback };
+          this.mascotService.react('sad');
+        }
+      },
+      error: (err) => {
+        this.isSubmitting = false;
+        this.errors = { ...this.errors, [field]: err.error?.error || fallback };
+        this.mascotService.react('sad');
+      },
+    });
+  }
+
+  private loggedIn(res: AuthApiResponse, message: string): void {
+    if (!res.user) return;
+    this.authService.setUser(res.user);
+    this.toastService.success(message);
+    this.mascotService.react('happy');
+    this.close();
+  }
+
+  private otpSent(res: AuthApiResponse): void {
+    this.otpCode = '';
+    this.startOtpTimer();
+    if (res.devOtp) this.toastService.info(`[DEV] Mã OTP: ${res.devOtp}`, 8000);
   }
 
   // ---------- Đăng nhập ----------
   submitLogin(): void {
     this.errors = {};
-    if (!this.validatePhone(this.phoneNumber)) {
-      this.errors.phone = 'Số điện thoại không hợp lệ.';
-      return;
-    }
+    if (!this.validateIdentifier()) return;
     if (!this.password) {
       this.errors.password = 'Vui lòng nhập mật khẩu.';
       return;
     }
-    if (this.isSubmitting) return;
-    this.isSubmitting = true;
-
-    this.authApi.login(this.phoneNumber.trim(), this.password).subscribe({
-      next: (res) => {
-        this.isSubmitting = false;
-        if (res.success && res.user) {
-          this.authService.setUser(res.user);
-          this.toastService.success('Đăng nhập thành công!');
-          this.mascotService.react('happy');
-          this.close();
-        } else {
-          this.errors.password = res.error || 'Thông tin đăng nhập sai, vui lòng thử lại.';
-          this.mascotService.react('sad');
-        }
-      },
-      error: (err) => {
-        this.isSubmitting = false;
-        this.errors.password = err.error?.error || 'Thông tin đăng nhập sai, vui lòng thử lại.';
-        this.mascotService.react('sad');
-      },
-    });
+    this.run(this.authApi.login(this.cleanIdentifier, this.password), 'password',
+      'Thông tin đăng nhập sai, vui lòng thử lại.', (res) => this.loggedIn(res, 'Đăng nhập thành công!'));
   }
 
   // ---------- Đăng ký ----------
-  submitRegisterPhone(): void {
+  submitRegisterIdentifier(): void {
     this.errors = {};
-    if (!this.validatePhone(this.phoneNumber)) {
-      this.errors.phone = 'Số điện thoại không hợp lệ.';
-      return;
-    }
-    if (this.isSubmitting) return;
-    this.isSubmitting = true;
-
-    this.authApi.registerOtp(this.phoneNumber.trim()).subscribe({
-      next: (res) => {
-        this.isSubmitting = false;
-        if (res.success) {
-          this.registerStep = 2;
-          this.otpCode = '';
-          this.startOtpTimer();
-          if (res.devOtp) this.toastService.info(`[DEV] Mã OTP: ${res.devOtp}`, 6000);
-        } else {
-          this.errors.phone = res.error || 'Không thể gửi mã OTP.';
-        }
-      },
-      error: (err) => {
-        this.isSubmitting = false;
-        this.errors.phone = err.error?.error || 'Không thể kết nối tới máy chủ.';
-      },
+    if (!this.validateIdentifier()) return;
+    this.run(this.authApi.registerOtp(this.cleanIdentifier), 'identifier', 'Không thể gửi mã OTP.', (res) => {
+      this.registerStep = 2;
+      this.otpSent(res);
     });
   }
 
   submitRegisterOtp(): void {
-    this.errors = { ...this.errors, otp: undefined };
+    this.errors = {};
     if (!this.isOtpValid) {
-      this.errors.otp = 'Mã không đúng, yêu cầu nhập lại.';
+      this.errors.otp = 'Vui lòng nhập đủ 6 chữ số.';
       return;
     }
     if (this.otpTimer <= 0) {
-      this.errors.otp = 'Hết thời gian, hãy yêu cầu gửi lại.';
+      this.errors.otp = 'Mã đã hết hiệu lực, hãy gửi lại mã mới.';
       return;
     }
-    if (this.isSubmitting) return;
-    this.isSubmitting = true;
-
-    this.authApi.verifyOtpAny(this.phoneNumber.trim(), this.otpCode).subscribe({
-      next: (res) => {
-        this.isSubmitting = false;
-        if (res.success) {
-          this.otpCode = '';
-          this.stopOtpTimer();
-          if (this.mode === 'google-phone') {
-            this.finishGoogleLogin();
-          } else {
-            this.registerStep = 3;
-          }
-        } else {
-          this.errors.otp = res.error || 'Mã không đúng, yêu cầu nhập lại.';
-        }
-      },
-      error: (err) => {
-        this.isSubmitting = false;
-        this.errors.otp = err.error?.error || 'Mã không đúng, yêu cầu nhập lại.';
-      },
+    this.run(this.authApi.verifyOtpAny(this.cleanIdentifier, this.otpCode), 'otp', 'Mã OTP không đúng.', () => {
+      this.stopOtpTimer();
+      this.otpCode = '';
+      this.registerStep = 3;
     });
-  }
-
-  resendRegisterOtp(): void {
-    if (this.isSubmitting) return;
-    this.submitRegisterPhone();
   }
 
   submitRegisterPassword(): void {
     this.errors = {};
-    const passErr = this.passwordErrorMessage(this.password);
-    if (passErr) {
-      this.errors.password = passErr;
-      return;
-    }
-    if (this.password !== this.confirmPassword) {
-      this.errors.confirmPassword = 'Mật khẩu nhập lại không khớp.';
-      return;
-    }
-    if (this.isSubmitting) return;
-    this.isSubmitting = true;
-
-    this.authApi.register(this.phoneNumber.trim(), this.password).subscribe({
-      next: (res) => {
-        this.isSubmitting = false;
-        if (res.success && res.user) {
-          this.authService.setUser(res.user);
-          this.toastService.success('Đăng ký tài khoản thành công!');
-          this.mascotService.react('happy');
-          this.close();
-        } else {
-          this.errors.password = res.error || 'Đăng ký thất bại.';
-          this.mascotService.react('sad');
-        }
-      },
-      error: (err) => {
-        this.isSubmitting = false;
-        this.errors.password = err.error?.error || 'Không thể kết nối tới máy chủ.';
-      },
-    });
+    if (!this.validateNewPassword()) return;
+    this.run(this.authApi.register(this.cleanIdentifier, this.password), 'password', 'Đăng ký thất bại.',
+      (res) => this.loggedIn(res, 'Đăng ký tài khoản thành công!'));
   }
 
   // ---------- Quên mật khẩu ----------
-  submitForgotPhone(): void {
+  submitForgotIdentifier(): void {
     this.errors = {};
-    if (!this.validatePhone(this.phoneNumber)) {
-      this.errors.phone = 'Số điện thoại không hợp lệ.';
-      return;
-    }
-    if (this.isSubmitting) return;
-    this.isSubmitting = true;
-
-    this.authApi.forgotPassword(this.phoneNumber.trim()).subscribe({
-      next: (res) => {
-        this.isSubmitting = false;
-        if (res.success) {
-          this.forgotStep = 2;
-          this.otpCode = '';
-          this.startOtpTimer();
-          if (res.devOtp) this.toastService.info(`[DEV] Mã OTP: ${res.devOtp}`, 6000);
-        } else {
-          this.errors.phone = res.error || 'Số điện thoại chưa đăng ký.';
-        }
-      },
-      error: (err) => {
-        this.isSubmitting = false;
-        this.errors.phone = err.error?.error || 'Không thể kết nối tới máy chủ.';
-      },
+    if (!this.validateIdentifier()) return;
+    this.run(this.authApi.forgotPassword(this.cleanIdentifier), 'identifier', 'Không thể gửi mã OTP.', (res) => {
+      this.forgotStep = 2;
+      this.otpSent(res);
     });
   }
 
   submitForgotOtp(): void {
-    this.errors = { ...this.errors, otp: undefined };
+    this.errors = {};
     if (!this.isOtpValid) {
-      this.errors.otp = 'Mã không đúng, yêu cầu nhập lại.';
+      this.errors.otp = 'Vui lòng nhập đủ 6 chữ số.';
       return;
     }
     if (this.otpTimer <= 0) {
-      this.errors.otp = 'Hết thời gian, hãy yêu cầu gửi lại.';
+      this.errors.otp = 'Mã đã hết hiệu lực, hãy gửi lại mã mới.';
       return;
     }
-    if (this.isSubmitting) return;
-    this.isSubmitting = true;
-
-    this.authApi.verifyOtp(this.phoneNumber.trim(), this.otpCode).subscribe({
-      next: (res) => {
-        this.isSubmitting = false;
-        if (res.success) {
-          this.forgotStep = 3;
-          this.otpCode = '';
-          this.stopOtpTimer();
-        } else {
-          this.errors.otp = res.error || 'Mã không đúng, yêu cầu nhập lại.';
-        }
-      },
-      error: (err) => {
-        this.isSubmitting = false;
-        this.errors.otp = err.error?.error || 'Mã không đúng, yêu cầu nhập lại.';
-      },
+    this.run(this.authApi.verifyOtp(this.cleanIdentifier, this.otpCode), 'otp', 'Mã OTP không đúng.', () => {
+      this.stopOtpTimer();
+      this.otpCode = '';
+      this.forgotStep = 3;
     });
-  }
-
-  resendForgotOtp(): void {
-    if (this.isSubmitting) return;
-    this.submitForgotPhone();
   }
 
   submitForgotNewPassword(): void {
     this.errors = {};
-    const passErr = this.passwordErrorMessage(this.password);
-    if (passErr) {
-      this.errors.password = passErr;
-      return;
-    }
-    if (this.password !== this.confirmPassword) {
-      this.errors.confirmPassword = 'Mật khẩu nhập lại không khớp.';
-      return;
-    }
-    if (this.isSubmitting) return;
-    this.isSubmitting = true;
-
-    this.authApi.resetPassword(this.phoneNumber.trim(), this.password).subscribe({
-      next: (res) => {
-        this.isSubmitting = false;
-        if (res.success && res.user) {
-          this.authService.setUser(res.user);
-          this.toastService.success('Đổi mật khẩu thành công, bạn đã đăng nhập.');
-          this.mascotService.react('happy');
-          this.close();
-        } else {
-          this.errors.password = res.error || 'Không thể đổi mật khẩu.';
-          this.mascotService.react('sad');
-        }
-      },
-      error: (err) => {
-        this.isSubmitting = false;
-        this.errors.password = err.error?.error || 'Không thể kết nối tới máy chủ.';
-      },
-    });
+    if (!this.validateNewPassword()) return;
+    this.run(this.authApi.resetPassword(this.cleanIdentifier, this.password), 'password', 'Không thể đổi mật khẩu.',
+      (res) => this.loggedIn(res, 'Đổi mật khẩu thành công, bạn đã đăng nhập.'));
   }
 
-  // ---------- Đăng nhập Google ----------
+  /** Gửi lại mã ở bước OTP (đăng ký hoặc quên mật khẩu). */
+  resendOtp(): void {
+    if (this.mode === 'register') this.submitRegisterIdentifier();
+    else this.submitForgotIdentifier();
+  }
+
+  submitOtp(): void {
+    if (this.mode === 'register') this.submitRegisterOtp();
+    else this.submitForgotOtp();
+  }
+
+  // ---------- Mạng xã hội ----------
   private handleGoogleCredential(credential: string): void {
     this.errors = {};
-    this.authApi.loginWithGoogle(credential).subscribe({
-      next: (res) => {
-        if (res.success && res.needsPhone && res.userId) {
-          this.pendingGoogleUserId = res.userId;
-          this.mode = 'google-phone';
-          this.registerStep = 1;
-          this.phoneNumber = '';
-        } else if (res.success && res.user) {
-          this.authService.setUser(res.user);
-          this.toastService.success('Đăng nhập Google thành công!');
-          this.mascotService.react('happy');
-          this.close();
-        } else {
-          this.toastService.error(res.error || 'Đăng nhập Google thất bại.');
-          this.mascotService.react('sad');
-        }
-      },
-      error: () => {
-        this.toastService.error('Không thể kết nối tới máy chủ.');
-        this.mascotService.react('sad');
-      },
-    });
-  }
-
-  private finishGoogleLogin(): void {
-    if (!this.pendingGoogleUserId) return;
-    this.isSubmitting = true;
-    this.authApi.attachGooglePhone(this.pendingGoogleUserId, this.phoneNumber.trim()).subscribe({
-      next: (res) => {
-        this.isSubmitting = false;
-        if (res.success && res.user) {
-          this.authService.setUser(res.user);
-          this.toastService.success('Đăng nhập Google thành công!');
-          this.mascotService.react('happy');
-          this.close();
-        } else {
-          this.errors.otp = res.error || 'Không thể hoàn tất đăng nhập.';
-          this.mascotService.react('sad');
-        }
-      },
-      error: (err) => {
-        this.isSubmitting = false;
-        this.errors.otp = err.error?.error || 'Không thể kết nối tới máy chủ.';
-        this.mascotService.react('sad');
-      },
-    });
-  }
-
-  // ---------- Đăng nhập Facebook (chưa cấu hình provider thật) ----------
-  onSocialLoginStub(provider: string): void {
-    this.toastService.info(`Đăng nhập bằng ${provider} đang được phát triển.`);
+    this.run(this.authApi.loginWithGoogle(credential), 'password', 'Đăng nhập Google thất bại.',
+      (res) => this.loggedIn(res, 'Đăng nhập Google thành công!'));
   }
 }

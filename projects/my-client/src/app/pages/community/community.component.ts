@@ -69,6 +69,7 @@ export class CommunityComponent implements OnInit {
   activeFilter = 'all';
   searchQuery = '';
   sortBy: SortKey = 'popular';
+  collectionSort: 'newest' | 'oldest' = 'newest';
   visibleCount = INITIAL_VISIBLE;
 
   showCreateModal = false;
@@ -171,6 +172,9 @@ export class CommunityComponent implements OnInit {
 
   private sortPosts(list: CommunityPost[]): CommunityPost[] {
     const arr = [...list];
+    if (this.feedMode !== 'all') {
+      return this.collectionSort === 'oldest' ? arr.reverse() : arr;
+    }
     switch (this.sortBy) {
       case 'newest':
         // Bài mới được service prepend vào đầu danh sách khi tạo — giữ nguyên thứ tự trả về
@@ -203,6 +207,7 @@ export class CommunityComponent implements OnInit {
   }
 
   setFeedMode(mode: FeedMode): void {
+    if (this.feedMode !== mode) this.collectionSort = 'newest';
     this.feedMode = mode;
     this.activePostId = null;
     this.applyFilters();

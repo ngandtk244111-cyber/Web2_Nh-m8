@@ -124,6 +124,15 @@
   50% { transform: translateY(-3px); }
 }
 
+.hd_logo__image {
+  display: block;
+  width: auto;
+  height: 54px;
+  max-width: 100%;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
 .hd_logo__mark-img {
   width: 58px;
   height: 58px;
@@ -472,7 +481,8 @@
   position: absolute;
   top: calc(100% + 10px);
   right: 0;
-  width: 240px;
+  width: 280px;
+  max-width: calc(100vw - 24px);
   padding: 8px;
   background: #ffffff;
   border: 1px solid rgba(0, 0, 0, 0.06);
@@ -527,6 +537,9 @@
 .hd_account-menu__who small {
   font-size: 12px;
   color: #6B5A4E;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .hd_account-menu__item {

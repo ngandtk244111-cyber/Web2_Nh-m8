@@ -1,4 +1,5 @@
 const express = require('express');
+const { sendError } = require('../utils/http-error');
 const NewsArticle = require('../models/NewsArticle');
 const NewsComment = require('../models/NewsComment');
 const User = require('../models/User');
@@ -13,7 +14,7 @@ router.get('/', async (_req, res) => {
     const articles = await NewsArticle.find().sort({ _id: -1 });
     res.json({ success: true, articles });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -27,7 +28,7 @@ router.get('/slug/:slug', async (req, res) => {
     if (!article) return res.status(404).json({ success: false, error: 'Không tìm thấy bài viết' });
     res.json({ success: true, article });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -39,7 +40,7 @@ router.get('/:id/comments', async (req, res) => {
     const comments = await NewsComment.find({ articleId: req.params.id }).sort({ createdAt: -1 });
     res.json({ success: true, comments });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -77,7 +78,7 @@ router.post('/:id/comments', requireUserId, async (req, res) => {
     res.json({ success: true, comment });
   } catch (err) {
     console.error('create news comment error', err);
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -96,7 +97,7 @@ router.post('/comments/:commentId/:action', async (req, res) => {
     if (!comment) return res.status(404).json({ success: false, error: 'Không tìm thấy ý kiến' });
     res.json({ success: true, comment });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -126,7 +127,7 @@ router.post('/', requireAdminId, async (req, res) => {
     res.json({ success: true, article });
   } catch (err) {
     console.error('create news article error', err);
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -136,7 +137,7 @@ router.put('/:id', requireAdminId, async (req, res) => {
     if (!article) return res.status(404).json({ success: false, error: 'Không tìm thấy bài viết' });
     res.json({ success: true, article });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -146,7 +147,7 @@ router.delete('/:id', requireAdminId, async (req, res) => {
     await NewsComment.deleteMany({ articleId: req.params.id });
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 

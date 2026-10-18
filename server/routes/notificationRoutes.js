@@ -1,4 +1,5 @@
 const express = require('express');
+const { sendError } = require('../utils/http-error');
 const router = express.Router();
 const Notification = require('../models/Notification');
 const User = require('../models/User');
@@ -21,7 +22,7 @@ router.get('/', attachUserId, async (req, res) => {
     const notifications = await Notification.find(visibleQuery(req.userId)).sort({ createdAt: -1 }).limit(30);
     res.json({ success: true, notifications });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -68,7 +69,7 @@ router.post('/flash-sale-reminder', requireUserId, async (req, res) => {
     });
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -86,7 +87,7 @@ router.delete('/flash-sale-reminder', requireUserId, async (req, res) => {
     });
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -97,7 +98,7 @@ router.put('/:id/read', async (req, res) => {
     if (!notification) return res.status(404).json({ success: false, error: 'Không tìm thấy thông báo.' });
     res.json({ success: true, notification });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -107,7 +108,7 @@ router.put('/read-all', attachUserId, async (req, res) => {
     await Notification.updateMany(visibleQuery(req.userId), { read: true });
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 

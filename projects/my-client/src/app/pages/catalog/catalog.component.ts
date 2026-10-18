@@ -89,6 +89,22 @@ export class CatalogComponent implements OnInit {
 
   filteredProducts: Product[] = [];
 
+  /** Hiển thị dần: ban đầu PAGE_SIZE món, mỗi lần bấm "Xem thêm" mở thêm PAGE_SIZE món. */
+  readonly PAGE_SIZE = 12;
+  visibleCount = this.PAGE_SIZE;
+
+  get visibleProducts(): Product[] {
+    return this.filteredProducts.slice(0, this.visibleCount);
+  }
+
+  get remainingCount(): number {
+    return Math.max(0, this.filteredProducts.length - this.visibleCount);
+  }
+
+  showMore(): void {
+    this.visibleCount += this.PAGE_SIZE;
+  }
+
   constructor(
     private productService: ProductService,
     private route: ActivatedRoute,
@@ -186,6 +202,8 @@ export class CatalogComponent implements OnInit {
       sortBy: this.sortBy,
     };
     this.filteredProducts = this.productService.filterProducts(filters);
+    // Đổi bộ lọc / sắp xếp thì quay lại trang đầu của danh sách.
+    this.visibleCount = this.PAGE_SIZE;
   }
 
   // ---------- Tiêu đề trang theo ngữ cảnh ----------

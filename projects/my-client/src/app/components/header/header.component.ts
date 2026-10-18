@@ -1,6 +1,8 @@
 import { Component, ElementRef, HostListener, OnDestroy } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { filter } from 'rxjs';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { AppIconComponent } from '../icon/icon.component';
 import { AnnouncementTickerComponent } from '../announcement-ticker/announcement-ticker.component';
 import { CartService } from '../../core/services/cart.service';
@@ -72,6 +74,8 @@ export class HeaderComponent implements OnDestroy {
   searchSuggestionsOpen = false;
   cartPreviewOpen = false;
   accountMenuOpen = false;
+  /** Link ảnh đại diện bị lỗi (ảnh Google/Facebook hết hạn, bị chặn...) -> hiện icon thay vì ảnh vỡ. */
+  brokenAvatar: string | null = null;
   expandedMobileGroup: string | null = null;
   private megaMenuCloseTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -174,7 +178,18 @@ export class HeaderComponent implements OnDestroy {
     public notificationService: NotificationService,
     public favoriteService: FavoriteService,
     private elementRef: ElementRef<HTMLElement>
-  ) {}
+  ) {
+    // Giữ từ khoá trên ô tìm kiếm theo URL: đang ở /catalog?q=... thì hiện lại từ khoá (kể cả khi tải lại trang
+    // hay bấm Back), rời trang catalog thì xoá trống.
+    this.router.events
+      .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd), takeUntilDestroyed())
+      .subscribe(() => {
+        const tree = this.router.parseUrl(this.router.url);
+        const onCatalog = tree.root.children['primary']?.segments[0]?.path === 'catalog';
+        this.searchText = onCatalog ? (tree.queryParams['q'] || this.matchSuggestionLabel(tree.queryParams)) : '';
+        this.updateSearchResults();
+      });
+  }
 
   ngOnDestroy(): void {
     this.cancelMegaMenuCloseTimer();
@@ -349,7 +364,22 @@ export class HeaderComponent implements OnDestroy {
   onSearchInput(value: string): void {
     this.searchText = value;
     this.searchSuggestionsOpen = true;
-    const q = value.trim();
+    this.updateSearchResults();
+  }
+
+  /** URL catalog đúng bằng bộ lọc của 1 chip "Tìm kiếm phổ biến" -> trả về nhãn chip để hiện trên ô tìm kiếm. */
+  private matchSuggestionLabel(params: Record<string, string>): string {
+    const keys = Object.keys(params);
+    const hit = this.searchSuggestions.find(s => {
+      const sp = s.queryParams || {};
+      const sKeys = Object.keys(sp);
+      return !s.link && sKeys.length === keys.length && sKeys.every(k => String(params[k]) === sp[k]);
+    });
+    return hit?.label || '';
+  }
+
+  private updateSearchResults(): void {
+    const q = this.searchText.trim();
     this.searchResults = q
       ? this.productService.filterProducts({ ...createEmptyFilters(), searchQuery: q }).slice(0, this.SEARCH_RESULT_LIMIT)
       : [];
@@ -395,6 +425,7 @@ export class HeaderComponent implements OnDestroy {
     const q = (value || '').trim();
     this.mobileMenuOpen = false;
     this.closeMenus();
+    this.searchSuggestionsOpen = false;
     this.searchResults = [];
     this.router.navigate(['/catalog'], q ? { queryParams: { q } } : {});
   }

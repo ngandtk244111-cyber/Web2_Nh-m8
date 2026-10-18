@@ -1,4 +1,5 @@
 const express = require('express');
+const { sendError } = require('../utils/http-error');
 const Order = require('../models/Order');
 const { createMomoPayment, verifyMomoIpnSignature } = require('../utils/momo');
 const { createZaloPayOrder, verifyZaloPayCallbackMac } = require('../utils/zalopay');
@@ -26,7 +27,7 @@ router.post('/momo/create', async (req, res) => {
     res.json({ success: true, payUrl: result.payUrl, raw: result });
   } catch (err) {
     console.error('momo/create error', err.response?.data || err.message);
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -35,15 +36,19 @@ router.post('/momo/ipn', async (req, res) => {
     if (!verifyMomoIpnSignature(req.body)) {
       return res.status(400).json({ success: false, error: 'Chữ ký không hợp lệ' });
     }
-    const { orderId, resultCode, transId } = req.body;
+    const { orderId, resultCode, transId, amount } = req.body;
+    const paid = Number(resultCode) === 0;
+    // Chỉ nhận PAID khi số tiền khớp tổng đơn; IPN thất bại đến sau không được ghi đè đơn đã PAID.
     await Order.findOneAndUpdate(
-      { orderNumber: orderId },
-      { paymentStatus: Number(resultCode) === 0 ? 'PAID' : 'FAILED', paymentTransactionId: String(transId) }
+      paid
+        ? { orderNumber: orderId, total: Number(amount) }
+        : { orderNumber: orderId, paymentStatus: { $ne: 'PAID' } },
+      { paymentStatus: paid ? 'PAID' : 'FAILED', paymentTransactionId: String(transId) }
     );
     res.json({ success: true });
   } catch (err) {
     console.error('momo/ipn error', err);
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -66,7 +71,7 @@ router.post('/zalopay/create', async (req, res) => {
     res.json({ success: true, orderUrl: result.order_url, raw: result });
   } catch (err) {
     console.error('zalopay/create error', err.response?.data || err.message);
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 

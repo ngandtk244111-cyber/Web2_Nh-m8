@@ -1,9 +1,10 @@
 const express = require('express');
+const { sendError } = require('../utils/http-error');
 const CommunityPost = require('../models/CommunityPost');
 const Notification = require('../models/Notification');
 const { awardCoins } = require('../utils/coins');
 const { checkContent } = require('../utils/moderation');
-const { requireAdminId } = require('../middleware/auth');
+const { requireAdminId, validId } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -24,7 +25,7 @@ router.get('/', async (_req, res) => {
     const posts = await CommunityPost.find(PUBLIC_FILTER).sort({ _id: -1 });
     res.json({ success: true, posts });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -37,7 +38,7 @@ router.get('/admin', requireAdminId, async (_req, res) => {
       posts: posts.map(p => ({ ...p, status: p.status || 'PUBLISHED', postedAt: p.postedAt || p._id.getTimestamp() })),
     });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -71,7 +72,7 @@ router.patch('/:id/moderation', requireAdminId, async (req, res) => {
 
     res.json({ success: true, post });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -80,14 +81,15 @@ router.delete('/:id', requireAdminId, async (req, res) => {
     await CommunityPost.deleteOne({ id: req.params.id });
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
 router.post('/', async (req, res) => {
   try {
     // Không cho client tự đặt các trường kiểm duyệt / số liệu.
-    const { userId, status: _s, moderationReason: _r, moderatedBy: _b, moderatedAt: _a, isStaffPick: _p, postedAt: _t, ...body } = req.body;
+    const { userId: rawUserId, status: _s, moderationReason: _r, moderatedBy: _b, moderatedAt: _a, isStaffPick: _p, postedAt: _t, ...body } = req.body;
+    const userId = validId(rawUserId);
 
 
     const violation = checkContent(body.title, body.caption, ...(Array.isArray(body.tags) ? body.tags : []));
@@ -132,7 +134,7 @@ router.post('/', async (req, res) => {
     res.json({ success: true, post });
   } catch (err) {
     console.error('create community post error', err);
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -144,23 +146,32 @@ router.post('/:id/like', async (req, res) => {
     if (!post) return res.status(404).json({ success: false, error: 'Không tìm thấy bài viết' });
     res.json({ success: true, post });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
 router.post('/:id/unlike', async (req, res) => {
   try {
-    const post = await CommunityPost.findOneAndUpdate({ id: req.params.id }, { $inc: { likesCount: -1 } }, { new: true });
+    // Không trừ xuống dưới 0 (unlike gọi lặp / gọi khi chưa like).
+    const post = await CommunityPost.findOneAndUpdate({ id: req.params.id, likesCount: { $gt: 0 } }, { $inc: { likesCount: -1 } }, { new: true })
+      || await CommunityPost.findOne({ id: req.params.id });
     if (!post) return res.status(404).json({ success: false, error: 'Không tìm thấy bài viết' });
     res.json({ success: true, post });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
 router.post('/:id/comments', async (req, res) => {
   try {
-    const { text, authorName = 'Bạn' } = req.body;
+    const text = String(req.body.text || '').trim();
+    const authorName = String(req.body.authorName || '').trim() || 'Bạn';
+    if (!text) return res.status(400).json({ success: false, error: 'Nội dung bình luận trống' });
+    if (text.length > 1000) return res.status(400).json({ success: false, error: 'Bình luận tối đa 1000 ký tự' });
+    const violation = checkContent(authorName, text);
+    if (violation) {
+      return res.status(422).json({ success: false, error: `Bình luận vi phạm tiêu chuẩn cộng đồng: ${violation.reason.toLowerCase()}.` });
+    }
     const newComment = {
       id: 'c-' + Date.now(),
       authorName,
@@ -177,7 +188,7 @@ router.post('/:id/comments', async (req, res) => {
     if (!post) return res.status(404).json({ success: false, error: 'Không tìm thấy bài viết' });
     res.json({ success: true, post });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 

@@ -3,10 +3,14 @@ const { Server } = require('socket.io');
 const ChatMessage = require('./models/ChatMessage');
 const Admin = require('./models/Admin');
 const { setIO, orderRoom } = require('./realtime');
+const { buildAutoReply } = require('./chatAutoReply');
 
 // Phòng chung của nhân viên my-admin: nhận mọi tin nhắn của mọi cuộc chat để cập nhật hộp thư.
 const STAFF_ROOM = 'staff';
 const MAX_MESSAGE_LENGTH = 2000;
+const AUTO_REPLY_DELAY_MS = 900;
+// Trong 10 phút: trợ lý vừa gửi menu -> chỉ xác nhận ngắn; nhân viên vừa trả lời -> trợ lý không chen vào.
+const AUTO_REPLY_COOLDOWN_MS = 10 * 60 * 1000;
 
 async function isAdmin(adminId) {
   if (!adminId || !mongoose.isValidObjectId(adminId)) return false;
@@ -28,6 +32,40 @@ function attachSocket(httpServer, corsOrigins) {
     }
     return [...ids];
   };
+
+  // Trợ lý tự động: hiện "đang soạn tin" một nhịp rồi gửi câu trả lời + nút dẫn tới đúng trang.
+  async function scheduleAutoReply(sessionId, text) {
+    try {
+      const [customerCount, lastAuto, lastStaff] = await Promise.all([
+        ChatMessage.countDocuments({ sessionId, sender: 'customer' }),
+        ChatMessage.findOne({ sessionId, auto: true }).sort({ createdAt: -1 }).select('createdAt').lean(),
+        ChatMessage.findOne({ sessionId, sender: 'staff', auto: { $ne: true } }).sort({ createdAt: -1 }).select('createdAt').lean(),
+      ]);
+      const isRecent = (doc) => !!doc && Date.now() - new Date(doc.createdAt).getTime() < AUTO_REPLY_COOLDOWN_MS;
+      const reply = buildAutoReply(text, {
+        isFirstMessage: customerCount <= 1,
+        staffOnline: staffOnline(),
+        recentAutoReply: isRecent(lastAuto),
+        staffChatting: isRecent(lastStaff),
+      });
+      if (!reply) return;
+
+      io.to(sessionId).emit('chat:typing', { sessionId, typing: true, from: 'staff' });
+      setTimeout(async () => {
+        try {
+          const message = await ChatMessage.create({
+            sessionId, sender: 'staff', text: reply.text, links: reply.links, auto: true, readByStaff: true,
+          });
+          io.to(sessionId).emit('chat:typing', { sessionId, typing: false, from: 'staff' });
+          io.to([sessionId, STAFF_ROOM]).emit('chat:message', message);
+        } catch (err) {
+          console.error('chat auto-reply error', err);
+        }
+      }, AUTO_REPLY_DELAY_MS);
+    } catch (err) {
+      console.error('chat auto-reply error', err);
+    }
+  }
 
   io.on('connection', (socket) => {
     // Trang Tra cứu đơn: theo dõi trực tiếp 1 mã đơn (cùng mức công khai với GET /orders/by-number/:orderNumber).
@@ -96,6 +134,7 @@ function attachSocket(httpServer, corsOrigins) {
             : { sender: 'customer', userId: userId || null, customerName: customerName || null, customerPhone: customerPhone || null }),
         });
         io.to([sessionId, STAFF_ROOM]).emit('chat:message', message);
+        if (!fromStaff) scheduleAutoReply(sessionId, clean);
       } catch (err) {
         console.error('chat:message error', err);
       }

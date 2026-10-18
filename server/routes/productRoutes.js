@@ -1,10 +1,10 @@
 const express = require('express');
-const mongoose = require('mongoose');
+const { sendError } = require('../utils/http-error');
 const Product = require('../models/Product');
 const Order = require('../models/Order');
 const { awardCoins } = require('../utils/coins');
 const { checkContent } = require('../utils/moderation');
-const { requireAdminId } = require('../middleware/auth');
+const { requireAdminId, validId } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -25,7 +25,7 @@ router.get('/', async (_req, res) => {
     const products = await Product.find().sort({ createdAt: -1 });
     res.json({ success: true, products: products.map(toPublicProduct) });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -45,7 +45,7 @@ router.get('/reviews/admin', requireAdminId, async (_req, res) => {
     reviews.sort((a, b) => String(b.id).localeCompare(String(a.id), undefined, { numeric: true }));
     res.json({ success: true, reviews });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -73,7 +73,7 @@ router.patch('/:id/reviews/:reviewId', requireAdminId, async (req, res) => {
     await product.save();
     res.json({ success: true, review: { ...review, productId: product.id, productName: product.name, productSlug: product.slug, productImage: (product.images || [])[0] || '' } });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -83,7 +83,7 @@ router.get('/slug/:slug', async (req, res) => {
     if (!product) return res.status(404).json({ success: false, error: 'Không tìm thấy sản phẩm' });
     res.json({ success: true, product: toPublicProduct(product) });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -94,26 +94,31 @@ router.post('/', requireAdminId, async (req, res) => {
     res.json({ success: true, product });
   } catch (err) {
     console.error('create product error', err);
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
 router.put('/:id', requireAdminId, async (req, res) => {
   try {
-    const product = await Product.findOneAndUpdate({ id: req.params.id }, req.body, { new: true });
+    const product = await Product.findOneAndUpdate({ id: req.params.id }, req.body, { new: true, runValidators: true });
     if (!product) return res.status(404).json({ success: false, error: 'Không tìm thấy sản phẩm' });
     res.json({ success: true, product });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
 // Gửi đánh giá thật, lưu vào Product.reviews (persist thật, không còn chỉ mutate ở client).
 router.post('/:id/reviews', async (req, res) => {
   try {
-    const { userId, author, rating, comment, images } = req.body;
-    if (!author || !rating || !comment) {
+    const { author, comment, images } = req.body;
+    const userId = validId(req.body.userId);
+    const rating = Number(req.body.rating);
+    if (!String(author || '').trim() || !String(comment || '').trim()) {
       return res.status(400).json({ success: false, error: 'Thiếu thông tin đánh giá' });
+    }
+    if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+      return res.status(400).json({ success: false, error: 'Số sao đánh giá phải từ 1 đến 5' });
     }
 
     // Chặn tự động ngôn từ thô tục / spam — cùng bộ lọc với bài đăng Cộng đồng. Đánh giá chê
@@ -130,7 +135,7 @@ router.post('/:id/reviews', async (req, res) => {
     if (!product) return res.status(404).json({ success: false, error: 'Không tìm thấy sản phẩm' });
 
     // "Đã mua hàng" chỉ khi user có đơn (chưa huỷ) chứa đúng sản phẩm này, không phải cứ đăng nhập là có.
-    const verifiedPurchase = userId && mongoose.isValidObjectId(userId)
+    const verifiedPurchase = userId
       ? !!(await Order.exists({ userId, status: { $ne: 'CANCELLED' }, 'items.product.id': product.id }))
       : false;
 
@@ -164,7 +169,7 @@ router.post('/:id/reviews', async (req, res) => {
     res.json({ success: true, product: toPublicProduct(product), review });
   } catch (err) {
     console.error('submit review error', err);
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -173,7 +178,7 @@ router.delete('/:id', requireAdminId, async (req, res) => {
     await Product.deleteOne({ id: req.params.id });
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 

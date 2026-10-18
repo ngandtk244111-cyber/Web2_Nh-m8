@@ -1,4 +1,5 @@
 const express = require('express');
+const { sendError } = require('../utils/http-error');
 const Coupon = require('../models/Coupon');
 
 const router = express.Router();
@@ -11,7 +12,7 @@ router.get('/', async (_req, res) => {
     const coupons = await Coupon.find({ active: true }, COUPON_FIELDS).lean();
     res.json({ success: true, coupons });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -25,7 +26,7 @@ router.get('/:code', async (req, res) => {
     }
     res.json({ success: true, coupon });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 

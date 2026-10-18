@@ -20,11 +20,11 @@
       </div>
     </div>
 
-    <form (ngSubmit)="search(mobileSearchInput.value)" class="hd_m__search">
+    <form (submit)="$event.preventDefault(); search(mobileSearchInput.value)" class="hd_m__search">
       <button type="submit" class="hd_m__search-icon-btn" aria-label="Tìm kiếm">
         <img src="assets/mascot/goh-search.png" alt="Tìm kiếm" class="hd_m__search-icon-img">
       </button>
-      <input #mobileSearchInput type="text" class="hd_m__search-input" placeholder="Tìm sofa, giường, đèn, decor...">
+      <input #mobileSearchInput type="text" [value]="searchText" class="hd_m__search-input" placeholder="Tìm sofa, giường, đèn, decor...">
     </form>
   </div>
 
@@ -112,23 +112,16 @@
   <div class="hd_main">
     <div class="hd_container hd_main__inner">
 
-      <a routerLink="/" class="hd_logo">
-        <span class="hd_mascot" aria-hidden="true">
-          <app-icon name="sparkles" [size]="16"></app-icon>
-        </span>
-        <img src="assets/logo/lumea-mark.png" alt="Luméa" class="hd_logo__mark-img">
-        <span class="hd_logo__group">
-          <span class="hd_logo__text">Luméa</span>
-          <span class="hd_logo__tagline">Interior & 3D</span>
-        </span>
+      <a routerLink="/" class="hd_logo" aria-label="Luméa Interior & 3D — về trang chủ">
+        <img src="assets/logo/lumea-logo-white.png" alt="Luméa Interior & 3D" class="hd_logo__image" height="54">
       </a>
 
       <div class="hd_search-wrap">
-        <form (ngSubmit)="search(searchInput.value)" class="hd_search">
+        <form (submit)="$event.preventDefault(); search(searchInput.value)" class="hd_search">
           <button type="submit" class="hd_search__icon-btn" aria-label="Tìm kiếm">
             <img src="assets/mascot/goh-search.png" alt="Tìm kiếm" class="hd_search__icon-img">
           </button>
-          <input #searchInput type="search" name="q" autocomplete="off" class="hd_search__input" placeholder="Tìm sofa, giường, đèn, decor..." (focus)="openSearchSuggestions()" (input)="onSearchInput(searchInput.value)">
+          <input #searchInput type="search" name="q" autocomplete="off" [value]="searchText" class="hd_search__input" placeholder="Tìm sofa, giường, đèn, decor..." (focus)="openSearchSuggestions()" (input)="onSearchInput(searchInput.value)">
         </form>
 
         <div class="hd_search-suggest" *ngIf="searchSuggestionsOpen" (click)="$event.stopPropagation()">
@@ -175,24 +168,26 @@
             type="button"
             class="hd_action hd_action--login"
             [class.hd_action--open]="accountMenuOpen"
-            [title]="user.fullName || user.phoneNumber"
+            [title]="user.fullName || user.phoneNumber || user.email"
             aria-haspopup="menu"
             [attr.aria-expanded]="accountMenuOpen"
             (click)="toggleAccountMenu()">
             <app-icon name="user" [size]="16"></app-icon>
-            <span class="hd_action__text">{{ user.fullName || user.phoneNumber }}</span>
+            <span class="hd_action__text">{{ user.fullName || user.phoneNumber || user.email }}</span>
             <app-icon name="chevron-down" [size]="14" class="hd_account-caret"></app-icon>
           </button>
 
           <div class="hd_account-menu" *ngIf="accountMenuOpen" role="menu" (click)="$event.stopPropagation()">
             <div class="hd_account-menu__head">
               <span class="hd_account-menu__avatar">
-                <img *ngIf="authService.getAvatarUrl(user.avatar) as src; else avatarIcon" [src]="src" alt="">
+                <!-- no-referrer: ảnh Google/Facebook (lh3.googleusercontent.com…) từ chối hiển thị khi có referrer của web khác. -->
+                <img *ngIf="authService.getAvatarUrl(user.avatar) as src; else avatarIcon" [hidden]="brokenAvatar === src" [src]="src" alt="" referrerpolicy="no-referrer" (error)="brokenAvatar = src">
+                <app-icon *ngIf="brokenAvatar && brokenAvatar === authService.getAvatarUrl(user.avatar)" name="user" [size]="18"></app-icon>
                 <ng-template #avatarIcon><app-icon name="user" [size]="18"></app-icon></ng-template>
               </span>
               <span class="hd_account-menu__who">
                 <strong>{{ user.fullName || 'Chưa đặt tên' }}</strong>
-                <small>{{ user.phoneNumber }}</small>
+                <small>{{ user.phoneNumber || user.email }}</small>
               </span>
             </div>
 

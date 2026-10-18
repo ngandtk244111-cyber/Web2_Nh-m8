@@ -90,18 +90,6 @@
             <app-icon name="chevron-right" [size]="16"></app-icon>
           </a>
 
-          <!-- PHẦN DƯỚI: lưới ảnh thường (ảnh studio + lifestyle), cuộn xuống xem hết -->
-          <div *ngIf="galleryImages.length > 1" class="pd_gallery" aria-label="Tất cả ảnh sản phẩm">
-            <button
-              *ngFor="let img of galleryImages; let i = index"
-              type="button"
-              class="pd_gallery__item"
-              (click)="openInCarousel(i, carousel)"
-              [attr.aria-label]="'Xem ảnh ' + (i + 1) + ' trong khung lớn'">
-              <img [src]="img" [alt]="product.name + ' - ảnh ' + (i + 1)" loading="lazy">
-            </button>
-          </div>
-
           <!-- Accordion thông tin -->
           <div class="pd_accordion">
             <div class="pd_accordion__item">
@@ -306,12 +294,15 @@
                 <app-icon name="plus" [size]="13"></app-icon>
               </button>
             </div>
-            <button type="button" (click)="addToCart()" [disabled]="isSoldOut" class="pd_btn pd_btn--primary">
-              <ng-container *ngIf="!isSoldOut; else soldOutLabel">Thêm vào giỏ · {{ displayPrice * quantity | vnd }}</ng-container>
-              <ng-template #soldOutLabel>Tạm hết hàng</ng-template>
+            <button type="button" (click)="addToCart()" [disabled]="isSoldOut" class="pd_btn pd_btn--cart">
+              <app-icon name="cart" [size]="18"></app-icon>
+              <span>{{ isSoldOut ? 'Tạm hết hàng' : 'Thêm vào giỏ hàng' }}</span>
             </button>
           </div>
-          <button type="button" (click)="buyNow()" [disabled]="isSoldOut" class="pd_btn pd_btn--ghost">Mua ngay</button>
+          <button type="button" (click)="buyNow()" [disabled]="isSoldOut" class="pd_btn pd_btn--buy">
+            <span>Mua ngay</span>
+            <strong class="pd_btn__price">{{ displayPrice * quantity | vnd }}</strong>
+          </button>
 
           <p class="pd_eta">
             <ng-container *ngIf="deliveryRange; else podEta">Dự kiến nhận hàng: <strong>{{ deliveryRange }}</strong></ng-container>

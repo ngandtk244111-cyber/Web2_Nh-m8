@@ -1,4 +1,5 @@
 const express = require('express');
+const { sendError } = require('../utils/http-error');
 const Video = require('../models/Video');
 const DEFAULT_VIDEOS = require('../seed/default-videos');
 const { requireAdminId } = require('../middleware/auth');
@@ -39,7 +40,7 @@ router.get('/', async (_req, res) => {
     const videos = await Video.find({ active: true }).sort({ order: 1, createdAt: -1 });
     res.json({ success: true, videos });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -50,7 +51,7 @@ router.get('/admin', requireAdminId, async (_req, res) => {
     const videos = await Video.find().sort({ order: 1, createdAt: -1 });
     res.json({ success: true, videos });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -71,7 +72,7 @@ router.post('/', requireAdminId, async (req, res) => {
     res.json({ success: true, video });
   } catch (err) {
     console.error('create video error', err);
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -87,7 +88,7 @@ router.put('/:id', requireAdminId, async (req, res) => {
     if (!video) return res.status(404).json({ success: false, error: 'Không tìm thấy video' });
     res.json({ success: true, video });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -96,7 +97,7 @@ router.delete('/:id', requireAdminId, async (req, res) => {
     await Video.deleteOne({ id: req.params.id });
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 

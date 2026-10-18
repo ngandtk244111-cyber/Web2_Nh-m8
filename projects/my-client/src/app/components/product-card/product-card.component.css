@@ -10,6 +10,8 @@
 .pc__photo--alt { opacity: 0; }
 .pc:hover .pc__photo--alt { opacity: 1; }
 .pc:hover .pc__photo { transform: scale(1.04); }
+/* Chưa có ảnh thứ 2: phóng to vào thân sản phẩm để xem rõ chất liệu. */
+.pc:hover .pc__photo--solo { transform: scale(1.35); }
 
 .pc__tag {
   display: inline-flex; align-items: center; gap: 4px;

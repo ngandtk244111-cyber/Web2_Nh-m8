@@ -11,6 +11,10 @@ export interface ChatMessage {
   sender: 'customer' | 'staff';
   text: string;
   createdAt?: string;
+  /** Tin do trợ lý tự động gửi. */
+  auto?: boolean;
+  /** Nút dẫn tới trang liên quan (đường dẫn nội bộ, VD '/orders/track'). */
+  links?: { label: string; url: string }[];
 }
 
 const SESSION_KEY = 'deco3d_chat_session';

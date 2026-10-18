@@ -1,13 +1,16 @@
+/* Hộp thoại tài khoản — bố cục tham khảo VitaCare-main (auth): tiêu đề giữa, label + dấu * đỏ, ô nhập
+   bo 12px, nút chính full-width, "hoặc" + nút mạng xã hội tròn, OTP 6 ô có đếm giờ. Màu theo Luméa. */
+
 .lm_overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(3px);
   z-index: 60;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 16px;
+  background: rgba(31, 23, 18, 0.5);
+  backdrop-filter: blur(3px);
   animation: lm-fade-in 0.2s ease;
 }
 
@@ -19,293 +22,332 @@
 .lm_modal {
   position: relative;
   width: 100%;
-  max-width: 380px;
-  max-height: 92vh;
+  max-width: 440px;
+  max-height: 94vh;
   overflow-y: auto;
-  background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 24px;
-  padding: 28px 24px 24px;
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.25);
-  animation: lm-pop-in 0.22s cubic-bezier(0.2, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  padding: 30px 34px 26px;
+  background: #FFFFFF;
+  border-radius: 16px;
+  box-shadow: 0 24px 64px rgba(59, 36, 24, 0.22), 0 0 0 1px rgba(59, 36, 24, 0.06);
   font-family: var(--font-family-content, 'Inter', sans-serif);
+  color: #1F1712;
+  animation: lm-pop-in 0.32s cubic-bezier(0.34, 1.4, 0.64, 1);
 }
 
 @keyframes lm-pop-in {
-  from { opacity: 0; transform: scale(0.94) translateY(10px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
+  from { opacity: 0; transform: scale(0.94) translateY(12px); }
+  to { opacity: 1; transform: none; }
 }
 
+/* ---------- Nút đóng / quay lại ---------- */
 .lm_close {
   position: absolute;
   top: 14px;
   right: 14px;
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: none;
   border-radius: 999px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  background: transparent;
-  color: #888888;
-  display: flex;
+  background: #F5F0E8;
+  color: #7A6558;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.lm_close:hover { background: #F2DEE2; color: #A3152D; }
+
+.lm_back {
+  position: absolute;
+  top: 18px;
+  left: 16px;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
+  gap: 4px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: #A3152D;
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
 }
+.lm_back:hover { color: #891226; text-decoration: underline; }
 
-.lm_close:hover {
-  color: #A3152D;
-  border-color: rgba(163, 21, 45, 0.3);
-}
-
-.lm_head {
-  text-align: center;
-  margin-bottom: 20px;
-}
+/* ---------- Tiêu đề ---------- */
+.lm_head { text-align: center; margin-bottom: 22px; }
 
 .lm_head__badge {
-  height: 60px;
+  height: 68px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
-
-.lm_head__logo {
-  width: 44px;
-  height: 44px;
-  object-fit: contain;
-}
-
-.lm_head__mascot {
-  width: 60px;
-  height: 60px;
-  object-fit: contain;
-  animation: lm-mascot-in 0.25s ease both;
-}
+.lm_head__logo { width: auto; height: 68px; max-width: 100%; object-fit: contain; }
+.lm_head__mascot { width: 52px; height: 52px; object-fit: contain; animation: lm-mascot-in 0.25s ease both; }
 
 @keyframes lm-mascot-in {
   from { transform: scale(0.9); opacity: 0.6; }
   to { transform: scale(1); opacity: 1; }
 }
 
-.lm_head__title {
-  font-family: var(--font-family-heading, 'Inter', sans-serif);
-  font-size: 19px;
-  font-weight: 700;
-  color: #111111;
+.lm_title {
   margin: 0;
-}
-
-.lm_form {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.lm_field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.lm_label {
-  font-size: 11.5px;
+  font-size: 22px;
   font-weight: 700;
-  color: #666666;
+  line-height: 1.2;
+  color: #1F1712;
 }
 
-.lm_input-wrap {
-  position: relative;
-  display: flex;
-  align-items: center;
+.lm_subtitle {
+  margin: 8px auto 0;
+  max-width: 320px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #7A6558;
 }
 
-.lm_input-icon {
-  position: absolute;
-  left: 13px;
-  color: #888888;
-  pointer-events: none;
+/* ---------- Form ---------- */
+.lm_form { display: flex; flex-direction: column; gap: 16px; }
+
+.lm_field { display: flex; flex-direction: column; gap: 7px; }
+
+.lm_field label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1F1712;
 }
+
+.lm_req { color: #EB5757; }
 
 .lm_input {
   width: 100%;
-  height: 42px;
+  height: 46px;
+  box-sizing: border-box;
+  padding: 0 16px;
+  font-size: 14px;
+  color: #1F1712;
+  background: #FBF8F1;
+  border: 1px solid #E8DEC9;
   border-radius: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  background: #F5F3EE;
-  color: #111111;
-  padding: 0 14px 0 38px;
-  font-size: 13.5px;
   outline: none;
-  transition: border-color 0.15s ease;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
 }
-
-.lm_input::placeholder {
-  color: #999999;
-}
-
+.lm_input::placeholder { color: #A99A8C; }
 .lm_input:focus {
+  background: #FFFFFF;
   border-color: #A3152D;
+  box-shadow: 0 0 0 3px rgba(163, 21, 45, 0.12);
 }
-
-.lm_input--error {
+.lm_input--error,
+.lm_input--error:focus {
   border-color: #EB5757;
+  box-shadow: 0 0 0 3px rgba(235, 87, 87, 0.12);
 }
+.lm_input--readonly {
+  background: #F5F0E8;
+  color: #7A6558;
+  cursor: default;
+}
+.lm_input--readonly:focus { border-color: #E8DEC9; box-shadow: none; }
 
-.lm_toggle-eye {
+/* Ô mật khẩu có nút con mắt */
+.lm_pwd { position: relative; }
+.lm_pwd .lm_input { padding-right: 46px; }
+.lm_eye {
   position: absolute;
-  right: 12px;
-  background: transparent;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
   border: none;
-  color: #888888;
+  background: none;
+  color: #93877E;
   cursor: pointer;
-  display: flex;
 }
+.lm_eye:hover { color: #A3152D; }
 
-.lm_toggle-eye:hover {
-  color: #891226;
+.lm_field-foot {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .lm_error {
-  font-size: 11px;
+  font-size: 12.5px;
+  line-height: 1.4;
   color: #EB5757;
 }
+.lm_error--center { text-align: center; }
 
-.lm_error--center {
-  text-align: center;
-}
-
+/* ---------- Link ---------- */
 .lm_link {
-  background: none;
-  border: none;
   padding: 0;
-  color: #891226;
-  font-size: 12.5px;
+  border: none;
+  background: none;
+  color: #A3152D;
+  font-size: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.lm_link:hover { color: #891226; text-decoration: underline; }
+.lm_link--forgot { margin-left: auto; font-size: 13px; white-space: nowrap; }
+
+/* ---------- Nút chính ---------- */
+.lm_submit {
+  width: 100%;
+  height: 48px;
+  margin-top: 4px;
+  border: none;
+  border-radius: 10px;
+  background: #A3152D;
+  color: #FFFFFF;
+  font-size: 15px;
   font-weight: 700;
   cursor: pointer;
+  transition: background 0.2s, opacity 0.2s, transform 0.1s;
 }
+.lm_submit:hover:not(:disabled) { background: #891226; }
+.lm_submit:active:not(:disabled) { transform: scale(0.99); }
+.lm_submit:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.lm_link:hover {
-  color: #A3152D;
-  text-decoration: underline;
-}
-
-.lm_link:disabled {
-  color: #999999;
-  cursor: default;
-  text-decoration: none;
-}
-
-.lm_link--right {
-  align-self: flex-end;
-  margin-top: -6px;
-}
-
-.lm_submit {
-  height: 44px;
-  border-radius: 12px;
-  border: none;
-  background: linear-gradient(135deg, #CD818E, #A3152D 60%, #891226);
-  color: #ffffff;
-  font-size: 14px;
-  font-weight: 800;
-  cursor: pointer;
-  transition: transform 0.15s ease, opacity 0.15s ease;
-}
-
-.lm_submit:hover:not(:disabled) {
-  transform: translateY(-1px);
-}
-
-.lm_submit:disabled {
-  opacity: 0.6;
-  cursor: default;
-}
-
+/* ---------- "hoặc" + mạng xã hội ---------- */
 .lm_divider {
   display: flex;
   align-items: center;
-  gap: 10px;
-  color: #999999;
-  font-size: 11px;
-  margin: 2px 0;
+  gap: 16px;
+  margin: 22px 0 18px;
 }
-
 .lm_divider::before,
 .lm_divider::after {
   content: '';
   flex: 1;
   height: 1px;
-  background: rgba(0, 0, 0, 0.08);
+  background: #EFE6D3;
 }
+.lm_divider span { font-size: 13px; font-weight: 500; color: #93877E; }
 
 .lm_social {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.lm_google-btn {
   display: flex;
   justify-content: center;
-  overflow: hidden;
+  align-items: center;
+  gap: 16px;
 }
 
-.lm_social-btn {
-  height: 40px;
+/* Nút "Đăng nhập với Google": mặt nút tự vẽ + nút thật của Google trong suốt phủ lên trên. */
+.lm_google {
+  position: relative;
+  width: 100%;
+  height: 46px;
+}
+
+.lm_google__face {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 1px solid #DADCE0;
   border-radius: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  background: #F5F3EE;
-  color: #333333;
-  font-size: 12.5px;
-  font-weight: 700;
+  background: #ffffff;
+  color: #3C4043;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
-  transition: border-color 0.15s ease, color 0.15s ease;
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
 
-.lm_social-btn:hover {
-  border-color: #A3152D;
-  color: #891226;
+.lm_google:hover .lm_google__face {
+  background: #F8F9FA;
+  border-color: #C6C9CE;
 }
 
+.lm_google__logo {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.lm_google__gsi {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  opacity: 0.01;
+}
+
+.lm_google__gsi:empty {
+  pointer-events: none;
+}
+
+
+/* ---------- Chân hộp thoại ---------- */
 .lm_switch {
+  margin: 22px 0 0;
   text-align: center;
-  font-size: 12.5px;
-  color: #888888;
-  margin: 4px 0 0;
+  font-size: 14px;
+  color: #7A6558;
 }
 
 .lm_hint {
-  text-align: center;
-  font-size: 12.5px;
-  color: #888888;
   margin: 0;
+  text-align: center;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: #7A6558;
 }
+.lm_hint strong { color: #1F1712; word-break: break-all; }
 
-.lm_otp-row {
+/* ---------- OTP 6 ô ---------- */
+.lm_otp {
   display: flex;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
 }
 
-.lm_otp-box {
-  width: 42px;
-  height: 48px;
-  border-radius: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  background: #F5F3EE;
-  color: #111111;
-  font-size: 18px;
-  font-weight: 700;
+.lm_otp-digit {
+  width: 50px;
+  height: 52px;
+  box-sizing: border-box;
   text-align: center;
+  font-family: var(--font-family-content, 'Inter', sans-serif);
+  font-size: 20px;
+  font-weight: 600;
+  color: #1F1712;
+  background: #FBF8F1;
+  border: 1px solid #E8DEC9;
+  border-radius: 10px;
   outline: none;
-  transition: border-color 0.15s ease;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
 }
-
-.lm_otp-box:focus {
+.lm_otp-digit:focus {
+  background: #FFFFFF;
   border-color: #A3152D;
+  box-shadow: 0 0 0 3px rgba(163, 21, 45, 0.12);
 }
 
-.lm_otp-footer {
+.lm_timer {
+  margin: -4px 0 0;
   text-align: center;
+  font-size: 13px;
+  color: #7A6558;
+}
+.lm_timer strong { color: #A3152D; font-variant-numeric: tabular-nums; }
+
+/* ---------- Màn hình nhỏ ---------- */
+@media (max-width: 420px) {
+  .lm_modal { padding: 28px 20px 22px; }
+  .lm_otp { gap: 6px; }
+  .lm_otp-digit { width: 42px; height: 48px; font-size: 18px; }
 }

@@ -1,4 +1,5 @@
 const express = require('express');
+const { sendError } = require('../utils/http-error');
 const ChatMessage = require('../models/ChatMessage');
 const { requireAdminId } = require('../middleware/auth');
 
@@ -31,7 +32,7 @@ router.get('/admin/sessions', requireAdminId, async (_req, res) => {
     ]);
     res.json({ success: true, sessions });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -41,7 +42,7 @@ router.post('/admin/sessions/:sessionId/read', requireAdminId, async (req, res) 
     await ChatMessage.updateMany({ sessionId: req.params.sessionId, sender: 'customer', readByStaff: { $ne: true } }, { readByStaff: true });
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -51,7 +52,7 @@ router.get('/:sessionId/messages', async (req, res) => {
     const messages = await ChatMessage.find({ sessionId: req.params.sessionId }).sort({ createdAt: 1 });
     res.json({ success: true, messages });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 

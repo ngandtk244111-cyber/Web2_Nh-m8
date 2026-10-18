@@ -1,4 +1,5 @@
 const express = require('express');
+const { sendError } = require('../utils/http-error');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const { attachUserId, requireUserId, requireAdminId } = require('../middleware/auth');
@@ -14,6 +15,17 @@ function generateOrderNumber() {
   return 'ORD-' + Math.floor(100000 + Math.random() * 900000);
 }
 
+// Mã đơn 6 chữ số ngẫu nhiên có thể trùng đơn cũ (unique index) — sinh lại mã thay vì báo lỗi 500.
+async function createWithUniqueNumber(data, attempts = 5) {
+  for (let i = 1; ; i++) {
+    try {
+      return await Order.create({ ...data, orderNumber: generateOrderNumber() });
+    } catch (err) {
+      if (err.code !== 11000 || !err.keyPattern?.orderNumber || i >= attempts) throw err;
+    }
+  }
+}
+
 function nowLabel() {
   const now = new Date();
   return now.toLocaleDateString('vi-VN') + ' ' + now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
@@ -26,7 +38,7 @@ router.get('/', requireAdminId, async (_req, res) => {
     const orders = await Order.find().sort({ createdAt: -1 });
     res.json({ success: true, orders });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -63,8 +75,7 @@ router.post('/', attachUserId, async (req, res) => {
       };
     }
 
-    const order = await Order.create({
-      orderNumber: generateOrderNumber(),
+    const order = await createWithUniqueNumber({
       userId: req.userId || null,
       createdAtLabel: nowLabel(),
       // COD: chờ nhân viên gọi xác nhận (PENDING) rồi mới sản xuất/giao — tránh in đồ khắc tên
@@ -86,7 +97,7 @@ router.post('/', attachUserId, async (req, res) => {
     res.json({ success: true, order });
   } catch (err) {
     console.error('create order error', err);
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -96,7 +107,7 @@ router.get('/by-number/:orderNumber', async (req, res) => {
     if (!order) return res.status(404).json({ success: false, error: 'Không tìm thấy đơn hàng' });
     res.json({ success: true, order });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -106,7 +117,7 @@ router.get('/mine', requireUserId, async (req, res) => {
     const orders = await Order.find({ userId: req.userId }).sort({ createdAt: -1 });
     res.json({ success: true, orders });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -123,7 +134,7 @@ router.patch('/:orderNumber/confirm-payment', async (req, res) => {
     if (!order) return res.status(404).json({ success: false, error: 'Không tìm thấy đơn hàng' });
     res.json({ success: true, order });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -149,7 +160,7 @@ router.patch('/:orderNumber/payment-status', requireAdminId, async (req, res) =>
     );
     res.json({ success: true, order });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -181,7 +192,7 @@ router.patch('/:orderNumber/confirm-phone', requireAdminId, async (req, res) => 
     await order.save();
     res.json({ success: true, order });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -192,7 +203,7 @@ router.get('/:orderNumber/shipping-options', requireAdminId, async (req, res) =>
     if (!order) return res.status(404).json({ success: false, error: 'Không tìm thấy đơn hàng' });
     res.json({ success: true, devMode: isDevMode(), ...shippingOptions(order) });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -243,7 +254,7 @@ router.patch('/:orderNumber/ship', requireAdminId, async (req, res) => {
     await order.save();
     res.json({ success: true, order });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -297,7 +308,7 @@ router.patch('/:orderNumber/production', requireAdminId, async (req, res) => {
 
     res.json({ success: true, order });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 

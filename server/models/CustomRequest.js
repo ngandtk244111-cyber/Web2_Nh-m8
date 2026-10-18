@@ -6,6 +6,8 @@ const customRequestSchema = new mongoose.Schema({
   createdAt: { type: String, default: '' },
   updatedAt: { type: String, default: '' },
   title: { type: String, required: true },
+  // Chủ yêu cầu (null nếu khách gửi khi chưa đăng nhập) — GET / chỉ trả yêu cầu của đúng user này.
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   customerName: { type: String, required: true },
   customerEmail: { type: String, required: true },
   customerPhone: { type: String, default: '' },

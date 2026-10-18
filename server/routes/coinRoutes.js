@@ -1,4 +1,5 @@
 const express = require('express');
+const { sendError } = require('../utils/http-error');
 const User = require('../models/User');
 const CoinTransaction = require('../models/CoinTransaction');
 const { requireUserId } = require('../middleware/auth');
@@ -56,7 +57,7 @@ router.get('/me', requireUserId, async (req, res) => {
       ...(birthdayReward ? { birthdayReward: { amount: birthdayReward.amount } } : {}),
     });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -98,7 +99,7 @@ router.post('/claim', requireUserId, async (req, res) => {
     res.json({ success: true, alreadyApplied: false, coins: user.coins, amount: transaction.amount });
   } catch (err) {
     console.error('coin claim error', err);
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -214,7 +215,7 @@ router.get('/rewards', requireUserId, async (req, res) => {
   try {
     res.json({ success: true, ...(await getRewardsState(req.userId)) });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -238,7 +239,7 @@ router.post('/checkin', requireUserId, async (req, res) => {
     }
     res.json({ success: true, amount, coins: result.coins, streakDay: state.streakDay });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -256,7 +257,7 @@ router.post('/browse', requireUserId, async (req, res) => {
     }
     res.json({ success: true, amount: BROWSE_REWARD, coins: result.coins });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 
@@ -312,7 +313,7 @@ router.post('/games/:game/play', requireUserId, async (req, res) => {
       ...extra,
     });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 

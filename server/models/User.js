@@ -15,14 +15,15 @@ const addressSchema = new mongoose.Schema({
 });
 
 const userSchema = new mongoose.Schema({
-  // sparse: cho phép tạm thời chưa có SĐT (tài khoản mới đăng nhập Google/Facebook, chưa gắn SĐT) —
-  // route /register vẫn tự bắt buộc SĐT ở tầng application, chỉ nới ở tầng schema.
-  phoneNumber: { type: String, unique: true, sparse: true, default: null },
+  // unique + sparse: tài khoản email/Google/Facebook có thể không có SĐT (và ngược lại). KHÔNG đặt
+  // default: null cho 3 field phoneNumber/googleId/facebookId — sparse index vẫn đánh index giá trị
+  // null lưu tường minh, nên chỉ cho tồn tại đúng 1 user thiếu field đó (lỗi E11000 khi đăng ký).
+  phoneNumber: { type: String, unique: true, sparse: true },
   // Băm bằng bcrypt — không lưu plain text. Đăng nhập bằng SĐT + mật khẩu (tham khảo VitaCare-main),
   // không còn OTP-login/JWT. Tài khoản Google/Facebook không có password.
   password: { type: String, default: null },
-  googleId: { type: String, unique: true, sparse: true, default: null },
-  facebookId: { type: String, unique: true, sparse: true, default: null },
+  googleId: { type: String, unique: true, sparse: true },
+  facebookId: { type: String, unique: true, sparse: true },
   fullName: { type: String, default: '' },
   email: { type: String, default: '' },
   gender: { type: String, enum: ['male', 'female', 'other', ''], default: '' },
@@ -43,5 +44,16 @@ const userSchema = new mongoose.Schema({
     },
   },
 });
+
+const LOGIN_ID_FIELDS = ['phoneNumber', 'googleId', 'facebookId'];
+
+// Dữ liệu cũ (tạo khi schema còn default: null) có thể đang lưu null tường minh ở các field trên,
+// chiếm mất "suất null" duy nhất của sparse unique index -> gỡ field đó đi. Idempotent, gọi mỗi
+// lần server khởi động (xem index.js), không cần chạy migration tay trên từng database.
+userSchema.statics.unsetNullLoginIds = async function unsetNullLoginIds() {
+  for (const field of LOGIN_ID_FIELDS) {
+    await this.updateMany({ [field]: { $type: 'null' } }, { $unset: { [field]: 1 } });
+  }
+};
 
 module.exports = mongoose.model('User', userSchema);

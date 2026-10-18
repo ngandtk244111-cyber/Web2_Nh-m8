@@ -90,3 +90,11 @@
     display: none;
   }
 }
+
+/* Nhãn "Tư vấn" đè lên chân mascot để người xem biết bấm vào sẽ được tư vấn. */
+.fm__label {
+  position: absolute; left: 50%; bottom: -6px; transform: translateX(-50%);
+  padding: 4px 10px; border-radius: 999px; white-space: nowrap; pointer-events: none;
+  font-size: 12px; font-weight: 700; line-height: 1.1; background: #A3152D; color: #fff;
+  border: 1.5px solid #fff; box-shadow: 0 4px 10px rgba(163, 21, 45, 0.3);
+}

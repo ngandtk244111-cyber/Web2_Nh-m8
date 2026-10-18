@@ -12,53 +12,49 @@ export interface AuthApiResponse {
   message?: string;
   error?: string;
   devOtp?: string;
-  /** Đăng nhập Google lần đầu chưa có SĐT trong hệ thống — FE cần hỏi SĐT + OTP trước khi coi là xong. */
-  needsPhone?: boolean;
-  userId?: string;
 }
 
 /**
  * Tách riêng phần gọi API khỏi state đăng nhập (AuthService) — tham khảo cấu trúc
  * AuthService/AuthApiService của VitaCare-main.
+ *
+ * `identifier` = số điện thoại (0xxxxxxxxx) HOẶC email — server tự nhận dạng (readContact ở
+ * server/routes/authRoutes.js), dùng chung cho đăng ký, đăng nhập và quên mật khẩu.
  */
 @Injectable({ providedIn: 'root' })
 export class AuthApiService {
   private http = inject(HttpClient);
 
-  registerOtp(phoneNumber: string): Observable<AuthApiResponse> {
-    return this.http.post<AuthApiResponse>(`${BASE}/register-otp`, { phoneNumber });
+  registerOtp(identifier: string): Observable<AuthApiResponse> {
+    return this.http.post<AuthApiResponse>(`${BASE}/register-otp`, { identifier });
   }
 
-  verifyOtpAny(phoneNumber: string, otp: string): Observable<AuthApiResponse> {
-    return this.http.post<AuthApiResponse>(`${BASE}/verify-otp-any`, { phoneNumber, otp });
+  verifyOtpAny(identifier: string, otp: string): Observable<AuthApiResponse> {
+    return this.http.post<AuthApiResponse>(`${BASE}/verify-otp-any`, { identifier, otp });
   }
 
-  register(phoneNumber: string, password: string): Observable<AuthApiResponse> {
-    return this.http.post<AuthApiResponse>(`${BASE}/register`, { phoneNumber, password });
+  register(identifier: string, password: string): Observable<AuthApiResponse> {
+    return this.http.post<AuthApiResponse>(`${BASE}/register`, { identifier, password });
   }
 
-  login(phoneNumber: string, password: string): Observable<AuthApiResponse> {
-    return this.http.post<AuthApiResponse>(`${BASE}/login`, { phoneNumber, password });
+  login(identifier: string, password: string): Observable<AuthApiResponse> {
+    return this.http.post<AuthApiResponse>(`${BASE}/login`, { identifier, password });
   }
 
   loginWithGoogle(credential: string): Observable<AuthApiResponse> {
     return this.http.post<AuthApiResponse>(`${BASE}/google`, { credential });
   }
 
-  attachGooglePhone(userId: string, phoneNumber: string): Observable<AuthApiResponse> {
-    return this.http.post<AuthApiResponse>(`${BASE}/google/attach-phone`, { userId, phoneNumber });
+  forgotPassword(identifier: string): Observable<AuthApiResponse> {
+    return this.http.post<AuthApiResponse>(`${BASE}/forgot-password`, { identifier });
   }
 
-  forgotPassword(phoneNumber: string): Observable<AuthApiResponse> {
-    return this.http.post<AuthApiResponse>(`${BASE}/forgot-password`, { phoneNumber });
+  verifyOtp(identifier: string, otp: string): Observable<AuthApiResponse> {
+    return this.http.post<AuthApiResponse>(`${BASE}/verify-otp`, { identifier, otp });
   }
 
-  verifyOtp(phoneNumber: string, otp: string): Observable<AuthApiResponse> {
-    return this.http.post<AuthApiResponse>(`${BASE}/verify-otp`, { phoneNumber, otp });
-  }
-
-  resetPassword(phoneNumber: string, newPassword: string): Observable<AuthApiResponse> {
-    return this.http.post<AuthApiResponse>(`${BASE}/reset-password`, { phoneNumber, newPassword });
+  resetPassword(identifier: string, newPassword: string): Observable<AuthApiResponse> {
+    return this.http.post<AuthApiResponse>(`${BASE}/reset-password`, { identifier, newPassword });
   }
 
   updateProfile(userId: string, payload: {

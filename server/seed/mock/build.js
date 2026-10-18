@@ -14,6 +14,8 @@ const {
 } = require('../mock-data.generated');
 const { DEV_MOCK_PRODUCTS } = require('../product-detail.generated');
 const { EXTRA_PRODUCTS } = require('./products-extra');
+const { FURNITURE_PRODUCTS } = require('./products-furniture');
+const { CATALOG_PRODUCTS } = require('./products-catalog');
 const DEFAULT_VIDEOS = require('../default-videos');
 
 const { resolveUnitPrice, resolveShippingFee } = require('../../utils/pricing');
@@ -203,7 +205,7 @@ function buildCustomRequest(spec) {
   const lastAt = spec.messages.reduce((max, m) => (m.at > max ? m.at : max), created);
   const { user: _u, days: _d, messages: _m, ...rest } = spec;
   return {
-    customerName: u?.fullName, customerEmail: u?.email, customerPhone: u?.phoneNumber || '',
+    userId: u?._id || null, customerName: u?.fullName, customerEmail: u?.email, customerPhone: u?.phoneNumber || '',
     customerImages: [], aiConceptImage: null, quotationPrice: null, estimatedDays: null, adminNote: '', preview3dModelType: null,
     ...rest,
     createdAt: viLabelPadded(created),
@@ -347,7 +349,7 @@ async function buildAll() {
     // nhau — bỏ hẳn field thay vì ghi null (chỉ 1 user mẫu không có SĐT).
     { model: 'User', key: ['_id'], docs: users, omitNull: ['phoneNumber', 'googleId', 'facebookId'] },
     { model: 'Admin', key: ['username'], docs: admins },
-    { model: 'Product', key: ['id'], docs: [...DEV_MOCK_PRODUCTS, ...EXTRA_PRODUCTS].map(enrichProduct) },
+    { model: 'Product', key: ['id'], docs: [...DEV_MOCK_PRODUCTS, ...EXTRA_PRODUCTS, ...FURNITURE_PRODUCTS, ...CATALOG_PRODUCTS].map(enrichProduct) },
     { model: 'Room', key: ['id'], docs: MOCK_ROOMS },
     { model: 'Coupon', key: ['code'], docs: [...MOCK_COUPONS, ...COUPONS] },
     { model: 'NewsArticle', key: ['id'], docs: MOCK_NEWS_ARTICLES },

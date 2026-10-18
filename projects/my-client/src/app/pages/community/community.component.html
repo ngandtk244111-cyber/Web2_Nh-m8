@@ -50,7 +50,7 @@
               aria-label="Quay lại">
               <app-icon name="chevron-left" [size]="20"></app-icon>
             </button>
-            <h2 class="text-[15px] font-bold text-neutral-900">{{ activePost ? 'Thread' : currentFeedLabel }}</h2>
+            <h2 class="text-[15px] font-bold text-neutral-900">{{ activePost ? '' : currentFeedLabel }}</h2>
           </div>
 
           <!-- Tìm kiếm + danh mục cho màn nhỏ -->
@@ -90,7 +90,7 @@
               </div>
 
               <!-- Tabs -->
-              <div class="grid grid-cols-2 border-b border-neutral-100">
+              <div *ngIf="feedMode === 'all'" class="grid grid-cols-2 border-b border-neutral-100">
                 <button
                   *ngFor="let t of feedTabs"
                   type="button"
@@ -101,6 +101,13 @@
                 </button>
               </div>
 
+              <div *ngIf="feedMode !== 'all'" class="cm-collection-toolbar">
+                <label for="collection-sort">Sắp xếp:</label>
+                <select id="collection-sort" class="cm-sort" [(ngModel)]="collectionSort" (ngModelChange)="applyFilters()">
+                  <option value="newest">Mới nhất</option>
+                  <option value="oldest">Cũ nhất</option>
+                </select>
+              </div>
               <!-- Empty state -->
               <div *ngIf="filteredPosts.length === 0" class="py-20 px-6 text-center">
                 <div class="w-14 h-14 rounded-full bg-neutral-50 flex items-center justify-center mx-auto mb-3">
@@ -115,7 +122,7 @@
                 *ngFor="let post of visiblePosts"
                 (click)="openPost(post)"
                 class="cm-post cursor-pointer hover:bg-neutral-50/60 transition">
-                <img [src]="post.author.avatar" [alt]="post.author.name" class="cm-avatar">
+                <img [src]="post.author.avatar" [alt]="post.author.name" class="cm-avatar" referrerpolicy="no-referrer">
 
                 <div class="min-w-0 flex-1">
                   <div class="flex items-center gap-1.5 min-w-0">
@@ -190,7 +197,7 @@
             <ng-container *ngIf="activePost as post">
               <article class="px-5 sm:px-6 pt-5 pb-4 border-b border-neutral-100">
                 <div class="flex items-center gap-3">
-                  <img [src]="post.author.avatar" [alt]="post.author.name" class="cm-avatar">
+                  <img [src]="post.author.avatar" [alt]="post.author.name" class="cm-avatar" referrerpolicy="no-referrer">
                   <div class="min-w-0 flex-1">
                     <div class="flex items-center gap-1.5">
                       <span class="text-[15px] font-semibold text-neutral-900 truncate">{{ post.author.name }}</span>
@@ -384,7 +391,7 @@
 
           <div class="flex items-center justify-between px-5 py-4 border-b border-neutral-100">
             <button (click)="closeCreateModal()" class="text-[15px] text-neutral-600 hover:text-neutral-900">Hủy</button>
-            <h3 class="text-[15px] font-bold text-neutral-900">Thread mới</h3>
+            <h3 class="text-[15px] font-bold text-neutral-900">Bài viết mới</h3>
             <span class="w-8"></span>
           </div>
 

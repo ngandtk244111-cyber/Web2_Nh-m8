@@ -2,6 +2,7 @@ const Coupon = require('../models/Coupon');
 
 const SHIPPING_FEE = 30000;
 const FREE_SHIPPING_THRESHOLD = 500000;
+const MAX_QUANTITY_PER_ITEM = 99;
 
 // Tính lại unitPrice từ sản phẩm THẬT trong DB + lựa chọn tùy biến của khách — không tin bất kỳ
 // priceDelta/unitPrice nào client gửi lên (khớp công thức calculateUnitPrice() ở cart.service.ts
@@ -79,7 +80,7 @@ async function resolveDiscount(subtotal, couponCode) {
   if (!couponCode) return 0;
   const coupon = await Coupon.findOne({ code: String(couponCode).trim().toUpperCase(), active: true }).lean();
   if (!coupon || subtotal < coupon.minSpend) return 0;
-  const calc = (subtotal * coupon.discountPercent) / 100;
+  const calc = Math.round((subtotal * coupon.discountPercent) / 100);
   return Math.min(calc, coupon.maxDiscount);
 }
 
@@ -102,8 +103,10 @@ async function verifyAndPriceOrderItems(items, Product) {
       throw new Error(`Sản phẩm "${item.product?.name || item.product?.id}" không tồn tại hoặc đã bị gỡ khỏi shop`);
     }
 
-    const quantity = Number(item.quantity) || 0;
-    if (quantity <= 0) throw new Error('Số lượng sản phẩm không hợp lệ');
+    const quantity = Number(item.quantity);
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > MAX_QUANTITY_PER_ITEM) {
+      throw new Error(`Số lượng sản phẩm "${dbProduct.name}" phải từ 1 đến ${MAX_QUANTITY_PER_ITEM}`);
+    }
 
     const unitPrice = resolveUnitPrice(dbProduct, item.selectedCustomization);
     const totalPrice = unitPrice * quantity;
@@ -128,4 +131,5 @@ module.exports = {
   verifyAndPriceOrderItems,
   SHIPPING_FEE,
   FREE_SHIPPING_THRESHOLD,
+  MAX_QUANTITY_PER_ITEM,
 };

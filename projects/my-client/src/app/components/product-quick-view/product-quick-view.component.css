@@ -22,9 +22,9 @@
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 24px;
   width: 100%;
-  max-width: 760px;
+  max-width: 880px;
   max-height: 90vh;
-  overflow: auto;
+  overflow: hidden;
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.25);
   animation: qv-pop-in 0.25s cubic-bezier(0.2, 1, 0.3, 1);
 }
@@ -58,12 +58,16 @@
 
 .qv-modal__grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  /* Khung cố định cho mọi sản phẩm: ảnh luôn cùng kích thước (~4:5), không phát sinh thanh cuộn. */
+  height: min(560px, calc(100vh - 32px));
 }
 
 .qv-modal__image {
   position: relative;
-  aspect-ratio: 1 / 1;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
   background: #F5F3EE;
 }
 
@@ -94,6 +98,12 @@
   padding: 28px;
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  /* Chỉ cuộn khi màn hình quá thấp; bình thường nội dung vừa khung. */
+  overflow-y: auto;
+  overflow-x: hidden;
+  overflow-wrap: anywhere;
 }
 
 .qv-modal__category {
@@ -112,6 +122,10 @@
   color: #4E0A16;
   margin: 0 0 10px;
   line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .qv-modal__rating {
@@ -135,7 +149,7 @@
   color: #333333;
   margin: 0 0 18px;
   display: -webkit-box;
-  -webkit-line-clamp: 4;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -203,11 +217,18 @@
 
 @media (max-width: 640px) {
   .qv-modal__grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+    height: auto;
+  }
+
+  .qv-modal__image {
+    height: auto;
+    aspect-ratio: 4 / 3;
   }
 
   .qv-modal {
     max-height: 92vh;
+    overflow-y: auto;
   }
 }
 
@@ -231,6 +252,8 @@
 }
 
 .qv-qty {
+  /* Không bị kéo giãn hết chiều ngang (body là flex column). */
+  align-self: flex-start;
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -243,11 +266,14 @@
 .qv-qty button {
   width: 32px;
   height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: 0;
   border-radius: 50%;
   background: transparent;
-  font-size: 18px;
-  line-height: 1;
+  color: #333333;
   cursor: pointer;
 }
 

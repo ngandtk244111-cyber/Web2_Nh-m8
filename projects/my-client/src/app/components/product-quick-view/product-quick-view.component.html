@@ -36,9 +36,9 @@
         </p>
 
         <div *ngIf="!product.customizable && product.inStock > 0" class="qv-qty" role="group" aria-label="Số lượng">
-          <button type="button" (click)="changeQty(-1)" [disabled]="quantity <= 1" aria-label="Giảm số lượng">−</button>
+          <button type="button" (click)="changeQty(-1)" [disabled]="quantity <= 1" aria-label="Giảm số lượng"><app-icon name="minus" [size]="14"></app-icon></button>
           <span aria-live="polite">{{ quantity }}</span>
-          <button type="button" (click)="changeQty(1)" [disabled]="quantity >= maxQty" aria-label="Tăng số lượng">+</button>
+          <button type="button" (click)="changeQty(1)" [disabled]="quantity >= maxQty" aria-label="Tăng số lượng"><app-icon name="plus" [size]="14"></app-icon></button>
         </div>
 
         <div class="qv-modal__actions">

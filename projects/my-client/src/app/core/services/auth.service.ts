@@ -43,7 +43,8 @@ export class AuthService {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const user = JSON.parse(raw) as LoggedUser;
-        if (user?.phoneNumber) this.currentUser.set(user);
+        // Tài khoản đăng ký bằng email / Google có thể không có SĐT — chỉ cần có _id là hợp lệ.
+        if (user?._id) this.currentUser.set(user);
       }
     } catch {
       // ignore invalid stored user

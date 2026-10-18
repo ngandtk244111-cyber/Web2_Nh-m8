@@ -1,7 +1,12 @@
 <div class="lm_overlay" *ngIf="modalService.isOpen()" (click)="onBackdropClick($event)">
-  <div class="lm_modal">
+  <div class="lm_modal" role="dialog" aria-modal="true" [attr.aria-label]="title">
     <button type="button" class="lm_close" (click)="close()" aria-label="Đóng">
       <app-icon name="x" [size]="16"></app-icon>
+    </button>
+
+    <!-- Bước OTP: quay lại bước nhập SĐT/email -->
+    <button *ngIf="isOtpStep" type="button" class="lm_back" (click)="backFromOtp()">
+      <app-icon name="chevron-left" [size]="14"></app-icon> Quay lại
     </button>
 
     <div class="lm_head">
@@ -9,201 +14,157 @@
       <div class="lm_head__badge">
         <img
           *ngIf="mascotService.expression() === 'idle'; else mascotFace"
-          src="assets/logo/lumea-mark.png" alt="Luméa" class="lm_head__logo">
+          src="assets/logo/lumea-logo.png" alt="Luméa Interior &amp; 3D" class="lm_head__logo">
         <ng-template #mascotFace>
           <img [src]="mascotService.image()" alt="Goh - trợ lý Luméa" class="lm_head__mascot">
         </ng-template>
       </div>
-      <h3 class="lm_head__title">{{ title }}</h3>
+      <h2 *ngIf="mode !== 'login'" id="lm-title" class="lm_title">{{ title }}</h2>
+      <p class="lm_subtitle" *ngIf="mode === 'login'">Đăng nhập để theo dõi đơn hàng, tích Xu và lưu sản phẩm yêu thích.</p>
     </div>
 
-    <!-- ============ ĐĂNG NHẬP ============ -->
-    <form *ngIf="mode === 'login'" class="lm_form" (ngSubmit)="submitLogin()">
-      <div class="lm_field">
-        <label class="lm_label">Số điện thoại</label>
-        <div class="lm_input-wrap">
-          <app-icon name="user" [size]="15" class="lm_input-icon"></app-icon>
-          <input type="tel" [(ngModel)]="phoneNumber" name="phoneNumber" placeholder="VD: 0912345678" class="lm_input" [class.lm_input--error]="errors.phone">
+    <!-- ===================== ĐĂNG NHẬP ===================== -->
+    <ng-container *ngIf="mode === 'login'">
+      <form class="lm_form" (ngSubmit)="submitLogin()" novalidate>
+        <div class="lm_field">
+          <label for="lm-login-id">Số điện thoại hoặc email <span class="lm_req">*</span></label>
+          <input id="lm-login-id" type="text" name="identifier" autocomplete="username" class="lm_input"
+            [(ngModel)]="identifier" (ngModelChange)="errors.identifier = undefined"
+            placeholder="VD: 0912345678 hoặc ten@gmail.com" [class.lm_input--error]="errors.identifier">
+          <span class="lm_error" *ngIf="errors.identifier">{{ errors.identifier }}</span>
         </div>
-        <span class="lm_error" *ngIf="errors.phone">{{ errors.phone }}</span>
-      </div>
 
-      <div class="lm_field">
-        <label class="lm_label">Mật khẩu</label>
-        <div class="lm_input-wrap">
-          <app-icon name="lock" [size]="15" class="lm_input-icon"></app-icon>
-          <input [type]="showPassword ? 'text' : 'password'" [(ngModel)]="password" name="password" placeholder="Nhập mật khẩu" class="lm_input" [class.lm_input--error]="errors.password">
-          <button type="button" class="lm_toggle-eye" (click)="showPassword = !showPassword">
-            <app-icon [name]="showPassword ? 'eye' : 'eye-off'" [size]="15"></app-icon>
-          </button>
+        <div class="lm_field">
+          <label for="lm-login-pwd">Mật khẩu <span class="lm_req">*</span></label>
+          <div class="lm_pwd">
+            <input id="lm-login-pwd" [type]="showPassword ? 'text' : 'password'" name="password" autocomplete="current-password"
+              class="lm_input" [(ngModel)]="password" (ngModelChange)="errors.password = undefined"
+              placeholder="Nhập mật khẩu" [class.lm_input--error]="errors.password">
+            <button type="button" class="lm_eye" (click)="showPassword = !showPassword" aria-label="Hiện/ẩn mật khẩu">
+              <app-icon [name]="showPassword ? 'eye' : 'eye-off'" [size]="16"></app-icon>
+            </button>
+          </div>
+          <div class="lm_field-foot">
+            <span class="lm_error" *ngIf="errors.password">{{ errors.password }}</span>
+            <button type="button" class="lm_link lm_link--forgot" (click)="switchToForgotPassword()">Quên mật khẩu?</button>
+          </div>
         </div>
-        <span class="lm_error" *ngIf="errors.password">{{ errors.password }}</span>
-      </div>
 
-      <button type="button" class="lm_link lm_link--right" (click)="switchToForgotPassword()">Quên mật khẩu?</button>
-
-      <button type="submit" class="lm_submit" [disabled]="isSubmitting">
-        {{ isSubmitting ? 'Đang đăng nhập...' : 'Đăng Nhập' }}
-      </button>
+        <button type="submit" class="lm_submit" [disabled]="isSubmitting">
+          {{ isSubmitting ? 'Đang đăng nhập...' : 'Đăng nhập' }}
+        </button>
+      </form>
 
       <div class="lm_divider"><span>hoặc</span></div>
 
+      <!-- Nút hiển thị do mình vẽ (luôn rõ ràng); nút thật của Google Identity Services nằm trong suốt phủ lên trên
+           để nhận click. Google chưa tải xong thì click rơi xuống nút dưới -> báo lỗi thay vì im lặng. -->
       <div class="lm_social">
-        <div #googleBtnContainer class="lm_google-btn"></div>
-        <button type="button" class="lm_social-btn" (click)="onSocialLoginStub('Facebook')">Facebook</button>
+        <div class="lm_google">
+          <button type="button" class="lm_google__face" (click)="onGoogleFallbackClick()" tabindex="-1">
+            <svg class="lm_google__logo" viewBox="0 0 48 48" aria-hidden="true">
+              <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/>
+              <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/>
+              <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/>
+              <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/>
+            </svg>
+            <span>Đăng nhập với Google</span>
+          </button>
+          <div #googleBtnContainer class="lm_google__gsi" aria-label="Đăng nhập với Google"></div>
+        </div>
       </div>
 
-      <p class="lm_switch">Chưa có tài khoản? <button type="button" class="lm_link" (click)="switchToRegister()">Đăng ký ngay</button></p>
-    </form>
+      <p class="lm_switch">Bạn chưa có tài khoản? <button type="button" class="lm_link" (click)="switchToRegister()">Đăng ký ngay</button></p>
+    </ng-container>
 
-    <!-- ============ ĐĂNG KÝ / GOOGLE — BƯỚC 1: SĐT ============ -->
-    <form *ngIf="(mode === 'register' || mode === 'google-phone') && registerStep === 1" class="lm_form" (ngSubmit)="submitRegisterPhone()">
-      <p class="lm_hint" *ngIf="mode === 'google-phone'">Đăng nhập Google thành công! Nhập số điện thoại để hoàn tất (dùng cho đơn hàng, bảo hành...).</p>
+    <!-- ===================== ĐĂNG KÝ / QUÊN MẬT KHẨU — BƯỚC 1: SĐT HOẶC EMAIL ===================== -->
+    <form *ngIf="(mode === 'register' && registerStep === 1) || (mode === 'forgot-password' && forgotStep === 1)"
+      class="lm_form" (ngSubmit)="mode === 'register' ? submitRegisterIdentifier() : submitForgotIdentifier()" novalidate>
+      <p class="lm_hint">
+        {{ mode === 'register'
+          ? 'Nhập số điện thoại hoặc email, Luméa sẽ gửi mã OTP 6 số để xác thực.'
+          : 'Nhập số điện thoại hoặc email đã đăng ký để nhận mã OTP đặt lại mật khẩu.' }}
+      </p>
       <div class="lm_field">
-        <label class="lm_label">Số điện thoại</label>
-        <div class="lm_input-wrap">
-          <app-icon name="user" [size]="15" class="lm_input-icon"></app-icon>
-          <input type="tel" [(ngModel)]="phoneNumber" name="phoneNumber" placeholder="VD: 0912345678" class="lm_input" [class.lm_input--error]="errors.phone">
-        </div>
-        <span class="lm_error" *ngIf="errors.phone">{{ errors.phone }}</span>
+        <label for="lm-step1-id">Số điện thoại hoặc email <span class="lm_req">*</span></label>
+        <input id="lm-step1-id" type="text" name="identifier" autocomplete="username" class="lm_input"
+          [(ngModel)]="identifier" (ngModelChange)="errors.identifier = undefined"
+          placeholder="VD: 0912345678 hoặc ten@gmail.com" [class.lm_input--error]="errors.identifier">
+        <span class="lm_error" *ngIf="errors.identifier">{{ errors.identifier }}</span>
       </div>
 
       <button type="submit" class="lm_submit" [disabled]="isSubmitting">
-        {{ isSubmitting ? 'Đang gửi...' : 'Gửi Mã OTP' }}
+        {{ isSubmitting ? 'Đang gửi...' : 'Gửi mã OTP' }}
       </button>
-
-      <p class="lm_switch" *ngIf="mode === 'register'">Đã có tài khoản? <button type="button" class="lm_link" (click)="switchToLogin()">Đăng nhập</button></p>
     </form>
 
-    <!-- ============ ĐĂNG KÝ / GOOGLE — BƯỚC 2: OTP ============ -->
-    <form *ngIf="(mode === 'register' || mode === 'google-phone') && registerStep === 2" class="lm_form" (ngSubmit)="submitRegisterOtp()">
-      <p class="lm_hint">Mã OTP đã gửi tới <strong>{{ phoneNumber }}</strong></p>
+    <!-- ===================== BƯỚC 2: NHẬP OTP (dùng chung đăng ký + quên mật khẩu) ===================== -->
+    <form *ngIf="isOtpStep" class="lm_form" (ngSubmit)="submitOtp()" novalidate>
+      <p class="lm_hint">Mã OTP đã được gửi đến <strong>{{ identifierLabel }}</strong></p>
 
-      <div class="lm_otp-row">
-        <input
-          *ngFor="let i of [0,1,2,3,4,5]" #otpInput
-          type="text" inputmode="numeric" maxlength="1" class="lm_otp-box"
+      <div class="lm_otp">
+        <input *ngFor="let i of [0,1,2,3,4,5]" #otpInput
+          type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code"
+          class="lm_otp-digit" [class.lm_input--error]="errors.otp" [attr.aria-label]="'Chữ số thứ ' + (i + 1)"
           [value]="otpCode[i] || ''"
-          (keydown)="onOtpKeypress($event)"
+          (keydown)="onOtpKeypress($event, i)"
           (input)="onOtpDigitChange($any($event.target).value, i)">
       </div>
       <span class="lm_error lm_error--center" *ngIf="errors.otp">{{ errors.otp }}</span>
 
-      <button type="submit" class="lm_submit" [disabled]="isSubmitting || !isOtpValid">
-        {{ isSubmitting ? 'Đang xác thực...' : 'Xác Nhận' }}
-      </button>
+      <p class="lm_timer" *ngIf="otpTimer > 0">Hiệu lực mã còn <strong>{{ otpTimer }}</strong> giây</p>
+      <p class="lm_timer" *ngIf="otpTimer <= 0">
+        Mã đã hết hiệu lực. <button type="button" class="lm_link" (click)="resendOtp()">Gửi lại mã</button>
+      </p>
 
-      <div class="lm_otp-footer">
-        <button type="button" class="lm_link" [disabled]="otpTimer > 0" (click)="resendRegisterOtp()">
-          {{ otpTimer > 0 ? 'Gửi lại mã sau ' + otpTimer + 's' : 'Gửi lại mã OTP' }}
-        </button>
-      </div>
+      <button type="submit" class="lm_submit" [disabled]="isSubmitting || !isOtpValid">
+        {{ isSubmitting ? 'Đang xác thực...' : 'Xác nhận' }}
+      </button>
     </form>
 
-    <!-- ============ ĐĂNG KÝ — BƯỚC 3: MẬT KHẨU ============ -->
-    <form *ngIf="mode === 'register' && registerStep === 3" class="lm_form" (ngSubmit)="submitRegisterPassword()">
+    <!-- ===================== BƯỚC 3: ĐẶT MẬT KHẨU (đăng ký) / MẬT KHẨU MỚI (quên mật khẩu) ===================== -->
+    <form *ngIf="(mode === 'register' && registerStep === 3) || (mode === 'forgot-password' && forgotStep === 3)"
+      class="lm_form" (ngSubmit)="mode === 'register' ? submitRegisterPassword() : submitForgotNewPassword()" novalidate>
       <div class="lm_field">
-        <label class="lm_label">Mật khẩu mới</label>
-        <div class="lm_input-wrap">
-          <app-icon name="lock" [size]="15" class="lm_input-icon"></app-icon>
-          <input [type]="showPassword ? 'text' : 'password'" [(ngModel)]="password" name="password" placeholder="Ít nhất 8 ký tự, 1 hoa, 1 ký tự đặc biệt" class="lm_input" [class.lm_input--error]="errors.password">
-          <button type="button" class="lm_toggle-eye" (click)="showPassword = !showPassword">
-            <app-icon [name]="showPassword ? 'eye' : 'eye-off'" [size]="15"></app-icon>
+        <label>Số điện thoại hoặc email</label>
+        <input type="text" class="lm_input lm_input--readonly" [value]="identifier" readonly tabindex="-1">
+      </div>
+
+      <div class="lm_field">
+        <label for="lm-new-pwd">{{ mode === 'register' ? 'Mật khẩu' : 'Mật khẩu mới' }} <span class="lm_req">*</span></label>
+        <div class="lm_pwd">
+          <input id="lm-new-pwd" [type]="showPassword ? 'text' : 'password'" name="password" autocomplete="new-password"
+            class="lm_input" [(ngModel)]="password" (ngModelChange)="errors.password = undefined"
+            placeholder="Ít nhất 8 ký tự, 1 chữ in hoa, 1 ký tự đặc biệt" [class.lm_input--error]="errors.password">
+          <button type="button" class="lm_eye" (click)="showPassword = !showPassword" aria-label="Hiện/ẩn mật khẩu">
+            <app-icon [name]="showPassword ? 'eye' : 'eye-off'" [size]="16"></app-icon>
           </button>
         </div>
         <span class="lm_error" *ngIf="errors.password">{{ errors.password }}</span>
       </div>
 
       <div class="lm_field">
-        <label class="lm_label">Nhập lại mật khẩu</label>
-        <div class="lm_input-wrap">
-          <app-icon name="lock" [size]="15" class="lm_input-icon"></app-icon>
-          <input [type]="showConfirmPassword ? 'text' : 'password'" [(ngModel)]="confirmPassword" name="confirmPassword" placeholder="Nhập lại mật khẩu" class="lm_input" [class.lm_input--error]="errors.confirmPassword">
-          <button type="button" class="lm_toggle-eye" (click)="showConfirmPassword = !showConfirmPassword">
-            <app-icon [name]="showConfirmPassword ? 'eye' : 'eye-off'" [size]="15"></app-icon>
+        <label for="lm-confirm-pwd">Nhập lại mật khẩu <span class="lm_req">*</span></label>
+        <div class="lm_pwd">
+          <input id="lm-confirm-pwd" [type]="showConfirmPassword ? 'text' : 'password'" name="confirmPassword" autocomplete="new-password"
+            class="lm_input" [(ngModel)]="confirmPassword" (ngModelChange)="errors.confirmPassword = undefined"
+            placeholder="Nhập lại mật khẩu vừa nhập" [class.lm_input--error]="errors.confirmPassword">
+          <button type="button" class="lm_eye" (click)="showConfirmPassword = !showConfirmPassword" aria-label="Hiện/ẩn mật khẩu">
+            <app-icon [name]="showConfirmPassword ? 'eye' : 'eye-off'" [size]="16"></app-icon>
           </button>
         </div>
         <span class="lm_error" *ngIf="errors.confirmPassword">{{ errors.confirmPassword }}</span>
       </div>
 
       <button type="submit" class="lm_submit" [disabled]="isSubmitting">
-        {{ isSubmitting ? 'Đang tạo tài khoản...' : 'Hoàn Tất Đăng Ký' }}
+        <ng-container *ngIf="mode === 'register'">{{ isSubmitting ? 'Đang tạo tài khoản...' : 'Đăng ký' }}</ng-container>
+        <ng-container *ngIf="mode === 'forgot-password'">{{ isSubmitting ? 'Đang lưu...' : 'Đổi mật khẩu' }}</ng-container>
       </button>
     </form>
 
-    <!-- ============ QUÊN MẬT KHẨU — BƯỚC 1: SĐT ============ -->
-    <form *ngIf="mode === 'forgot-password' && forgotStep === 1" class="lm_form" (ngSubmit)="submitForgotPhone()">
-      <div class="lm_field">
-        <label class="lm_label">Số điện thoại đã đăng ký</label>
-        <div class="lm_input-wrap">
-          <app-icon name="user" [size]="15" class="lm_input-icon"></app-icon>
-          <input type="tel" [(ngModel)]="phoneNumber" name="phoneNumber" placeholder="VD: 0912345678" class="lm_input" [class.lm_input--error]="errors.phone">
-        </div>
-        <span class="lm_error" *ngIf="errors.phone">{{ errors.phone }}</span>
-      </div>
-
-      <button type="submit" class="lm_submit" [disabled]="isSubmitting">
-        {{ isSubmitting ? 'Đang gửi...' : 'Gửi Mã OTP' }}
-      </button>
-
-      <p class="lm_switch"><button type="button" class="lm_link" (click)="switchToLogin()">← Quay lại đăng nhập</button></p>
-    </form>
-
-    <!-- ============ QUÊN MẬT KHẨU — BƯỚC 2: OTP ============ -->
-    <form *ngIf="mode === 'forgot-password' && forgotStep === 2" class="lm_form" (ngSubmit)="submitForgotOtp()">
-      <p class="lm_hint">Mã OTP đã gửi tới <strong>{{ phoneNumber }}</strong></p>
-
-      <div class="lm_otp-row">
-        <input
-          *ngFor="let i of [0,1,2,3,4,5]" #otpInput
-          type="text" inputmode="numeric" maxlength="1" class="lm_otp-box"
-          [value]="otpCode[i] || ''"
-          (keydown)="onOtpKeypress($event)"
-          (input)="onOtpDigitChange($any($event.target).value, i)">
-      </div>
-      <span class="lm_error lm_error--center" *ngIf="errors.otp">{{ errors.otp }}</span>
-
-      <button type="submit" class="lm_submit" [disabled]="isSubmitting || !isOtpValid">
-        {{ isSubmitting ? 'Đang xác thực...' : 'Xác Nhận' }}
-      </button>
-
-      <div class="lm_otp-footer">
-        <button type="button" class="lm_link" [disabled]="otpTimer > 0" (click)="resendForgotOtp()">
-          {{ otpTimer > 0 ? 'Gửi lại mã sau ' + otpTimer + 's' : 'Gửi lại mã OTP' }}
-        </button>
-      </div>
-    </form>
-
-    <!-- ============ QUÊN MẬT KHẨU — BƯỚC 3: MẬT KHẨU MỚI ============ -->
-    <form *ngIf="mode === 'forgot-password' && forgotStep === 3" class="lm_form" (ngSubmit)="submitForgotNewPassword()">
-      <div class="lm_field">
-        <label class="lm_label">Mật khẩu mới</label>
-        <div class="lm_input-wrap">
-          <app-icon name="lock" [size]="15" class="lm_input-icon"></app-icon>
-          <input [type]="showPassword ? 'text' : 'password'" [(ngModel)]="password" name="password" placeholder="Ít nhất 8 ký tự, 1 hoa, 1 ký tự đặc biệt" class="lm_input" [class.lm_input--error]="errors.password">
-          <button type="button" class="lm_toggle-eye" (click)="showPassword = !showPassword">
-            <app-icon [name]="showPassword ? 'eye' : 'eye-off'" [size]="15"></app-icon>
-          </button>
-        </div>
-        <span class="lm_error" *ngIf="errors.password">{{ errors.password }}</span>
-      </div>
-
-      <div class="lm_field">
-        <label class="lm_label">Nhập lại mật khẩu</label>
-        <div class="lm_input-wrap">
-          <app-icon name="lock" [size]="15" class="lm_input-icon"></app-icon>
-          <input [type]="showConfirmPassword ? 'text' : 'password'" [(ngModel)]="confirmPassword" name="confirmPassword" placeholder="Nhập lại mật khẩu" class="lm_input" [class.lm_input--error]="errors.confirmPassword">
-          <button type="button" class="lm_toggle-eye" (click)="showConfirmPassword = !showConfirmPassword">
-            <app-icon [name]="showConfirmPassword ? 'eye' : 'eye-off'" [size]="15"></app-icon>
-          </button>
-        </div>
-        <span class="lm_error" *ngIf="errors.confirmPassword">{{ errors.confirmPassword }}</span>
-      </div>
-
-      <button type="submit" class="lm_submit" [disabled]="isSubmitting">
-        {{ isSubmitting ? 'Đang lưu...' : 'Đổi Mật Khẩu' }}
-      </button>
-    </form>
-
+    <!-- Chân hộp thoại cho đăng ký / quên mật khẩu -->
+    <p class="lm_switch" *ngIf="mode !== 'login'">
+      Bạn đã có tài khoản? <button type="button" class="lm_link" (click)="switchToLogin()">Đăng nhập ngay</button>
+    </p>
   </div>
 </div>

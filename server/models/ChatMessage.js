@@ -12,6 +12,9 @@ const chatMessageSchema = new mongoose.Schema({
   staffId: { type: String, default: null },
   // Tin của khách mà nhân viên chưa mở xem — dùng đếm "chưa đọc" trong my-admin.
   readByStaff: { type: Boolean, default: false },
+  // Tin do trợ lý tự động gửi (sender 'staff', không có staffId) kèm các nút dẫn tới trang liên quan.
+  auto: { type: Boolean, default: false },
+  links: { type: [{ label: String, url: String, _id: false }], default: undefined },
 }, { timestamps: true });
 
 module.exports = mongoose.model('ChatMessage', chatMessageSchema);

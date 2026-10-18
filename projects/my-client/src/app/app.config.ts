@@ -12,7 +12,8 @@ export const appConfig: ApplicationConfig = {
       routes,
       withComponentInputBinding(),
       withViewTransitions(),
-      withInMemoryScrolling({ scrollPositionRestoration: 'top', anchorScrolling: 'enabled' })
+      // Cuộn khi chuyển trang do AppComponent tự xử lý (lên đầu trang khi vào trang mới, về đúng vị trí cũ khi Back).
+      withInMemoryScrolling({ scrollPositionRestoration: 'disabled', anchorScrolling: 'enabled' })
     )
   ]
 };

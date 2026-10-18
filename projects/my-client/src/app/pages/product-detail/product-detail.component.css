@@ -639,6 +639,53 @@
   color: #ffffff;
 }
 
+/* "Thêm vào giỏ hàng" (nền nhạt, viền đỏ) cạnh ô số lượng; "Mua ngay" (nền đỏ, nổi bật nhất) trải hết chiều ngang bên dưới. */
+.pd_buybox .pd_btn--cart,
+.pd_buybox .pd_btn--buy {
+  min-height: 56px;
+  padding: 8px 14px;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  font-size: 14px;
+}
+
+.pd_buybox .pd_btn--cart {
+  flex: 1;
+  min-width: 0;
+}
+
+.pd_buybox .pd_btn--buy {
+  width: 100%;
+}
+
+.pd_btn--cart {
+  background: rgba(163, 21, 45, 0.06);
+  color: var(--pd-accent);
+  border-color: var(--pd-accent);
+}
+
+.pd_btn--cart:hover {
+  background: rgba(163, 21, 45, 0.12);
+}
+
+.pd_btn--buy {
+  flex-direction: column;
+  gap: 2px;
+  background: var(--pd-accent);
+  color: #ffffff;
+  font-weight: 500;
+}
+
+.pd_btn--buy:hover {
+  background: var(--pd-accent-dark);
+}
+
+.pd_btn__price {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
 .pd_btn--sm {
   flex: none;
   padding: 10px 18px;

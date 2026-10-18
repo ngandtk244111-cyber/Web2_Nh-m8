@@ -48,6 +48,7 @@ attachSocket(httpServer, corsOrigins);
 const PORT = process.env.PORT || 4300;
 
 connectDB()
+  .then(() => require('./models/User').unsetNullLoginIds())
   .then(() => {
     httpServer.listen(PORT, () => {
       console.log(`Luméa server listening on http://localhost:${PORT}`);

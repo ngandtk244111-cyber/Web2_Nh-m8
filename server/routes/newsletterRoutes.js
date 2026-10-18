@@ -1,6 +1,8 @@
 const express = require('express');
+const { sendError } = require('../utils/http-error');
 const NewsletterSubscriber = require('../models/NewsletterSubscriber');
 const { awardCoins } = require('../utils/coins');
+const { validId } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -9,7 +11,8 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 router.post('/subscribe', async (req, res) => {
   try {
-    const { email, userId } = req.body;
+    const { email } = req.body;
+    const userId = validId(req.body.userId);
     if (!email || !EMAIL_REGEX.test(email)) {
       return res.status(400).json({ success: false, error: 'Email không hợp lệ' });
     }
@@ -35,7 +38,7 @@ router.post('/subscribe', async (req, res) => {
     res.json({ success: true, alreadySubscribed });
   } catch (err) {
     console.error('newsletter subscribe error', err);
-    res.status(500).json({ success: false, error: err.message });
+    sendError(res, err);
   }
 });
 

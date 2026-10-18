@@ -1,5 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { HeroTickerService } from '../../core/services/hero-ticker.service';
 
 @Component({
@@ -13,7 +14,7 @@ export class AnnouncementTickerComponent {
   /** true khi Header ở trạng thái compact (đã scroll) — tắt marquee, hiển thị dạng tĩnh gọn. */
   @Input() compact = false;
 
-  constructor(public tickerService: HeroTickerService) {}
+  constructor(public tickerService: HeroTickerService, private router: Router) {}
 
   /** Nhân đôi danh sách để marquee chạy vòng lặp liền mạch — chỉ cần khi đang chạy marquee. */
   get displayItems() {
@@ -26,8 +27,11 @@ export class AnnouncementTickerComponent {
     return renderIndex % this.tickerService.items.length;
   }
 
+  /** Bấm 1 mục: đồng bộ banner trang chủ rồi mở đúng trang của mục đó (cùng link với nút CTA trên banner). */
   onItemClick(renderIndex: number): void {
-    this.tickerService.setActive(this.originalIndex(renderIndex));
+    const index = this.originalIndex(renderIndex);
+    this.tickerService.setActive(index);
+    this.router.navigateByUrl(this.tickerService.items[index].ctaLink);
   }
 
   onMouseEnter(): void {

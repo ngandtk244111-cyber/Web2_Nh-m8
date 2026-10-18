@@ -131,7 +131,7 @@
         [class.grid-cols-1]="viewMode === 'list'"
         [class.grid-cols-2]="viewMode === 'grid'"
         [class.lg:grid-cols-3]="viewMode === 'grid'">
-        <div *ngFor="let p of filteredProducts" class="cg_item">
+        <div *ngFor="let p of visibleProducts" class="cg_item">
           <app-product-card [product]="p" [layout]="viewMode"></app-product-card>
           <!-- Xem nhanh 3D: mở phòng xem nhanh 3D của đúng sản phẩm ở tab mới -->
           <a
@@ -145,6 +145,11 @@
             <span>Xem nhanh 3D</span>
           </a>
         </div>
+      </div>
+
+      <!-- Xem thêm -->
+      <div *ngIf="remainingCount > 0" class="cg_load-more">
+        <button type="button" class="cg_empty__btn cg_empty__btn--ghost" (click)="showMore()">Xem thêm</button>
       </div>
 
       <!-- Empty State -->

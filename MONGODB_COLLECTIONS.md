@@ -40,7 +40,7 @@ Nguồn gốc: các schema trong [server/models/](server/models/) — nếu mode
 | `rating` | number | | 0–5, mặc định 5 |
 | `reviewCount` | number | | |
 | `inStock` | number | | Số lượng tồn kho |
-| `images` | string[] | | Ảnh đầu tiên là ảnh chính |
+| `images` | string[] | | `[0]` ảnh chính trên thẻ sản phẩm; `[1]` ảnh hiện khi rê chuột — **phải là ảnh khác của chính món đó**. Xem mục *Thay ảnh sản phẩm* bên dưới |
 | `badge` | string | | vd `Bán chạy`, `Mới`, `Thanh lý` |
 | `dimensions` | string | | vd `Đường kính 50cm x Cao 50cm` |
 | `materialInfo` | string | | |
@@ -78,6 +78,35 @@ Nguồn gốc: các schema trong [server/models/](server/models/) — nếu mode
 }
 ```
 `images`, `reply`, `pinned` có thể bỏ.
+
+### Thay ảnh sản phẩm (sửa trực tiếp trên MongoDB)
+
+Mọi ảnh của sản phẩm nằm trong mảng `images` của document trong collection `products` — web đọc thẳng từ đây, sửa xong chỉ cần F5.
+
+| Vị trí | Hiển thị ở đâu | Quy ước |
+|---|---|---|
+| `images[0]` | Ảnh chính trên thẻ sản phẩm, ảnh đầu tiên ở trang chi tiết | Ảnh rõ toàn bộ sản phẩm |
+| `images[1]` | Hiện khi rê chuột lên thẻ sản phẩm (và ảnh thứ 2 ở trang chi tiết) | **Ảnh khác của chính món đó** (góc khác, đặt trong phòng, mở tủ, cận chất liệu). Không dùng ảnh món khác. Để trống thì khi rê chuột web tự phóng to vào ảnh chính |
+| `images[2]`, `[3]`… | Thêm vào bộ ảnh ở trang chi tiết | Tuỳ chọn |
+
+Giá trị mỗi phần tử là 1 đường dẫn ảnh, dạng nào cũng được:
+- URL đầy đủ: `https://images.unsplash.com/photo-...?...` hoặc link ảnh trên host bất kỳ (ảnh nhóm tự chụp/thiết kế, có quyền dùng).
+- Ảnh để trong project: chép file vào `projects/my-client/src/assets/products/<thư-mục>/` rồi ghi `assets/products/<thư-mục>/<tên-file>.jpg` (giống sản phẩm `prod-28`). Cách này cần build/deploy lại client.
+
+**Cách sửa bằng MongoDB Compass:** mở `deco3d` → `products` → lọc `{ id: "cat-sofa-05" }` (hoặc `{ name: /Sofa Văng/ }`) → bấm biểu tượng bút ✏️ → sửa / thêm phần tử trong `images` → *Update*.
+
+**Bằng mongosh:**
+```js
+use deco3d
+// đặt ảnh rê chuột cho 1 sản phẩm
+db.products.updateOne({ id: "cat-sofa-05" }, { $set: { "images.1": "https://..." } })
+// thay ảnh chính
+db.products.updateOne({ id: "cat-sofa-05" }, { $set: { "images.0": "https://..." } })
+// bỏ ảnh rê chuột (quay về kiểu phóng to ảnh chính)
+db.products.updateOne({ id: "cat-sofa-05" }, { $pop: { images: 1 } })
+```
+
+> Chạy lại `npm run seed:all` **không ghi đè** ảnh đã sửa (seed chỉ thêm sản phẩm còn thiếu). Muốn ảnh mới cũng có khi dựng DB từ đầu thì thêm cặp `'mã ảnh chính': 'mã ảnh thứ 2'` vào `SAME_ITEM` trong `server/seed/mock/products-catalog.js`.
 
 **Cấu trúc `customization`:**
 ```json

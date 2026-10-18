@@ -8,6 +8,7 @@
         <img
           *ngIf="authService.getAvatarUrl(authService.currentUser()?.avatar) as avatarUrl; else avatarFallback"
           [src]="avatarUrl"
+          referrerpolicy="no-referrer"
           alt="Ảnh đại diện"
           class="w-full h-full object-cover">
         <ng-template #avatarFallback>

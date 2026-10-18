@@ -211,13 +211,17 @@ export class ProductService {
       result = result.filter(p => filters.categories.includes(p.category));
     }
 
-    // Nhóm lớn + danh mục con: danh mục con đã chọn thì thu hẹp trong nhóm lớn tương ứng.
-    if (filters.subcategories?.length) {
-      const subs = filters.subcategories.map(k => findSubcategory(k)?.sub).filter(s => !!s);
-      result = result.filter(p => subs.some(sub => subcategoryMatches(sub!, p)));
-    } else if (filters.departments?.length) {
-      const depts = filters.departments.map(k => findDepartment(k)).filter(d => !!d);
-      result = result.filter(p => depts.some(d => departmentMatches(d!, p)));
+    // Nhóm lớn + danh mục con: danh mục con chỉ thu hẹp NHÓM LỚN CHỨA NÓ; nhóm lớn nào chưa chọn danh mục
+    // con thì lấy cả nhóm. Các nhóm gộp theo OR — vd. [Đèn & ánh sáng › Đèn ngủ] + [Decor] = đèn ngủ + mọi đồ Decor.
+    if (filters.departments?.length || filters.subcategories?.length) {
+      const subs = (filters.subcategories || []).map(k => findSubcategory(k)).filter(s => !!s);
+      const deptKeys = new Set([...(filters.departments || []), ...subs.map(s => s!.dept.key)]);
+      const groups = [...deptKeys].map(key => findDepartment(key)).filter(d => !!d).map(dept => ({
+        dept: dept!,
+        picked: subs.filter(s => s!.dept.key === dept!.key).map(s => s!.sub),
+      }));
+      result = result.filter(p => groups.some(({ dept, picked }) =>
+        picked.length ? picked.some(sub => subcategoryMatches(sub, p)) : departmentMatches(dept, p)));
     }
 
     if (filters.spaces?.length) {

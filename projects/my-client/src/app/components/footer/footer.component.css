@@ -49,19 +49,12 @@
   text-decoration: none;
 }
 
-.ft_brand__mark {
-  width: 34px;
-  height: 34px;
+.ft_brand__logo {
+  display: block;
+  width: auto;
+  height: 54px;
+  max-width: 100%;
   object-fit: contain;
-}
-
-.ft_brand__name {
-  font-family: var(--font-family-heading, 'Inter', sans-serif);
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  color: var(--ft-text);
 }
 
 .ft_brand__tagline {

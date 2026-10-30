@@ -13,6 +13,11 @@
           <p class="text-xs sm:text-sm text-neutral-600 mt-1">
             {{ currentRoom.description }}
           </p>
+          <!-- Chưa ưng mẫu phòng nào thì gửi yêu cầu thiết kế riêng -->
+          <a routerLink="/custom-request/new" class="inline-flex items-center gap-1.5 mt-3 px-4 py-2 rounded-full border border-amber-500/40 bg-white text-amber-700 text-xs font-bold hover:bg-amber-500/10 transition">
+            <app-icon name="pencil" [size]="13"></app-icon>
+            <span>Chưa ưng mẫu nào? Gửi yêu cầu thiết kế riêng</span>
+          </a>
         </div>
 
         <!-- Room selector pills -->

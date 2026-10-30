@@ -6,14 +6,6 @@
 
   <div class="tp_popup" [class.tp_popup--closing]="closing()" (click)="$event.stopPropagation()">
 
-    <span class="tp_sparkle tp_sparkle--1" aria-hidden="true">✦</span>
-    <span class="tp_sparkle tp_sparkle--2" aria-hidden="true">✦</span>
-    <span class="tp_sparkle tp_sparkle--3" aria-hidden="true">✦</span>
-
-    <button type="button" class="tp_icon-badge" aria-label="Mẹo hay">
-      <app-icon name="sparkles" [size]="16"></app-icon>
-    </button>
-
     <button type="button" class="tp_close" (click)="close()" aria-label="Đóng">
       <app-icon name="x" [size]="18"></app-icon>
     </button>

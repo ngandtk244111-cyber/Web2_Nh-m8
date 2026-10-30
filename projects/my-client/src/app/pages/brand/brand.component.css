@@ -135,7 +135,7 @@
 }
 
 .br-slide__eyebrow { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; opacity: 0.9; }
-.br-slide__title { font-family: 'Cormorant Garamond', serif; font-size: clamp(22px, 4.4vw, 48px); font-weight: 700; line-height: 1.05; }
+.br-slide__title { font-family: var(--font-family-heading, 'Inter', sans-serif); font-size: clamp(22px, 4.4vw, 48px); font-weight: 700; line-height: 1.05; }
 .br-slide__sub { font-size: clamp(11px, 1.4vw, 15px); opacity: 0.92; }
 
 .br-dots {

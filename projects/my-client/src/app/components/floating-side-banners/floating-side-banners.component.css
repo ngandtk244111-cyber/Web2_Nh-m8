@@ -137,8 +137,14 @@
   }
 }
 
-/* Nội dung chính rộng tối đa 1280px + 2 banner ~130px mỗi bên — hẹp hơn thì ẩn để không đè nội dung. */
-@media (max-width: 1599px) {
+/*
+ * Banner rộng 116px, cách mép 18px -> chiếm 134px mỗi bên.
+ * - ≥ 1600px: nội dung chính (tối đa 1280px) còn dư ≥ 160px mỗi bên, banner nằm gọn trong lề.
+ * - 1200–1599px (laptop ở zoom 100%): vẫn hiện banner; styles.css đệm <main> 144px bên có banner
+ *   để nội dung co lại, không bị banner che.
+ * - < 1200px: ẩn banner — nội dung còn lại quá hẹp nếu chừa thêm 2 lề.
+ */
+@media (max-width: 1199px) {
   .fsb {
     display: none;
   }

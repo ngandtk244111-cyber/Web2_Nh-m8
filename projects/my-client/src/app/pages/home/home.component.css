@@ -623,7 +623,7 @@
   margin: 16px 0 0;
   padding: 2px 0 2px 14px;
   border-left: 2px solid var(--str-red);
-  font-family: var(--font-family-heading, 'Cormorant Garamond', serif);
+  font-family: var(--font-family-heading, 'Inter', sans-serif);
   font-size: 15px;
   font-style: italic;
   line-height: 1.5;
@@ -897,7 +897,7 @@
 .hm-marquee__item {
   display: inline-flex;
   align-items: center;
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-family-heading, 'Inter', sans-serif);
   font-size: clamp(12px, 0.8vw, 13px);
   font-style: italic;
   font-weight: 500;

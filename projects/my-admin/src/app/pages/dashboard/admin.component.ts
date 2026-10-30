@@ -149,6 +149,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   oldPassword = '';
   newPassword = '';
   confirmPassword = '';
+  showChangePasswords = false;
 
   // 1. Dashboard State
   totalRevenue = 0;

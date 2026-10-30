@@ -200,7 +200,7 @@
             <span class="pd_stars">
               <app-icon *ngFor="let s of [1,2,3,4,5]" name="star" [size]="12" [filled]="product.rating >= s"></app-icon>
             </span>
-            <span class="pd_rating-link__count">{{ product.reviews.length }} đánh giá</span>
+            <span class="pd_rating-link__count">{{ displayReviews.length }} đánh giá</span>
           </button>
 
           <div class="pd_price-row">
@@ -381,9 +381,10 @@
       <section id="pd-reviews" class="pd_container pd_section">
         <div class="pd_rv-top">
           <h2 class="pd_h2">Khách hàng nói gì về sản phẩm</h2>
-          <button type="button" (click)="showReviewForm = !showReviewForm" class="pd_btn pd_btn--primary pd_btn--sm">
+          <button *ngIf="canReview" type="button" (click)="showReviewForm = !showReviewForm" class="pd_btn pd_btn--primary pd_btn--sm">
             {{ showReviewForm ? 'Đóng form' : 'Viết đánh giá' }}
           </button>
+          <span *ngIf="!canReview" class="pd_rv-note">Chỉ khách đã mua sản phẩm này mới có thể viết đánh giá.</span>
         </div>
 
         <div class="pd_rv-summary">
@@ -393,7 +394,7 @@
               <span class="pd_stars">
                 <app-icon *ngFor="let s of [1,2,3,4,5]" name="star" [size]="14" [filled]="product.rating >= s"></app-icon>
               </span>
-              <span class="pd_rv-score__count">Dựa trên {{ product.reviews.length }} đánh giá</span>
+              <span class="pd_rv-score__count">Dựa trên {{ displayReviews.length }} đánh giá</span>
             </div>
           </div>
 
@@ -411,7 +412,7 @@
         </div>
 
         <!-- Form viết đánh giá -->
-        <div *ngIf="showReviewForm" class="pd_review-form">
+        <div *ngIf="showReviewForm && canReview" class="pd_review-form">
           <h4>Chia sẻ cảm nhận của bạn</h4>
           <div>
             <label>Số sao</label>

@@ -213,102 +213,6 @@
   white-space: nowrap;
 }
 
-/* ---------- Coin / Xu row ---------- */
-.cd_coin-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  background: #ffffff;
-}
-
-.cd_coin-row--guest {
-  opacity: 0.6;
-}
-
-.cd_coin-row__left {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #A3152D;
-}
-
-.cd_coin-row__meta {
-  display: flex;
-  flex-direction: column;
-  color: #111111;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.cd_coin-row__meta small {
-  font-weight: 500;
-  color: #888888;
-  font-size: 10.5px;
-}
-
-.cd_coin-row__right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.cd_coin-row__amount {
-  font-size: 11.5px;
-  font-weight: 700;
-  color: #1a8a5f;
-}
-
-.cd_switch {
-  position: relative;
-  display: inline-block;
-  width: 34px;
-  height: 20px;
-}
-
-.cd_switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.cd_switch__track {
-  position: absolute;
-  inset: 0;
-  background: #d9d9d9;
-  border-radius: 999px;
-  transition: background 0.15s ease;
-  cursor: pointer;
-}
-
-.cd_switch__track::before {
-  content: '';
-  position: absolute;
-  width: 16px;
-  height: 16px;
-  left: 2px;
-  top: 2px;
-  background: #ffffff;
-  border-radius: 999px;
-  transition: transform 0.15s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-}
-
-.cd_switch input:checked + .cd_switch__track {
-  background: #A3152D;
-}
-
-.cd_switch input:checked + .cd_switch__track::before {
-  transform: translateX(14px);
-}
-
-.cd_switch input:disabled + .cd_switch__track {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
 @media (max-width: 480px) {
   .cd_item-name {
     max-width: 150px;
@@ -320,7 +224,7 @@
 :host h2.font-serif,
 :host h3.font-serif,
 :host h4.font-serif {
-  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-family: var(--font-family-heading, 'Inter', sans-serif);
   font-weight: 700;
   letter-spacing: 0;
   color: #3B2418;
@@ -338,13 +242,22 @@
 :host label { letter-spacing: 0.02em; }
 :host .text-lg.font-semibold,
 :host .text-lg.font-bold {
-  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-family: var(--font-family-heading, 'Inter', sans-serif);
   font-size: 30px; font-weight: 700; line-height: 1; letter-spacing: 0;
 }
 :host .text-neutral-600.text-xs, :host .text-xs.text-neutral-600 { font-size: 13px; }
 
-.cd_item-name { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 19px; font-weight: 700; color: #3B2418; line-height: 1.2; }
+.cd_item-name { font-family: var(--font-family-heading, 'Inter', sans-serif); font-size: 19px; font-weight: 700; color: #3B2418; line-height: 1.2; }
 .cd_item-price { font-size: 15px; font-weight: 700; color: #A3152D; }
 .cd_col-label { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #93877E; }
 .cd_select-all { font-size: 13px; }
 .cd_spec-pill { font-size: 11px; }
+
+/* Danh sách voucher để chọn — cuộn riêng khi nhiều mã */
+.cd_voucher-list {
+  display: grid;
+  gap: 10px;
+  max-height: 360px;
+  overflow-y: auto;
+  padding-right: 2px;
+}

@@ -1,5 +1,9 @@
-<div class="fcw">
-  <button type="button" class="fcw__btn" aria-label="Xem Xu Luméa" (click)="toggle()">
+<div class="fcw" *ngIf="!dismissed()">
+  <button type="button" class="fcw__close" aria-label="Đóng túi voucher" (click)="dismiss($event)">
+    <app-icon name="x" [size]="9"></app-icon>
+  </button>
+
+  <button type="button" class="fcw__btn" aria-label="Xem voucher của bạn" (click)="toggle()">
     <svg viewBox="0 0 100 110" class="fcw__bag" aria-hidden="true">
       <defs>
         <linearGradient id="fcw-red" x1="0" y1="0" x2="0" y2="1">
@@ -18,11 +22,11 @@
         <path id="fcw-star" d="M0-5 1.5-1.5 5 0 1.5 1.5 0 5-1.5 1.5-5 0-1.5-1.5z"/>
       </defs>
 
-      <!-- xu trong miệng túi -->
+      <!-- đồng tiền trong miệng túi -->
       <use href="#fcw-c" transform="translate(36 50) scale(1.55)"/>
       <use href="#fcw-c" transform="translate(66 51) scale(1.5)"/>
       <use href="#fcw-c" transform="translate(51 46) scale(1.75)"/>
-      <text x="51" y="49" text-anchor="middle" font-size="7" font-weight="800" fill="#A56A0E">Xu</text>
+      <text x="51" y="49" text-anchor="middle" font-size="7" font-weight="800" fill="#A56A0E">%</text>
 
       <!-- thân túi -->
       <path d="M22 62C14 72 9 88 15 98C21 108 79 108 85 98C91 88 86 72 78 62Z" fill="url(#fcw-red)"/>
@@ -39,7 +43,7 @@
       <path d="M74 64C70 56 80 54 83 60C84 65 77 67 74 64Z" fill="none" stroke="#F6C244" stroke-width="2.2" stroke-linejoin="round"/>
       <path d="M77 66 84 71M75 66 77 72" fill="none" stroke="#F6C244" stroke-width="2.2" stroke-linecap="round"/>
 
-      <!-- xu tung lên -->
+      <!-- đồng tiền tung lên -->
       <g class="fcw__toss" style="--dx:-20px;--dy:-40px;animation-delay:0s">
         <g class="fcw__spin" style="animation-delay:0s"><use href="#fcw-c" transform="translate(50 44) scale(0.95)"/></g>
       </g>
@@ -61,25 +65,25 @@
       <g transform="translate(50 6)"><use href="#fcw-star" class="fcw__spark fcw__spark--sm" style="animation-delay:1.4s" fill="#FFF1B0"/></g>
     </svg>
     <span class="fcw__badge">
-      <app-icon name="coin" [size]="10"></app-icon>
-      <span>{{ authService.currentUser() ? coinService.balance() : 0 }}</span>
+      <app-icon name="tag" [size]="10"></app-icon>
+      <span>{{ authService.currentUser() ? voucherService.usable().length : 0 }}</span>
     </span>
   </button>
 
   <div class="fcw__panel" *ngIf="panelOpen()" (click)="$event.stopPropagation()">
     <div class="fcw__panel-head">
-      <span>Xu Luméa của bạn</span>
+      <span>Voucher của bạn</span>
       <button type="button" class="fcw__panel-close" aria-label="Đóng" (click)="close()">
         <app-icon name="x" [size]="13"></app-icon>
       </button>
     </div>
     <div class="fcw__panel-balance">
-      <app-icon name="coin" [size]="20"></app-icon>
-      <span>{{ coinService.balance() }} xu</span>
+      <app-icon name="tag" [size]="20"></app-icon>
+      <span>{{ voucherService.usable().length }} voucher</span>
     </div>
-    <p class="fcw__panel-hint">Dùng Xu để giảm trực tiếp vào đơn hàng khi thanh toán.</p>
-    <a routerLink="/xu" (click)="close()" class="fcw__panel-link">
-      Điểm danh, chơi game nhận thêm xu →
+    <p class="fcw__panel-hint">Chọn voucher ở giỏ hàng để được giảm giá khi thanh toán.</p>
+    <a routerLink="/voucher" (click)="close()" class="fcw__panel-link">
+      Lật thẻ, chơi game nhận voucher →
     </a>
   </div>
 </div>

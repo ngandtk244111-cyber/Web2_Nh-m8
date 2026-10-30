@@ -1,12 +1,12 @@
 import { Component, ElementRef, HostListener, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { CoinService } from '../../core/services/coin.service';
+import { VoucherService } from '../../core/services/voucher.service';
 import { AuthService } from '../../core/services/auth.service';
 import { LoginModalService } from '../../core/services/login-modal.service';
 import { AppIconComponent } from '../icon/icon.component';
 
-/** Túi xu nổi góc màn hình — bấm vào để xem nhanh số dư Xu Luméa hiện có. */
+/** Túi voucher nổi góc màn hình — bấm vào để xem nhanh số voucher đang có; có nút đóng để ẩn đi. */
 @Component({
   selector: 'app-floating-coin-widget',
   standalone: true,
@@ -16,9 +16,10 @@ import { AppIconComponent } from '../icon/icon.component';
 })
 export class FloatingCoinWidgetComponent {
   readonly panelOpen = signal(false);
+  readonly dismissed = signal(false);
 
   constructor(
-    public coinService: CoinService,
+    public voucherService: VoucherService,
     public authService: AuthService,
     public loginModalService: LoginModalService,
     private elementRef: ElementRef<HTMLElement>
@@ -41,5 +42,10 @@ export class FloatingCoinWidgetComponent {
 
   close(): void {
     this.panelOpen.set(false);
+  }
+
+  dismiss(event: Event): void {
+    event.stopPropagation();
+    this.dismissed.set(true);
   }
 }

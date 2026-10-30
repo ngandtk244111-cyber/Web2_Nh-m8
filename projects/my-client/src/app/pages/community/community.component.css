@@ -24,6 +24,12 @@
 .cm-sticky {
   position: sticky;
   top: 132px;
+  /* Cột bên dài hơn màn hình thì tự cuộn riêng, không phải đợi cuộn hết cột giữa */
+  max-height: calc(100vh - 148px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  padding-right: 4px;
 }
 
 /* Khung trắng bo tròn chứa feed/sidebar */
@@ -64,7 +70,7 @@
   border-radius: 999px;
   border: 1px solid rgba(0, 0, 0, 0.08);
   background: #ffffff;
-  padding: 10px 16px 10px 38px;
+  padding: 10px 16px 10px 44px;
   color: #1F1712;
   outline: none;
   transition: border-color 0.15s ease;

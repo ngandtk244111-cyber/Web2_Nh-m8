@@ -267,7 +267,7 @@ export class CommunityComponent implements OnInit {
 
   // ---------- Create post modal ----------
 
-  /** Đăng bài yêu cầu đăng nhập — cần userId thật để tính Xu thưởng và gắn đúng tác giả. */
+  /** Đăng bài yêu cầu đăng nhập — cần userId thật để tặng voucher và gắn đúng tác giả. */
   openCreateModal(): void {
     if (!this.authService.currentUser()) {
       this.loginModalService.open();

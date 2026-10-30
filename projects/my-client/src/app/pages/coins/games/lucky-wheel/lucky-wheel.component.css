@@ -47,7 +47,7 @@
 }
 
 .lw__label-inner strong {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-family-heading, 'Inter', sans-serif);
   font-size: clamp(20px, 5vw, 28px);
   font-weight: 700;
 }

@@ -49,7 +49,7 @@
 }
 
 .fb-tile__name {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-family-heading, 'Inter', sans-serif);
   font-size: clamp(19px, 1.7vw, 24px);
   font-weight: 600;
   line-height: 1.2;

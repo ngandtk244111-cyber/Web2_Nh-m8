@@ -35,7 +35,7 @@
 }
 
 .mg__stat strong {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-family-heading, 'Inter', sans-serif);
   font-size: 24px;
   font-weight: 700;
   color: #1F1712;
@@ -95,7 +95,7 @@
 }
 
 .mg__logo {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-family-heading, 'Inter', sans-serif);
   font-size: 30px;
   font-weight: 700;
   color: #FFE9A8;

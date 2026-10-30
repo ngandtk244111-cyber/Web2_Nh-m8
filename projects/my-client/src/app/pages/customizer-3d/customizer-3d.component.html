@@ -159,16 +159,16 @@
                 *ngFor="let mat of selectedProduct.customization!.materials"
                 (click)="setMaterial(mat)"
                 [class.border-amber-500]="selectedConfig.material.id === mat.id"
-                [class.bg-amber-950]="selectedConfig.material.id === mat.id"
+                [class.cz-opt--on]="selectedConfig.material.id === mat.id"
                 class="p-3 rounded-2xl border border-neutral-300 bg-neutral-100/60 hover:border-neutral-400 cursor-pointer transition flex items-start justify-between gap-3">
                 <div class="min-w-0">
-                  <div class="text-xs font-bold text-neutral-900 flex items-center gap-2" [class.text-white]="selectedConfig.material.id === mat.id">
+                  <div class="text-xs font-bold text-neutral-900 flex items-center gap-2">
                     <span>{{ mat.name }}</span>
-                    <span *ngIf="mat.priceDelta > 0" class="text-[10px] text-amber-400 font-bold" [class.text-amber-200]="selectedConfig.material.id === mat.id">
+                    <span *ngIf="mat.priceDelta > 0" class="text-[10px] text-amber-400 font-bold">
                       +{{ mat.priceDelta | vnd }}
                     </span>
                   </div>
-                  <p class="text-[11px] text-neutral-600 mt-0.5" [class.text-amber-200]="selectedConfig.material.id === mat.id">{{ mat.description }}</p>
+                  <p class="text-[11px] text-neutral-600 mt-0.5">{{ mat.description }}</p>
                 </div>
                 <div class="w-4 h-4 rounded-full border-2 mt-0.5 flex items-center justify-center flex-shrink-0"
                      [class.border-amber-400]="selectedConfig.material.id === mat.id"

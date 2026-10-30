@@ -54,25 +54,25 @@ const CATEGORY_LINKS: NavLink[] = [
 
 const ROOMS: RoomCard[] = [
   {
-    key: 'desk', title: 'Desk Setup', size: 'large',
+    key: 'desk', title: 'Phòng làm việc', size: 'large',
     image: 'https://images.unsplash.com/photo-1486946255434-2466348c2166?auto=format&fit=crop&w=1200&q=80',
     link: '/catalog', queryParams: { space: 'phong-lam-viec' },
     categories: ['organizer', 'tray', 'lamp', 'clock'],
   },
   {
-    key: 'bedroom', title: 'Bedroom', size: 'small',
+    key: 'bedroom', title: 'Phòng ngủ', size: 'small',
     image: 'https://images.unsplash.com/photo-1540518614846-7eded433c457?auto=format&fit=crop&w=900&q=80',
     link: '/catalog', queryParams: { space: 'phong-ngu' },
     categories: ['lamp', 'plant_pot', 'candle_holder', 'clock'],
   },
   {
-    key: 'living', title: 'Living Room', size: 'small',
+    key: 'living', title: 'Phòng khách', size: 'small',
     image: 'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?auto=format&fit=crop&w=900&q=80',
     link: '/catalog', queryParams: { space: 'phong-khach' },
     categories: ['vase', 'frame', 'side_table', 'stool', 'sculpture'],
   },
   {
-    key: 'study', title: 'Study Corner', size: 'large',
+    key: 'study', title: 'Phòng học', size: 'large',
     image: 'https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?auto=format&fit=crop&w=1200&q=80',
     link: '/catalog', queryParams: { space: 'phong-hoc' },
     categories: ['bookshelf', 'organizer', 'sculpture', 'plant_pot'],

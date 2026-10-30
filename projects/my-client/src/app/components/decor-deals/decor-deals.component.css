@@ -795,6 +795,8 @@
   color: #333333;
   margin: 0 0 6px;
   line-height: 1.35;
+  /* Luôn cao đúng 2 dòng: tên 1 dòng hay 2 dòng thì giá, nhãn, nút "Chọn mua" vẫn cùng toạ độ */
+  min-height: 2.7em;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   line-clamp: 2;
@@ -816,7 +818,8 @@
 }
 
 .dd_card__original {
-  margin-top: 1px;
+  margin: 1px 0 8px;
+  min-height: 15px;
 }
 
 .dd_card__original span {
@@ -826,7 +829,8 @@
 }
 
 .dd_card__promo {
-  margin-top: 8px;
+  /* Đẩy nhãn ưu đãi + thanh suất + nút xuống đáy thẻ để mọi thẻ thẳng hàng */
+  margin-top: auto;
   padding: 4px 9px;
   border-radius: 999px;
   background: linear-gradient(180deg, #CD818E, #B7485B);

@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener, OnDestroy } from '@angular/core';
+import { Component, ElementRef, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter } from 'rxjs';
 import { CommonModule } from '@angular/common';
@@ -66,7 +66,7 @@ export interface MegaMenuSection {
   templateUrl: './header.component.html',
   styleUrl: './header.component.css'
 })
-export class HeaderComponent implements OnDestroy {
+export class HeaderComponent implements OnInit, OnDestroy {
   mobileMenuOpen = false;
   megaMenuOpen = false;
   megaMenuClosing = false;
@@ -106,13 +106,15 @@ export class HeaderComponent implements OnDestroy {
     { label: 'Có thể tùy biến', queryParams: { custom: '1' } },
   ];
 
+  /** Tên trùng với tiêu đề trang đích (đồng bộ với footer). */
   readonly exploreMenu: { label: string; link: string }[] = [
-    { label: 'Phòng 3D', link: '/shop-the-room' },
-    { label: 'Tùy biến 3D', link: '/customizer-3d' },
-    { label: 'Thiết kế riêng', link: '/custom-request' },
-    { label: 'Quiz phong cách', link: '/style-quiz' },
-    { label: 'Cộng đồng', link: '/community' },
-    { label: 'Insights', link: '/news' },
+    { label: 'Không gian 3D trực quan', link: '/shop-the-room' },
+    { label: 'Tự tay thiết kế & xem trước 3D', link: '/customizer-3d' },
+    { label: 'Gửi yêu cầu thiết kế riêng', link: '/custom-request/new' },
+    { label: 'Trắc nghiệm phong cách', link: '/style-quiz' },
+    { label: 'Cộng đồng decor', link: '/community' },
+    { label: 'Tin tức & Mẹo sống', link: '/news' },
+    { label: 'Voucher Luméa', link: '/voucher' },
   ];
 
   /**
@@ -191,20 +193,28 @@ export class HeaderComponent implements OnDestroy {
       });
   }
 
+  ngOnInit(): void {
+    // Lắng nghe ở pha capture: nhiều component trong trang gọi stopPropagation() nên listener 'document:click'
+    // thường không nhận được click -> panel không tự đóng.
+    document.addEventListener('pointerdown', this.onDocumentPointerDown, true);
+  }
+
   ngOnDestroy(): void {
+    document.removeEventListener('pointerdown', this.onDocumentPointerDown, true);
     this.cancelMegaMenuCloseTimer();
     this.onMegaMenuTriggerLeave();
   }
 
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(event: MouseEvent): void {
-    if (!this.elementRef.nativeElement.contains(event.target as Node)) {
-      this.notificationsOpen = false;
-      this.searchSuggestionsOpen = false;
-      this.cartPreviewOpen = false;
-      this.accountMenuOpen = false;
-    }
-  }
+  /** Bấm ra ngoài vùng của panel nào (tài khoản/thông báo/giỏ hàng/gợi ý tìm kiếm) thì đóng panel đó. */
+  private readonly onDocumentPointerDown = (event: Event): void => {
+    const target = event.target as Node;
+    const inside = (selector: string) =>
+      !!this.elementRef.nativeElement.querySelector(selector)?.contains(target);
+    if (this.notificationsOpen && !inside('.hd_notify-wrap')) this.notificationsOpen = false;
+    if (this.cartPreviewOpen && !inside('.hd_cart-wrap')) this.cartPreviewOpen = false;
+    if (this.accountMenuOpen && !inside('.hd_account-wrap')) this.accountMenuOpen = false;
+    if (this.searchSuggestionsOpen && !inside('.hd_search-wrap')) this.searchSuggestionsOpen = false;
+  };
 
   toggleCartPreview(): void {
     this.cartPreviewOpen = !this.cartPreviewOpen;
@@ -334,7 +344,7 @@ export class HeaderComponent implements OnDestroy {
     { label: 'Hồ sơ cá nhân', icon: 'user', link: '/account', queryParams: { tab: 'profile' } },
     { label: 'Đơn hàng của tôi', icon: 'truck', link: '/account', queryParams: { tab: 'orders' } },
     { label: 'Sổ địa chỉ', icon: 'map-pin', link: '/account', queryParams: { tab: 'addresses' } },
-    { label: 'Xu thưởng', icon: 'coin', link: '/account', queryParams: { tab: 'coins' } },
+    { label: 'Voucher của tôi', icon: 'tag', link: '/account', queryParams: { tab: 'vouchers' } },
     { label: 'Sản phẩm yêu thích', icon: 'heart', link: '/favorites' },
   ];
 

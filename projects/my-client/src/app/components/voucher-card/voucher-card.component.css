@@ -1,0 +1,139 @@
+.vcard {
+  display: flex;
+  align-items: stretch;
+  min-height: 92px;
+  border: 1px solid #EBDDD5;
+  border-radius: 14px;
+  background: #FFFFFF;
+  overflow: hidden;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.vcard--selectable {
+  cursor: pointer;
+}
+
+.vcard--selectable:hover,
+.vcard--selected {
+  border-color: #A3152D;
+  box-shadow: 0 6px 16px rgba(163, 21, 45, 0.12);
+}
+
+.vcard--off {
+  opacity: 0.55;
+  cursor: default;
+  box-shadow: none;
+}
+
+.vcard__stub {
+  position: relative;
+  flex: 0 0 82px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: linear-gradient(180deg, #C42A42 0%, #A3152D 100%);
+  color: #FFFFFF;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+/* Mép răng cưa của vé */
+.vcard__stub::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: -5px;
+  bottom: 0;
+  width: 10px;
+  background: radial-gradient(circle at 5px 6px, #FFFFFF 3.5px, transparent 4px) 0 0 / 10px 12px repeat-y;
+}
+
+.vcard__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  padding: 10px 12px 10px 16px;
+}
+
+.vcard__title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #3B2418;
+}
+
+.vcard__desc {
+  font-size: 12px;
+  color: #6B5A50;
+  line-height: 1.35;
+}
+
+.vcard__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  font-size: 11px;
+  color: #8A7A70;
+}
+
+.vcard__code {
+  font-weight: 700;
+  color: #A3152D;
+  letter-spacing: 0.04em;
+}
+
+.vcard__warn {
+  font-size: 11px;
+  color: #B45309;
+}
+
+.vcard__side {
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+}
+
+.vcard__copy {
+  padding: 6px 10px;
+  border: 1px solid #A3152D;
+  border-radius: 999px;
+  background: #FFFFFF;
+  color: #A3152D;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.vcard__copy:hover {
+  background: #A3152D;
+  color: #FFFFFF;
+}
+
+.vcard__status {
+  font-size: 11px;
+  font-weight: 700;
+  color: #8A7A70;
+  white-space: nowrap;
+}
+
+.vcard__radio {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #CDBFB6;
+  border-radius: 999px;
+  color: #FFFFFF;
+}
+
+.vcard__radio--on {
+  border-color: #A3152D;
+  background: #A3152D;
+}

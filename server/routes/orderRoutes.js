@@ -3,11 +3,25 @@ const { sendError } = require('../utils/http-error');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const { attachUserId, requireUserId, requireAdminId } = require('../middleware/auth');
-const { awardCoins } = require('../utils/coins');
-const { verifyAndPriceOrderItems, resolveDiscount, resolveShippingFee } = require('../utils/pricing');
+const { awardVoucher, reserveDiscountCode, releaseCodesForOrder, VoucherError } = require('../utils/vouchers');
+const { verifyAndPriceOrderItems, resolveShippingFee } = require('../utils/pricing');
 const { shippingOptions, findCarrier, trackingUrlFor, isDevMode, devTrackingCode } = require('../utils/shipping');
 
-const DELIVERY_REWARD_RATE = 0.01; // 1% giá trị đơn hàng, quy đổi thẳng sang Xu (1 xu = 1đ khi giảm giá)
+/** Lý do khách được tự chọn khi huỷ đơn (trang đơn hàng phía khách). */
+// Giữ khớp với CANCEL_REASONS ở projects/my-client/src/app/core/data/cancel-reasons.ts
+const CUSTOMER_CANCEL_REASONS = [
+  'Tôi muốn cập nhật địa chỉ/số điện thoại nhận hàng',
+  'Tôi muốn thêm/thay đổi mã giảm giá',
+  'Tôi muốn thay đổi sản phẩm (màu sắc, kích thước, số lượng...)',
+  'Thủ tục thanh toán quá rắc rối',
+  'Tôi tìm thấy chỗ mua khác tốt hơn (rẻ hơn, uy tín hơn, giao nhanh hơn...)',
+  'Thời gian giao hàng quá lâu',
+  'Tôi đặt nhầm / đặt trùng đơn',
+  'Tôi không có nhu cầu mua nữa',
+  'Tôi không tìm thấy lý do huỷ phù hợp',
+];
+/** Khách chỉ tự huỷ được khi đơn chưa vào sản xuất/giao. */
+const CUSTOMER_CANCELLABLE = ['PENDING', 'CONFIRMED'];
 
 const router = express.Router();
 
@@ -59,7 +73,15 @@ router.post('/', attachUserId, async (req, res) => {
       return res.status(400).json({ success: false, error: priceErr.message });
     }
 
-    const discount = await resolveDiscount(subtotal, couponCode);
+    // Giữ chỗ mã giảm giá trước khi tạo đơn: mỗi mã chỉ dùng 1 lần, dùng rồi là hết.
+    let reserved;
+    try {
+      reserved = await reserveDiscountCode({ code: couponCode, userId: req.userId, phone: shippingAddress.phone, subtotal });
+    } catch (codeErr) {
+      if (codeErr instanceof VoucherError) return res.status(400).json({ success: false, error: codeErr.message });
+      throw codeErr;
+    }
+    const discount = reserved.discount;
     const shippingFee = resolveShippingFee(subtotal);
     const total = Math.max(0, subtotal - discount + shippingFee);
 
@@ -75,7 +97,9 @@ router.post('/', attachUserId, async (req, res) => {
       };
     }
 
-    const order = await createWithUniqueNumber({
+    let order;
+    try {
+      order = await createWithUniqueNumber({
       userId: req.userId || null,
       createdAtLabel: nowLabel(),
       // COD: chờ nhân viên gọi xác nhận (PENDING) rồi mới sản xuất/giao — tránh in đồ khắc tên
@@ -92,7 +116,12 @@ router.post('/', attachUserId, async (req, res) => {
       shippingFee,
       total,
       notes: notes || '',
-    });
+      });
+    } catch (createErr) {
+      await reserved.release(); // tạo đơn lỗi -> trả lại mã cho khách
+      throw createErr;
+    }
+    await reserved.attach(order.orderNumber);
 
     res.json({ success: true, order });
   } catch (err) {
@@ -116,6 +145,38 @@ router.get('/mine', requireUserId, async (req, res) => {
   try {
     const orders = await Order.find({ userId: req.userId }).sort({ createdAt: -1 });
     res.json({ success: true, orders });
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
+router.get('/cancel-reasons', (_req, res) => {
+  res.json({ success: true, reasons: CUSTOMER_CANCEL_REASONS });
+});
+
+// Khách tự huỷ đơn của chính mình (chỉ khi đơn chưa sản xuất/giao) — bắt buộc chọn lý do.
+router.patch('/:orderNumber/cancel', requireUserId, async (req, res) => {
+  try {
+    const reason = String(req.body.reason || '').trim();
+    const detail = String(req.body.detail || '').trim().slice(0, 300);
+    if (!CUSTOMER_CANCEL_REASONS.includes(reason)) {
+      return res.status(400).json({ success: false, error: 'Vui lòng chọn lý do huỷ đơn' });
+    }
+    const order = await Order.findOne({ orderNumber: req.params.orderNumber, userId: req.userId });
+    if (!order) return res.status(404).json({ success: false, error: 'Không tìm thấy đơn hàng' });
+    if (!CUSTOMER_CANCELLABLE.includes(order.status)) {
+      return res.status(400).json({ success: false, error: 'Đơn hàng đã được xử lý, không thể tự huỷ. Vui lòng liên hệ hỗ trợ.' });
+    }
+    if (order.paymentStatus === 'PAID') {
+      return res.status(400).json({ success: false, error: 'Đơn đã thanh toán — vui lòng liên hệ hỗ trợ để được huỷ và hoàn tiền.' });
+    }
+    order.status = 'CANCELLED';
+    order.cancelReason = detail ? `${reason}: ${detail}` : reason;
+    order.cancelledAt = new Date();
+    await order.save();
+    // Trả lại mã đã dùng cho đơn này (voucher còn hạn thì khách dùng lại được).
+    await releaseCodesForOrder(order.orderNumber);
+    res.json({ success: true, order });
   } catch (err) {
     sendError(res, err);
   }
@@ -294,15 +355,16 @@ router.patch('/:orderNumber/production', requireAdminId, async (req, res) => {
       if (order.paymentMethod === 'COD') order.codCollectedAt = new Date();
     }
     await order.save();
+    if (status === 'CANCELLED') await releaseCodesForOrder(order.orderNumber);
 
-    // Đơn giao thành công -> thưởng Xu 1 lần cho khách (chỉ áp dụng nếu đơn gắn với tài khoản thật).
+    // Đơn giao thành công -> tặng 1 voucher cho lần mua sau (chỉ áp dụng nếu đơn gắn với tài khoản thật).
     if (order.status === 'DELIVERED' && order.userId) {
-      await awardCoins({
+      await awardVoucher({
         userId: order.userId,
-        reason: 'ORDER_DELIVERED',
+        tierKey: 'P5',
+        source: 'ORDER_DELIVERED',
         refId: order.orderNumber,
-        amount: Math.round(order.total * DELIVERY_REWARD_RATE),
-        note: `Nhận thưởng từ đơn hàng ${order.orderNumber} đã giao thành công`,
+        note: `Cảm ơn bạn đã mua đơn ${order.orderNumber}`,
       });
     }
 

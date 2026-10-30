@@ -80,7 +80,7 @@
 }
 
 .qv3__logo {
-  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-family: var(--font-family-heading, 'Inter', sans-serif);
   font-weight: 700;
   font-size: 18px;
   letter-spacing: 0.12em;

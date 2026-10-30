@@ -156,7 +156,6 @@ export const THREE_D_CUSTOM_LINKS: CatalogLink[] = [
 
 export const DEAL_LINKS: CatalogLink[] = [
   { label: 'Flash Sale', link: '/flash-sale', image: 'assets/decor-deals/flash-sale-hero.jpg' },
-  { label: 'Deal hôm nay', link: '/flash-sale', image: 'assets/hero-banner/hero-deal-today.png' },
   { label: 'Sản phẩm giảm giá', link: '/catalog', queryParams: { sale: '1' }, image: img('1607083206869-4c7672e72a8a') },
 ];
 

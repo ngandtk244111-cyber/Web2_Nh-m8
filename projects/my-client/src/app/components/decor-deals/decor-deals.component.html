@@ -99,8 +99,9 @@
               <div class="dd_card__price-row">
                 <span class="dd_card__price">{{ priceDisplay(p) }}</span>
               </div>
-              <div class="dd_card__original" *ngIf="p.originalPrice">
-                <span>{{ p.originalPrice | number:'1.0-0' }}đ</span>
+              <!-- Luôn giữ chỗ cho dòng giá gốc để các thẻ thẳng hàng dù sản phẩm không có giá gốc -->
+              <div class="dd_card__original">
+                <span *ngIf="p.originalPrice">{{ p.originalPrice | number:'1.0-0' }}đ</span>
               </div>
               <div class="dd_card__promo">
                 <span>🔥 Ưu đãi giá sốc</span>

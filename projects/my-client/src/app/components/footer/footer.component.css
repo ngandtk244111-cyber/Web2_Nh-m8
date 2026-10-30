@@ -278,6 +278,9 @@
   flex-wrap: wrap;
   font-size: 12.5px;
   color: var(--ft-text-muted);
+  /* Chừa chỗ cho nút "lên đầu trang" + bong bóng hỗ trợ cố định ở góc phải dưới, không che chữ. */
+  padding-right: 160px;
+  padding-bottom: 8px;
 }
 
 .ft_bottom__left {
@@ -382,6 +385,8 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
+    padding-right: 0;
+    padding-bottom: 88px;
   }
 
   .ft_bottom__right {

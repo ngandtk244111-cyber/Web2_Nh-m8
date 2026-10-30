@@ -1,43 +1,40 @@
-import { AfterViewInit, Component, ElementRef, HostListener, NgZone, OnDestroy, ViewChild, computed, effect, signal } from '@angular/core';
+import { AfterViewInit, Component, HostListener, OnDestroy, computed, effect, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { CoinService } from '../../core/services/coin.service';
+import { VoucherService, couponToVoucher } from '../../core/services/voucher.service';
+import { CartService } from '../../core/services/cart.service';
 import { AuthService } from '../../core/services/auth.service';
 import { LoginModalService } from '../../core/services/login-modal.service';
-import { ProductService } from '../../core/services/product.service';
 import { ToastService } from '../../core/services/toast.service';
-import { CoinGameKey } from '../../core/models/coin.model';
+import { VoucherGameKey } from '../../core/models/voucher.model';
 import { AppIconComponent } from '../../components/icon/icon.component';
-import { ProductCardComponent } from '../../components/product-card/product-card.component';
-import { XuCoinComponent } from './xu-coin/xu-coin.component';
+import { VoucherCardComponent } from '../../components/voucher-card/voucher-card.component';
 import { LuckyWheelComponent } from './games/lucky-wheel/lucky-wheel.component';
 import { MemoryGameComponent } from './games/memory-game/memory-game.component';
 import { GiftBoxComponent } from './games/gift-box/gift-box.component';
 
-type CheckinDayState = 'claimed' | 'today' | 'upcoming';
-
 interface GameInfo {
-  key: CoinGameKey;
+  key: VoucherGameKey;
   title: string;
   desc: string;
   reward: string;
   theme: string;
 }
 
-/** Hiển thị khi chưa đăng nhập — khớp CHECKIN_SCHEDULE ở server. */
-const DEFAULT_SCHEDULE = [100, 100, 100, 100, 100, 100, 300];
-const DEFAULT_WHEEL_PRIZES = [10, 50, 20, 200, 10, 100, 30, 20];
+/** Hiển thị khi chưa đăng nhập — khớp WHEEL_PRIZES ở server/routes/voucherRoutes.js. */
+const DEFAULT_WHEEL_PRIZES = ['10K', '5%', '20K', '15%', '10K', '50K', '8%', '100K'];
 const BANNER_INTERVAL_MS = 5000;
-const VN_OFFSET_MS = 7 * 60 * 60 * 1000;
-const DAY_MS = 24 * 60 * 60 * 1000;
-const FEED_SIZE = 16;
 
 const GAMES: GameInfo[] = [
-  { key: 'WHEEL', title: 'Vòng Quay May Mắn', desc: 'Quay là trúng — độc đắc 200 xu mỗi lượt.', reward: '10 – 200 xu', theme: 'wheel' },
-  { key: 'MEMORY', title: 'Lật Thẻ Decor', desc: 'Ghép 8 cặp món decor, càng ít lượt càng nhiều xu.', reward: '20 – 80 xu', theme: 'memory' },
-  { key: 'GIFT_BOX', title: 'Hộp Quà Bí Ẩn', desc: 'Chọn 1 trong 3 hộp quà, mỗi ngày một lần.', reward: '10 – 150 xu', theme: 'gift' },
+  { key: 'MEMORY', title: 'Lật Thẻ Nhận Voucher', desc: 'Ghép 8 cặp món decor, càng ít lượt voucher càng lớn.', reward: 'Giảm 10K – 10%', theme: 'memory' },
+  { key: 'WHEEL', title: 'Vòng Quay May Mắn', desc: 'Quay là trúng voucher — độc đắc giảm 100K.', reward: 'Giảm 10K – 100K', theme: 'wheel' },
+  { key: 'GIFT_BOX', title: 'Hộp Quà Bí Ẩn', desc: 'Chọn 1 trong 3 hộp quà, bên trong là voucher giảm giá.', reward: 'Giảm 10K – 10%', theme: 'gift' },
 ];
 
+/**
+ * Trang "Voucher Luméa" (route /voucher, /xu cũ tự chuyển hướng): thay cho Túi Xu. Khách thỉnh thoảng mới vào
+ * web nội thất nên không cần điểm danh/tích xu hằng ngày — chỉ giữ trò chơi nhận voucher dùng ngay.
+ */
 @Component({
   selector: 'app-coins',
   standalone: true,
@@ -45,8 +42,7 @@ const GAMES: GameInfo[] = [
     CommonModule,
     RouterLink,
     AppIconComponent,
-    ProductCardComponent,
-    XuCoinComponent,
+    VoucherCardComponent,
     LuckyWheelComponent,
     MemoryGameComponent,
     GiftBoxComponent,
@@ -55,102 +51,41 @@ const GAMES: GameInfo[] = [
   styleUrl: './coins.component.css'
 })
 export class CoinsComponent implements AfterViewInit, OnDestroy {
-  @ViewChild('feed') feedRef?: ElementRef<HTMLElement>;
-  @ViewChild('history') historyRef?: ElementRef<HTMLElement>;
-
   readonly games = GAMES;
-  readonly activeGame = signal<CoinGameKey | null>(null);
+  readonly activeGame = signal<VoucherGameKey | null>(null);
   readonly bannerIndex = signal(0);
-  readonly checkingIn = signal(false);
-  readonly historyExpanded = signal(false);
-  readonly feedProgress = signal(0);
-  readonly feedInView = signal(false);
-  readonly rewardPop = signal<{ amount: number; label: string } | null>(null);
 
-  private browseClaiming = false;
   private bannerTimer: ReturnType<typeof setInterval> | null = null;
-  private popTimer: ReturnType<typeof setTimeout> | null = null;
-  private midnightTimer: ReturnType<typeof setTimeout> | null = null;
-
-  /** Ngày hiện tại theo giờ Việt Nam — đổi lúc 0:00 để lượt chơi/điểm danh reset ngay trên trang đang mở. */
-  readonly todayKey = signal(this.vnDateKey(new Date()));
 
   readonly isLoggedIn = computed(() => !!this.authService.currentUser());
-  readonly rewards = computed(() => this.coinService.rewards());
-
-  readonly checkinDays = computed(() => {
-    const r = this.rewards();
-    const schedule = r?.checkin.schedule ?? DEFAULT_SCHEDULE;
-    const streakDay = r?.checkin.streakDay ?? 1;
-    const claimedToday = r?.checkin.claimedToday ?? false;
-    return schedule.map((amount, i) => {
-      const day = i + 1;
-      let state: CheckinDayState = 'upcoming';
-      if (day < streakDay || (day === streakDay && claimedToday)) state = 'claimed';
-      else if (day === streakDay) state = 'today';
-      return { day, amount, state, isToday: day === streakDay, isBig: day === schedule.length };
-    });
-  });
-
-  readonly todayCheckinAmount = computed(() => {
-    const today = this.checkinDays().find(d => d.isToday);
-    return today?.amount ?? DEFAULT_SCHEDULE[0];
-  });
-
-  readonly claimedToday = computed(() => this.rewards()?.checkin.claimedToday ?? false);
-
+  readonly rewards = computed(() => this.voucherService.rewards());
   readonly wheelPrizes = computed(() => this.rewards()?.prizes.WHEEL ?? DEFAULT_WHEEL_PRIZES);
-
-  /** Tổng xu nhận được trong ngày (giờ Việt Nam) — tính từ lịch sử giao dịch. */
-  readonly earnedToday = computed(() => {
-    const today = this.todayKey();
-    return this.coinService.transactions()
-      .filter(t => t.amount > 0 && this.vnDateKey(new Date(t.createdAt)) === today)
-      .reduce((sum, t) => sum + t.amount, 0);
-  });
-
-  readonly visibleHistory = computed(() => {
-    const list = this.coinService.transactions();
-    return this.historyExpanded() ? list : list.slice(0, 6);
-  });
-
-  readonly feedProducts = computed(() => this.productService.products().slice(0, FEED_SIZE));
-
-  readonly browseClaimed = computed(() => this.rewards()?.browse.claimedToday ?? false);
-  readonly browseAmount = computed(() => this.rewards()?.browse.amount ?? 100);
+  /** Mã công khai của shop (vd ưu đãi thành viên mới) — ai cũng dùng được. */
+  readonly shopVouchers = computed(() => this.cartService.shopCoupons().map(couponToVoucher));
 
   constructor(
-    public coinService: CoinService,
+    public voucherService: VoucherService,
     public authService: AuthService,
     private loginModalService: LoginModalService,
-    private productService: ProductService,
     private toastService: ToastService,
-    private zone: NgZone,
+    private cartService: CartService,
   ) {
-    // Tải trạng thái điểm danh/lượt chơi mỗi khi đăng nhập (kể cả đăng nhập ngay trên trang này)
+    this.cartService.loadShopCoupons();
+    // Tải lượt chơi mỗi khi đăng nhập (kể cả đăng nhập ngay trên trang này)
     effect(() => {
-      if (this.authService.currentUser()) this.coinService.loadRewards();
+      if (this.authService.currentUser()) {
+        this.voucherService.loadRewards();
+        this.voucherService.refresh();
+      }
     });
   }
 
   ngAfterViewInit(): void {
-    this.bannerTimer = setInterval(() => this.bannerIndex.update(i => (i + 1) % this.games.length), BANNER_INTERVAL_MS);
-    this.zone.runOutsideAngular(() => {
-      window.addEventListener('scroll', this.onScroll, { passive: true });
-      window.addEventListener('resize', this.onScroll, { passive: true });
-    });
-    this.onScroll();
-    this.scheduleMidnightReset();
-    document.addEventListener('visibilitychange', this.checkDayRollover);
+    this.startBannerTimer();
   }
 
   ngOnDestroy(): void {
     if (this.bannerTimer) clearInterval(this.bannerTimer);
-    if (this.popTimer) clearTimeout(this.popTimer);
-    if (this.midnightTimer) clearTimeout(this.midnightTimer);
-    document.removeEventListener('visibilitychange', this.checkDayRollover);
-    window.removeEventListener('scroll', this.onScroll);
-    window.removeEventListener('resize', this.onScroll);
   }
 
   @HostListener('document:keydown.escape')
@@ -158,33 +93,19 @@ export class CoinsComponent implements AfterViewInit, OnDestroy {
     this.closeGame();
   }
 
-  // ===== Điểm danh =====
-
-  async checkIn(): Promise<void> {
-    if (!this.requireLogin() || this.checkingIn() || this.claimedToday()) return;
-    this.checkingIn.set(true);
-    try {
-      const res = await this.coinService.checkIn();
-      this.showRewardPop(res.amount, `Điểm danh ngày ${res.streakDay}/7`);
-    } catch (err: any) {
-      this.toastService.error(err.message);
-    } finally {
-      this.checkingIn.set(false);
-    }
-  }
-
-  // ===== Trò chơi =====
-
-  playsLeft(key: CoinGameKey): number {
+  playsLeft(key: VoucherGameKey): number {
     return this.rewards()?.games[key]?.playsLeft ?? 0;
   }
 
-  dailyLimit(key: CoinGameKey): number {
-    return this.rewards()?.games[key]?.dailyLimit ?? (key === 'GIFT_BOX' ? 1 : 3);
+  dailyLimit(key: VoucherGameKey): number {
+    return this.rewards()?.games[key]?.dailyLimit ?? 1;
   }
 
-  openGame(key: CoinGameKey): void {
-    if (!this.requireLogin()) return;
+  openGame(key: VoucherGameKey): void {
+    if (!this.isLoggedIn()) {
+      this.loginModalService.open();
+      return;
+    }
     this.activeGame.set(key);
   }
 
@@ -192,108 +113,25 @@ export class CoinsComponent implements AfterViewInit, OnDestroy {
     this.activeGame.set(null);
   }
 
-  gameTitle(key: CoinGameKey | null): string {
+  gameTitle(key: VoucherGameKey | null): string {
     return this.games.find(g => g.key === key)?.title ?? '';
   }
 
-  onGameRewarded(amount: number): void {
-    this.toastService.success(`+${amount} xu đã được cộng vào ví của bạn`);
+  onGameRewarded(title: string): void {
+    this.toastService.success(`Đã lưu voucher "${title}" vào tài khoản — dùng ngay ở giỏ hàng nhé!`);
   }
 
   setBanner(index: number): void {
     this.bannerIndex.set(index);
-    // bấm chấm thì đặt lại chu kỳ tự chạy
-    if (this.bannerTimer) clearInterval(this.bannerTimer);
-    this.bannerTimer = setInterval(() => this.bannerIndex.update(i => (i + 1) % this.games.length), BANNER_INTERVAL_MS);
+    this.startBannerTimer();
   }
-
-  // ===== Lướt gợi ý nhận xu =====
-
-  scrollToFeed(): void {
-    this.feedRef?.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
-
-  scrollToHistory(): void {
-    if (!this.requireLogin()) return;
-    this.historyRef?.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
-
-  /** Chạy ngoài Angular zone — chỉ vào zone khi % tiến độ thực sự đổi. */
-  private readonly onScroll = () => {
-    const el = this.feedRef?.nativeElement;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const vh = window.innerHeight;
-    const inView = rect.top < vh && rect.bottom > 0;
-    const progress = Math.max(0, Math.min(1, (vh - rect.top) / Math.max(rect.height, 1)));
-    const rounded = Math.round(progress * 100) / 100;
-
-    if (rounded !== this.feedProgress() || inView !== this.feedInView()) {
-      this.zone.run(() => {
-        this.feedProgress.set(rounded);
-        this.feedInView.set(inView);
-        if (rounded >= 0.98) this.claimBrowse();
-      });
-    }
-  };
-
-  private async claimBrowse(): Promise<void> {
-    if (this.browseClaiming || this.browseClaimed() || !this.isLoggedIn() || !this.rewards()) return;
-    this.browseClaiming = true;
-    try {
-      const res = await this.coinService.claimBrowse();
-      this.showRewardPop(res.amount, 'Lướt gợi ý sản phẩm');
-    } catch {
-      /* đã nhận ở tab khác — loadRewards() trong service đã đồng bộ lại trạng thái */
-    } finally {
-      this.browseClaiming = false;
-    }
-  }
-
-  // ===== Tiện ích =====
 
   login(): void {
     this.loginModalService.open();
   }
 
-  private requireLogin(): boolean {
-    if (this.isLoggedIn()) return true;
-    this.loginModalService.open();
-    return false;
-  }
-
-  private showRewardPop(amount: number, label: string): void {
-    this.rewardPop.set({ amount, label });
-    if (this.popTimer) clearTimeout(this.popTimer);
-    this.popTimer = setTimeout(() => this.rewardPop.set(null), 2200);
-  }
-
-  /** Hẹn giờ tới đúng 0:00 giờ Việt Nam kế tiếp (+1s dư cho lệch đồng hồ với server). */
-  private scheduleMidnightReset(): void {
-    if (this.midnightTimer) clearTimeout(this.midnightTimer);
-    const vnNow = Date.now() + VN_OFFSET_MS;
-    const msToMidnight = DAY_MS - (vnNow % DAY_MS) + 1000;
-    this.midnightTimer = setTimeout(() => this.checkDayRollover(), msToMidnight);
-  }
-
-  /**
-   * Sang ngày mới thì tải lại lượt chơi/điểm danh/lịch sử từ server (server tự reset theo ngày).
-   * Gọi cả khi quay lại tab, vì timer ở tab nền hoặc lúc máy ngủ có thể bị trễ.
-   */
-  private readonly checkDayRollover = (): void => {
-    if (document.visibilityState === 'hidden') return;
-    const key = this.vnDateKey(new Date());
-    if (key !== this.todayKey()) {
-      this.todayKey.set(key);
-      if (this.isLoggedIn()) {
-        this.coinService.loadRewards();
-        this.coinService.refresh();
-      }
-    }
-    this.scheduleMidnightReset();
-  };
-
-  private vnDateKey(date: Date): string {
-    return new Date(date.getTime() + VN_OFFSET_MS).toISOString().slice(0, 10);
+  private startBannerTimer(): void {
+    if (this.bannerTimer) clearInterval(this.bannerTimer);
+    this.bannerTimer = setInterval(() => this.bannerIndex.update(i => (i + 1) % this.games.length), BANNER_INTERVAL_MS);
   }
 }

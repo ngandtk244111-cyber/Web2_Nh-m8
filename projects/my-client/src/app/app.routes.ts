@@ -122,9 +122,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/account/account.component').then(m => m.AccountComponent),
   },
   {
-    path: 'xu',
+    path: 'voucher',
     loadComponent: () => import('./pages/coins/coins.component').then(m => m.CoinsComponent),
   },
+  // Đường dẫn cũ của trang Túi Xu
+  { path: 'xu', redirectTo: 'voucher' },
   {
     path: 'notifications',
     loadComponent: () => import('./pages/notifications/notifications.component').then(m => m.NotificationsComponent),

@@ -1,0 +1,7 @@
+
+/* Ô chất liệu đang chọn: nền hồng nhạt + viền đỏ, giữ chữ tối cho dễ đọc */
+.cz-opt--on {
+  background: #FFF1F3 !important;
+  border-color: #A3152D !important;
+  box-shadow: 0 0 0 1px #A3152D inset;
+}

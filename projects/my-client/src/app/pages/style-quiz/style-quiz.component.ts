@@ -1,8 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { QuizService } from '../../core/services/quiz.service';
-import { CoinService } from '../../core/services/coin.service';
+import { VoucherService } from '../../core/services/voucher.service';
 import { AuthService } from '../../core/services/auth.service';
 import { LoginModalService } from '../../core/services/login-modal.service';
 import { ProductService } from '../../core/services/product.service';
@@ -28,7 +28,8 @@ interface SuggestedCategory {
   link: CatalogLink;
 }
 
-type Screen = 'intro' | 'quiz' | 'result';
+/** 'locked': đã làm xong nhưng chưa đăng nhập — phải đăng nhập mới xem được kết quả. */
+type Screen = 'intro' | 'quiz' | 'locked' | 'result';
 
 @Component({
   selector: 'app-style-quiz',
@@ -48,7 +49,7 @@ export class StyleQuizComponent {
   coinBusy = false;
   showCelebration = false;
   showFlyingCoin = false;
-  readonly rewardAmount = 30;
+  readonly rewardLabel = 'voucher giảm 10%';
 
   /** Danh mục gợi ý của kết quả (kèm tên thật) + danh mục đang xem trước ngay trong trang. */
   suggestedCategories: SuggestedCategory[] = [];
@@ -56,13 +57,17 @@ export class StyleQuizComponent {
 
   constructor(
     private quizService: QuizService,
-    public coinService: CoinService,
+    public voucherService: VoucherService,
     public authService: AuthService,
     public loginModalService: LoginModalService,
     private productService: ProductService,
     private toastService: ToastService
   ) {
     this.restoreResult();
+    // Làm xong khi chưa đăng nhập → đăng nhập (ngay trên trang này) xong thì hiện kết quả luôn.
+    effect(() => {
+      if (this.authService.currentUser() && this.screen === 'locked') this.showResult();
+    });
   }
 
   /** Vài sản phẩm của danh mục đang chọn để xem nhanh ngay dưới kết quả. */
@@ -88,13 +93,8 @@ export class StyleQuizComponent {
     return ((this.currentIndex) / this.questions.length) * 100;
   }
 
+  /** Ai cũng làm được trắc nghiệm; chỉ bước xem kết quả mới cần đăng nhập. */
   startQuiz(): void {
-    // Chỉ khách đã đăng nhập mới làm trắc nghiệm (kết quả gắn với tài khoản để nhận xu).
-    if (!this.authService.currentUser()) {
-      this.toastService.info('Vui lòng đăng nhập để làm trắc nghiệm phong cách.');
-      this.loginModalService.open();
-      return;
-    }
     this.screen = 'quiz';
     this.currentIndex = 0;
     this.answers = {};
@@ -120,8 +120,17 @@ export class StyleQuizComponent {
       typeof crypto !== 'undefined' && crypto.randomUUID
         ? crypto.randomUUID()
         : `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
-    this.showResult();
     this.saveResult();
+    if (this.authService.currentUser()) {
+      this.showResult();
+    } else {
+      this.screen = 'locked';
+      this.loginModalService.open();
+    }
+  }
+
+  loginToSeeResult(): void {
+    this.loginModalService.open();
   }
 
   private showResult(): void {
@@ -150,7 +159,8 @@ export class StyleQuizComponent {
       this.answers = state.answers;
       this.attemptId = state.attemptId;
       this.coinClaimed = !!state.coinClaimed;
-      this.showResult();
+      if (this.authService.currentUser()) this.showResult();
+      else this.screen = 'locked';
     } catch {
       sessionStorage.removeItem(RESULT_STORAGE_KEY);
     }
@@ -188,7 +198,7 @@ export class StyleQuizComponent {
     this.showCelebration = false;
     this.coinBusy = true;
     try {
-      await this.coinService.claim('STYLE_QUIZ', this.attemptId);
+      await this.voucherService.claim('STYLE_QUIZ', this.attemptId);
       this.coinClaimed = true;
       this.saveResult();
       this.showFlyingCoin = true;

@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, DestroyRef, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AppIconComponent } from '../icon/icon.component';
@@ -43,6 +43,18 @@ const FLOATING_SIDE_BANNERS: FloatingSideBanner[] = [
 export class FloatingSideBannersComponent {
   readonly banners = FLOATING_SIDE_BANNERS;
   private readonly dismissedSides = signal<Set<FloatingBannerSide>>(new Set());
+
+  constructor() {
+    // Gắn body.fsb-left / body.fsb-right khi banner bên đó đang hiện -> styles.css co nội dung chính
+    // lại chừa chỗ cho banner (khỏi đè nội dung, không cần màn hình ≥1600px mới thấy banner).
+    effect(() => {
+      const dismissed = this.dismissedSides();
+      for (const side of ['left', 'right'] as const) {
+        document.body.classList.toggle(`fsb-${side}`, !dismissed.has(side));
+      }
+    });
+    inject(DestroyRef).onDestroy(() => document.body.classList.remove('fsb-left', 'fsb-right'));
+  }
 
   isDismissed(side: FloatingBannerSide): boolean {
     return this.dismissedSides().has(side);

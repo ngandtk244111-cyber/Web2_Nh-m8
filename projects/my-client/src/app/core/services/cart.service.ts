@@ -8,6 +8,7 @@ import { FlashSaleService } from './flash-sale.service';
 import { ToastService } from './toast.service';
 import { AuthService } from './auth.service';
 import { LoginModalService } from './login-modal.service';
+import { voucherDiscount } from './voucher.service';
 
 @Injectable({
   providedIn: 'root'
@@ -46,13 +47,7 @@ export class CartService {
     this.itemsSignal().reduce((sum, item) => sum + item.totalPrice, 0)
   );
 
-  readonly discount = computed(() => {
-    const coupon = this.appliedCouponSignal();
-    const sub = this.subtotal();
-    if (!coupon || sub < coupon.minSpend) return 0;
-    const calc = (sub * coupon.discountPercent) / 100;
-    return Math.min(calc, coupon.maxDiscount);
-  });
+  readonly discount = computed(() => voucherDiscount(this.appliedCouponSignal(), this.subtotal()));
 
   readonly shippingFee = computed(() => {
     const sub = this.subtotal();
@@ -89,13 +84,7 @@ export class CartService {
     this.checkoutItems().reduce((sum, item) => sum + item.totalPrice, 0)
   );
 
-  readonly checkoutDiscount = computed(() => {
-    const coupon = this.appliedCouponSignal();
-    const sub = this.checkoutSubtotal();
-    if (!coupon || sub < coupon.minSpend) return 0;
-    const calc = (sub * coupon.discountPercent) / 100;
-    return Math.min(calc, coupon.maxDiscount);
-  });
+  readonly checkoutDiscount = computed(() => voucherDiscount(this.appliedCouponSignal(), this.checkoutSubtotal()));
 
   readonly checkoutShippingFee = computed(() => {
     const sub = this.checkoutSubtotal();
@@ -257,7 +246,6 @@ export class CartService {
     }
 
     this.saveCart(current);
-    this.openCart();
     this.notifyAdded(product.name);
     return true;
   }
@@ -309,27 +297,102 @@ export class CartService {
     this.appliedCouponSignal.set(null);
   }
 
-  /** Tra mã giảm giá trong MongoDB (GET /api/coupons/:code); điều kiện minSpend kiểm theo giỏ hiện tại. */
-  applyCoupon(code: string): Observable<{ success: boolean; message: string }> {
+  // ---------- Mã giảm giá ----------
+  private readonly savedCouponsKey = 'lumea_saved_coupons';
+  /** Mã công khai khách từng nhập thành công — lưu lại để lần sau chọn trong danh sách, khỏi gõ lại. */
+  private savedCouponsSignal = signal<Coupon[]>(this.loadSavedCoupons());
+  readonly savedCoupons = this.savedCouponsSignal.asReadonly();
+  /** Mã công khai đang hoạt động của shop (GET /api/coupons). */
+  readonly shopCoupons = signal<Coupon[]>([]);
+
+  /** Mã của shop còn dùng được — server bỏ sẵn các mã khách đã dùng (mỗi mã chỉ dùng 1 lần). */
+  loadShopCoupons(): void {
+    const userId = this.auth.currentUser()?._id;
+    this.http.get<{ success: boolean; coupons: Coupon[]; usedCodes?: string[] }>(
+      `${environment.apiUrl}/coupons`, { params: userId ? { userId } : {} }
+    ).subscribe({
+      next: res => {
+        if (!res.success) return;
+        this.shopCoupons.set(res.coupons);
+        const used = new Set(res.usedCodes || []);
+        if (used.size) {
+          this.persistSavedCoupons(this.savedCouponsSignal().filter(c => !used.has(c.code)));
+          if (used.has(this.appliedCouponSignal()?.code || '')) this.appliedCouponSignal.set(null);
+        }
+      },
+      error: () => { /* không tải được thì chỉ còn mã đã lưu + voucher cá nhân */ },
+    });
+  }
+
+  /**
+   * Nhập tay mã giảm giá: tra mã công khai (GET /api/coupons/:code). Tìm thấy thì lưu vào danh sách mã
+   * của khách để lần sau chọn lại, nhưng KHÔNG tự áp dụng — khách tự chọn trong danh sách.
+   * Voucher cá nhân (đã có sẵn trong danh sách) được nhận ra qua `ownVouchers`.
+   */
+  addCouponCode(code: string, ownVouchers: Coupon[] = []): Observable<{ success: boolean; message: string; coupon?: Coupon }> {
     const cleanCode = code.trim().toUpperCase();
-    return this.http.get<{ success: boolean; coupon: Coupon }>(`${environment.apiUrl}/coupons/${encodeURIComponent(cleanCode)}`).pipe(
+    const own = ownVouchers.find(v => v.code === cleanCode);
+    if (own) return of({ success: true, message: `Mã ${cleanCode} đã có trong voucher của bạn.`, coupon: own });
+    const userId = this.auth.currentUser()?._id;
+    return this.http.get<{ success: boolean; coupon: Coupon }>(
+      `${environment.apiUrl}/coupons/${encodeURIComponent(cleanCode)}`, { params: userId ? { userId } : {} }
+    ).pipe(
       map(res => {
         const found = res.coupon;
-        if (this.subtotal() < found.minSpend) {
-          return {
-            success: false,
-            message: `Mã này chỉ áp dụng cho đơn hàng từ ${found.minSpend.toLocaleString('vi-VN')}đ trở lên.`
-          };
-        }
-        this.appliedCouponSignal.set(found);
-        return { success: true, message: `Áp dụng thành công mã ${found.code}!` };
+        this.saveCoupon(found);
+        return { success: true, message: `Đã lưu mã ${found.code} vào danh sách voucher.`, coupon: found };
       }),
-      catchError(() => of({ success: false, message: 'Mã giảm giá không hợp lệ hoặc đã hết hạn.' }))
+      catchError(err => of({ success: false, message: err?.error?.error || 'Mã giảm giá không hợp lệ hoặc đã hết hạn.' }))
     );
+  }
+
+  /** Đặt đơn thành công: mã vừa dùng không dùng lại được nữa -> bỏ chọn và xoá khỏi danh sách đã lưu/của shop. */
+  consumeAppliedCoupon(): void {
+    const code = this.appliedCouponSignal()?.code;
+    if (!code) return;
+    this.appliedCouponSignal.set(null);
+    this.persistSavedCoupons(this.savedCouponsSignal().filter(c => c.code !== code));
+    this.shopCoupons.update(list => list.filter(c => c.code !== code));
+  }
+
+  /** Chọn 1 mã trong danh sách (null = không dùng mã). Kiểm tra giá trị đơn tối thiểu theo `subtotal`. */
+  selectCoupon(coupon: Coupon | null, subtotal = this.subtotal()): { success: boolean; message: string } {
+    if (!coupon) {
+      this.appliedCouponSignal.set(null);
+      return { success: true, message: '' };
+    }
+    if (subtotal < coupon.minSpend) {
+      return { success: false, message: `Mã này chỉ áp dụng cho đơn hàng từ ${coupon.minSpend.toLocaleString('vi-VN')}đ trở lên.` };
+    }
+    this.appliedCouponSignal.set(coupon);
+    return { success: true, message: `Đã áp dụng mã ${coupon.code}.` };
   }
 
   removeCoupon(): void {
     this.appliedCouponSignal.set(null);
+  }
+
+  removeSavedCoupon(code: string): void {
+    this.persistSavedCoupons(this.savedCouponsSignal().filter(c => c.code !== code));
+    if (this.appliedCouponSignal()?.code === code) this.appliedCouponSignal.set(null);
+  }
+
+  private saveCoupon(coupon: Coupon): void {
+    this.persistSavedCoupons([coupon, ...this.savedCouponsSignal().filter(c => c.code !== coupon.code)]);
+  }
+
+  private persistSavedCoupons(list: Coupon[]): void {
+    this.savedCouponsSignal.set(list);
+    localStorage.setItem(this.savedCouponsKey, JSON.stringify(list));
+  }
+
+  private loadSavedCoupons(): Coupon[] {
+    try {
+      const raw = localStorage.getItem(this.savedCouponsKey);
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
   }
 
   openCart(): void {

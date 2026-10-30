@@ -1,27 +1,26 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { AppIconComponent } from '../icon/icon.component';
 
-export interface PromoCard {
-  icon: string;
-  title: string;
-  subtitle: string;
+export interface PromoPoster {
+  image: string;
+  alt: string;
   link: string;
+  queryParams?: Record<string, string>;
 }
 
+/** Hàng poster khuyến mãi ngay dưới hero banner trang chủ — bấm cả poster để vào trang tương ứng. */
 @Component({
   selector: 'app-promo-cards',
   standalone: true,
-  imports: [CommonModule, RouterLink, AppIconComponent],
+  imports: [CommonModule, RouterLink],
   templateUrl: './promo-cards.component.html',
   styleUrl: './promo-cards.component.css'
 })
 export class PromoCardsComponent {
-  readonly cards: PromoCard[] = [
-    { icon: 'sparkles', title: 'Trắc Nghiệm Phong Cách', subtitle: 'Làm quiz, nhận ngay 30 xu', link: '/style-quiz' },
-    { icon: 'room', title: 'Bộ Sưu Tập Phòng 3D', subtitle: 'Khám phá không gian mẫu 360°', link: '/shop-the-room' },
-    { icon: 'sliders', title: 'Tùy Biến Sản Phẩm', subtitle: 'Cá nhân hóa màu sắc, khắc tên', link: '/customizer-3d' },
-    { icon: 'shield', title: 'Bảo Hành 12 Tháng', subtitle: 'Yên tâm sử dụng lâu dài', link: '/warranty-lookup' },
+  readonly posters: PromoPoster[] = [
+    { image: 'assets/promo-cards/xa-kho.jpg', alt: 'Xả kho giá sốc — nhà xinh khỏi lo giá', link: '/catalog', queryParams: { sale: '1' } },
+    { image: 'assets/promo-cards/deal-thang-11.jpg', alt: 'Tháng 11 — Deal xịn mỗi ngày, nhà xinh quá', link: '/flash-sale' },
+    { image: 'assets/promo-cards/phong-3d.jpg', alt: 'Khám phá Phòng 3D — giảm ngay đến 40%', link: '/shop-the-room' },
   ];
 }

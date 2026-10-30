@@ -4,7 +4,7 @@
 :host h2.font-serif,
 :host h3.font-serif,
 :host h4.font-serif {
-  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-family: var(--font-family-heading, 'Inter', sans-serif);
   font-weight: 700;
   letter-spacing: 0;
   color: #3B2418;
@@ -22,7 +22,7 @@
 :host label { letter-spacing: 0.02em; }
 :host .text-lg.font-semibold,
 :host .text-lg.font-bold {
-  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-family: var(--font-family-heading, 'Inter', sans-serif);
   font-size: 30px; font-weight: 700; line-height: 1; letter-spacing: 0;
 }
 :host .text-neutral-600.text-xs, :host .text-xs.text-neutral-600 { font-size: 13px; }
@@ -30,7 +30,7 @@
 /* ===== Trạng thái chưa có sản phẩm để thanh toán =====
    Class riêng để không dính rule chung ở trên (a[routerLink="/catalog"].text-xs tô chữ nâu làm chìm chữ trên nút đỏ). */
 :host .ck-empty__title {
-  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-family: var(--font-family-heading, 'Inter', sans-serif);
   font-size: 26px;
   font-weight: 700;
   line-height: 1.2;

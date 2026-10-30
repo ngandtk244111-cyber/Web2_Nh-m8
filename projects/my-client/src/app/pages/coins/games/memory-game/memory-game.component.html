@@ -2,7 +2,7 @@
   <div class="mg__bar">
     <div class="mg__stat"><span>Lượt lật</span><strong>{{ moves() }}</strong></div>
     <div class="mg__stat"><span>Thời gian</span><strong>{{ formatTime(seconds()) }}</strong></div>
-    <div class="mg__stat"><span>Lượt nhận xu</span><strong>{{ playsLeft }}</strong></div>
+    <div class="mg__stat"><span>Lượt nhận voucher</span><strong>{{ playsLeft }}</strong></div>
   </div>
 
   <div class="mg__grid">
@@ -27,16 +27,16 @@
 
   <div class="mg__footer">
     <ng-container *ngIf="!finished()">
-      <p class="mg__hint">Lật 2 thẻ giống nhau để ghép cặp. <strong>≤ 12 lượt: 80 xu</strong> · ≤ 16: 50 xu · ≤ 22: 30 xu · còn lại: 20 xu.</p>
-      <p class="mg__hint mg__hint--muted" *ngIf="playsLeft <= 0">Bạn đã hết lượt nhận xu hôm nay — vẫn có thể chơi thử cho vui.</p>
+      <p class="mg__hint">Lật 2 thẻ giống nhau để ghép cặp. <strong>≤ 12 lượt: giảm 10%</strong> · ≤ 16: giảm 50K · ≤ 22: giảm 20K · còn lại: giảm 10K.</p>
+      <p class="mg__hint mg__hint--muted" *ngIf="playsLeft <= 0">Bạn đã hết lượt nhận voucher hôm nay — vẫn có thể chơi thử cho vui.</p>
     </ng-container>
 
     <ng-container *ngIf="finished()">
       <div class="mg__result" *ngIf="result() !== null">
-        <app-xu-coin [size]="26"></app-xu-coin>
-        <span>Hoàn thành trong {{ moves() }} lượt · <strong>+{{ result() }} xu</strong></span>
+        <app-icon name="tag" [size]="22"></app-icon>
+        <span>Hoàn thành trong {{ moves() }} lượt · nhận voucher <strong>{{ result() }}</strong></span>
       </div>
-      <p class="mg__hint" *ngIf="submitting()">Đang cộng xu...</p>
+      <p class="mg__hint" *ngIf="submitting()">Đang nhận voucher...</p>
       <p class="mg__hint" *ngIf="result() === null && !submitting()">Hoàn thành trong {{ moves() }} lượt, {{ formatTime(seconds()) }}!</p>
       <button type="button" class="mg__again" (click)="reset()">Chơi lại</button>
     </ng-container>

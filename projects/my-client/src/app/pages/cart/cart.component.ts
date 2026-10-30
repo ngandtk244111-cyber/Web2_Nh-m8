@@ -3,7 +3,10 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CartService } from '../../core/services/cart.service';
-import { CoinService } from '../../core/services/coin.service';
+import { VoucherService, couponToVoucher, isVoucherUsable, voucherDiscount } from '../../core/services/voucher.service';
+import { Coupon } from '../../core/models/cart.model';
+import { UserVoucher } from '../../core/models/voucher.model';
+import { VoucherCardComponent } from '../../components/voucher-card/voucher-card.component';
 import { AuthService } from '../../core/services/auth.service';
 import { CheckoutFlowService } from '../../core/services/checkout-flow.service';
 import { AppIconComponent } from '../../components/icon/icon.component';
@@ -14,14 +17,13 @@ const FREE_SHIPPING_THRESHOLD = 500_000;
 const DEFAULT_SHIPPING_FEE = 30_000;
 
 /**
- * Trang Giỏ Hàng riêng (route /cart) — cùng logic chọn sản phẩm/voucher/xu với CartDrawerComponent,
- * chỉ khác là hiển thị dạng trang đầy đủ thay vì drawer trượt ra. Icon giỏ hàng ở Header điều hướng
- * thẳng tới đây thay vì mở drawer.
+ * Trang Giỏ Hàng (route /cart): chọn sản phẩm mang sang thanh toán + chọn voucher trong danh sách
+ * (voucher cá nhân, mã của shop, mã khách từng nhập) — khách tự chọn hoặc bỏ chọn, không tự áp dụng.
  */
 @Component({
   selector: 'app-cart',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, AppIconComponent, CheckoutStepsComponent, VndPipe],
+  imports: [CommonModule, FormsModule, RouterLink, AppIconComponent, CheckoutStepsComponent, VoucherCardComponent, VndPipe],
   templateUrl: './cart.component.html',
   styleUrl: './cart.component.css'
 })
@@ -29,15 +31,14 @@ export class CartComponent implements OnInit {
   couponCodeInput = '';
   couponMessage = '';
   couponSuccess = false;
-  showCouponInput = false;
+  showVoucherList = false;
 
   readonly selectedIds = signal<Set<string>>(new Set());
-  readonly useCoins = signal(false);
   private knownIds = new Set<string>();
 
   constructor(
     public cartService: CartService,
-    public coinService: CoinService,
+    public voucherService: VoucherService,
     public authService: AuthService,
     public flow: CheckoutFlowService,
     private router: Router
@@ -65,6 +66,9 @@ export class CartComponent implements OnInit {
     // Đang đứng trên trang /cart thì luôn coi là Bước 1 — không được để trạng thái Stepper
     // trỏ tới bước khác trong khi người dùng đang thực sự nhìn thấy trang giỏ hàng.
     this.flow.enterCartPage();
+    // Tải lại để voucher đã dùng (mỗi mã chỉ dùng 1 lần) không còn hiện trong danh sách chọn.
+    this.cartService.loadShopCoupons();
+    this.voucherService.refresh();
   }
 
   readonly selectedItems = computed(() =>
@@ -86,20 +90,45 @@ export class CartComponent implements OnInit {
     this.selectedItems().reduce((sum, i) => sum + i.totalPrice, 0)
   );
 
-  readonly selectedCouponDiscount = computed(() => {
-    const coupon = this.cartService.appliedCoupon();
+  readonly selectedCouponDiscount = computed(() => voucherDiscount(this.cartService.appliedCoupon(), this.selectedSubtotal()));
+
+  /**
+   * Danh sách voucher để chọn: voucher cá nhân còn hạn + mã khách từng nhập + mã công khai của shop
+   * (bỏ trùng mã). Mã công khai được quy về dạng UserVoucher để dùng chung thẻ VoucherCard.
+   */
+  readonly voucherOptions = computed<UserVoucher[]>(() => {
+    const own = this.voucherService.usable();
+    const seen = new Set(own.map(v => v.code));
+    const extra: UserVoucher[] = [];
+    for (const c of [...this.cartService.savedCoupons(), ...this.cartService.shopCoupons()]) {
+      if (seen.has(c.code)) continue;
+      seen.add(c.code);
+      extra.push(couponToVoucher(c));
+    }
+    return [...own, ...extra];
+  });
+
+  voucherDisabledReason(v: UserVoucher): string | null {
     const sub = this.selectedSubtotal();
-    if (!coupon || sub < coupon.minSpend) return 0;
-    return Math.min((sub * coupon.discountPercent) / 100, coupon.maxDiscount);
-  });
+    return sub < v.minSpend ? `Mua thêm ${(v.minSpend - sub).toLocaleString('vi-VN')}đ để dùng mã này` : null;
+  }
 
-  readonly coinBalance = computed(() => this.coinService.balance());
+  isVoucherSelected(v: UserVoucher): boolean {
+    return this.cartService.appliedCoupon()?.code === v.code;
+  }
 
-  readonly coinDiscount = computed(() => {
-    if (!this.authService.currentUser() || !this.useCoins()) return 0;
-    const remaining = Math.max(0, this.selectedSubtotal() - this.selectedCouponDiscount());
-    return Math.min(this.coinBalance(), remaining);
-  });
+  /** Bấm vào voucher đang chọn thì bỏ chọn (khách không muốn dùng mã). */
+  toggleVoucher(v: UserVoucher): void {
+    if (!isVoucherUsable(v)) return;
+    const res = this.isVoucherSelected(v)
+      ? this.cartService.selectCoupon(null)
+      : this.cartService.selectCoupon(
+          { code: v.code, title: v.title, description: v.description, discountPercent: v.discountPercent, discountAmount: v.discountAmount, maxDiscount: v.maxDiscount, minSpend: v.minSpend },
+          this.selectedSubtotal()
+        );
+    this.couponSuccess = res.success;
+    this.couponMessage = res.message;
+  }
 
   readonly selectedShippingFee = computed(() => {
     if (this.selectedSubtotal() === 0) return 0;
@@ -107,7 +136,7 @@ export class CartComponent implements OnInit {
   });
 
   readonly selectedFinalAmount = computed(() =>
-    Math.max(0, this.selectedSubtotal() - this.selectedCouponDiscount() - this.coinDiscount())
+    Math.max(0, this.selectedSubtotal() - this.selectedCouponDiscount())
   );
 
   readonly selectedTotal = computed(() => this.selectedFinalAmount() + this.selectedShippingFee());
@@ -127,11 +156,6 @@ export class CartComponent implements OnInit {
     this.selectedIds.set(checked ? new Set(this.cartService.items().map(i => i.id)) : new Set());
   }
 
-  toggleUseCoins(checked: boolean): void {
-    if (!this.authService.currentUser()) return;
-    this.useCoins.set(checked);
-  }
-
   removeItem(itemId: string): void {
     this.cartService.removeFromCart(itemId);
     const next = new Set(this.selectedIds());
@@ -139,15 +163,14 @@ export class CartComponent implements OnInit {
     this.selectedIds.set(next);
   }
 
-  applyCoupon(): void {
+  /** Nhập tay mã: hợp lệ thì lưu vào danh sách (lần sau khỏi nhập lại), khách tự bấm chọn để áp dụng. */
+  addCouponCode(): void {
     if (!this.couponCodeInput.trim()) return;
-    this.cartService.applyCoupon(this.couponCodeInput).subscribe(res => {
+    const own = this.voucherService.usable().map(v => ({ ...v } as Coupon));
+    this.cartService.addCouponCode(this.couponCodeInput, own).subscribe(res => {
       this.couponSuccess = res.success;
       this.couponMessage = res.message;
-      if (res.success) {
-        this.couponCodeInput = '';
-        this.showCouponInput = false;
-      }
+      if (res.success) this.couponCodeInput = '';
     });
   }
 

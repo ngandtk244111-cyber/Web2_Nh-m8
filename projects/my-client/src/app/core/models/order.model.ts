@@ -54,6 +54,8 @@ export interface Order {
   total: number;
   notes?: string;
   cancelReason?: string;
+  /** Tài khoản đặt đơn (null nếu khách vãng lai). */
+  userId?: string | null;
   returnReason?: string;
   /** Vận đơn do shop tạo với hãng vận chuyển (có khi đơn đã giao cho vận chuyển). */
   shipment?: {

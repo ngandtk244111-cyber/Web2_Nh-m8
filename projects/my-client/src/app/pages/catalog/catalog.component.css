@@ -592,7 +592,7 @@
   color: #1F1712;
 }
 
-/* Ô sản phẩm: thẻ + nút "Xem nhanh 3D" bên ngoài thẻ (chỉ sản phẩm có mô hình 3D). */
+/* Ô sản phẩm: thẻ kéo giãn đều chiều cao trong hàng. */
 .cg_item {
   display: flex;
   flex-direction: column;
@@ -605,24 +605,3 @@
   display: block;
 }
 
-.cg_qv3d {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  width: 100%;
-  padding: 9px 12px;
-  border: 1px solid #1F1712;
-  border-radius: 999px;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: #1F1712;
-  background: #fff;
-  text-decoration: none;
-  transition: background 0.15s, color 0.15s;
-}
-
-.cg_qv3d:hover {
-  background: #1F1712;
-  color: #fff;
-}

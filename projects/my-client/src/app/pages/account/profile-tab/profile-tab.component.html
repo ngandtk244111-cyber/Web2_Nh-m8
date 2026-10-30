@@ -45,8 +45,11 @@
     </div>
     <div>
       <label class="text-xs font-bold text-neutral-700 block mb-1">Email</label>
-      <input type="email" [(ngModel)]="email" placeholder="Nhập email của bạn"
-        class="w-full p-2.5 rounded-xl border border-neutral-300 bg-white text-neutral-900 text-sm focus:outline-none focus:border-amber-400">
+      <input type="email" [(ngModel)]="email" placeholder="Nhập email của bạn" (input)="emailError = ''" (blur)="validateEmail()"
+        class="w-full p-2.5 rounded-xl border bg-white text-neutral-900 text-sm focus:outline-none focus:border-amber-400"
+        [class.border-rose-500]="emailError"
+        [class.border-neutral-300]="!emailError">
+      <span *ngIf="emailError" class="text-[11px] text-rose-500 mt-1 block font-medium">{{ emailError }}</span>
     </div>
     <div>
       <label class="text-xs font-bold text-neutral-700 block mb-1">Ngày sinh</label>

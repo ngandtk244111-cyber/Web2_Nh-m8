@@ -157,9 +157,8 @@ export class CheckoutComponent implements OnInit {
       this.errors['phone'] = 'Số điện thoại không hợp lệ';
     }
 
-    if (!this.shipping.email.trim()) {
-      this.errors['email'] = 'Vui lòng nhập email để nhận tiến độ đơn';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.shipping.email.trim())) {
+    // Email không bắt buộc — chỉ kiểm tra định dạng khi khách có nhập.
+    if (this.shipping.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.shipping.email.trim())) {
       this.errors['email'] = 'Địa chỉ email không đúng định dạng';
     }
 
@@ -230,6 +229,8 @@ export class CheckoutComponent implements OnInit {
         // Chỉ xoá đúng các sản phẩm vừa đặt hàng — sản phẩm chưa chọn vẫn còn trong giỏ.
         this.cartService.removeItems(items.map(i => i.id));
         this.cartService.clearCheckoutSelection();
+        // Mỗi mã chỉ dùng 1 lần: dùng xong thì xoá khỏi danh sách mã của khách.
+        this.cartService.consumeAppliedCoupon();
 
         if (this.paymentMethod === 'BANK_TRANSFER') {
           this.showBankQrModal = true;
@@ -244,7 +245,8 @@ export class CheckoutComponent implements OnInit {
       error: (err) => {
         this.placingOrder = false;
         this.mascotService.endLoading('sad');
-        this.placeOrderError = 'Không tạo được đơn hàng, vui lòng thử lại. (' + (err?.message || 'lỗi kết nối') + ')';
+        // Lỗi mã giảm giá (đã dùng, hết hạn, chưa đủ giá trị...) thì hiện đúng thông điệp của server.
+        this.placeOrderError = err?.error?.error || 'Không tạo được đơn hàng, vui lòng thử lại. (' + (err?.message || 'lỗi kết nối') + ')';
       },
     });
   }

@@ -1,12 +1,11 @@
 const express = require('express');
 const { sendError } = require('../utils/http-error');
 const NewsletterSubscriber = require('../models/NewsletterSubscriber');
-const { awardCoins } = require('../utils/coins');
+const { awardVoucher } = require('../utils/vouchers');
 const { validId } = require('../middleware/auth');
 
 const router = express.Router();
 
-const NEWSLETTER_REWARD = 10;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 router.post('/subscribe', async (req, res) => {
@@ -26,11 +25,11 @@ router.post('/subscribe', async (req, res) => {
     }
 
     if (userId) {
-      await awardCoins({
+      await awardVoucher({
         userId,
-        reason: 'NEWSLETTER_SUBSCRIBE',
+        tierKey: 'P5',
+        source: 'NEWSLETTER_SUBSCRIBE',
         refId: 'newsletter-subscribe',
-        amount: NEWSLETTER_REWARD,
         note: 'Đăng ký nhận bản tin Luméa',
       });
     }

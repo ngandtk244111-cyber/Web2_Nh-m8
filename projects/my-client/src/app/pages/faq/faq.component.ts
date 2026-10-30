@@ -37,8 +37,8 @@ const FAQ_LEFT_COLUMN: FaqCategory[] = [
       },
       {
         id: 'order-4',
-        question: 'Xu Luméa là gì và dùng để làm gì?',
-        answer: 'Xu Luméa là điểm thưởng tích luỹ khi mua sắm hoặc tham gia hoạt động trên Luméa (ví dụ hoàn thành Trắc Nghiệm Phong Cách). Xu có thể dùng để giảm trừ trực tiếp vào giá trị đơn hàng khi thanh toán tại Giỏ hàng.',
+        question: 'Voucher Luméa là gì và dùng thế nào?',
+        answer: 'Voucher Luméa là mã giảm giá cá nhân bạn nhận được khi chơi game (lật thẻ, vòng quay, hộp quà), hoàn thành Trắc Nghiệm Phong Cách, đánh giá sản phẩm... Voucher có hạn 30 ngày và tự hiện trong Giỏ hàng để bạn chọn áp dụng khi thanh toán.',
       },
     ],
   },

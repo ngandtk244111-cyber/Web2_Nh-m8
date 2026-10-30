@@ -1,8 +1,8 @@
 import { Component, EventEmitter, Input, OnDestroy, Output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { CoinService } from '../../../../core/services/coin.service';
+import { VoucherService } from '../../../../core/services/voucher.service';
 import { ToastService } from '../../../../core/services/toast.service';
-import { XuCoinComponent } from '../../xu-coin/xu-coin.component';
+import { AppIconComponent } from '../../../../components/icon/icon.component';
 
 interface MemoryCard {
   id: number;
@@ -18,18 +18,18 @@ const MISMATCH_DELAY_MS = 750;
 
 /**
  * Lật Thẻ Decor: ghép 8 cặp thẻ. Ghép xong mới gửi số lượt + thời gian lên server,
- * server tự quy ra số xu (càng ít lượt càng nhiều xu). Hết lượt nhận xu vẫn chơi thử được.
+ * server tự quy ra voucher (càng ít lượt voucher càng lớn). Hết lượt nhận voucher vẫn chơi thử được.
  */
 @Component({
   selector: 'app-memory-game',
   standalone: true,
-  imports: [CommonModule, XuCoinComponent],
+  imports: [CommonModule, AppIconComponent],
   templateUrl: './memory-game.component.html',
   styleUrl: './memory-game.component.css'
 })
 export class MemoryGameComponent implements OnDestroy {
   @Input() playsLeft = 0;
-  @Output() rewarded = new EventEmitter<number>();
+  @Output() rewarded = new EventEmitter<string>();
 
   readonly cards = signal<MemoryCard[]>([]);
   readonly moves = signal(0);
@@ -37,13 +37,13 @@ export class MemoryGameComponent implements OnDestroy {
   readonly started = signal(false);
   readonly finished = signal(false);
   readonly submitting = signal(false);
-  readonly result = signal<number | null>(null);
+  readonly result = signal<string | null>(null);
 
   private firstPick: MemoryCard | null = null;
   private locked = false;
   private timer: ReturnType<typeof setInterval> | null = null;
 
-  constructor(private coinService: CoinService, private toastService: ToastService) {
+  constructor(private voucherService: VoucherService, private toastService: ToastService) {
     this.reset();
   }
 
@@ -117,10 +117,10 @@ export class MemoryGameComponent implements OnDestroy {
 
     this.submitting.set(true);
     try {
-      const res = await this.coinService.playGame('MEMORY', { moves: this.moves(), seconds: this.seconds() });
-      this.result.set(res.amount);
+      const res = await this.voucherService.playGame('MEMORY', { moves: this.moves(), seconds: this.seconds() });
+      this.result.set(res.voucher.title);
       this.playsLeft = res.playsLeft;
-      this.rewarded.emit(res.amount);
+      this.rewarded.emit(res.voucher.title);
     } catch (err: any) {
       this.toastService.error(err.message);
     } finally {

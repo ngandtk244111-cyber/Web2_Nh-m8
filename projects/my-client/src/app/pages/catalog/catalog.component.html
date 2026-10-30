@@ -132,18 +132,8 @@
         [class.grid-cols-2]="viewMode === 'grid'"
         [class.lg:grid-cols-3]="viewMode === 'grid'">
         <div *ngFor="let p of visibleProducts" class="cg_item">
+          <!-- Không thêm nút "Xem nhanh 3D" riêng: thẻ sản phẩm đã có nút "Xem 3D", thêm nút làm các thẻ lệch chiều cao -->
           <app-product-card [product]="p" [layout]="viewMode"></app-product-card>
-          <!-- Xem nhanh 3D: mở phòng xem nhanh 3D của đúng sản phẩm ở tab mới -->
-          <a
-            *ngIf="has3D(p)"
-            [routerLink]="['/xem-nhanh-3d', p.id]"
-            target="_blank"
-            rel="noopener"
-            class="cg_qv3d"
-            [attr.aria-label]="'Xem nhanh 3D ' + p.name + ' (mở tab mới)'">
-            <app-icon name="cube" [size]="14"></app-icon>
-            <span>Xem nhanh 3D</span>
-          </a>
         </div>
       </div>
 

@@ -1,5 +1,5 @@
 <div class="gb">
-  <p class="gb__lead">Chọn 1 hộp quà — mỗi ngày được mở <strong>1 lần</strong>, phần thưởng từ 10 đến 150 xu.</p>
+  <p class="gb__lead">Chọn 1 hộp quà — mỗi ngày được mở <strong>1 lần</strong>, bên trong là voucher giảm từ 10K đến 10%.</p>
 
   <div class="gb__row">
     <button
@@ -15,8 +15,8 @@
       (click)="pick(i)">
 
       <span class="gb__prize" *ngIf="isOpen(i)">
-        <app-xu-coin [size]="30"></app-xu-coin>
-        <strong>+{{ amounts()[i] }}</strong>
+        <app-icon name="tag" [size]="22"></app-icon>
+        <strong>{{ amounts()[i] }}</strong>
       </span>
 
       <span class="gb__lid"><span class="gb__bow"></span></span>
@@ -26,7 +26,7 @@
 
   <div class="gb__footer">
     <p class="gb__result" *ngIf="picked() !== null && isOpen(picked()!)">
-      Bạn nhận được <strong>+{{ amounts()[picked()!] }} xu</strong>! Quay lại ngày mai để mở hộp mới nhé.
+      Bạn nhận được voucher giảm <strong>{{ amounts()[picked()!] }}</strong>! Voucher đã lưu vào tài khoản, quay lại ngày mai để mở hộp mới nhé.
     </p>
     <p class="gb__muted" *ngIf="picked() === null && playsLeft <= 0">Hôm nay bạn đã mở hộp quà rồi — quay lại vào ngày mai nhé!</p>
   </div>

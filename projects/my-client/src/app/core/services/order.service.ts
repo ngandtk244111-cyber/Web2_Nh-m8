@@ -109,6 +109,14 @@ export class OrderService {
     );
   }
 
+  /** Khách tự huỷ đơn của mình (chỉ khi đơn chưa sản xuất/giao). Lỗi trả về thông điệp tiếng Việt từ server. */
+  cancelOrder(orderNumber: string, userId: string, reason: string, detail = ''): Observable<Order> {
+    return this.http.patch<OrderApiResponse>(`${this.baseUrl}/${encodeURIComponent(orderNumber)}/cancel`, { userId, reason, detail }).pipe(
+      map(res => this.normalize(res.order!)),
+      tap(order => this.replaceInSignal(order))
+    );
+  }
+
   // Admin: cập nhật trạng thái tổng quát + tiến độ sản xuất chi tiết.
   updateOrderStatus(orderNumber: string, status: OrderStatus, progress?: ProductionProgress): Observable<Order> {
     return this.http.patch<OrderApiResponse>(`${this.baseUrl}/${encodeURIComponent(orderNumber)}/production`, {

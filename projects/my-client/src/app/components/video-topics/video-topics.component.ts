@@ -79,7 +79,7 @@ const TOPICS: VideoTopic[] = [
   },
   {
     title: 'Trắc Nghiệm Phong Cách',
-    description: 'Trả lời vài câu hỏi nhanh để biết phong cách nội thất hợp với bạn — nhận thêm Xu.',
+    description: 'Trả lời vài câu hỏi nhanh để biết phong cách nội thất hợp với bạn — nhận thêm voucher.',
     link: '/style-quiz',
     ctaLabel: 'Làm trắc nghiệm',
     poster: 'https://images.unsplash.com/photo-1618220179428-22790b461013?auto=format&fit=crop&w=800&q=70',
@@ -102,10 +102,10 @@ const TOPICS: VideoTopic[] = [
     youtubeId: 'AQb595Y5j3Q',
   },
   {
-    title: 'Tích Xu Luméa',
-    description: 'Mua sắm và tham gia hoạt động để tích Xu, dùng Xu giảm trực tiếp khi thanh toán.',
-    link: '/xu',
-    ctaLabel: 'Xem ví Xu',
+    title: 'Chơi Game Nhận Voucher',
+    description: 'Lật thẻ, vòng quay, hộp quà bí ẩn — nhận voucher giảm giá dùng ngay khi thanh toán.',
+    link: '/voucher',
+    ctaLabel: 'Nhận voucher',
     poster: 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&w=800&q=70',
     youtubeId: 'S5B4qfxUQKE',
   },

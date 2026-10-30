@@ -1,6 +1,6 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap } from 'rxjs';
+import { Observable, catchError, map, of, tap } from 'rxjs';
 import { Product, ProductCategory, ProductionType, SpaceKey } from '../models/product.model';
 import { environment } from '../../../environments/environment';
 import { MascotService } from './mascot.service';
@@ -324,6 +324,14 @@ export class ProductService {
   }
 
   /** Gửi đánh giá thật lên backend (lưu vào Product.reviews), không còn chỉ mutate cục bộ. */
+  /** Chỉ khách đã mua sản phẩm (có đơn chưa huỷ chứa sản phẩm) mới được đánh giá. */
+  canReview(productId: string, userId: string): Observable<boolean> {
+    return this.http.get<{ success: boolean; canReview: boolean }>(`${BASE}/${productId}/can-review`, { params: { userId } }).pipe(
+      map(res => !!res.canReview),
+      catchError(() => of(false))
+    );
+  }
+
   submitReview(productId: string, payload: {
     userId?: string;
     author: string;

@@ -2,7 +2,6 @@ import { Component, signal } from '@angular/core';
 import { ActivatedRouteSnapshot, Router, RouterOutlet, NavigationStart, NavigationEnd, NavigationCancel, NavigationError, Scroll } from '@angular/router';
 import { HeaderComponent } from './components/header/header.component';
 import { FooterComponent } from './components/footer/footer.component';
-import { CartDrawerComponent } from './components/cart-drawer/cart-drawer.component';
 import { AiModalComponent } from './components/ai-modal/ai-modal.component';
 import { LoginModalComponent } from './components/login-modal/login-modal.component';
 import { SupportChatWidgetComponent } from './components/support-chat-widget/support-chat-widget.component';
@@ -21,7 +20,6 @@ import { ScrollToTopComponent } from './components/scroll-to-top/scroll-to-top.c
     RouterOutlet,
     HeaderComponent,
     FooterComponent,
-    CartDrawerComponent,
     AiModalComponent,
     LoginModalComponent,
     SupportChatWidgetComponent,

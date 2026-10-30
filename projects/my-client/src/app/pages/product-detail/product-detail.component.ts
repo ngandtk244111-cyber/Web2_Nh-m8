@@ -101,6 +101,37 @@ const PRODUCT_FAQ: FaqCategory[] = [
   },
 ];
 
+/** Đánh giá mẫu hiển thị khi sản phẩm chưa có đánh giá thật nào (dữ liệu demo). */
+const SAMPLE_REVIEWS: ProductReview[] = [
+  {
+    id: 'sample-rev-1',
+    author: 'Ngọc Anh',
+    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80',
+    rating: 5,
+    date: '12/10/2026',
+    comment: 'Sản phẩm đẹp y hình, đóng gói rất kỹ, giao nhanh hơn dự kiến. Đặt vào phòng khách nhìn sang hẳn!',
+    verifiedPurchase: true,
+  },
+  {
+    id: 'sample-rev-2',
+    author: 'Minh Quân',
+    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80',
+    rating: 4,
+    date: '05/10/2026',
+    comment: 'Chất lượng hoàn thiện tốt, màu ngoài đời ấm hơn ảnh một chút nhưng vẫn rất ưng. Shop tư vấn nhiệt tình.',
+    verifiedPurchase: true,
+  },
+  {
+    id: 'sample-rev-3',
+    author: 'Thu Trang',
+    avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=150&q=80',
+    rating: 5,
+    date: '28/09/2026',
+    comment: 'Mua làm quà tân gia, bạn mình thích lắm. Sẽ quay lại mua thêm đồ decor ở Luméa.',
+    verifiedPurchase: true,
+  },
+];
+
 @Component({
   selector: 'app-product-detail',
   standalone: true,
@@ -136,6 +167,8 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
   selectedFinishId?: string;
 
   showReviewForm = false;
+  /** Khách đang đăng nhập đã mua sản phẩm này chưa — chưa mua thì chỉ xem đánh giá. */
+  canReview = false;
   newReviewRating = 5;
   newReviewAuthor = '';
   newReviewComment = '';
@@ -249,6 +282,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     this.selectedSizeId = product.customization?.sizes?.[0]?.id;
     this.selectedFinishId = product.customization?.finishes?.[0]?.id;
     this.recentlyViewedService.recordView(product.id);
+    this.checkCanReview(product);
     this.buildPickRows(product);
     this.loadTaggedCommunityPosts();
   }
@@ -457,9 +491,25 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     return opts.length ? 'Đổi ' + opts.join(', ') : 'Theo yêu cầu';
   }
 
+  /** Đánh giá hiển thị: đánh giá thật, hoặc vài đánh giá mẫu khi sản phẩm chưa có đánh giá nào. */
+  get displayReviews(): ProductReview[] {
+    if (!this.product) return [];
+    return this.product.reviews.length ? this.product.reviews : SAMPLE_REVIEWS;
+  }
+
+  private checkCanReview(product: Product): void {
+    this.canReview = false;
+    this.showReviewForm = false;
+    const userId = this.authService.currentUser()?._id;
+    if (!userId) return;
+    this.productService.canReview(product.id, userId).subscribe(ok => {
+      if (this.product?.id === product.id) this.canReview = ok;
+    });
+  }
+
   get filteredReviews(): ProductReview[] {
     if (!this.product) return [];
-    const reviews = this.product.reviews;
+    const reviews = this.displayReviews;
     switch (this.reviewFilter) {
       case 'with-images': return reviews.filter(r => r.images && r.images.length > 0);
       case '5': return reviews.filter(r => r.rating === 5);
@@ -485,14 +535,15 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
   /** Dải ảnh khách hàng ở đầu khối đánh giá. */
   get reviewImages(): string[] {
     if (!this.product) return [];
-    return this.product.reviews.flatMap(r => r.images ?? []).slice(0, 8);
+    return this.displayReviews.flatMap(r => r.images ?? []).slice(0, 8);
   }
 
   get ratingBreakdown(): { star: number; count: number; percent: number }[] {
     if (!this.product) return [];
-    const total = this.product.reviews.length || 1;
+    const reviews = this.displayReviews;
+    const total = reviews.length || 1;
     return [5, 4, 3, 2, 1].map(star => {
-      const count = this.product!.reviews.filter(r => r.rating === star).length;
+      const count = reviews.filter(r => r.rating === star).length;
       return { star, count, percent: Math.round((count / total) * 100) };
     });
   }
@@ -607,9 +658,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
         this.newReviewAuthor = '';
         this.newReviewComment = '';
         this.reviewPage = 1;
-        this.toastService.success(
-          userId ? 'Cảm ơn bạn đã đánh giá! Bạn vừa nhận thêm Xu Luméa.' : 'Cảm ơn bạn đã đánh giá sản phẩm!'
-        );
+        this.toastService.success('Cảm ơn bạn đã đánh giá! Luméa tặng bạn 1 voucher giảm giá.');
         this.mascotService.endLoading('happy');
       },
       // Server trả lý do cụ thể khi đánh giá bị bộ lọc chặn (từ ngữ thô tục, spam...).

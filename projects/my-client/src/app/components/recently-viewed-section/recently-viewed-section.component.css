@@ -68,4 +68,4 @@
 
 .rv_head { margin-bottom: 28px; }
 .rv_eyebrow { margin: 0 0 8px; font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #7A6558; }
-.rv_title { margin: 0; font-family: 'Cormorant Garamond', serif; font-size: clamp(28px, 3.6vw, 40px); font-weight: 700; line-height: 1.1; color: #3B2418; }
+.rv_title { margin: 0; font-family: var(--font-family-heading, 'Inter', sans-serif); font-size: clamp(28px, 3.6vw, 40px); font-weight: 700; line-height: 1.1; color: #3B2418; }

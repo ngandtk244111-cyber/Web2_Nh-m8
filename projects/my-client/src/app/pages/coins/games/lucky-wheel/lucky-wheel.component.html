@@ -14,7 +14,7 @@
         [style.transform]="'rotate(' + (i * segmentAngle + segmentAngle / 2) + 'deg)'">
         <span class="lw__label-inner" [style.color]="labelColor(i)">
           <strong>{{ amount }}</strong>
-          <small>xu</small>
+          <small>voucher</small>
         </span>
       </span>
     </div>
@@ -32,8 +32,8 @@
 
   <div class="lw__footer">
     <div class="lw__result" *ngIf="result() !== null; else hint">
-      <app-xu-coin [size]="26"></app-xu-coin>
-      <span>Chúc mừng! Bạn nhận được <strong>+{{ result() }} xu</strong></span>
+      <app-icon name="tag" [size]="22"></app-icon>
+      <span>Chúc mừng! Bạn nhận được voucher <strong>{{ result() }}</strong> — đã lưu vào Voucher của tôi</span>
     </div>
     <ng-template #hint>
       <p class="lw__hint">Bấm <strong>QUAY</strong> ở giữa vòng quay để thử vận may.</p>

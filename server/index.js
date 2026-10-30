@@ -22,6 +22,7 @@ app.use('/api/warranty', require('./routes/warrantyRoutes'));
 app.use('/api/payments', require('./routes/paymentRoutes'));
 app.use('/api/chat', require('./routes/chatRoutes'));
 app.use('/api/coins', require('./routes/coinRoutes'));
+app.use('/api/vouchers', require('./routes/voucherRoutes'));
 app.use('/api/products', require('./routes/productRoutes'));
 app.use('/api/rooms', require('./routes/roomRoutes'));
 app.use('/api/custom-requests', require('./routes/customRequestRoutes'));

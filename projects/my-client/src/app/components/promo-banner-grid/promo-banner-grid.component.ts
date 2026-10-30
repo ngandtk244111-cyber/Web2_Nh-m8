@@ -56,7 +56,7 @@ export class PromoBannerGridComponent {
       title: 'Giảm 10% Đơn Đầu Tiên',
       description: 'Áp dụng cho đơn hàng từ 200.000đ',
       ctaLabel: 'Nhận ưu đãi',
-      link: '/catalog',
+      link: '/voucher',
       image: 'assets/mascot/lumea-mascot.png',
       code: 'LUMÉANEW',
     },
@@ -68,10 +68,8 @@ export class PromoBannerGridComponent {
     description: 'Đổi màu sắc, chất liệu, kích thước và khắc tên riêng ngay trên trình xem 3D',
     ctaLabel: 'Bắt đầu tùy biến',
     link: '/customizer-3d',
-    // TODO: đây là video placeholder (CC0, nguồn MDN) — thay bằng video quay/dựng thật của Luméa khi có.
     video: {
-      mp4: 'assets/promo-banner/customizer-placeholder.mp4',
-      webm: 'assets/promo-banner/customizer-placeholder.webm',
+      mp4: 'assets/promo-banner/sofa-intro.mp4',
     },
     swatches: ['#F3E3D9', '#CD818E', '#A3152D', '#2B2B2B'],
     engraving: 'LUMÉA',

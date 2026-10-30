@@ -26,7 +26,8 @@
 .xu-hero {
   position: relative;
   overflow: hidden;
-  padding: 22px 0 130px;
+  /* Không còn thẻ điểm danh chồng lên hero nên chỉ cần đệm dưới vừa đủ */
+  padding: 22px 0 44px;
   color: #fff;
   background:
     radial-gradient(circle at 85% 20%, rgba(246, 194, 68, 0.28), transparent 40%),
@@ -101,7 +102,7 @@
 
 .xu-hero__title {
   margin: 2px 0 14px;
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-family-heading, 'Inter', sans-serif);
   font-size: clamp(34px, 4vw, 48px);
   font-weight: 600;
   line-height: 1.05;
@@ -147,7 +148,6 @@
 .xu-main {
   position: relative;
   z-index: 2;
-  margin-top: -100px;
 }
 
 .xu-card {
@@ -214,7 +214,7 @@
   margin: 0 0 22px;
   padding: 10px 48px;
   background: #FCEFE4;
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-family-heading, 'Inter', sans-serif);
   font-size: 26px;
   font-style: italic;
   font-weight: 600;
@@ -353,7 +353,7 @@
   align-items: center;
   gap: 10px;
   margin: 8px 0 18px;
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-family-heading, 'Inter', sans-serif);
   font-size: 34px;
   font-weight: 700;
 }
@@ -449,7 +449,7 @@
 }
 
 .xu-banner__title {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-family-heading, 'Inter', sans-serif);
   font-size: clamp(30px, 3.6vw, 46px);
   font-weight: 700;
   line-height: 1.05;
@@ -689,7 +689,7 @@
 
 .xu-game__title {
   margin: 0;
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-family-heading, 'Inter', sans-serif);
   font-size: 24px;
   font-weight: 700;
 }
@@ -925,7 +925,7 @@
 
 .xu-modal__head h3 {
   margin: 0;
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-family-heading, 'Inter', sans-serif);
   font-size: 24px;
   font-weight: 700;
 }
@@ -970,7 +970,7 @@
 }
 
 .xu-pop__card strong {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-family-heading, 'Inter', sans-serif);
   font-size: 40px;
   font-weight: 700;
   color: var(--xu-wine);
@@ -1246,4 +1246,19 @@
 
 .xu-history__amount--neg {
   color: #93877E;
+}
+
+/* ===== Voucher của bạn ===== */
+.vc-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.vc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px;
 }

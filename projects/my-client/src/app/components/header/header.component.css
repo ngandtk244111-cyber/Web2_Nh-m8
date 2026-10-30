@@ -274,6 +274,7 @@
 }
 
 .hd_action--icon {
+  position: relative;
   padding: 9px;
   border-radius: 999px;
 }

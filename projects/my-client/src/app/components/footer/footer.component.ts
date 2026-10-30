@@ -42,22 +42,22 @@ export class FooterComponent {
     { label: 'Đèn & ánh sáng', link: '/catalog', queryParams: { dept: 'anh-sang' } },
     { label: 'Decor', link: '/catalog', queryParams: { dept: 'decor' } },
     { label: 'Đồ dùng & phụ kiện', link: '/catalog', queryParams: { dept: 'do-dung' } },
-    { label: 'Sản phẩm 3D & Custom', link: '/catalog', queryParams: { custom: '1' } },
+    { label: 'Sản phẩm có thể tuỳ biến', link: '/catalog', queryParams: { custom: '1' } },
     { label: 'Flash Sale', link: '/flash-sale' },
   ];
 
+  /** Tên mỗi mục trùng với tiêu đề của trang nó mở ra. */
   readonly exploreLinks: FooterLink[] = [
-    { label: 'Về Luméa', link: '/ve-lumea' },
-    { label: '3D Studio', link: '/customizer-3d' },
-    { label: 'Tạo sản phẩm riêng', link: '/custom-request/new' },
-    { label: 'Decor Community', link: '/community' },
-    { label: 'Cảm hứng decor', link: '/shop-the-room' },
+    { label: 'Câu chuyện Luméa', link: '/ve-lumea' },
+    { label: 'Tự tay thiết kế & xem trước 3D', link: '/customizer-3d' },
+    { label: 'Gửi yêu cầu thiết kế riêng', link: '/custom-request/new' },
+    { label: 'Cộng đồng decor', link: '/community' },
+    { label: 'Không gian 3D trực quan', link: '/shop-the-room' },
     { label: 'Tin tức & Mẹo sống', link: '/news' },
-    { label: 'Sản phẩm nổi bật', link: '/catalog' },
   ];
 
   readonly supportLinks: FooterLink[] = [
-    { label: 'Theo dõi đơn hàng', link: '/orders/track' },
+    { label: 'Đơn hàng của tôi', link: '/account', queryParams: { tab: 'orders' } },
     { label: 'Chính sách bảo hành', link: '/chinh-sach/bao-hanh' },
   ];
 
@@ -86,7 +86,7 @@ export class FooterComponent {
         if (res.success) {
           this.toastService.success(
             userId && !res.alreadySubscribed
-              ? 'Cảm ơn bạn đã đăng ký! Bạn vừa nhận thêm Xu Luméa.'
+              ? 'Cảm ơn bạn đã đăng ký! Voucher ưu đãi đã được thêm vào tài khoản của bạn.'
               : 'Cảm ơn bạn đã đăng ký! Luméa sẽ gửi cảm hứng nội thất & decor mới nhất tới email của bạn.'
           );
           this.newsletterEmail = '';

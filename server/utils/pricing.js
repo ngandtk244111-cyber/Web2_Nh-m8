@@ -76,14 +76,6 @@ function resolveUnitPrice(product, selectedCustomization) {
 }
 
 // Tra mã giảm giá THẬT trong collection Coupon — không tin discount client gửi lên.
-async function resolveDiscount(subtotal, couponCode) {
-  if (!couponCode) return 0;
-  const coupon = await Coupon.findOne({ code: String(couponCode).trim().toUpperCase(), active: true }).lean();
-  if (!coupon || subtotal < coupon.minSpend) return 0;
-  const calc = Math.round((subtotal * coupon.discountPercent) / 100);
-  return Math.min(calc, coupon.maxDiscount);
-}
-
 function resolveShippingFee(subtotal) {
   if (subtotal === 0) return 0;
   return subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
@@ -126,7 +118,6 @@ async function verifyAndPriceOrderItems(items, Product) {
 
 module.exports = {
   resolveUnitPrice,
-  resolveDiscount,
   resolveShippingFee,
   verifyAndPriceOrderItems,
   SHIPPING_FEE,

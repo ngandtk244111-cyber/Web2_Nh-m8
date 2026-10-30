@@ -1,0 +1,35 @@
+<div
+  class="vcard"
+  [class.vcard--selectable]="selectable"
+  [class.vcard--selected]="selected"
+  [class.vcard--off]="!usable || !!disabledReason"
+  [attr.role]="selectable ? 'button' : null"
+  [attr.tabindex]="selectable ? 0 : null"
+  [attr.aria-pressed]="selectable ? selected : null"
+  (click)="onClick()"
+  (keydown.enter)="onClick()">
+  <div class="vcard__stub">
+    <app-icon name="tag" [size]="20"></app-icon>
+    <span>Luméa</span>
+  </div>
+  <div class="vcard__body">
+    <strong class="vcard__title">{{ voucher.title }}</strong>
+    <span class="vcard__desc">{{ voucher.description }}</span>
+    <span class="vcard__meta">
+      <span class="vcard__code">{{ voucher.code }}</span>
+      <span>· HSD {{ voucher.expiresAt | date: 'dd/MM/yyyy' }}</span>
+    </span>
+    <span class="vcard__warn" *ngIf="disabledReason && usable">{{ disabledReason }}</span>
+  </div>
+  <div class="vcard__side">
+    <span class="vcard__status" *ngIf="statusLabel as s; else actions">{{ s }}</span>
+    <ng-template #actions>
+      <span *ngIf="selectable; else copyBtn" class="vcard__radio" [class.vcard__radio--on]="selected" aria-hidden="true">
+        <app-icon *ngIf="selected" name="check" [size]="12"></app-icon>
+      </span>
+      <ng-template #copyBtn>
+        <button type="button" class="vcard__copy" (click)="copy($event)">Sao chép mã</button>
+      </ng-template>
+    </ng-template>
+  </div>
+</div>

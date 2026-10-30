@@ -55,7 +55,7 @@
 .pc__cat { font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #7A6558; }
 
 .pc__name {
-  margin: 0; font-family: 'Cormorant Garamond', serif;
+  margin: 0; font-family: var(--font-family-heading, 'Inter', sans-serif);
   font-size: 20px; font-weight: 700; line-height: 1.2; color: #3B2418;
   transition: color 0.2s ease;
 }

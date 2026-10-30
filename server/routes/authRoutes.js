@@ -10,11 +10,10 @@ const User = require('../models/User');
 const OtpCode = require('../models/OtpCode');
 const { generateOtpCode, sendOtpSms, sendOtpEmail } = require('../utils/otp');
 const { requireUserId } = require('../middleware/auth');
-const { awardCoins } = require('../utils/coins');
+const { awardVoucher } = require('../utils/vouchers');
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-const PROFILE_COMPLETE_REWARD = 20;
 
 const router = express.Router();
 
@@ -411,8 +410,11 @@ router.put('/profile', requireUserId, async (req, res) => {
     const user = await User.findById(req.userId);
     if (!user) return res.status(404).json({ success: false, error: 'Không tìm thấy tài khoản' });
 
+    if (email !== undefined && String(email).trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(email).trim())) {
+      return res.status(400).json({ success: false, error: 'Email không đúng định dạng' });
+    }
     if (fullName !== undefined) user.fullName = fullName;
-    if (email !== undefined) user.email = email;
+    if (email !== undefined) user.email = String(email).trim();
     if (address !== undefined) user.address = address;
     if (gender !== undefined) user.gender = gender;
     if (dateOfBirth !== undefined) user.dateOfBirth = dateOfBirth;
@@ -420,14 +422,13 @@ router.put('/profile', requireUserId, async (req, res) => {
 
     // Thưởng 1 lần khi hồ sơ có đủ họ tên/email/giới tính/ngày sinh.
     if (user.fullName?.trim() && user.email?.trim() && user.gender && user.dateOfBirth?.trim()) {
-      const reward = await awardCoins({
+      await awardVoucher({
         userId: user._id,
-        reason: 'PROFILE_COMPLETE',
+        tierKey: 'V20K',
+        source: 'PROFILE_COMPLETE',
         refId: 'profile-complete',
-        amount: PROFILE_COMPLETE_REWARD,
         note: 'Hoàn thiện hồ sơ cá nhân',
       });
-      if (reward) user.coins = reward.coins;
     }
 
     res.json({ success: true, user });

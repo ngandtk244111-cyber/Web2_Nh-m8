@@ -58,11 +58,26 @@ export class ProfileTabComponent {
     input.value = '';
   }
 
+  emailError = '';
+
+  /** Email không bắt buộc, nhưng đã nhập thì phải đúng định dạng (vd ten@gmail.com). */
+  validateEmail(): boolean {
+    const value = this.email.trim();
+    this.emailError = value && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value)
+      ? 'Email không đúng định dạng, ví dụ: ten@gmail.com'
+      : '';
+    return !this.emailError;
+  }
+
   saveProfile(): void {
+    if (!this.validateEmail()) {
+      this.toastService.error(this.emailError);
+      return;
+    }
     this.isSaving = true;
     this.authService.updateProfile({
       fullName: this.fullName,
-      email: this.email,
+      email: this.email.trim(),
       gender: this.gender,
       dateOfBirth: this.dateOfBirth,
     }).subscribe({

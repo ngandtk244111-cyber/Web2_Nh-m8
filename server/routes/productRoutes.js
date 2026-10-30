@@ -2,13 +2,12 @@ const express = require('express');
 const { sendError } = require('../utils/http-error');
 const Product = require('../models/Product');
 const Order = require('../models/Order');
-const { awardCoins } = require('../utils/coins');
+const { awardVoucher } = require('../utils/vouchers');
 const { checkContent } = require('../utils/moderation');
 const { requireAdminId, validId } = require('../middleware/auth');
 
 const router = express.Router();
 
-const REVIEW_REWARD = 15;
 
 // Đánh giá đăng ngay, không chờ duyệt. Nhân viên chỉ ẩn khi vi phạm (status HIDDEN), phản hồi
 // công khai (reply) và ghim đánh giá hay lên đầu (pinned). Client không bao giờ thấy bài bị ẩn.
@@ -108,7 +107,24 @@ router.put('/:id', requireAdminId, async (req, res) => {
   }
 });
 
-// Gửi đánh giá thật, lưu vào Product.reviews (persist thật, không còn chỉ mutate ở client).
+/** Khách đã mua sản phẩm khi có đơn (chưa huỷ) chứa đúng sản phẩm này. */
+function hasPurchased(userId, productId) {
+  return userId
+    ? Order.exists({ userId, status: { $nin: ['CANCELLED', 'RETURNED'] }, 'items.product.id': productId }).then(Boolean)
+    : Promise.resolve(false);
+}
+
+// Trang chi tiết sản phẩm hỏi trước để chỉ hiện form đánh giá cho khách đã mua.
+router.get('/:id/can-review', async (req, res) => {
+  try {
+    const userId = validId(req.query.userId);
+    res.json({ success: true, canReview: await hasPurchased(userId, req.params.id) });
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
+// Gửi đánh giá thật, lưu vào Product.reviews. Chỉ khách đã mua sản phẩm mới được đánh giá.
 router.post('/:id/reviews', async (req, res) => {
   try {
     const { author, comment, images } = req.body;
@@ -134,10 +150,10 @@ router.post('/:id/reviews', async (req, res) => {
     const product = await Product.findOne({ id: req.params.id });
     if (!product) return res.status(404).json({ success: false, error: 'Không tìm thấy sản phẩm' });
 
-    // "Đã mua hàng" chỉ khi user có đơn (chưa huỷ) chứa đúng sản phẩm này, không phải cứ đăng nhập là có.
-    const verifiedPurchase = userId
-      ? !!(await Order.exists({ userId, status: { $ne: 'CANCELLED' }, 'items.product.id': product.id }))
-      : false;
+    const verifiedPurchase = await hasPurchased(userId, product.id);
+    if (!verifiedPurchase) {
+      return res.status(403).json({ success: false, error: 'Chỉ khách đã mua sản phẩm này mới có thể đánh giá.' });
+    }
 
     const review = {
       id: 'rev-' + Date.now(),
@@ -155,13 +171,13 @@ router.post('/:id/reviews', async (req, res) => {
     product.reviews.unshift(review);
     await product.save();
 
-    // Thưởng Xu cho đánh giá đầu tiên của user này trên đúng sản phẩm này.
+    // Tặng voucher cho đánh giá đầu tiên của user này trên đúng sản phẩm này.
     if (userId) {
-      await awardCoins({
+      await awardVoucher({
         userId,
-        reason: 'PRODUCT_REVIEW',
+        tierKey: 'V10K',
+        source: 'PRODUCT_REVIEW',
         refId: product.id,
-        amount: REVIEW_REWARD,
         note: `Đánh giá sản phẩm "${product.name}"`,
       });
     }

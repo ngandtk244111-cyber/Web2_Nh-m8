@@ -6,6 +6,8 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { OrderService } from '../../core/services/order.service';
 import { Order, OrderStatus, ProductionStep } from '../../core/models/order.model';
 import { ToastService } from '../../core/services/toast.service';
+import { AuthService } from '../../core/services/auth.service';
+import { CANCEL_REASONS, CANCEL_REASON_OTHER } from '../../core/data/cancel-reasons';
 import { AppIconComponent } from '../../components/icon/icon.component';
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
 
@@ -30,6 +32,16 @@ export class OrderTrackingComponent implements OnInit, OnDestroy {
   currentOrder: Order | undefined;
   isSearching = false;
   notFound = false;
+  /** Mở từ link (sau khi đặt hàng / từ tài khoản) thì chỉ hiện chi tiết đơn, ẩn ô tra cứu. */
+  openedFromLink = false;
+
+  // Huỷ đơn: hộp thoại chọn lý do (giống Shopee)
+  cancelOpen = false;
+  readonly cancelReasons = CANCEL_REASONS;
+  readonly cancelReasonOther = CANCEL_REASON_OTHER;
+  cancelReason = '';
+  cancelDetail = '';
+  cancelling = false;
 
   /** Thời điểm nhận bản cập nhật gần nhất (lúc tra cứu hoặc do server đẩy về). */
   lastUpdatedAt: Date | null = null;
@@ -50,7 +62,8 @@ export class OrderTrackingComponent implements OnInit, OnDestroy {
   constructor(
     public orderService: OrderService,
     private route: ActivatedRoute,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private authService: AuthService
   ) {}
 
   ngOnDestroy(): void {
@@ -62,6 +75,7 @@ export class OrderTrackingComponent implements OnInit, OnDestroy {
     this.route.queryParams.subscribe(params => {
       const code = params['orderNumber'];
       if (code) {
+        this.openedFromLink = true;
         this.searchCode = code;
         this.searchOrder();
       }
@@ -110,6 +124,44 @@ export class OrderTrackingComponent implements OnInit, OnDestroy {
     this.justUpdated = true;
     if (this.flashTimer) clearTimeout(this.flashTimer);
     this.flashTimer = setTimeout(() => (this.justUpdated = false), 2200);
+  }
+
+  /** Chủ đơn tự huỷ được khi đơn chưa sản xuất/giao và chưa thanh toán (đã trả tiền thì liên hệ hỗ trợ). */
+  get canCancel(): boolean {
+    const order = this.currentOrder;
+    const user = this.authService.currentUser();
+    return !!order && !!user && order.userId === user._id
+      && (order.status === 'PENDING' || order.status === 'CONFIRMED')
+      && order.paymentStatus !== 'PAID';
+  }
+
+  openCancel(): void {
+    this.cancelReason = '';
+    this.cancelDetail = '';
+    this.cancelOpen = true;
+  }
+
+  closeCancel(): void {
+    if (!this.cancelling) this.cancelOpen = false;
+  }
+
+  confirmCancel(): void {
+    const order = this.currentOrder;
+    const userId = this.authService.currentUser()?._id;
+    if (!order || !userId || !this.cancelReason || this.cancelling) return;
+    this.cancelling = true;
+    this.orderService.cancelOrder(order.orderNumber, userId, this.cancelReason, this.cancelDetail).subscribe({
+      next: updated => {
+        this.currentOrder = updated;
+        this.cancelling = false;
+        this.cancelOpen = false;
+        this.toastService.success('Đã huỷ đơn ' + updated.orderNumber + '.');
+      },
+      error: err => {
+        this.cancelling = false;
+        this.toastService.error(err?.error?.error || 'Không huỷ được đơn, vui lòng thử lại.', 6000);
+      },
+    });
   }
 
   /** Đơn đã kết thúc (giao xong / huỷ / hoàn) — không còn gì để theo dõi thêm. */

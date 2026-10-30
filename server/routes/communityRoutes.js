@@ -2,13 +2,12 @@ const express = require('express');
 const { sendError } = require('../utils/http-error');
 const CommunityPost = require('../models/CommunityPost');
 const Notification = require('../models/Notification');
-const { awardCoins } = require('../utils/coins');
+const { awardVoucher } = require('../utils/vouchers');
 const { checkContent } = require('../utils/moderation');
 const { requireAdminId, validId } = require('../middleware/auth');
 
 const router = express.Router();
 
-const COMMUNITY_POST_REWARD = 15;
 const MODERATION_STATUSES = ['PUBLISHED', 'HIDDEN', 'REJECTED'];
 
 
@@ -119,14 +118,14 @@ router.post('/', async (req, res) => {
       });
     }
 
-    // Thưởng Xu cho bài đăng có ảnh thật (imageUrl bắt buộc ở schema) và có gắn tag sản phẩm,
+    // Tặng voucher cho bài đăng có ảnh thật (imageUrl bắt buộc ở schema) và có gắn tag sản phẩm,
     // chỉ áp dụng cho người dùng đã đăng nhập.
     if (userId && Array.isArray(post.productTags) && post.productTags.length > 0) {
-      await awardCoins({
+      await awardVoucher({
         userId,
-        reason: 'COMMUNITY_POST',
+        tierKey: 'V20K',
+        source: 'COMMUNITY_POST',
         refId: post.id,
-        amount: COMMUNITY_POST_REWARD,
         note: 'Chia sẻ góc decor lên Cộng đồng Luméa',
       });
     }

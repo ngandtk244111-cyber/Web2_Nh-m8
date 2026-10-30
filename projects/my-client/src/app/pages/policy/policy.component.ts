@@ -87,7 +87,7 @@ const POLICY_PAGES: Record<string, PolicyPage> = {
       {
         heading: '4. Hoàn tiền',
         body: [
-          'Hoàn tiền theo phương thức thanh toán ban đầu (chuyển khoản, ví MoMo/ZaloPay) hoặc quy đổi thành Xu Luméa theo yêu cầu của khách hàng, trong vòng 3-7 ngày làm việc kể từ khi yêu cầu được duyệt.',
+          'Hoàn tiền theo phương thức thanh toán ban đầu (chuyển khoản, ví MoMo/ZaloPay) hoặc quy đổi thành voucher mua sắm theo yêu cầu của khách hàng, trong vòng 3-7 ngày làm việc kể từ khi yêu cầu được duyệt.',
         ],
       },
     ],

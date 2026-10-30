@@ -20,7 +20,7 @@
       </div>
     </div>
 
-    <form (submit)="$event.preventDefault(); search(mobileSearchInput.value)" class="hd_m__search">
+    <form (submit)="$event.preventDefault(); mobileSearchInput.value.trim() ? search(mobileSearchInput.value) : mobileSearchInput.focus()" class="hd_m__search">
       <button type="submit" class="hd_m__search-icon-btn" aria-label="Tìm kiếm">
         <img src="assets/mascot/goh-search.png" alt="Tìm kiếm" class="hd_m__search-icon-img">
       </button>
@@ -45,7 +45,7 @@
     </div>
 
     <div class="hd_drawer__login" *ngIf="!authService.currentUser()">
-      <div class="hd_drawer__login-title">Đăng nhập để tích xu & lưu thiết kế</div>
+      <div class="hd_drawer__login-title">Đăng nhập để nhận voucher & lưu thiết kế</div>
       <button type="button" class="hd_drawer__login-btn" (click)="loginModalService.open(); mobileMenuOpen = false">Đăng nhập ngay</button>
     </div>
 
@@ -88,7 +88,6 @@
 
       <div class="hd_drawer__group-title">Khác</div>
       <a *ngIf="authService.currentUser()" routerLink="/account" (click)="mobileMenuOpen = false" class="hd_drawer__item">Tài khoản của tôi</a>
-      <a routerLink="/orders/track" (click)="mobileMenuOpen = false" class="hd_drawer__item">Tra cứu đơn hàng</a>
       <button *ngIf="authService.currentUser()" type="button" (click)="logout()" class="hd_drawer__item hd_drawer__item--logout">Đăng xuất</button>
     </nav>
 
@@ -117,7 +116,7 @@
       </a>
 
       <div class="hd_search-wrap">
-        <form (submit)="$event.preventDefault(); search(searchInput.value)" class="hd_search">
+        <form (submit)="$event.preventDefault(); searchInput.value.trim() ? search(searchInput.value) : searchInput.focus()" class="hd_search">
           <button type="submit" class="hd_search__icon-btn" aria-label="Tìm kiếm">
             <img src="assets/mascot/goh-search.png" alt="Tìm kiếm" class="hd_search__icon-img">
           </button>
@@ -162,7 +161,7 @@
       </div>
 
       <div class="hd_actions">
-        <!-- Tài khoản: bấm mở dropdown (hồ sơ, đơn hàng, xu, đăng xuất...) -->
+        <!-- Tài khoản: bấm mở dropdown (hồ sơ, đơn hàng, voucher, đăng xuất...) -->
         <div class="hd_account-wrap" *ngIf="authService.currentUser() as user">
           <button
             type="button"

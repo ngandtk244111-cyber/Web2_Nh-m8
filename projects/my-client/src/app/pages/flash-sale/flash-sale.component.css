@@ -43,13 +43,17 @@
 .fs-heading { margin-bottom: 28px; }
 .fs-heading--row { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
 
+/* Cùng kiểu chữ với banner/poster: Inter đậm, viết hoa, đỏ rượu + bóng đổ đậm (không viền trắng) */
 .fs-heading__title {
   margin: 0;
-  font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(30px, 4vw, 44px);
-  font-weight: 700;
-  line-height: 1.1;
-  color: var(--fs-ink);
+  font-family: var(--font-family-heading, 'Inter', sans-serif);
+  font-size: clamp(26px, 3.2vw, 38px);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  color: #A3152D;
+  text-shadow: 0 3px 0 #5C0A18;
 }
 
 .fs-heading__sub {
@@ -164,7 +168,7 @@
 
 .fs-hero__title {
   margin: 0;
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-family-heading, 'Inter', sans-serif);
   font-size: clamp(54px, 9vw, 112px);
   font-weight: 700;
   line-height: 0.95;
@@ -580,7 +584,7 @@
 }
 
 .fs-room__count { font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.9; }
-.fs-room__title { font-family: 'Cormorant Garamond', serif; font-size: clamp(28px, 3vw, 38px); font-weight: 700; line-height: 1.1; }
+.fs-room__title { font-family: var(--font-family-heading, 'Inter', sans-serif); font-size: clamp(28px, 3vw, 38px); font-weight: 700; line-height: 1.1; }
 .fs-room__cta { margin-top: 6px; font-size: 12.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
 
 /* ---------- F. Almost sold out ---------- */
@@ -623,7 +627,7 @@
 .fs-featured__body { display: flex; flex-direction: column; justify-content: center; gap: 16px; padding: 30px 24px; }
 @media (min-width: 900px) { .fs-featured__body { padding: 48px 52px; } }
 
-.fs-featured__title { margin: 0; font-family: 'Cormorant Garamond', serif; font-size: clamp(30px, 3.4vw, 46px); font-weight: 700; line-height: 1.1; }
+.fs-featured__title { margin: 0; font-family: var(--font-family-heading, 'Inter', sans-serif); font-size: clamp(30px, 3.4vw, 46px); font-weight: 700; line-height: 1.1; }
 .fs-featured__desc { margin: 0; font-size: 14.5px; line-height: 1.65; color: var(--fs-muted); display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 
 .fs-featured__timer { display: inline-flex; align-items: center; gap: 10px; align-self: flex-start; padding: 9px 16px; border-radius: 999px; background: #fff; border: 1px solid var(--fs-border); font-size: 13px; }
@@ -690,7 +694,7 @@
 
 /* ---------- J. Final CTA ---------- */
 .fs-final { margin-top: 80px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 14px; }
-.fs-final__title { margin: 0; font-family: 'Cormorant Garamond', serif; font-size: clamp(32px, 5vw, 56px); font-weight: 700; line-height: 1.1; }
+.fs-final__title { margin: 0; font-family: var(--font-family-heading, 'Inter', sans-serif); font-size: clamp(28px, 4vw, 44px); font-weight: 800; line-height: 1.2; text-transform: uppercase; }
 .fs-final__sub { margin: 0 0 8px; font-size: 16px; color: var(--fs-muted); }
 .fs-final__link { font-size: 14px; color: var(--fs-muted); text-decoration: none; }
 .fs-final__link:hover { color: var(--fs-accent); }

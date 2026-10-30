@@ -28,7 +28,7 @@ export interface LoggedUser {
  * Đăng nhập bằng số điện thoại + mật khẩu, KHÔNG dùng JWT — tham khảo đúng cơ chế của
  * VitaCare-main: sau khi login/register thành công, server trả thẳng object user (trừ
  * password), client lưu nguyên vào localStorage và giữ trong 1 signal. Các request cần xác
- * thực sau đó tự gửi kèm `userId` (xem AddressService/CoinService/OrderService), server tin
+ * thực sau đó tự gửi kèm `userId` (xem AddressService/VoucherService/OrderService), server tin
  * tưởng thẳng giá trị này — đánh đổi để giống đúng mô hình của Vita, không còn access token.
  */
 @Injectable({ providedIn: 'root' })
@@ -96,7 +96,7 @@ export class AuthService {
   async confirmLogout(): Promise<boolean> {
     const ok = await this.confirmDialog.confirm({
       title: 'Bạn có chắc chắn muốn đăng xuất không?',
-      message: 'Bạn sẽ cần đăng nhập lại để mua hàng, xem đơn hàng và dùng xu thưởng.',
+      message: 'Bạn sẽ cần đăng nhập lại để mua hàng, xem đơn hàng và dùng voucher.',
       confirmLabel: 'Đăng xuất',
       cancelLabel: 'Ở lại',
       danger: true,

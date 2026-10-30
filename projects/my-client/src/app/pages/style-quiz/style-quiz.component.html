@@ -9,12 +9,12 @@
     <h1 class="quiz-intro__title">Không Gian Của Bạn Hợp Phong Cách Nào?</h1>
     <p class="quiz-intro__desc">
       Trả lời 5 câu hỏi ngắn để Luméa gợi ý phong cách trang trí phù hợp nhất với gu thẩm mỹ của bạn —
-      kèm theo danh mục sản phẩm nên khám phá đầu tiên. Hoàn thành bài test còn được thưởng
-      <strong>+{{ rewardAmount }} xu</strong> vào tài khoản.
+      kèm theo danh mục sản phẩm nên khám phá đầu tiên. Hoàn thành bài test còn được tặng
+      <strong>{{ rewardLabel }}</strong>.
     </p>
 
     <button type="button" class="quiz-btn quiz-btn--primary" (click)="startQuiz()">
-      {{ authService.currentUser() ? 'Bắt Đầu Trắc Nghiệm' : 'Đăng Nhập Để Làm Trắc Nghiệm' }}
+      Bắt Đầu Trắc Nghiệm
     </button>
 
     <div class="quiz-intro__grid">
@@ -47,6 +47,21 @@
     <button type="button" class="quiz-btn quiz-btn--ghost" *ngIf="currentIndex > 0" (click)="goBack()">
       ← Câu trước
     </button>
+  </section>
+
+  <!-- ============ CHƯA ĐĂNG NHẬP: khoá kết quả ============ -->
+  <section class="quiz-intro" *ngIf="screen === 'locked'">
+    <div class="quiz-intro__badge">
+      <app-icon name="lock" [size]="14"></app-icon>
+      <span>Kết quả đã sẵn sàng</span>
+    </div>
+    <h1 class="quiz-intro__title">Đăng Nhập Để Xem Phong Cách Của Bạn</h1>
+    <p class="quiz-intro__desc">
+      Bạn đã hoàn thành 5 câu hỏi. Đăng nhập để xem kết quả, danh mục sản phẩm gợi ý và nhận
+      <strong>{{ rewardLabel }}</strong>.
+    </p>
+    <button type="button" class="quiz-btn quiz-btn--primary" (click)="loginToSeeResult()">Đăng Nhập Để Xem Kết Quả</button>
+    <button type="button" class="quiz-btn quiz-btn--ghost" (click)="retakeQuiz()">Làm lại bài test</button>
   </section>
 
   <!-- ============ RESULT ============ -->
@@ -93,12 +108,12 @@
         </a>
       </div>
 
-      <!-- Coin reward -->
+      <!-- Voucher reward -->
       <div class="quiz-reward">
         <div class="quiz-reward__info">
-          <app-icon name="coin" [size]="20" class="quiz-reward__icon"></app-icon>
-          <span *ngIf="!coinClaimed">Hoàn thành bài test — nhận ngay +{{ rewardAmount }} xu</span>
-          <span *ngIf="coinClaimed">Bạn đã nhận +{{ rewardAmount }} xu cho bài test này 🎉</span>
+          <app-icon name="tag" [size]="20" class="quiz-reward__icon"></app-icon>
+          <span *ngIf="!coinClaimed">Hoàn thành bài test — nhận ngay {{ rewardLabel }}</span>
+          <span *ngIf="coinClaimed">Bạn đã nhận {{ rewardLabel }} cho bài test này 🎉 — xem trong giỏ hàng khi thanh toán</span>
         </div>
         <button
           type="button"
@@ -106,7 +121,7 @@
           *ngIf="!coinClaimed"
           [disabled]="coinBusy"
           (click)="openClaimCelebration()">
-          {{ coinBusy ? 'Đang xử lý...' : ('Nhận +' + rewardAmount + ' xu') }}
+          {{ coinBusy ? 'Đang xử lý...' : 'Nhận voucher' }}
         </button>
       </div>
 
@@ -119,9 +134,9 @@
   <!-- ============ Celebration popup ============ -->
   <div class="quiz-overlay" *ngIf="showCelebration" (click)="closeCelebration()">
     <div class="quiz-modal" (click)="$event.stopPropagation()">
-      <app-icon name="coin" [size]="40" class="quiz-modal__icon"></app-icon>
-      <h3 class="quiz-modal__title">Nhận thưởng +{{ rewardAmount }} xu?</h3>
-      <p class="quiz-modal__desc">Xu có thể dùng để đổi ưu đãi trong các đơn hàng sắp tới.</p>
+      <app-icon name="tag" [size]="40" class="quiz-modal__icon"></app-icon>
+      <h3 class="quiz-modal__title">Nhận {{ rewardLabel }}?</h3>
+      <p class="quiz-modal__desc">Voucher được lưu vào tài khoản, chọn áp dụng ở giỏ hàng trong 30 ngày tới.</p>
       <div class="quiz-modal__actions">
         <button type="button" class="quiz-btn quiz-btn--ghost" (click)="closeCelebration()">Để sau</button>
         <button type="button" class="quiz-btn quiz-btn--coin" (click)="confirmClaim()">Nhận ngay</button>
@@ -131,7 +146,7 @@
 
   <!-- ============ Flying coin effect ============ -->
   <div class="quiz-flying-coin" *ngIf="showFlyingCoin">
-    <app-icon name="coin" [size]="28"></app-icon>
+    <app-icon name="tag" [size]="28"></app-icon>
   </div>
 
 </div>

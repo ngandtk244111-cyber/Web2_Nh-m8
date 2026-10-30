@@ -94,7 +94,7 @@
               </div>
 
               <div>
-                <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Email nhận thông báo tiến độ *</label>
+                <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Email nhận thông báo tiến độ <span class="font-normal text-neutral-500">(không bắt buộc)</span></label>
                 <input 
                   type="email" 
                   [(ngModel)]="shipping.email" 
@@ -104,9 +104,12 @@
                   class="w-full text-xs rounded-xl border p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500 transition"
                   [class.border-rose-500]="errors['email']"
                   [class.border-neutral-300]="!errors['email']">
-                <span *ngIf="errors['email']" class="text-[11px] text-rose-400 mt-1 block font-medium">
+                <span *ngIf="errors['email']; else emailHint" class="text-[11px] text-rose-400 mt-1 block font-medium">
                   {{ errors['email'] }}
                 </span>
+                <ng-template #emailHint>
+                  <span class="text-[11px] text-neutral-500 mt-1 block">Nhập email để nhận mã vận đơn và thông báo hành trình đơn hàng.</span>
+                </ng-template>
               </div>
 
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">

@@ -3,15 +3,15 @@
       <!-- Page Title -->
       <div class="text-center space-y-2">
         <h1 class="font-serif text-3xl font-extrabold text-amber-800">
-          Tra Cứu Đơn Hàng
+          {{ openedFromLink ? 'Chi Tiết Đơn Hàng' : 'Tra Cứu Đơn Hàng' }}
         </h1>
-        <p class="text-xs sm:text-sm text-neutral-600 max-w-md mx-auto">
+        <p *ngIf="!openedFromLink" class="text-xs sm:text-sm text-neutral-600 max-w-md mx-auto">
           Nhập mã đơn hàng để xem tình trạng đơn. Trang sẽ tự cập nhật trực tiếp mỗi khi Luméa xác nhận, sản xuất hay giao hàng.
         </p>
       </div>
 
       <!-- Search Input Box -->
-      <div class="max-w-lg mx-auto bg-[#FFFFFF] p-2 rounded-2xl border border-neutral-200 shadow-xl flex items-center gap-2">
+      <div *ngIf="!openedFromLink" class="max-w-lg mx-auto bg-[#FFFFFF] p-2 rounded-2xl border border-neutral-200 shadow-xl flex items-center gap-2">
         <app-icon name="search" [size]="18" class="text-neutral-600 ml-3"></app-icon>
         <input 
           type="text" 
@@ -88,6 +88,9 @@
             <span *ngIf="currentOrder.paymentMethod === 'COD' && currentOrder.status === 'SHIPPED'">Vui lòng chuẩn bị <strong>{{ currentOrder.total | number }}đ</strong> để thanh toán khi nhận hàng.</span>
           </div>
           <p *ngIf="currentOrder.status === 'PENDING'" class="text-xs text-neutral-600">Luméa sẽ gọi tới số {{ currentOrder.shippingAddress.phone }} để xác nhận đơn trước khi giao. Vui lòng để ý điện thoại nhé.</p>
+          <div *ngIf="canCancel" class="flex justify-end">
+            <button type="button" class="ot-cancel-btn" (click)="openCancel()">Huỷ đơn hàng</button>
+          </div>
           <p *ngIf="currentOrder.status === 'CANCELLED' && currentOrder.cancelReason" class="text-xs text-rose-500">Lý do huỷ: {{ currentOrder.cancelReason }}</p>
           <p *ngIf="currentOrder.status === 'RETURNED' && currentOrder.returnReason" class="text-xs text-rose-500">Giao không thành công: {{ currentOrder.returnReason }}. Liên hệ Luméa nếu bạn muốn giao lại.</p>
 
@@ -184,4 +187,35 @@
 
       </div>
 
-    </div>
+    
+      <!-- Hộp thoại huỷ đơn: chọn lý do -->
+      <div *ngIf="cancelOpen" class="ot-modal" (click)="closeCancel()">
+        <div class="ot-modal__panel" role="dialog" aria-modal="true" aria-label="Lý do huỷ đơn" (click)="$event.stopPropagation()">
+          <h3 class="ot-modal__title">Chọn lý do huỷ đơn</h3>
+          <p class="ot-modal__desc">Vui lòng chọn lý do huỷ. Lưu ý: thao tác này sẽ huỷ tất cả sản phẩm trong đơn và không thể hoàn tác. Voucher đã dùng cho đơn sẽ được hoàn lại vào tài khoản.</p>
+
+          <div class="ot-reasons" role="radiogroup">
+            <label *ngFor="let r of cancelReasons" class="ot-reason" [class.ot-reason--on]="cancelReason === r">
+              <input type="radio" name="cancelReason" [value]="r" [(ngModel)]="cancelReason">
+              <span>{{ r }}</span>
+            </label>
+          </div>
+
+          <textarea
+            *ngIf="cancelReason === cancelReasonOther"
+            [(ngModel)]="cancelDetail"
+            maxlength="300"
+            rows="3"
+            placeholder="Chia sẻ thêm lý do (không bắt buộc)"
+            class="ot-modal__note"></textarea>
+
+          <div class="ot-modal__actions">
+            <button type="button" class="ot-modal__btn" (click)="closeCancel()">Không phải bây giờ</button>
+            <button type="button" class="ot-modal__btn ot-modal__btn--danger" [disabled]="!cancelReason || cancelling" (click)="confirmCancel()">
+              {{ cancelling ? 'Đang huỷ...' : 'Huỷ đơn hàng' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+</div>

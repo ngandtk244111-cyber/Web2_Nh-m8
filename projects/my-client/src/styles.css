@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&family=Pacifico&display=swap');
+/* Toàn web chỉ dùng 1 font: Inter (cùng font với banner) — tiêu đề dùng 700–800, nội dung 400–600. */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -400,84 +401,49 @@ body.vw-open .fsb {
 }
 
 /* ======================================================================
-   TIÊU ĐỀ SECTION KIỂU CHỮ NỔI 3D — cùng bộ với hero banner, chữ thẳng, tông đỏ thương hiệu
+   TIÊU ĐỀ SECTION — chữ đậm thường, không viền/không đổ bóng (giống CellphoneS)
    Dùng: <h2 class="... lm-3d" data-text="Tiêu đề">Tiêu đề</h2>
-         <p class="... lm-kicker">Nhãn nhỏ</p>
-   ::before = viền trắng + khối đổ đỏ rượu, ::after = ruột gradient đỏ.
-   Chữ thật vẫn nằm trong thẻ (trong suốt) cho trình đọc màn hình/SEO.
+   Tên class giữ nguyên để không phải sửa template; data-text không còn được dùng.
    !important vì style riêng của component (.ps-title, .cat-title...) có độ ưu tiên cao hơn.
    ====================================================================== */
 .lm-3d {
-  --lm3d-stroke: #FFFFFF;
-  --lm3d-fill: linear-gradient(180deg, #D0354B 0%, #A3152D 55%, #7A0F20 100%);
-  position: relative;
-  isolation: isolate;
-  display: inline-block;
-  margin-bottom: 0.12em !important;
-  padding: 0.04em 0.12em 0.06em 0.06em;
+  display: block;
+  margin: 0 0 4px !important;
   font-family: var(--font-family-heading, 'Inter', sans-serif) !important;
+  font-size: clamp(20px, 2.2vw, 26px) !important;
   font-weight: 800 !important;
   text-transform: uppercase;
   letter-spacing: 0 !important;
-  line-height: 1.12 !important;
-  color: transparent !important;
+  line-height: 1.25 !important;
+  color: #3B2418 !important;
+  background: none !important;
+  -webkit-text-stroke: 0 !important;
+  text-shadow: none !important;
 }
 
 .lm-3d::before,
 .lm-3d::after {
-  content: attr(data-text);
-  position: absolute;
-  inset: 0;
-  padding: inherit;
-  pointer-events: none;
+  content: none !important;
 }
 
-.lm-3d::before {
-  z-index: -1;
-  color: var(--lm3d-stroke);
-  -webkit-text-stroke: 0.16em var(--lm3d-stroke);
-  text-shadow: 0 0.06em 0 #7A0F20, 0 0.1em 0 #4E0A16, 0 0.16em 0.22em rgba(78, 10, 22, 0.25);
-}
-
-.lm-3d::after {
-  z-index: 1;
-  background: var(--lm3d-fill);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-/* Biến thể nâu đậm (đổi nhịp giữa các section) */
-.lm-3d--brown {
-  --lm3d-fill: linear-gradient(180deg, #5A3D2E 0%, #3B2418 100%);
-}
-
-.lm-3d--brown::before {
-  text-shadow: 0 0.06em 0 #A3152D, 0 0.1em 0 #7A0F20, 0 0.16em 0.22em rgba(59, 36, 24, 0.25);
-}
-
-/* Pill nhãn đỏ chữ trắng — giống nhãn trên hero banner */
+/* Pill nhãn đỏ phía trên tiêu đề: bỏ hẳn cho bố cục gọn, tiêu đề các section thẳng hàng */
 .lm-kicker {
-  display: inline-flex !important;
-  align-items: center;
-  gap: 8px !important;
-  margin: 0 0 14px !important;
-  padding: 6px 16px 5px !important;
-  border-radius: 999px !important;
-  border: 2px solid #FFFFFF;
-  background: linear-gradient(180deg, #D0354B 0%, #A3152D 55%, #7A0F20 100%) !important;
-  box-shadow: 0 3px 0 #4E0A16, 0 8px 14px rgba(78, 10, 22, 0.2);
-  font-size: 12px !important;
-  font-weight: 800 !important;
-  letter-spacing: 0.06em !important;
-  text-transform: uppercase;
-  color: #FFFFFF !important;
+  display: none !important;
 }
 
-/* Icon tròn bên trong nhãn (nếu có) */
-.lm-kicker > span:first-child:not(:only-child) {
-  width: 22px !important;
-  height: 22px !important;
-  background: #FFFFFF !important;
-  color: #A3152D !important;
+/* ======================================================================
+   CHỪA CHỖ CHO 2 BANNER DỌC HAI BÊN (app-floating-side-banners)
+   body.fsb-left / body.fsb-right do component gắn khi banner bên đó đang hiện.
+   Chỉ áp dụng 1200–1599px: rộng hơn thì lề sẵn đủ chỗ, hẹp hơn thì banner đã ẩn.
+   144px = banner 116px + cách mép 18px + khe 10px với nội dung.
+   Header/footer không bị co (chỉ đệm <main>).
+   ====================================================================== */
+@media (min-width: 1200px) and (max-width: 1599px) {
+  body.fsb-left main {
+    padding-left: 144px;
+  }
+
+  body.fsb-right main {
+    padding-right: 144px;
+  }
 }

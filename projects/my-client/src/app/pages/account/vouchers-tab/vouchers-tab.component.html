@@ -1,0 +1,59 @@
+<div class="bg-[#FFFFFF] rounded-3xl p-6 sm:p-8 border border-neutral-200 shadow-xl space-y-4">
+  <div class="flex items-center justify-between border-b border-neutral-200 pb-3">
+    <h3 class="font-serif text-lg font-bold text-amber-800">Voucher Của Bạn</h3>
+    <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-700 text-xs font-bold">
+      <app-icon name="tag" [size]="14"></app-icon>
+      <span>{{ voucherService.usable().length }} voucher</span>
+    </div>
+  </div>
+
+  <a routerLink="/voucher" class="flex items-center justify-between gap-3 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-800 hover:bg-amber-500/15 transition">
+    <span class="text-xs font-semibold">Lật thẻ, vòng quay, hộp quà — chơi game để nhận thêm voucher giảm giá</span>
+    <span class="text-xs font-bold whitespace-nowrap">Nhận voucher →</span>
+  </a>
+
+  <div class="flex gap-2" role="tablist">
+    <button
+      type="button"
+      role="tab"
+      class="px-3.5 py-2 rounded-full text-xs font-bold transition"
+      [class.bg-neutral-900]="view() === 'usable'"
+      [class.text-white]="view() === 'usable'"
+      [class.bg-neutral-100]="view() !== 'usable'"
+      [attr.aria-selected]="view() === 'usable'"
+      (click)="view.set('usable')">
+      Đang có ({{ voucherService.usable().length }})
+    </button>
+    <button
+      type="button"
+      role="tab"
+      class="px-3.5 py-2 rounded-full text-xs font-bold transition"
+      [class.bg-neutral-900]="view() === 'history'"
+      [class.text-white]="view() === 'history'"
+      [class.bg-neutral-100]="view() !== 'history'"
+      [attr.aria-selected]="view() === 'history'"
+      (click)="view.set('history')">
+      Lịch sử dùng voucher ({{ voucherService.history().length }})
+    </button>
+  </div>
+
+  <ng-container *ngIf="view() === 'usable'">
+    <div *ngIf="voucherService.usable().length === 0" class="text-xs text-neutral-500 text-center py-4">
+      Bạn chưa có voucher nào. Thử
+      <a routerLink="/voucher" class="text-amber-600 font-semibold hover:underline">chơi game nhận voucher</a>
+      hoặc làm <a routerLink="/style-quiz" class="text-amber-600 font-semibold hover:underline">Trắc Nghiệm Phong Cách</a> nhé!
+    </div>
+    <div class="grid gap-3">
+      <app-voucher-card *ngFor="let v of voucherService.usable()" [voucher]="v"></app-voucher-card>
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="view() === 'history'">
+    <div *ngIf="voucherService.history().length === 0" class="text-xs text-neutral-500 text-center py-4">
+      Chưa có voucher nào đã dùng hoặc hết hạn.
+    </div>
+    <div class="grid gap-3">
+      <app-voucher-card *ngFor="let v of voucherService.history()" [voucher]="v"></app-voucher-card>
+    </div>
+  </ng-container>
+</div>

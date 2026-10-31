@@ -34,6 +34,9 @@ interface HotspotViewModel {
   product?: Product;
 }
 
+/** Khoảng cách camera → tâm xoay ở chế độ walkthrough (đứng yên nhìn quanh). */
+const WALK_PIVOT = 0.05;
+
 @Component({
   selector: 'app-room-viewer',
   standalone: true,
@@ -215,8 +218,14 @@ export class RoomViewerComponent implements OnInit, AfterViewInit, OnChanges, On
       const lookAt = this.room?.cameraLookAt || [0, 0.6, 0];
       const isWalkthrough = !!this.room?.walkthroughMode;
       const isFreeExplore = !!this.room?.freeExploreMode;
-      const initDistance = new THREE.Vector3(initCam.x, initCam.y, initCam.z)
-        .distanceTo(new THREE.Vector3(lookAt[0], lookAt[1], lookAt[2]));
+      // Walkthrough = đứng yên một chỗ, chỉ xoay đầu nhìn quanh: tâm xoay đặt ngay trước mắt camera
+      // (WALK_PIVOT), nên kéo chuột chỉ đổi hướng nhìn chứ không đẩy camera đi vòng quanh phòng.
+      // Xoay ngang tự do 360°; dọc chỉ cho cúi xuống ~40° / ngước lên ~25° quanh đường chân trời.
+      const target = isWalkthrough ? this.walkthroughPivot() : new THREE.Vector3(lookAt[0], lookAt[1], lookAt[2]);
+      const offset = new THREE.Vector3(initCam.x, initCam.y, initCam.z).sub(target);
+      const spherical = new THREE.Spherical().setFromVector3(offset);
+      const WALK_MIN_POLAR = THREE.MathUtils.degToRad(50);
+      const WALK_MAX_POLAR = THREE.MathUtils.degToRad(115);
 
       this.runtime = new ViewerRuntime({
         container,
@@ -224,16 +233,19 @@ export class RoomViewerComponent implements OnInit, AfterViewInit, OnChanges, On
         qualityManager: this.qualityManager,
         cameraFov: initCam.fov || 46,
         cameraInitialPos: new THREE.Vector3(initCam.x, initCam.y, initCam.z),
-        controlsTarget: new THREE.Vector3(lookAt[0], lookAt[1], lookAt[2]),
+        controlsTarget: target,
         // Walkthrough: khoá bán kính orbit sát với khoảng cách camera ban đầu (chỉ nhích nhẹ để
         // zoom), để người dùng chỉ xoay quanh đúng góc nội thất đã canh sẵn thay vì bay ra xa
         // thấy hết tường/không gian trống xung quanh.
-        controlsMinDistance: isWalkthrough ? Math.max(0.5, initDistance - 0.6) : (isFreeExplore ? 0.05 : 2.0),
-        controlsMaxDistance: isWalkthrough ? initDistance + 0.6 : (isFreeExplore ? 100 : 6.5),
+        controlsMinDistance: isWalkthrough ? WALK_PIVOT : (isFreeExplore ? 0.05 : 2.0),
+        controlsMaxDistance: isWalkthrough ? WALK_PIVOT : (isFreeExplore ? 100 : 6.5),
         // Khoá góc nghiêng dọc: chỉ cho xoay ngang quanh phòng, không ngước lên trần / cúi xuống sàn.
         // Bỏ khoá tạm thời khi đang ở chế độ khám phá tự do để dễ định hướng bay vào trong.
-        controlsMinPolarAngle: isFreeExplore ? 0 : Math.PI / 2,
-        controlsMaxPolarAngle: isFreeExplore ? Math.PI : Math.PI / 2,
+        controlsMinPolarAngle: isFreeExplore ? 0 : isWalkthrough ? Math.min(WALK_MIN_POLAR, spherical.phi) : Math.PI / 2,
+        controlsMaxPolarAngle: isFreeExplore ? Math.PI : isWalkthrough ? Math.max(WALK_MAX_POLAR, spherical.phi) : Math.PI / 2,
+        controlsEnablePan: isWalkthrough ? false : undefined,
+        controlsEnableZoom: isWalkthrough ? false : undefined,
+        controlsRotateSpeed: isWalkthrough ? -0.6 : undefined,
         clearColor: 0xf3f1ec,
         onRender: () => {
           // Update hotspot transforms directly in the render callback outside NgZone
@@ -306,9 +318,18 @@ export class RoomViewerComponent implements OnInit, AfterViewInit, OnChanges, On
     const lookAt = this.room.cameraLookAt || [0, 0.6, 0];
     this.runtime.smoothResetCamera(
       new THREE.Vector3(initCam.x, initCam.y, initCam.z),
-      new THREE.Vector3(lookAt[0], lookAt[1], lookAt[2]),
+      this.room.walkthroughMode ? this.walkthroughPivot() : new THREE.Vector3(lookAt[0], lookAt[1], lookAt[2]),
       350
     );
+  }
+
+  /** Tâm xoay của chế độ walkthrough: ngay trước mắt camera, theo hướng cameraLookAt. */
+  private walkthroughPivot(): THREE.Vector3 {
+    const initCam = this.room?.cameraInitial || { x: 0, y: 1.8, z: 4.2 };
+    const lookAt = this.room?.cameraLookAt || [0, 0.6, 0];
+    const eye = new THREE.Vector3(initCam.x, initCam.y, initCam.z);
+    const dir = new THREE.Vector3(lookAt[0], lookAt[1], lookAt[2]).sub(eye).normalize();
+    return eye.add(dir.multiplyScalar(WALK_PIVOT));
   }
 
   setQuality(mode: QualityMode): void {

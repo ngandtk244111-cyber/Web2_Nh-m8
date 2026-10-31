@@ -1,9 +1,9 @@
 <section class="pg_section">
   <div class="pg_row">
-    <ng-container *ngFor="let banner of squareBanners">
+    <ng-container *ngFor="let banner of squareBanners; let i = index">
 
       <!-- Thẻ ảnh phủ kín -->
-      <a *ngIf="banner.layout === 'photo'" [routerLink]="banner.link" class="pg_card pg_photo">
+      <a *ngIf="banner.layout === 'photo'" appScrollReveal="rise" [revealDelay]="i * 180" [routerLink]="banner.link" class="pg_card pg_photo">
         <span class="pg_photo__frame" aria-hidden="true">
           <img [src]="banner.image" alt="" class="pg_photo__img" loading="lazy" draggable="false">
         </span>
@@ -20,7 +20,7 @@
       </a>
 
       <!-- Thẻ ưu đãi có mascot -->
-      <a *ngIf="banner.layout === 'mascot'" [routerLink]="banner.link" class="pg_card pg_promo">
+      <a *ngIf="banner.layout === 'mascot'" appScrollReveal="rise" [revealDelay]="i * 180" [routerLink]="banner.link" class="pg_card pg_promo">
         <span class="pg_promo__glow" aria-hidden="true"></span>
         <div class="pg_promo__text">
           <span class="pg_eyebrow pg_eyebrow--soft">{{ banner.eyebrow }}</span>
@@ -40,7 +40,7 @@
     </ng-container>
   </div>
 
-  <a [routerLink]="wideBanner.link" class="pg_card pg_wide">
+  <a appScrollReveal="rise" [routerLink]="wideBanner.link" class="pg_card pg_wide">
     <div class="pg_wide__text">
       <span class="pg_new"><app-icon name="sparkles" [size]="11"></app-icon> Tính năng mới</span>
       <span class="pg_eyebrow pg_eyebrow--soft">{{ wideBanner.eyebrow }}</span>

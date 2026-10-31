@@ -1,7 +1,9 @@
 <section class="pc_section">
   <div class="pc_grid" [style.--cols]="posters.length">
     <a
-      *ngFor="let p of posters"
+      *ngFor="let p of posters; let i = index"
+      appScrollReveal="rise"
+      [revealDelay]="i * 180"
       [routerLink]="p.link"
       [queryParams]="p.queryParams"
       class="pc_poster"

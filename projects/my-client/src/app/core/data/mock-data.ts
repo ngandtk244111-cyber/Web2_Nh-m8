@@ -965,25 +965,26 @@ export const MOCK_ROOMS: Room[] = [
   },
   {
     id: 'room-3',
-    name: 'Căn Hộ Phong Cách Châu Âu (Full Apartment Scan)',
-    theme: 'European Apartment Interior',
-    tagline: 'Dạo quanh trọn vẹn 1 căn hộ được scan 3D chân thực để tìm cảm hứng bài trí',
-    description: 'Không gian căn hộ đầy đủ phòng khách, cửa sổ, rèm và nội thất được dựng từ mô hình 3D thật (không phải dựng bằng code). Đây là phòng trưng bày ý tưởng — hiện chưa gắn sản phẩm cụ thể để mua, chỉ để tham khảo phong cách bài trí.',
-    coverImage: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1200&q=80',
+    name: 'Phòng Khách – Bếp Mở Tối Giản (Living & Kitchen)',
+    theme: 'Modern Minimal Living Room',
+    tagline: 'Phòng khách liền bếp tông trắng – gỗ, sofa êm, bàn trà tròn và góc ăn nhỏ xinh',
+    description: 'Không gian phòng khách liền bếp được dựng từ mô hình 3D thật: sofa vải, bàn trà tròn, ghế bành đọc sách, kệ TV trắng mờ và bàn ăn tròn cho 4 người. Chạm vào từng số để xem sản phẩm tương tự tại Luméa.',
+    coverImage: 'assets/rooms/phong-khach-bep.jpg',
     roomType: 'glb_scene',
-    modelUrl: 'assets/models/mirrors_edge_apartment_-_interior_scene.glb',
-    // Vùng toạ độ gốc (chưa scale) chứa khu ghế/bàn/kệ chính trong file — Y min đã sửa thành 0
-    // vì click thật vào sàn (2 điểm góc dưới khung cửa) cho kết quả Y ≈ 0.005, xác nhận sàn thật
-    // nằm ở Y=0, không phải -3.5 như giả định ban đầu.
-    modelFocusBounds: { min: [-11.2, 0, -2.7], max: [3.5, 4, 23.1] },
-    // Đứng ngay ngưỡng cửa ra vào (đã xác nhận bằng click thật: 2 góc dưới khung cửa raw
-    // ≈ [1.814, 0, 0.172] và [-0.965, 0, -1.831], tâm cửa raw ≈ [0.42, 0, -0.83]),
-    // nhìn theo hướng +Z sâu vào trong nhà (hướng có bàn/ghế/kệ theo phân tích vật liệu).
-    cameraInitial: { x: 0.99, y: 1.6, z: -2.57, fov: 60 },
-    cameraLookAt: [0.99, 1.6, -0.57],
-    walkthroughMode: false,
-    freeExploreMode: true,
-    hotspots: [],
+    modelUrl: 'assets/models/phong-khach-bep.glb?v=2',
+    // Xem server/seed/room-living-kitchen.js: hotspot/focusBounds = toạ độ gốc file .glb, camera = toạ độ sau scale.
+    modelFocusBounds: { min: [-5.84, 0, -5.8], max: [2.48, 2.7, -0.85] },
+    cameraInitial: { x: 0.71, y: 1.12, z: 0.81, fov: 60 },
+    cameraLookAt: [2.65, 0.58, 1.17],
+    walkthroughMode: true,
+    freeExploreMode: false,
+    hotspots: [
+      { id: 'hs-lk-1', productId: 'furn-03', label: 'Sofa Vải 3 Chỗ', position: [0.56, 0.75, -1.3], annotationNote: 'Sofa vải êm, tựa lưng thấp cho phòng khách gọn' },
+      { id: 'hs-lk-2', productId: 'furn-21', label: 'Bàn Trà Tròn', position: [0.55, 0.34, -2.44], annotationNote: 'Bàn trà tròn bo mềm, đi lại không vướng góc' },
+      { id: 'hs-lk-3', productId: 'cat-chair-13', label: 'Ghế Bành Đọc Sách', position: [1.75, 0.8, -2.96], annotationNote: 'Góc đọc sách cạnh cửa sổ' },
+      { id: 'hs-lk-4', productId: 'furn-18', label: 'Bàn Ăn Tròn 4 Người', position: [-2.11, 0.78, -2.57], annotationNote: 'Bàn ăn tròn mặt trắng, vừa căn hộ nhỏ' },
+      { id: 'hs-lk-5', productId: 'cat-cabinet-21', label: 'Kệ TV Trắng Mờ', position: [0.6, 0.65, -3.4], annotationNote: 'Kệ TV thấp trắng mờ, liền khối với tủ kệ' },
+    ],
   },
 ];
 

@@ -10,7 +10,6 @@ import { CommunityService } from '../../core/services/community.service';
 import { AuthService } from '../../core/services/auth.service';
 import { Product, ProductReview } from '../../core/models/product.model';
 import { CommunityPost } from '../../core/models/community.model';
-import { ThreeViewerComponent } from '../../components/three-viewer/three-viewer.component';
 import { RecentlyViewedSectionComponent } from '../../components/recently-viewed-section/recently-viewed-section.component';
 import { AppIconComponent } from '../../components/icon/icon.component';
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
@@ -139,7 +138,6 @@ const SAMPLE_REVIEWS: ProductReview[] = [
     CommonModule,
     FormsModule,
     RouterLink,
-    ThreeViewerComponent,
     RecentlyViewedSectionComponent,
     AppIconComponent,
     VndPipe
@@ -243,11 +241,10 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     return !!id && this.roomService.rooms().some(r => r.hotspots.some(h => h.productId === id));
   }
 
-  /** Nút "Xem 3D" ở buy box: chuyển carousel tới slide 3D và cuộn lên. */
-  view3D(carousel: HTMLElement): void {
-    if (!this.has3D) return;
-    this.goToSlide(this.galleryImages.length);
-    carousel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  /** Nút "Xem 3D" ở buy box: mở phòng xem 3D của sản phẩm (tab mới), giống nút dưới khung ảnh. */
+  view3D(): void {
+    if (!this.product || !this.has3D) return;
+    window.open(this.router.serializeUrl(this.router.createUrlTree(['/phong-3d', this.product.id])), '_blank', 'noopener');
   }
 
   ngOnDestroy(): void {
@@ -268,9 +265,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
 
   private showProduct(product: Product): void {
     this.product = product;
-    this.slideIndex = this.route.snapshot.queryParamMap.get('view') === '3d' && this.has3D
-      ? this.galleryImages.length
-      : 0;
+    this.slideIndex = 0;
     this.openPanel = null;
     this.reviewFilter = 'all';
     this.reviewPage = 1;
@@ -333,16 +328,13 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     return this.product?.images ?? [];
   }
 
+  /** Khung ảnh chỉ gồm ảnh — xem 3D dùng nút "Xem sản phẩm trong phòng 3D" ngay bên dưới. */
   get slideCount(): number {
-    return this.galleryImages.length + (this.has3D ? 1 : 0);
+    return this.galleryImages.length;
   }
 
   get slideIndexes(): number[] {
     return Array.from({ length: this.slideCount }, (_, i) => i);
-  }
-
-  is3DSlide(index: number): boolean {
-    return this.has3D && index === this.galleryImages.length;
   }
 
   goToSlide(index: number): void {
@@ -360,7 +352,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
   }
 
   onCarouselTouchStart(event: TouchEvent): void {
-    this.touchStartX = this.is3DSlide(this.slideIndex) ? null : event.touches[0].clientX;
+    this.touchStartX = event.touches[0].clientX;
   }
 
   onCarouselTouchEnd(event: TouchEvent): void {

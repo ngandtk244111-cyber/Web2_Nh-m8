@@ -1,23 +1,32 @@
 /* Bố cục kiểu Threads: [điều hướng] [feed] [trending + danh mục] */
+/* Cột giữa (feed) giãn theo chỗ trống, tối đa 760px; cột phải chỉ hiện khi đủ rộng để feed không bị bóp hẹp. */
 .cm-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 24px;
-  max-width: 640px;
+  max-width: 760px;
   margin: 0 auto;
+}
+
+.cm-right {
+  display: none;
 }
 
 @media (min-width: 1024px) {
   .cm-layout {
-    grid-template-columns: 200px minmax(0, 640px);
+    grid-template-columns: 190px minmax(0, 760px);
     max-width: none;
     justify-content: center;
   }
 }
 
-@media (min-width: 1280px) {
+@media (min-width: 1600px) {
   .cm-layout {
-    grid-template-columns: 200px minmax(0, 620px) 300px;
+    grid-template-columns: 200px minmax(0, 720px) 300px;
+  }
+
+  .cm-right {
+    display: block;
   }
 }
 
@@ -184,7 +193,7 @@
   overflow: hidden;
   border: 1px solid rgba(0, 0, 0, 0.08);
   background: #F7F2E7;
-  max-width: 460px;
+  max-width: 600px;
 }
 
 .cm-media img {

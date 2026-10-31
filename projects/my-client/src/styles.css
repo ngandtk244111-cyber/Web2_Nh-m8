@@ -262,6 +262,27 @@ html {
   transform: none;
 }
 
+/* Poster/banner lớn: trồi lên từ dưới, mờ dần thành rõ, phóng nhẹ — chậm hơn các hiệu ứng khác.
+   Dùng animation (không phải transition) để không đụng transition hover riêng của thẻ; độ trễ lần lượt
+   lấy từ --rd (ScrollRevealDirective gán theo revealDelay). */
+.reveal-rise:not(.visible) {
+  opacity: 0;
+}
+
+.reveal-rise.visible {
+  animation: reveal-rise-in 1.1s cubic-bezier(0.16, 1, 0.3, 1) var(--rd, 0ms) backwards;
+}
+
+@keyframes reveal-rise-in {
+  from { opacity: 0; transform: translateY(70px) scale(0.95); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-rise:not(.visible) { opacity: 1; }
+  .reveal-rise.visible { animation: none; }
+}
+
 /* ===== Stagger + "in 3D từng lớp" =====
    Đặt appScrollReveal="stagger" lên lưới/hàng: mỗi phần tử con hiện lần lượt (--sd),
    ảnh bên trong (.print-layer, ảnh thẻ sản phẩm .pc__img) lộ dần từ dưới lên theo từng
@@ -401,7 +422,7 @@ body.vw-open .fsb {
 }
 
 /* ======================================================================
-   TIÊU ĐỀ SECTION — chữ đậm thường, không viền/không đổ bóng (giống CellphoneS)
+   TIÊU ĐỀ SECTION — chữ đỏ rượu đậm, đổ bóng đỏ sẫm, không viền (cùng kiểu tiêu đề trang Flash Sale)
    Dùng: <h2 class="... lm-3d" data-text="Tiêu đề">Tiêu đề</h2>
    Tên class giữ nguyên để không phải sửa template; data-text không còn được dùng.
    !important vì style riêng của component (.ps-title, .cat-title...) có độ ưu tiên cao hơn.
@@ -415,10 +436,10 @@ body.vw-open .fsb {
   text-transform: uppercase;
   letter-spacing: 0 !important;
   line-height: 1.25 !important;
-  color: #3B2418 !important;
+  color: #A3152D !important;
   background: none !important;
   -webkit-text-stroke: 0 !important;
-  text-shadow: none !important;
+  text-shadow: 0 2px 0 #5C0A18 !important;
 }
 
 .lm-3d::before,

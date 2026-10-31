@@ -355,6 +355,23 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.accountMenuOpen = open;
   }
 
+  /**
+   * Bấm logo: đang ở trang chủ thì cuộn mượt lên đầu (router không điều hướng lại cùng URL nên
+   * trước đây bấm như không ăn); ở trang khác thì về trang chủ và hiện từ đầu trang.
+   */
+  goHome(event: MouseEvent): void {
+    // Giữ hành vi mở tab mới của trình duyệt (Ctrl/Cmd/Shift + click, chuột giữa).
+    if (event.ctrlKey || event.metaKey || event.shiftKey || event.button !== 0) return;
+    event.preventDefault();
+    this.closeMenus();
+    this.searchSuggestionsOpen = false;
+    if (this.router.url.split(/[?#]/)[0] === '/') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    this.router.navigateByUrl('/').then(() => window.scrollTo({ top: 0 }));
+  }
+
   async logout(): Promise<void> {
     this.accountMenuOpen = false;
     this.mobileMenuOpen = false;

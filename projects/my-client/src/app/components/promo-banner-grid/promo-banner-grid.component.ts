@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { ScrollRevealDirective } from '../../shared/directives/scroll-reveal.directive';
 import { AppIconComponent } from '../icon/icon.component';
 
 export interface PromoGridBanner {
@@ -33,7 +34,7 @@ export interface PromoWideBanner {
 @Component({
   selector: 'app-promo-banner-grid',
   standalone: true,
-  imports: [CommonModule, RouterLink, AppIconComponent],
+  imports: [CommonModule, RouterLink, AppIconComponent, ScrollRevealDirective],
   templateUrl: './promo-banner-grid.component.html',
   styleUrl: './promo-banner-grid.component.css'
 })

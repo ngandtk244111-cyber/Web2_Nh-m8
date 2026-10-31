@@ -75,10 +75,6 @@
   user-select: none;
 }
 
-.pd_carousel__3d-hint {
-  color: var(--pd-text-muted);
-}
-
 .pd_carousel__nav {
   position: absolute;
   top: 50%;

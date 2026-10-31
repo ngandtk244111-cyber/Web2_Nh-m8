@@ -64,8 +64,9 @@
 
           <a
             *ngIf="product.threeModelType"
-            [routerLink]="['/product', product.slug]"
-            [queryParams]="{ view: '3d' }"
+            [routerLink]="['/phong-3d', product.id]"
+            target="_blank"
+            rel="noopener"
             (click)="quickViewService.close()"
             class="qv-btn qv-btn--ghost">
             <app-icon name="cube" [size]="16"></app-icon>

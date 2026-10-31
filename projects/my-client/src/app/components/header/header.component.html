@@ -7,7 +7,7 @@
         <app-icon name="menu" [size]="20"></app-icon>
       </button>
 
-      <a routerLink="/" class="hd_m__logo">
+      <a routerLink="/" class="hd_m__logo" (click)="goHome($event)">
         <img src="assets/logo/lumea-mark.png" alt="Luméa" class="hd_logo__mark-img">
         <span class="hd_logo__text">Luméa</span>
       </a>
@@ -32,7 +32,7 @@
   <div class="hd_overlay" *ngIf="mobileMenuOpen" (click)="mobileMenuOpen = false"></div>
   <aside class="hd_drawer" [class.hd_drawer--open]="mobileMenuOpen">
     <div class="hd_drawer__head">
-      <a routerLink="/" class="hd_m__logo" (click)="mobileMenuOpen = false">
+      <a routerLink="/" class="hd_m__logo" (click)="mobileMenuOpen = false; goHome($event)">
         <img src="assets/logo/lumea-mark.png" alt="Luméa" class="hd_logo__mark-img">
         <div class="hd_drawer__brand">
           <span class="hd_drawer__brand-sub">ELEVATE YOUR SPACE</span>
@@ -111,8 +111,8 @@
   <div class="hd_main">
     <div class="hd_container hd_main__inner">
 
-      <a routerLink="/" class="hd_logo" aria-label="Luméa Interior & 3D — về trang chủ">
-        <img src="assets/logo/lumea-logo-white.png" alt="Luméa Interior & 3D" class="hd_logo__image" height="54">
+      <a routerLink="/" class="hd_logo" aria-label="Luméa Interior & 3D — về trang chủ" (click)="goHome($event)">
+        <img src="assets/logo/lumea-logo-white.png" alt="Luméa Interior & 3D" class="hd_logo__image" height="66">
       </a>
 
       <div class="hd_search-wrap">

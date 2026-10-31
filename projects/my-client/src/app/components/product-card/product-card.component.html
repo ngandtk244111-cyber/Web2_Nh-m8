@@ -67,8 +67,9 @@
         <div class="pc__actions absolute inset-x-0 bottom-0 p-2.5 flex items-center justify-center gap-2 flex-wrap">
           <a
             *ngIf="has3D"
-            [routerLink]="['/product', product.slug]"
-            [queryParams]="{ view: '3d' }"
+            [routerLink]="['/phong-3d', product.id]"
+            target="_blank"
+            rel="noopener"
             class="pc__btn">
             <app-icon name="cube" [size]="13"></app-icon>
             <span>Xem 3D</span>

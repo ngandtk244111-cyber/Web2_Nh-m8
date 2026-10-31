@@ -17,6 +17,14 @@ export interface ViewerRuntimeOptions {
   controlsMaxDistance?: number;
   controlsMinPolarAngle?: number;
   controlsMaxPolarAngle?: number;
+  /** Giới hạn xoay ngang (radian, theo quy ước OrbitControls). Không set = xoay tự do 360°. */
+  controlsMinAzimuthAngle?: number;
+  controlsMaxAzimuthAngle?: number;
+  /** false: không cho kéo dời camera (pan) — giữ đúng chỗ đứng đã canh sẵn. */
+  controlsEnablePan?: boolean;
+  controlsEnableZoom?: boolean;
+  /** Âm = đảo chiều kéo (dùng cho chế độ đứng yên nhìn quanh, kéo trái thì nhìn sang trái). */
+  controlsRotateSpeed?: number;
   alpha?: boolean;
   clearColor?: THREE.ColorRepresentation;
   onContextLost?: () => void;
@@ -168,6 +176,21 @@ export class ViewerRuntime {
     }
     if (options.controlsMaxPolarAngle !== undefined) {
       this.controls.maxPolarAngle = options.controlsMaxPolarAngle;
+    }
+    if (options.controlsMinAzimuthAngle !== undefined) {
+      this.controls.minAzimuthAngle = options.controlsMinAzimuthAngle;
+    }
+    if (options.controlsMaxAzimuthAngle !== undefined) {
+      this.controls.maxAzimuthAngle = options.controlsMaxAzimuthAngle;
+    }
+    if (options.controlsEnablePan !== undefined) {
+      this.controls.enablePan = options.controlsEnablePan;
+    }
+    if (options.controlsEnableZoom !== undefined) {
+      this.controls.enableZoom = options.controlsEnableZoom;
+    }
+    if (options.controlsRotateSpeed !== undefined) {
+      this.controls.rotateSpeed = options.controlsRotateSpeed;
     }
 
     this.controls.addEventListener('start', () => {

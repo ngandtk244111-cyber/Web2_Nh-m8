@@ -23,24 +23,11 @@
                 role="group"
                 [attr.aria-label]="(i + 1) + ' / ' + slideCount"
                 [attr.aria-hidden]="i !== slideIndex">
-                <ng-container *ngIf="is3DSlide(i); else photoSlide">
-                  <app-three-viewer
-                    *ngIf="i === slideIndex"
-                    [modelType]="product.threeModelType || ''"
-                    [modelUrl]="product.modelUrl"
-                    [colorHex]="previewColorHex"
-                    [roughness]="0.8"
-                    [metalness]="0.1">
-                  </app-three-viewer>
-                  <span *ngIf="i !== slideIndex" class="pd_carousel__3d-hint"><app-icon name="cube" [size]="28"></app-icon></span>
-                </ng-container>
-                <ng-template #photoSlide>
-                  <img
-                    [src]="galleryImages[i]"
-                    [alt]="product.name + ' - ảnh ' + (i + 1)"
-                    [attr.loading]="i === 0 ? null : 'lazy'"
-                    draggable="false">
-                </ng-template>
+                <img
+                  [src]="galleryImages[i]"
+                  [alt]="product.name + ' - ảnh ' + (i + 1)"
+                  [attr.loading]="i === 0 ? null : 'lazy'"
+                  draggable="false">
               </div>
             </div>
 
@@ -263,7 +250,7 @@
 
           <!-- 3D / Space Builder: chỉ hiện khi sản phẩm thực sự có dữ liệu tương ứng -->
           <div *ngIf="has3D || isInShowroom" class="pd_feature-btns">
-            <button *ngIf="has3D" type="button" class="pd_feature-btn" (click)="view3D(carousel)">
+            <button *ngIf="has3D" type="button" class="pd_feature-btn" (click)="view3D()">
               <app-icon name="cube" [size]="15"></app-icon>
               Xem 3D
             </button>

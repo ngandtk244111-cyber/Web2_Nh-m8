@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { ScrollRevealDirective } from '../../shared/directives/scroll-reveal.directive';
 
 export interface PromoPoster {
   image: string;
@@ -13,7 +14,7 @@ export interface PromoPoster {
 @Component({
   selector: 'app-promo-cards',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, ScrollRevealDirective],
   templateUrl: './promo-cards.component.html',
   styleUrl: './promo-cards.component.css'
 })

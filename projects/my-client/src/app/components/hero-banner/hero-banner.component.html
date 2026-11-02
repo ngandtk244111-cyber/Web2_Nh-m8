@@ -61,7 +61,7 @@
           <app-icon name="chevron-right" [size]="16"></app-icon>
         </button>
         <ng-template #ctaLink>
-          <a [routerLink]="item.ctaLink" class="hb_slide__cta">
+          <a [routerLink]="item.ctaLink" [queryParams]="item.ctaQueryParams" class="hb_slide__cta">
             {{ item.ctaLabel }}
             <app-icon name="chevron-right" [size]="16"></app-icon>
           </a>

@@ -8,7 +8,7 @@
     <!-- ===== Banner carousel (mũi tên + chấm, banner kế bên lấp ló) ===== -->
     <section class="br-hero" aria-roledescription="carousel" [attr.aria-label]="'Banner Luméa ' + st">
       <div class="br-hero__track" #banner (scroll)="onBannerScroll(banner)">
-        <a *ngFor="let b of banners" [routerLink]="b.link" class="br-slide">
+        <a *ngFor="let b of banners" [routerLink]="b.link" [queryParams]="b.queryParams" class="br-slide">
           <img [src]="b.image" [alt]="b.title" loading="lazy" draggable="false">
           <span class="br-slide__text">
             <span class="br-slide__eyebrow">Luméa {{ st }}</span>

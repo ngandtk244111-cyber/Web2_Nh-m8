@@ -288,7 +288,7 @@ export class CheckoutComponent implements OnInit {
 
   confirmBankTransferPaid(): void {
     if (this.createdOrder) {
-      this.orderService.confirmPayment(this.createdOrder.orderNumber).subscribe(() => {
+      this.orderService.confirmPayment(this.createdOrder.orderNumber, this.createdOrder.shippingAddress.phone).subscribe(() => {
         this.router.navigate(['/orders/track'], { queryParams: { orderNumber: this.createdOrder!.orderNumber } });
       });
     }

@@ -29,6 +29,7 @@ const STATUS_RANK: Partial<Record<OrderStatus, number>> = {
 })
 export class OrderTrackingComponent implements OnInit, OnDestroy {
   searchCode = '';
+  searchPhone = '';
   currentOrder: Order | undefined;
   isSearching = false;
   notFound = false;
@@ -83,26 +84,29 @@ export class OrderTrackingComponent implements OnInit, OnDestroy {
   }
 
   searchOrder(): void {
-    const code = this.searchCode.trim();
+    const code = this.searchCode.trim().toUpperCase();
     if (!code) return;
 
     this.isSearching = true;
     this.notFound = false;
     this.stopWatching();
-    this.orderService.getOrderByNumber(code).subscribe(order => {
+    this.orderService.getOrderByNumber(code, this.searchPhone.trim()).subscribe(order => {
       this.isSearching = false;
       this.currentOrder = order || undefined;
       this.notFound = !order;
       if (order) {
         this.lastUpdatedAt = new Date();
         this.startWatching(order.orderNumber);
+      } else {
+        // Mở từ link nhưng không phải chủ đơn: hiện lại ô tra cứu để nhập SĐT nhận hàng.
+        this.openedFromLink = false;
       }
     });
   }
 
   /** Theo dõi trực tiếp đơn đang xem: nhân viên cập nhật là trang tự đổi, không cần tải lại. */
   private startWatching(orderNumber: string): void {
-    this.watchSub = this.orderService.watchOrder(orderNumber).subscribe(updated => {
+    this.watchSub = this.orderService.watchOrder(orderNumber, this.searchPhone.trim()).subscribe(updated => {
       const prev = this.currentOrder;
       this.currentOrder = updated;
       this.lastUpdatedAt = new Date();

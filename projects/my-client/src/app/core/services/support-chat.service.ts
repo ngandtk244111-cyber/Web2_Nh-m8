@@ -141,7 +141,7 @@ export class SupportChatService {
     this.socket?.emit('chat:message', {
       sessionId: this.sessionId,
       text: text.trim(),
-      userId: user?._id,
+      userToken: this.authService.token || undefined,
       customerName: user?.fullName || undefined,
       customerPhone: user?.phoneNumber || undefined,
     });

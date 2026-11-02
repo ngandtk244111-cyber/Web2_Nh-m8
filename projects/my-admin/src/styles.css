@@ -5,9 +5,8 @@
 @tailwind utilities;
 
 /**
- * Luméa Admin — đồng bộ giao diện my-client: header đỏ MUJI (#A3152D), nền be kraft,
- * card trắng, sidebar sáng với mục đang chọn tô đỏ nhạt, Inter cho toàn bộ chữ.
- * Bố cục (sidebar thu gọn, topbar liền dải, breadcrumb + page header) tham khảo my-admin-vita.
+ * Luméa Admin — giao diện theo my-admin-vita (sidebar + topbar màu đậm, đầu bảng màu chủ đạo,
+ * thẻ thống kê viền trên, tiêu đề in hoa), đổi sang màu Luméa: đỏ MUJI #A3152D trên nền be kraft.
  */
 :root {
   --rust: #A3152D;
@@ -26,7 +25,8 @@
   --border-strong: #E3D5BA;
   --ring: rgba(163, 21, 45, 0.16);
 
-  --sidebar-width: 248px;
+  --main-dark: #891226;
+  --sidebar-width: clamp(220px, 18vw, 320px);
   --sidebar-collapsed-width: 72px;
 
   --font-heading: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -116,6 +116,7 @@
   /* ---------- Sidebar (mở rộng / thu gọn) ---------- */
   .sidebar {
     width: var(--sidebar-width);
+    background-color: #fff;
     transition: width 160ms ease-out;
   }
   .is-collapsed .sidebar {
@@ -125,77 +126,22 @@
   .is-collapsed .nav-count {
     display: none;
   }
-  .is-collapsed .sidebar-brand {
-    @apply justify-center px-0;
+  .sidebar-brand {
+    @apply flex items-center justify-center shrink-0 px-3;
+    height: 78px;
+    background-color: var(--main-dark);
+  }
+  .sidebar-brand img {
+    max-height: 58px;
+    width: auto;
+    object-fit: contain;
+  }
+  .is-collapsed .sidebar-brand img {
+    max-height: 44px;
   }
 
   .sidebar-scroll::-webkit-scrollbar-thumb {
     border-color: #fff;
-  }
-
-  .nav-group-label {
-    @apply px-5 pt-3 pb-1 text-[10px] uppercase tracking-[0.16em] font-semibold text-[#93877E] whitespace-nowrap;
-  }
-  .nav-group-label:first-child {
-    @apply pt-0;
-  }
-  .is-collapsed .nav-group-label {
-    font-size: 0;
-    @apply mx-4 my-2 p-0 h-px bg-[#EFE6D3];
-  }
-
-  /* Nhóm menu dạng accordion: dòng tiêu đề có icon + mũi tên, mục con thụt vào kèm đường kẻ dọc */
-  .nav-group-toggle {
-    @apply relative flex items-center gap-3 mx-3 mt-1 px-3 py-2 rounded-lg text-[13px] font-semibold text-left text-[#3C332D] whitespace-nowrap transition-colors duration-150;
-    width: calc(100% - 1.5rem);
-  }
-  .nav-group-toggle > app-icon:first-child {
-    @apply shrink-0 text-[#93877E] transition-colors duration-150;
-  }
-  .nav-group-toggle > span {
-    @apply flex-1 min-w-0 truncate;
-  }
-  .nav-group-toggle:hover {
-    @apply bg-[#F7F2E7] text-[#1F1712];
-  }
-  .nav-group-toggle.has-active,
-  .nav-group-toggle.has-active > app-icon:first-child {
-    @apply text-[#A3152D];
-  }
-  .nav-group-chevron {
-    @apply inline-flex shrink-0 text-[#93877E];
-  }
-  .nav-group {
-    @apply ml-[26px] mr-0 pl-1 mb-1 border-l border-[#EFE6D3] space-y-px;
-  }
-  .nav-group .nav-item {
-    @apply ml-2 py-1.5 text-[13px];
-    width: calc(100% - 1.25rem);
-  }
-  .nav-group .nav-item.is-active::before {
-    @apply -left-[13px];
-  }
-  .nav-group.is-closed {
-    display: none;
-  }
-  /* Sidebar thu gọn chỉ hiện icon: tiêu đề nhóm thành vạch ngăn, luôn hiện đủ mục con */
-  .is-collapsed .nav-group-toggle {
-    @apply h-px my-2 mx-4 p-0 bg-[#EFE6D3] overflow-hidden pointer-events-none;
-    width: calc(100% - 2rem);
-  }
-  .is-collapsed .nav-group-toggle > * {
-    display: none;
-  }
-  .is-collapsed .nav-group,
-  .is-collapsed .nav-group.is-closed {
-    @apply block ml-0 pl-0 border-l-0;
-  }
-  .is-collapsed .nav-group .nav-item {
-    @apply mx-3;
-    width: calc(100% - 1.5rem);
-  }
-  .is-collapsed .nav-group .nav-item.is-active::before {
-    @apply -left-3;
   }
 
   /* Mục menu dạng "viên" bo tròn; active: nền đỏ nhạt + chữ đỏ + vạch đỏ bên trái */
@@ -226,6 +172,70 @@
     @apply justify-center px-0;
   }
 
+  /* Nhóm menu dạng accordion: dòng tiêu đề có icon + mũi tên, mục con thụt vào kèm đường kẻ dọc */
+  .nav-group-toggle {
+    @apply relative flex items-center gap-3 mx-3 mt-1 px-3 py-2 rounded-lg text-[13px] font-semibold text-left text-[#3C332D] whitespace-nowrap transition-colors duration-150;
+    width: calc(100% - 1.5rem);
+  }
+  .nav-group-toggle > app-icon:first-child {
+    @apply shrink-0 text-[#93877E] transition-colors duration-150;
+  }
+  .nav-group-toggle > span {
+    @apply flex-1 min-w-0 truncate;
+  }
+  .nav-group-toggle:hover {
+    @apply bg-[#F7F2E7] text-[#1F1712];
+  }
+  .nav-group-toggle.has-active,
+  .nav-group-toggle.has-active > app-icon:first-child {
+    @apply text-[#A3152D];
+  }
+  .nav-group-chevron {
+    @apply inline-flex shrink-0 text-[#93877E];
+  }
+  .is-collapsed .nav-group-toggle {
+    @apply justify-center px-0;
+  }
+  .nav-group {
+    @apply ml-[26px] mr-0 pl-1 mb-1 border-l border-[#EFE6D3] space-y-px;
+  }
+  .nav-group .nav-item {
+    @apply ml-2 py-1.5 text-[13px];
+    width: calc(100% - 1.25rem);
+  }
+  .nav-group .nav-item.is-active::before {
+    @apply -left-[13px];
+  }
+  .nav-group.is-closed {
+    display: none;
+  }
+
+  /* Sidebar thu gọn: rê chuột vào icon nhóm thì hiện menu bay */
+  .is-collapsed .nav-group,
+  .is-collapsed .nav-group.is-closed {
+    display: none;
+  }
+  .is-collapsed .nav-section:hover .nav-group,
+  .is-collapsed .nav-section:focus-within .nav-group {
+    @apply block overflow-y-auto m-0 py-2 border-0 bg-white rounded-[10px] shadow-lift;
+    position: fixed;
+    left: var(--sidebar-collapsed-width);
+    top: var(--flyout-top, 8px);
+    min-width: 230px;
+    max-height: calc(100vh - var(--flyout-top, 8px) - 8px);
+    z-index: 50;
+  }
+  .is-collapsed .nav-section .nav-group .nav-item {
+    @apply mx-2 justify-start px-3 py-2;
+    width: calc(100% - 1rem);
+  }
+  .is-collapsed .nav-section .nav-group .nav-item.is-active::before {
+    display: none;
+  }
+  .is-collapsed .nav-section .nav-group .nav-item .nav-text {
+    display: inline;
+  }
+
   .nav-count {
     @apply ml-auto text-[10px] font-semibold tabular-nums px-1.5 py-0.5 rounded-md bg-[#EFE6D3] text-[#7A6F67];
   }
@@ -238,8 +248,14 @@
   }
 
   /* ---------- Topbar ---------- */
+  .top-bar {
+    @apply shrink-0 flex items-center justify-between gap-6 text-white z-20 pl-1 pr-6;
+    height: 78px;
+    background-color: var(--main-dark);
+    box-shadow: 0 4px 20px rgba(31, 23, 18, 0.05);
+  }
   .topbar-btn {
-    @apply relative inline-flex items-center justify-center w-10 h-10 rounded-full text-white/85 transition;
+    @apply relative inline-flex items-center justify-center w-10 h-10 rounded-full text-white/90 transition;
   }
   .topbar-btn:hover {
     @apply text-white bg-white/10;
@@ -258,7 +274,17 @@
 
   /* ---------- Page header ---------- */
   .page-header {
-    @apply flex items-end justify-between gap-6 pb-1;
+    @apply flex flex-wrap items-baseline gap-x-4 gap-y-0.5 rounded-2xl px-[22px] py-3;
+    background-color: var(--bg-subtle);
+    box-shadow: 0 1px 2px 0 rgba(31, 23, 18, 0.05);
+  }
+  .content-title {
+    @apply m-0 uppercase font-bold;
+    font-size: 22px;
+    color: var(--rust);
+  }
+  .content-subtitle {
+    @apply m-0 text-[13px] text-[#7A6F67];
   }
 
   /* ---------- Surfaces ---------- */
@@ -286,33 +312,33 @@
     @apply text-[#1F1712] border-[#E3D5BA] bg-[#FBF8F1];
   }
 
-  /* ---------- Thẻ thống kê dạng bộ lọc (kiểu vita: viền trên màu, bấm để lọc) ---------- */
+  /* ---------- Thẻ thống kê dạng bộ lọc (như Vita: viền trên màu, số căn giữa, bấm để lọc) ---------- */
   .filter-stats {
-    @apply grid grid-cols-2 sm:grid-cols-3 gap-3;
+    @apply grid grid-cols-2 sm:grid-cols-3 gap-4;
   }
   .filter-stat {
     --tone: #A3152D;
-    @apply relative bg-white rounded-xl border border-[#E8DEC9] shadow-xs px-4 pt-3 pb-3.5 text-left overflow-hidden transition duration-200;
-  }
-  .filter-stat::before {
-    content: '';
-    background: var(--tone);
-    @apply absolute inset-x-0 top-0 h-[3px];
+    @apply relative bg-white rounded-xl px-2.5 pt-2 pb-2.5 text-center overflow-hidden transition duration-200;
+    border: 1px solid var(--border-subtle);
+    border-top: 4px solid var(--tone);
+    box-shadow: 0 2px 8px rgba(31, 23, 18, 0.05);
   }
   .filter-stat:hover {
-    @apply shadow-card -translate-y-0.5 border-[#E3D5BA];
+    @apply -translate-y-0.5;
+    box-shadow: 0 8px 16px rgba(31, 23, 18, 0.08);
   }
   .filter-stat.is-active {
-    border-color: var(--tone);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--tone) 14%, transparent);
-    @apply bg-[#FBF8F1];
+    border: 2px solid var(--tone);
+    border-top-width: 4px;
+    background-color: var(--bg-canvas);
   }
   .filter-stat__label {
-    @apply block text-[10.5px] font-semibold uppercase tracking-[0.12em] text-[#7A6F67] truncate;
+    @apply block mb-1 text-[11px] leading-tight font-semibold uppercase text-[#7A6F67] truncate;
+    letter-spacing: 0.35px;
   }
   .filter-stat__value {
     color: var(--tone);
-    @apply block mt-1 font-serif text-[28px] leading-none font-semibold tabular-nums;
+    @apply block text-[22px] leading-tight font-extrabold tabular-nums;
   }
   .tone-rust { --tone: #A3152D; }
   .tone-amber { --tone: #B45309; }
@@ -322,47 +348,62 @@
   .tone-orange { --tone: #B7485B; }
   .tone-muted { --tone: #7A6F67; }
 
-  /* ---------- Toolbar + ô tìm kiếm có icon ---------- */
+  /* ---------- Toolbar + ô tìm kiếm (như Vita: không khung, icon bên phải) ---------- */
   .toolbar {
-    @apply flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white rounded-2xl border border-[#E8DEC9] shadow-card px-4 py-3;
+    @apply flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-1;
   }
   .toolbar__meta {
-    @apply text-xs text-[#7A6F67] whitespace-nowrap;
+    @apply text-sm text-[#7A6F67] whitespace-nowrap;
   }
   .search-field {
     @apply relative w-full sm:w-80;
   }
   .search-field app-icon {
-    @apply absolute left-3 top-1/2 -translate-y-1/2 text-[#93877E] pointer-events-none;
+    @apply absolute right-3 top-1/2 -translate-y-1/2 text-[#B7485B] pointer-events-none;
   }
   .search-field input {
-    @apply w-full text-[13px] bg-[#FBF8F1] border border-[#E3D5BA] rounded-lg pl-9 pr-3 py-2 text-[#1F1712] placeholder-[#93877E];
+    @apply w-full text-sm bg-white border border-[#E3D5BA] rounded-lg pl-4 pr-10 py-2.5 text-[#1F1712] placeholder-[#93877E];
   }
 
   .empty-state {
     @apply py-14 text-center text-[13px] text-[#7A6F67];
   }
 
-  /* ---------- Tables ---------- */
+  /* ---------- Tables (như Vita: đầu bảng màu chủ đạo, chữ trắng) ---------- */
   .castlery-table {
     width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
+    border-collapse: collapse;
   }
   .castlery-table thead th {
-    @apply bg-[#F7F2E8] text-[#7A6F67] text-[11px] font-semibold uppercase tracking-[0.12em] px-5 py-3.5 text-left whitespace-nowrap border-b border-[#E8DEC9];
-  }
-  .castlery-table tbody td {
-    @apply px-5 py-3.5 text-[13px] text-[#1F1712] align-middle border-b border-[#EFE6D3];
+    @apply text-white text-xs font-bold uppercase px-3 py-2.5 text-left whitespace-nowrap;
+    background-color: var(--rust);
+    letter-spacing: 0.5px;
   }
   .castlery-table tbody tr {
+    border-bottom: 1px solid var(--bg-tint);
     transition: background-color 150ms ease;
   }
-  .castlery-table tbody tr:hover td {
-    background-color: #FCF9F3;
-  }
-  .castlery-table tbody tr:last-child td {
+  .castlery-table tbody tr:last-child {
     border-bottom: none;
+  }
+  .castlery-table tbody td {
+    @apply px-3 py-2.5 text-[13.5px] font-medium text-[#1F1712] align-middle;
+  }
+  .castlery-table tbody tr:hover {
+    background-color: var(--bg-canvas);
+  }
+  /* Ghim cột thao tác vào cạnh phải khi bảng rộng hơn khung, nút sửa/xóa không bị đẩy ra ngoài. */
+  .castlery-table .col-actions {
+    position: sticky;
+    right: 0;
+    z-index: 1;
+  }
+  .castlery-table tbody td.col-actions {
+    background-color: #fff;
+    box-shadow: -1px 0 0 var(--bg-tint);
+  }
+  .castlery-table tbody tr:hover td.col-actions {
+    background-color: var(--bg-canvas);
   }
 
   .status-badge {

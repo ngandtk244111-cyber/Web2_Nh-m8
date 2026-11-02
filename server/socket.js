@@ -1,7 +1,9 @@
-const mongoose = require('mongoose');
 const { Server } = require('socket.io');
 const ChatMessage = require('./models/ChatMessage');
-const Admin = require('./models/Admin');
+const Order = require('./models/Order');
+const { adminIdFromToken, userIdFromToken } = require('./middleware/auth');
+const { adminHasPermission } = require('./utils/permissions');
+const { canWatchOrder, isLocked, recordFailure } = require('./utils/order-access');
 const { setIO, orderRoom } = require('./realtime');
 const { buildAutoReply } = require('./chatAutoReply');
 
@@ -11,11 +13,6 @@ const MAX_MESSAGE_LENGTH = 2000;
 const AUTO_REPLY_DELAY_MS = 900;
 // Trong 10 phút: trợ lý vừa gửi menu -> chỉ xác nhận ngắn; nhân viên vừa trả lời -> trợ lý không chen vào.
 const AUTO_REPLY_COOLDOWN_MS = 10 * 60 * 1000;
-
-async function isAdmin(adminId) {
-  if (!adminId || !mongoose.isValidObjectId(adminId)) return false;
-  return !!(await Admin.exists({ _id: adminId }));
-}
 
 function attachSocket(httpServer, corsOrigins) {
   const io = new Server(httpServer, {
@@ -68,10 +65,19 @@ function attachSocket(httpServer, corsOrigins) {
   }
 
   io.on('connection', (socket) => {
-    // Trang Tra cứu đơn: theo dõi trực tiếp 1 mã đơn (cùng mức công khai với GET /orders/by-number/:orderNumber).
-    socket.on('order:watch', (orderNumber) => {
-      const code = String(orderNumber || '').trim().toUpperCase();
-      if (code) socket.join(orderRoom(code));
+    // Trang Tra cứu đơn: theo dõi trực tiếp 1 mã đơn, cùng điều kiện với GET /orders/by-number/:orderNumber
+    // (chủ tài khoản hoặc đúng SĐT nhận hàng) vì sự kiện cập nhật chứa thông tin giao hàng.
+    socket.on('order:watch', async ({ orderNumber, userToken, phone } = {}) => {
+      try {
+        const code = String(orderNumber || '').trim().toUpperCase();
+        const ip = String(socket.handshake.headers['x-forwarded-for'] || socket.handshake.address).split(',')[0].trim();
+        if (!code || isLocked(ip)) return;
+        const order = await Order.findOne({ orderNumber: code });
+        if (order && await canWatchOrder(order, { userToken, phone })) socket.join(orderRoom(code));
+        else recordFailure(ip);
+      } catch (err) {
+        console.error('order:watch error', err);
+      }
     });
     socket.on('order:unwatch', (orderNumber) => {
       const code = String(orderNumber || '').trim().toUpperCase();
@@ -88,9 +94,10 @@ function attachSocket(httpServer, corsOrigins) {
       socket.emit('chat:staff-status', { online: staffOnline() });
     });
 
-    // Nhân viên (my-admin) vào phòng chung — chỉ khi adminId tồn tại thật.
-    socket.on('chat:staff-join', async (adminId) => {
-      if (!(await isAdmin(adminId))) return;
+    // Nhân viên (my-admin) vào phòng chung — chỉ khi token hợp lệ.
+    socket.on('chat:staff-join', async (adminToken) => {
+      const adminId = await adminIdFromToken(adminToken);
+      if (!adminId || !(await adminHasPermission(adminId, 'customers.view'))) return;
       const wasOnline = staffOnline();
       socket.join(STAFF_ROOM);
       socket.data.isStaff = true;
@@ -119,19 +126,22 @@ function attachSocket(httpServer, corsOrigins) {
       }
     });
 
-    // Vai trò người gửi do server quyết định: có adminId hợp lệ mới là "staff", còn lại là khách.
-    socket.on('chat:message', async ({ sessionId, text, adminId, userId, customerName, customerPhone } = {}) => {
+    // Vai trò người gửi do server quyết định: có token hợp lệ mới là "staff", còn lại là khách.
+    socket.on('chat:message', async ({ sessionId, text, adminToken, userToken, customerName, customerPhone } = {}) => {
       try {
         const clean = String(text || '').trim().slice(0, MAX_MESSAGE_LENGTH);
         if (!sessionId || !clean) return;
 
-        const fromStaff = adminId ? await isAdmin(adminId) : false;
+        const adminId = adminToken ? await adminIdFromToken(adminToken) : null;
+        const fromStaff = !!adminId;
+        if (fromStaff && !(await adminHasPermission(adminId, 'customers.edit'))) return;
+        const userId = !fromStaff && userToken ? await userIdFromToken(userToken) : null;
         const message = await ChatMessage.create({
           sessionId,
           text: clean,
           ...(fromStaff
             ? { sender: 'staff', staffId: adminId, readByStaff: true }
-            : { sender: 'customer', userId: userId || null, customerName: customerName || null, customerPhone: customerPhone || null }),
+            : { sender: 'customer', userId, customerName: customerName || null, customerPhone: customerPhone || null }),
         });
         io.to([sessionId, STAFF_ROOM]).emit('chat:message', message);
         if (!fromStaff) scheduleAutoReply(sessionId, clean);

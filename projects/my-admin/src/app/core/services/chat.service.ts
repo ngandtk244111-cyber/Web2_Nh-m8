@@ -33,7 +33,7 @@ export interface ChatSession {
 
 /**
  * Hộp thư hỗ trợ khách hàng: nhận tin realtime của mọi cuộc chat qua phòng "staff" của socket.io
- * (server chỉ cho vào phòng khi adminId hợp lệ) và trả lời vào đúng cuộc chat của khách.
+ * (server chỉ cho vào phòng khi token hợp lệ) và trả lời vào đúng cuộc chat của khách.
  */
 @Injectable({
   providedIn: 'root'
@@ -69,7 +69,7 @@ export class ChatService {
   connect(): void {
     if (this.socket) return;
     this.socket = io(environment.socketUrl);
-    this.socket.on('connect', () => this.socket?.emit('chat:staff-join', this.adminAuth.adminId));
+    this.socket.on('connect', () => this.socket?.emit('chat:staff-join', this.adminAuth.token));
     this.socket.on('disconnect', () => {
       this.onlineSignal.set(new Set());
       this.typingSignal.set(new Set());
@@ -168,7 +168,7 @@ export class ChatService {
     const clean = text.trim();
     if (!sessionId || !clean) return;
     this.stopTyping();
-    this.socket?.emit('chat:message', { sessionId, text: clean, adminId: this.adminAuth.adminId });
+    this.socket?.emit('chat:message', { sessionId, text: clean, adminToken: this.adminAuth.token });
   }
 
   private markRead(sessionId: string): void {

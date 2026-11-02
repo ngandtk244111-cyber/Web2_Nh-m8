@@ -9,6 +9,7 @@ const BASE = `${environment.apiUrl}/auth`;
 export interface AuthApiResponse {
   success: boolean;
   user?: LoggedUser;
+  token?: string;
   message?: string;
   error?: string;
   devOtp?: string;

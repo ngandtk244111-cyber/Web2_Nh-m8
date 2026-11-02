@@ -1,4 +1,4 @@
-import { Injectable, signal, computed, inject } from '@angular/core';
+import { Injectable, signal, computed, effect, inject, untracked } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, catchError, map, of } from 'rxjs';
 import { CartItem, Coupon } from '../models/cart.model';
@@ -9,6 +9,7 @@ import { ToastService } from './toast.service';
 import { AuthService } from './auth.service';
 import { LoginModalService } from './login-modal.service';
 import { voucherDiscount } from './voucher.service';
+import { UserData, UserDataService } from './user-data.service';
 
 @Injectable({
   providedIn: 'root'
@@ -19,11 +20,22 @@ export class CartService {
   private readonly toast = inject(ToastService);
   private readonly auth = inject(AuthService);
   private readonly loginModal = inject(LoginModalService);
+  private readonly userData = inject(UserDataService);
+
+  constructor() {
+    effect(() => {
+      const userId = this.auth.currentUser()?._id;
+      untracked(() => (userId ? this.syncFromAccount() : this.resetAfterLogout()));
+    });
+  }
 
   // Gom các lần thêm giỏ trong cùng một lượt xử lý (vd. "thêm tất cả") thành một thông báo duy nhất.
   private pendingAddedNames: string[] = [];
 
-  private readonly storageKey = 'deco3d_cart';
+  // Giỏ hàng lưu trên MongoDB theo tài khoản. Bản trên trình duyệt chỉ là cache để F5 hiện ngay,
+  // bị bản server thay thế sau khi tải xong. Giỏ cũ ở khoá legacy được gộp vào tài khoản 1 lần.
+  private readonly storageKey = 'deco3d_cart_cache';
+  private readonly legacyStorageKey = 'deco3d_cart';
   private readonly checkoutSelectionKey = 'deco3d_checkout_selection';
 
   // Signals
@@ -119,9 +131,9 @@ export class CartService {
     }
   }
 
-  private loadCart(): CartItem[] {
+  private loadCart(key = this.storageKey): CartItem[] {
     try {
-      const stored = localStorage.getItem(this.storageKey);
+      const stored = localStorage.getItem(key);
       if (stored) return JSON.parse(stored);
     } catch (e) {
       console.warn('Failed to load cart', e);
@@ -129,13 +141,56 @@ export class CartService {
     return [];
   }
 
-  private saveCart(items: CartItem[]): void {
+  private cacheCart(items: CartItem[]): void {
     try {
       localStorage.setItem(this.storageKey, JSON.stringify(items));
-      this.itemsSignal.set(items);
     } catch (e) {
-      console.warn('Failed to save cart', e);
+      console.warn('Failed to cache cart', e);
     }
+  }
+
+  private saveCart(items: CartItem[]): void {
+    this.itemsSignal.set(items);
+    this.cacheCart(items);
+    this.userData.save({ cart: items });
+  }
+
+  private syncFromAccount(): void {
+    this.userData.load().subscribe({
+      next: data => this.applyAccountData(data),
+      error: err => console.warn('Failed to load cart', err),
+    });
+  }
+
+  private applyAccountData(data: UserData): void {
+    const legacyCart = this.loadCart(this.legacyStorageKey);
+    const serverIds = new Set(data.cart.map(item => item.id));
+    const cart = [...data.cart, ...legacyCart.filter(item => !serverIds.has(item.id))];
+    this.itemsSignal.set(cart);
+    this.cacheCart(cart);
+
+    const legacyCoupons = this.loadSavedCoupons();
+    const serverCodes = new Set(data.savedCoupons.map(c => c.code));
+    const coupons = [...data.savedCoupons, ...legacyCoupons.filter(c => !serverCodes.has(c.code))];
+    this.savedCouponsSignal.set(coupons);
+
+    if (cart.length !== data.cart.length) this.userData.save({ cart });
+    if (coupons.length !== data.savedCoupons.length) this.userData.save({ savedCoupons: coupons });
+    try {
+      localStorage.removeItem(this.legacyStorageKey);
+      localStorage.removeItem(this.savedCouponsKey);
+    } catch { /* ignore */ }
+  }
+
+  private resetAfterLogout(): void {
+    this.userData.discardPending();
+    this.itemsSignal.set([]);
+    this.appliedCouponSignal.set(null);
+    this.savedCouponsSignal.set([]);
+    this.clearCheckoutSelection();
+    try {
+      localStorage.removeItem(this.storageKey);
+    } catch { /* ignore */ }
   }
 
   private loadCheckoutSelection(): string[] | null {
@@ -383,7 +438,7 @@ export class CartService {
 
   private persistSavedCoupons(list: Coupon[]): void {
     this.savedCouponsSignal.set(list);
-    localStorage.setItem(this.savedCouponsKey, JSON.stringify(list));
+    this.userData.save({ savedCoupons: list });
   }
 
   private loadSavedCoupons(): Coupon[] {

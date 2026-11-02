@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, computed, effect, signal, untracked } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, effect, inject, signal, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { ProductService } from '../../core/services/product.service';
@@ -8,6 +8,7 @@ import { ToastService } from '../../core/services/toast.service';
 import { MascotService } from '../../core/services/mascot.service';
 import { FlashSaleService, FlashSlot, FlashSlotStatus } from '../../core/services/flash-sale.service';
 import { NotificationService } from '../../core/services/notification.service';
+import { BannerService } from '../../core/services/banner.service';
 import { Product } from '../../core/models/product.model';
 import { AppIconComponent } from '../../components/icon/icon.component';
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
@@ -96,6 +97,9 @@ const DISCOVER: (NavLink & { image: string })[] = [
   styleUrl: './flash-sale.component.css'
 })
 export class FlashSaleComponent implements OnInit, OnDestroy {
+  private bannerService = inject(BannerService);
+  readonly heroImage = computed(() => this.bannerService.overrides()['flash-sale-hero']?.imageUrl || 'assets/hero-banner/hero-deal-today.png');
+
   readonly categoryLinks = CATEGORY_LINKS;
   readonly discover = DISCOVER;
 

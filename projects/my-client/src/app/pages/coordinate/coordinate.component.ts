@@ -4,6 +4,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { RoomService } from '../../core/services/room.service';
 import { ProductService } from '../../core/services/product.service';
 import { NewsService } from '../../core/services/news.service';
+import { BannerService } from '../../core/services/banner.service';
 import { Product } from '../../core/models/product.model';
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
 
@@ -45,6 +46,9 @@ export class CoordinateComponent {
   private productService = inject(ProductService);
   private newsService = inject(NewsService);
   private route = inject(ActivatedRoute);
+  private bannerService = inject(BannerService);
+
+  readonly bannerImage = computed(() => this.bannerService.overrides()['coordinate-banner']?.imageUrl || 'assets/hero-banner/hero-room-3d.png');
 
   private readonly roomIdSignal = signal<string | null>(null);
 

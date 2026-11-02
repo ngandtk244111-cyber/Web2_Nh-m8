@@ -16,6 +16,7 @@ export class LoginComponent {
   password = '';
   submitting = false;
   error = '';
+  showPassword = false;
 
   constructor(private adminAuth: AdminAuthService, private router: Router) {}
 
@@ -39,11 +40,5 @@ export class LoginComponent {
         this.error = err?.error?.error || 'Không kết nối được tới server';
       },
     });
-  }
-
-  fillDemo(u: string, p: string): void {
-    this.username = u;
-    this.password = p;
-    this.error = '';
   }
 }

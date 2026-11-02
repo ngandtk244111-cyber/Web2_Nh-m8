@@ -13,6 +13,15 @@ const videoSchema = new mongoose.Schema({
   active: { type: Boolean, default: true },
   order: { type: Number, default: 0 },
   createdBy: { type: String, default: null },
-}, { timestamps: true });
+}, {
+  timestamps: true,
+  // Route công khai trả document này — không gửi id nhân viên ra ngoài (xem middleware/auth.js).
+  toJSON: {
+    transform(_doc, ret) {
+      delete ret.createdBy;
+      return ret;
+    },
+  },
+});
 
 module.exports = mongoose.model('Video', videoSchema);

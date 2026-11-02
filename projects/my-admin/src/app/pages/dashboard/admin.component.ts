@@ -1,7 +1,8 @@
 import { Component, ElementRef, OnDestroy, OnInit, ViewChild, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { ProductService } from '../../core/services/product.service';
 import { OrderService } from '../../core/services/order.service';
 import { CustomRequestService } from '../../core/services/custom-request.service';
@@ -12,6 +13,7 @@ import { NewsService } from '../../core/services/news.service';
 import { VideoService } from '../../core/services/video.service';
 import { ChatService, ChatSession } from '../../core/services/chat.service';
 import { ReviewService, AdminReview } from '../../core/services/review.service';
+import { AdminDataService, AdminConfigKey } from '../../core/services/admin-data.service';
 import { Product, ProductionType, ProductCategory } from '../../core/models/product.model';
 import { Order, ProductionStep, OrderStatus, ShippingOptions } from '../../core/models/order.model';
 import { CustomRequest, CustomRequestStatus } from '../../core/models/custom-request.model';
@@ -22,7 +24,28 @@ import { Video } from '../../core/models/video.model';
 import { AppIconComponent } from '../../components/icon/icon.component';
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
 import { LumeaMapComponent } from '../../components/lumea-map/lumea-map.component';
+import { ImageCropperComponent } from '../../components/image-cropper/image-cropper.component';
+import { SalesRange, SalesRangePickerComponent, SalesRangeSelection } from '../../components/sales-range-picker/sales-range-picker.component';
+import { BANNER_GROUPS, BANNER_SLOTS, BannerSlot } from '../../core/data/banner-slots';
 import { environment } from '../../../environments/environment';
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+const MAX_DAILY_SALES_BARS = 31;
+const MAX_WEEKLY_SALES_DAYS = 186;
+const MAX_SALES_LABELS = 8;
+
+/** Quyền cần có để xem từng tab; Dashboard ai cũng vào được. */
+const TAB_VIEW_RULES: Partial<Record<string, string>> = {
+  products: 'products.view', categories: 'products.view',
+  inventory: 'inventory.view', suppliers: 'inventory.view',
+  orders: 'orders.view', warranty: 'orders.view',
+  'custom-requests': 'custom3d.view',
+  customers: 'customers.view', messages: 'customers.view', reviews: 'customers.view',
+  promotions: 'marketing.view', banners: 'marketing.view',
+  community: 'content.view', articles: 'content.view', videos: 'content.view', rooms: 'content.view',
+  staff: 'staff.view', roles: 'staff.view',
+  settings: 'settings.view', 'audit-log': 'settings.view',
+};
 
 /** Bộ lọc tab Cộng đồng: bài đăng hôm nay, đang hiển thị, bị bộ lọc tự động chặn, nhân viên đã ẩn. */
 export type CommunityFilter = 'TODAY' | 'ALL' | 'PUBLISHED' | 'REJECTED' | 'HIDDEN' | 'STAFF_PICK';
@@ -60,6 +83,7 @@ export type AdminTab =
   | 'suppliers'
   | 'orders'
   | 'custom-requests'
+  | 'warranty'
   | 'customers'
   | 'messages'
   | 'reviews'
@@ -77,14 +101,26 @@ export type AdminTab =
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule, FormsModule, AppIconComponent, VndPipe, LumeaMapComponent],
+  imports: [CommonModule, FormsModule, AppIconComponent, VndPipe, LumeaMapComponent, ImageCropperComponent, SalesRangePickerComponent],
   templateUrl: './admin.component.html',
   styleUrl: './admin.component.css'
 })
 export class AdminComponent implements OnInit, OnDestroy {
   readonly clientAppUrl = environment.clientAppUrl;
 
-  activeTab: AdminTab = 'dashboard';
+  private currentTab: AdminTab = 'dashboard';
+  private routeSub?: Subscription;
+
+  // Tab nằm trên URL (/orders, /products...): tải lại trang và nút Back của trình duyệt đều đúng tab.
+  get activeTab(): AdminTab {
+    return this.currentTab;
+  }
+  set activeTab(tab: AdminTab) {
+    if (tab === this.currentTab) return;
+    this.currentTab = tab;
+    this.router.navigate(['/', tab]);
+  }
+
   globalSearch = '';
   readonly today = new Date();
 
@@ -93,6 +129,28 @@ export class AdminComponent implements OnInit, OnDestroy {
 
   toggleSidebar(): void {
     this.isSidebarCollapsed = !this.isSidebarCollapsed;
+  }
+
+  canViewTab(tab: string): boolean {
+    const rule = TAB_VIEW_RULES[tab];
+    return !rule || this.adminAuth.can(rule);
+  }
+
+  canViewNavGroup(group: string): boolean {
+    return (Object.keys(this.tabMeta) as AdminTab[]).some(tab => this.tabMeta[tab].group === group && this.canViewTab(tab));
+  }
+
+  /** Mở thẳng URL của tab không có quyền thì về Dashboard. Chờ tải xong quyền mới xét. */
+  private enforceTabAccess(): void {
+    if (!this.adminAuth.permissions() || this.canViewTab(this.currentTab)) return;
+    this.showToast('Bạn không có quyền xem mục này', 'warning');
+    this.router.navigate(['/dashboard'], { replaceUrl: true });
+  }
+
+  /** Sidebar thu gọn: đặt menu bay ngang hàng với nhóm đang rê chuột. */
+  onNavSectionEnter(event: MouseEvent): void {
+    const section = event.currentTarget as HTMLElement;
+    section.style.setProperty('--flyout-top', `${section.getBoundingClientRect().top}px`);
   }
 
   // Nhóm menu gập/mở để sidebar không phải cuộn dài. Chưa bấm gì thì chỉ mở nhóm chứa tab
@@ -109,7 +167,7 @@ export class AdminComponent implements OnInit, OnDestroy {
 
   /** Bấm tên nhóm trên breadcrumb: mở tab đầu tiên của nhóm (theo thứ tự trong tabMeta) và mở nhóm trên sidebar. */
   goToGroup(group: string): void {
-    const firstTab = (Object.keys(this.tabMeta) as AdminTab[]).find(tab => this.tabMeta[tab].group === group);
+    const firstTab = (Object.keys(this.tabMeta) as AdminTab[]).find(tab => this.tabMeta[tab].group === group && this.canViewTab(tab));
     if (firstTab) this.activeTab = firstTab;
     this.navGroupState[group] = true;
   }
@@ -123,6 +181,7 @@ export class AdminComponent implements OnInit, OnDestroy {
     'suppliers': { group: 'Thương mại & kho', title: 'Nhà cung cấp & xưởng chế tác', subtitle: 'Đối tác vật tư, filament và gia công' },
     'orders': { group: 'Vận hành & sản xuất', title: 'Đơn hàng', subtitle: 'Tiến độ xử lý, sản xuất và giao hàng' },
     'custom-requests': { group: 'Vận hành & sản xuất', title: 'Yêu cầu in 3D riêng', subtitle: 'Brief thiết kế từ khách hàng chờ duyệt & báo giá' },
+    'warranty': { group: 'Vận hành & sản xuất', title: 'Bảo hành', subtitle: 'Phiếu bảo hành theo đơn hàng và yêu cầu khách gửi từ cửa hàng' },
     'customers': { group: 'Khách hàng & CSKH', title: 'Khách hàng', subtitle: 'Khách mua hàng tổng hợp từ đơn, lịch sử mua và tỉ lệ nhận hàng COD' },
     'messages': { group: 'Khách hàng & CSKH', title: 'Tin nhắn hỗ trợ', subtitle: 'Trả lời khách nhắn qua khung chat trên cửa hàng — tin mới hiện ngay, không cần tải lại' },
     'reviews': { group: 'Khách hàng & CSKH', title: 'Đánh giá', subtitle: 'Đánh giá đăng ngay không cần duyệt — theo dõi, phản hồi khách chưa hài lòng và ẩn nội dung vi phạm' },
@@ -199,6 +258,7 @@ export class AdminComponent implements OnInit, OnDestroy {
     }
   }
   showProductModal = false;
+  uploadingProductImage = false;
   editingProduct: Product | null = null;
   productForm = {
     name: '',
@@ -248,15 +308,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   // 4. Inventory State
   inventorySearch = '';
   inventoryFilter = 'ALL';
-  inventoryItems = [
-    { id: 'inv-1', sku: 'LM-MOON-01', name: 'Đèn Ngủ Mặt Trăng Moon Lamp 3D', category: 'lamp', currentStock: 42, minThreshold: 15, soldCount: 128, location: 'Kệ A2-04', status: 'SAFE' },
-    { id: 'inv-2', sku: 'LM-VASE-02', name: 'Bình Hoa Gốm Gợn Sóng Wave Vase', category: 'vase-planter', currentStock: 4, minThreshold: 10, soldCount: 95, location: 'Kệ B1-12', status: 'LOW' },
-    { id: 'inv-3', sku: 'LM-STAND-03', name: 'Đế Đèn Gỗ Tần Bì Ash Wood Stand', category: 'lamp', currentStock: 0, minThreshold: 20, soldCount: 160, location: 'Kệ A1-02', status: 'OUT' },
-    { id: 'inv-4', sku: 'LM-FIL-PLA01', name: 'Cuộn Nhựa PLA Matte Trắng Kem (1kg)', category: 'material', currentStock: 65, minThreshold: 20, soldCount: 310, location: 'Kho Vật Liệu C1', status: 'SAFE' },
-    { id: 'inv-5', sku: 'LM-FIL-WOOD', name: 'Cuộn Nhựa Wood Composite Hạt Gỗ', category: 'material', currentStock: 8, minThreshold: 15, soldCount: 84, location: 'Kho Vật Liệu C2', status: 'LOW' },
-    { id: 'inv-6', sku: 'LM-DESK-06', name: 'Khay Bút Công Thái Học Origami', category: 'desk-organizer', currentStock: 28, minThreshold: 10, soldCount: 62, location: 'Kệ B3-05', status: 'SAFE' },
-    { id: 'inv-7', sku: 'LM-PLANTER-07', name: 'Chậu Cây Tự Hút Nước Hexagon', category: 'vase-planter', currentStock: 3, minThreshold: 8, soldCount: 78, location: 'Kệ B2-08', status: 'LOW' },
-  ];
+  inventoryItems: any[] = [];
   showStockModal = false;
   selectedStockItem: any = null;
   stockAdjustQty = 10;
@@ -351,23 +403,18 @@ export class AdminComponent implements OnInit, OnDestroy {
   ];
 
   // 10. Promotions & Coupons State
-  coupons = [
-    { code: 'LUMÉANEW', description: 'Giảm 10% tối đa 50.000đ cho khách hàng mới', discountPercent: 10, maxDiscount: 50000, minSpend: 200000, usedCount: 142, limitCount: 500, status: 'ACTIVE', endDate: '31/12/2026' },
-    { code: 'FREESHIP', description: 'Miễn phí vận chuyển toàn quốc đơn từ 300K', discountPercent: 100, maxDiscount: 35000, minSpend: 300000, usedCount: 389, limitCount: 1000, status: 'ACTIVE', endDate: '31/10/2026' },
-    { code: 'ROOMCOMBO', description: 'Giảm 15% khi mua trọn gói Phòng Decor 3D', discountPercent: 15, maxDiscount: 200000, minSpend: 800000, usedCount: 65, limitCount: 200, status: 'ACTIVE', endDate: '15/11/2026' },
-    { code: 'AUTUMN26', description: 'Ưu đãi phong cách mùa thu ấm áp Castlery', discountPercent: 12, maxDiscount: 120000, minSpend: 500000, usedCount: 18, limitCount: 300, status: 'ACTIVE', endDate: '30/11/2026' },
-  ];
+  coupons: any[] = [];
   showCouponModal = false;
-  couponForm = { code: '', description: '', discountPercent: 10, maxDiscount: 50000, minSpend: 200000, limitCount: 500, endDate: '31/12/2026' };
+  couponForm = { code: '', description: '', discountPercent: 10, maxDiscount: 50000, minSpend: 200000, limitCount: 500, endDate: '' };
 
-  // 11. Banners State
-  banners = [
-    { id: 'b-1', title: 'Nghệ Thuật Không Gian Tối Giản', subtitle: 'Bộ sưu tập nội thất & decor in 3D cảm hứng Castlery phong cách Bắc Âu', ctaText: 'Khám Phá BST Mới', ctaLink: '/catalog', imageUrl: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1200&q=80', position: 'HERO_HOME', active: true, order: 1 },
-    { id: 'b-2', title: 'In 3D Theo Yêu Cầu Riêng', subtitle: 'Tùy chỉnh chất liệu, kích thước & khắc chữ theo dấu ấn cá nhân của bạn', ctaText: 'Tạo Thiết Kế', ctaLink: '/customizer-3d', imageUrl: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1200&q=80', position: 'MID_PAGE', active: true, order: 2 },
-    { id: 'b-3', title: 'Trải Nghiệm Phòng 3D Tương Tác', subtitle: 'Xem phối cảnh nội thất chân thực trước khi chọn mua sản phẩm', ctaText: 'Vào Phòng Mẫu 3D', ctaLink: '/shop-the-room', imageUrl: 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1200&q=80', position: 'ROOM_HERO', active: true, order: 3 },
-  ];
+  // 11. Banners State — vị trí cố định của my-client, chỉ lưu phần admin đã sửa
+  readonly bannerGroups = BANNER_GROUPS;
+  bannerOverrides: Record<string, any> = {};
   showBannerModal = false;
-  bannerForm = { title: '', subtitle: '', ctaText: '', ctaLink: '', imageUrl: '', position: 'HERO_HOME', order: 1 };
+  editingBannerSlot: BannerSlot | null = null;
+  bannerForm: Record<string, string> = {};
+  uploadingBannerImage = false;
+  bannerCropFile: File | null = null;
 
   // 12. Cộng đồng — bài khách đăng ở my-client (GET /community/admin, gồm cả bài bị chặn/ẩn)
   communityPosts: CommunityPost[] = [];
@@ -413,15 +460,9 @@ export class AdminComponent implements OnInit, OnDestroy {
   savingVideo = false;
 
   // 14. Staff State
-  staffList = [
-    { id: 'st-1', code: 'LM-EMP01', name: 'Quản trị viên Luméa', username: 'admin', email: 'admin@lumea.vn', phone: '0901 000 001', department: 'Ban Giám Đốc & Vận Hành', role: 'Super Admin', status: 'ACTIVE', joinedDate: '01/01/2026' },
-    { id: 'st-2', code: 'LM-EMP02', name: 'Đặng Tuấn Vũ', username: 'vudt_3d', email: 'vu.dang@lumea.vn', phone: '0902 333 444', department: 'Xưởng In & Thiết Kế 3D', role: '3D Specialist', status: 'ACTIVE', joinedDate: '15/02/2026' },
-    { id: 'st-3', code: 'LM-EMP03', name: 'Trần Thị Thu Trang', username: 'trangtt_sales', email: 'trang.tran@lumea.vn', phone: '0903 555 666', department: 'Chăm Sóc Khách Hàng', role: 'Customer Care', status: 'ACTIVE', joinedDate: '01/03/2026' },
-    { id: 'st-4', code: 'LM-EMP04', name: 'Lê Minh Quân', username: 'quanlm_stock', email: 'quan.le@lumea.vn', phone: '0904 777 888', department: 'Kho Vận & Đóng Gói', role: 'Warehouse Lead', status: 'ACTIVE', joinedDate: '20/03/2026' },
-    { id: 'st-5', code: 'LM-EMP05', name: 'Vũ Hoàng Mai', username: 'maivh_mkt', email: 'mai.vu@lumea.vn', phone: '0905 999 000', department: 'Marketing & Nội Dung', role: 'Content Editor', status: 'ACTIVE', joinedDate: '10/04/2026' },
-  ];
+  staffList: any[] = [];
   showStaffModal = false;
-  staffForm = { code: '', name: '', username: '', email: '', phone: '', department: 'Chăm Sóc Khách Hàng', role: 'Customer Care', status: 'ACTIVE' };
+  staffForm = { code: '', name: '', username: '', email: '', phone: '', department: 'Chăm Sóc Khách Hàng', role: 'Customer Care', password: '' };
 
   // 15. Roles & Permissions State
   roles = [
@@ -444,41 +485,8 @@ export class AdminComponent implements OnInit, OnDestroy {
     { key: 'staff', name: 'Nhân sự & Phân quyền' },
     { key: 'settings', name: 'Cài đặt hệ thống & Audit' },
   ];
-  permissionsMatrix: { [roleId: string]: { [moduleKey: string]: { view: boolean; create: boolean; edit: boolean; delete: boolean; approve: boolean } } } = {
-    'r-1': {
-      products: { view: true, create: true, edit: true, delete: true, approve: true },
-      orders: { view: true, create: true, edit: true, delete: true, approve: true },
-      custom3d: { view: true, create: true, edit: true, delete: true, approve: true },
-      inventory: { view: true, create: true, edit: true, delete: true, approve: true },
-      customers: { view: true, create: true, edit: true, delete: true, approve: true },
-      marketing: { view: true, create: true, edit: true, delete: true, approve: true },
-      content: { view: true, create: true, edit: true, delete: true, approve: true },
-      staff: { view: true, create: true, edit: true, delete: true, approve: true },
-      settings: { view: true, create: true, edit: true, delete: true, approve: true },
-    },
-    'r-2': {
-      products: { view: true, create: true, edit: true, delete: false, approve: true },
-      orders: { view: true, create: true, edit: true, delete: false, approve: true },
-      custom3d: { view: true, create: true, edit: true, delete: false, approve: true },
-      inventory: { view: true, create: true, edit: true, delete: false, approve: true },
-      customers: { view: true, create: true, edit: true, delete: false, approve: true },
-      marketing: { view: true, create: true, edit: true, delete: false, approve: true },
-      content: { view: true, create: true, edit: true, delete: false, approve: true },
-      staff: { view: true, create: false, edit: false, delete: false, approve: false },
-      settings: { view: true, create: false, edit: false, delete: false, approve: false },
-    },
-    'r-3': {
-      products: { view: true, create: true, edit: true, delete: false, approve: false },
-      orders: { view: true, create: false, edit: true, delete: false, approve: true },
-      custom3d: { view: true, create: true, edit: true, delete: false, approve: true },
-      inventory: { view: true, create: false, edit: false, delete: false, approve: false },
-      customers: { view: true, create: false, edit: false, delete: false, approve: false },
-      marketing: { view: false, create: false, edit: false, delete: false, approve: false },
-      content: { view: false, create: false, edit: false, delete: false, approve: false },
-      staff: { view: false, create: false, edit: false, delete: false, approve: false },
-      settings: { view: false, create: false, edit: false, delete: false, approve: false },
-    },
-  };
+  /** Nạp từ server (GET /admin/config), mặc định nằm ở server/utils/permissions.js. */
+  permissionsMatrix: { [roleId: string]: { [moduleKey: string]: { view: boolean; create: boolean; edit: boolean; delete: boolean; approve: boolean } } } = {};
 
   // 16. Settings State
   settings = {
@@ -504,20 +512,22 @@ export class AdminComponent implements OnInit, OnDestroy {
   settingsTab: 'general' | 'print3d' | 'loyalty' | 'payment' = 'general';
 
   // 17. Audit Log State
-  auditLogs = [
-    { id: 'log-1', timestamp: '25/09/2026 01:25:10', actor: 'admin (Super Admin)', module: 'Đơn Hàng', action: 'Cập nhật tiến độ in 3D', detail: 'Đơn ORD-982104: Chuyển sang bước Đang in 3D (55%)', ip: '192.168.1.10', level: 'SUCCESS' },
-    { id: 'log-2', timestamp: '24/09/2026 23:45:02', actor: 'vudt_3d (3D Specialist)', module: 'Yêu Cầu In 3D', action: 'Gửi báo giá tùy biến', detail: 'Yêu cầu REQ-882: Báo giá 450.000đ, thời gian 4 ngày', ip: '192.168.1.18', level: 'INFO' },
-    { id: 'log-3', timestamp: '24/09/2026 21:10:44', actor: 'admin (Super Admin)', module: 'Sản Phẩm', action: 'Cập nhật tồn kho sản phẩm', detail: 'Bình hoa gợn sóng Wave Vase: 4 -> 14 cái (Nhập kho)', ip: '192.168.1.10', level: 'SUCCESS' },
-    { id: 'log-4', timestamp: '24/09/2026 18:30:15', actor: 'trangtt_sales (Customer Care)', module: 'Đánh Giá', action: 'Duyệt đánh giá khách hàng', detail: 'Duyệt đánh giá 5 sao từ khách Phạm Minh Tuấn cho Đèn Mặt Trăng', ip: '192.168.1.22', level: 'SUCCESS' },
-    { id: 'log-5', timestamp: '24/09/2026 15:02:40', actor: 'quanlm_stock (Warehouse Lead)', module: 'Kho Hàng', action: 'Cảnh báo vật liệu thấp', detail: 'Cuộn nhựa Wood Composite còn 8 cuộn (Dưới ngưỡng 15)', ip: '192.168.1.15', level: 'WARNING' },
-    { id: 'log-6', timestamp: '24/09/2026 10:14:00', actor: 'admin (Super Admin)', module: 'Hệ Thống', action: 'Đăng nhập thành công', detail: 'Phiên đăng nhập IP 192.168.1.10 (Chrome/Windows)', ip: '192.168.1.10', level: 'INFO' },
-  ];
+  auditLogs: any[] = [];
   auditModuleFilter = 'ALL';
   auditLevelFilter = 'ALL';
   auditSearch = '';
 
   // 18. Rooms State
   rooms: Room[] = [];
+
+  // 19. Bảo hành
+  warranties: any[] = [];
+  warrantySearch = '';
+  showWarrantyModal = false;
+  warrantyForm = { orderNumber: '', productName: '', customerName: '', customerPhone: '', warrantyMonths: 12 };
+
+  // 20. Thông báo trên topbar
+  showNotifications = false;
 
   constructor(
     private productService: ProductService,
@@ -530,12 +540,15 @@ export class AdminComponent implements OnInit, OnDestroy {
     public chatService: ChatService,
     private reviewService: ReviewService,
     public adminAuth: AdminAuthService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute,
+    private adminData: AdminDataService
   ) {
     effect(() => {
       this.products = this.productService.products();
       this.customizableProductsCount = this.products.filter(p => p.customizable).length;
       this.refreshCategoryCounts();
+      this.refreshInventory();
     });
     effect(() => {
       this.customRequests = this.customRequestService.requests();
@@ -568,25 +581,144 @@ export class AdminComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.refreshData();
-    this.chatService.connect();
+    this.routeSub = this.route.paramMap.subscribe(params => {
+      const tab = params.get('tab') || '';
+      if (Object.hasOwn(this.tabMeta, tab)) {
+        this.currentTab = tab as AdminTab;
+        this.enforceTabAccess();
+      } else {
+        this.router.navigate(['/dashboard'], { replaceUrl: true });
+      }
+    });
+    this.adminAuth.loadAccess().subscribe({
+      next: () => {
+        this.enforceTabAccess();
+        this.refreshData();
+        if (this.adminAuth.can('customers.view')) this.chatService.connect();
+      },
+      error: err => {
+        if (err?.status !== 401) this.showToast('Không tải được quyền của tài khoản từ server', 'error');
+      },
+    });
   }
 
   ngOnDestroy(): void {
+    this.routeSub?.unsubscribe();
     this.chatService.disconnect();
   }
 
   refreshData(): void {
-    this.communityService.refresh();
+    if (this.adminAuth.can('content.view')) {
+      this.communityService.refresh();
+      this.videoService.refresh();
+    }
     this.newsService.refresh();
-    this.videoService.refresh();
-    this.reviewService.refresh();
-    this.orderService.fetchAll().subscribe(orders => {
-      this.orders = orders;
-      // Doanh thu không tính đơn đã huỷ.
-      this.totalRevenue = this.orders.filter(o => o.status !== 'CANCELLED').reduce((sum, o) => sum + o.total, 0);
-      this.podOrdersCount = this.orders.filter(o => o.hasPrintOnDemandItems).length;
+    if (this.adminAuth.can('customers.view')) this.reviewService.refresh();
+    if (this.adminAuth.can('orders.view') || this.adminAuth.can('customers.view') || this.adminAuth.can('inventory.view')) {
+      this.orderService.fetchAll().subscribe(orders => {
+        this.orders = orders;
+        // Doanh thu không tính đơn đã huỷ.
+        this.totalRevenue = this.orders.filter(o => o.status !== 'CANCELLED').reduce((sum, o) => sum + o.total, 0);
+        this.podOrdersCount = this.orders.filter(o => o.hasPrintOnDemandItems).length;
+        this.refreshInventory();
+      });
+    }
+    this.loadAdminData();
+  }
+
+  /** Dữ liệu riêng của admin lưu trên server: cấu hình, mã giảm giá, nhân viên, nhật ký, bảo hành. */
+  private loadAdminData(): void {
+    const loadError = (err: any) => {
+      if (err?.status !== 401) this.showToast('Không tải được một phần dữ liệu quản trị từ server', 'error');
+    };
+    this.loadConfig();
+    if (this.adminAuth.can('marketing.view')) this.adminData.getCoupons().subscribe({ next: res => this.coupons = res.coupons, error: loadError });
+    if (this.adminAuth.can('staff.view')) this.adminData.getStaff().subscribe({ next: res => this.staffList = res.staff.map(a => this.toStaffRow(a)), error: loadError });
+    this.refreshAuditLogs();
+    if (this.adminAuth.can('orders.view')) this.adminData.getWarranties().subscribe({ next: res => this.warranties = res.warranties, error: loadError });
+  }
+
+  /** Chỉ tải khi có quyền xem, nên các thao tác ghi nhật ký của nhân viên khác vẫn chạy bình thường. */
+  private refreshAuditLogs(): void {
+    if (!this.adminAuth.can('settings.view')) return;
+    this.adminData.getAuditLogs().subscribe({
+      next: res => this.auditLogs = res.logs.map(l => this.toAuditRow(l)),
+      error: err => {
+        if (err?.status !== 401) this.showToast('Không tải được nhật ký từ server', 'error');
+      },
     });
+  }
+
+  /** Chưa lưu lần nào thì giữ giá trị mặc định trong code. */
+  private loadConfig(): void {
+    this.adminData.getConfig().subscribe({
+      next: ({ config }) => {
+        if (config.categories) this.categories = config.categories;
+        if (config.suppliers) this.suppliers = config.suppliers;
+        if (config.banners) this.bannerOverrides = this.toBannerOverrides(config.banners);
+        if (config.settings) this.settings = { ...this.settings, ...config.settings };
+        if (config.permissions) this.permissionsMatrix = config.permissions;
+        this.refreshCategoryCounts();
+      },
+      error: err => {
+        if (err?.status !== 401) this.showToast('Không tải được cấu hình từ server', 'error');
+      },
+    });
+  }
+
+  /** Lưu cấu hình lên server; chỉ báo thành công khi server xác nhận, lỗi thì tải lại bản đang lưu. */
+  private saveConfig(key: AdminConfigKey, value: unknown, onSaved: () => void): void {
+    this.adminData.saveConfig(key, value).subscribe({
+      next: () => onSaved(),
+      error: err => {
+        this.showToast(err?.error?.error || 'Không lưu được lên server', 'error');
+        this.loadConfig();
+      },
+    });
+  }
+
+  /** Kho hàng lấy từ sản phẩm có sẵn thật: tồn = inStock, đã bán = tổng số lượng trong đơn không huỷ/hoàn. */
+  private refreshInventory(): void {
+    const sold = new Map<string, number>();
+    for (const order of this.orders) {
+      if (order.status === 'CANCELLED' || order.status === 'RETURNED') continue;
+      for (const item of order.items || []) {
+        const id = item.product?.id;
+        if (id) sold.set(id, (sold.get(id) || 0) + item.quantity);
+      }
+    }
+    this.inventoryItems = this.products
+      .filter(p => p.productionType === 'READY_STOCK')
+      .map(p => ({
+        id: p.id,
+        sku: p.id,
+        name: p.name,
+        location: p.categoryName,
+        currentStock: p.inStock,
+        minThreshold: this.LOW_STOCK_THRESHOLD,
+        soldCount: sold.get(p.id) || 0,
+        status: p.inStock <= 0 ? 'OUT' : p.inStock <= this.LOW_STOCK_THRESHOLD ? 'LOW' : 'SAFE',
+      }));
+  }
+
+  private toStaffRow(a: any): any {
+    return {
+      id: a._id,
+      code: a.code || '',
+      name: a.fullName || a.username,
+      username: a.username,
+      email: a.email || '',
+      phone: a.phone || '',
+      department: a.department || '',
+      role: a.role || '',
+      status: a.active ? 'ACTIVE' : 'LOCKED',
+      joinedDate: a.createdAt ? new Date(a.createdAt).toLocaleDateString('vi-VN') : '',
+    };
+  }
+
+  private toAuditRow(l: any): any {
+    const at = new Date(l.createdAt);
+    return { ...l, id: l._id, timestamp: at.toLocaleDateString('vi-VN') + ' ' + at.toLocaleTimeString('vi-VN') };
   }
 
   showToast(message: string, type: 'success' | 'info' | 'warning' | 'error' = 'success'): void {
@@ -608,12 +740,17 @@ export class AdminComponent implements OnInit, OnDestroy {
       this.showToast('Mật khẩu xác nhận không khớp', 'error');
       return;
     }
-    this.showChangePasswordModal = false;
-    this.oldPassword = '';
-    this.newPassword = '';
-    this.confirmPassword = '';
-    this.showToast('Đổi mật khẩu tài khoản quản trị thành công!', 'success');
-    this.recordAudit('Bảo Mật', 'Đổi mật khẩu tài khoản quản trị', 'Thành công', 'SUCCESS');
+    this.adminAuth.changePassword(this.oldPassword, this.newPassword).subscribe({
+      next: () => {
+        this.showChangePasswordModal = false;
+        this.oldPassword = '';
+        this.newPassword = '';
+        this.confirmPassword = '';
+        this.showToast('Đổi mật khẩu tài khoản quản trị thành công!', 'success');
+        this.refreshAuditLogs();
+      },
+      error: err => this.showToast(err?.error?.error || 'Không đổi được mật khẩu', 'error'),
+    });
   }
 
   logout(): void {
@@ -967,8 +1104,8 @@ export class AdminComponent implements OnInit, OnDestroy {
       description: 'Thiết kế tối giản mang lại sự ấm cúng cho không gian.',
       story: 'Cảm hứng từ phong cách Scandinavian ấm áp.',
       badge: 'Mới Ra Mắt',
-      image1: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=800&q=80',
-      image2: 'https://images.unsplash.com/photo-1532274402911-5a369e4c4bb5?auto=format&fit=crop&w=800&q=80',
+      image1: '',
+      image2: '',
       threeModelType: 'moon_lamp',
       modelUrl: '',
     };
@@ -1001,15 +1138,39 @@ export class AdminComponent implements OnInit, OnDestroy {
     this.showProductModal = true;
   }
 
+  onProductImageSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = ''; // Cho phép chọn lại đúng file đó sau khi tải lỗi.
+    if (!file) return;
+
+    const form = this.productForm;
+    this.uploadingProductImage = true;
+    this.productService.uploadImage(file).subscribe({
+      next: (url) => {
+        form.image1 = url;
+        this.uploadingProductImage = false;
+      },
+      error: (err) => {
+        this.uploadingProductImage = false;
+        this.showToast(err?.error?.error || 'Không tải được ảnh lên server', 'error');
+      }
+    });
+  }
+
   saveProduct(): void {
     if (!this.productForm.name.trim()) {
       this.showToast('Vui lòng nhập tên sản phẩm', 'warning');
       return;
     }
+    if (!this.productForm.image1) {
+      this.showToast('Vui lòng tải lên hình ảnh chính', 'warning');
+      return;
+    }
 
     const payload: any = {
       name: this.productForm.name.trim(),
-      slug: this.productForm.slug.trim() || this.productForm.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      slug: this.productForm.slug.trim() || this.productForm.name.normalize('NFD').replace(/\p{M}/gu, '').replace(/đ/gi, 'd').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
       category: this.productForm.category,
       categoryName: this.productForm.categoryName,
       categoryGroup: this.productForm.categoryGroup,
@@ -1023,11 +1184,9 @@ export class AdminComponent implements OnInit, OnDestroy {
       description: this.productForm.description,
       story: this.productForm.story,
       badge: this.productForm.badge,
-      images: [this.productForm.image1, this.productForm.image2].filter(Boolean),
-      threeModelType: this.productForm.threeModelType || undefined,
+      images: [this.productForm.image1, this.productForm.image2, ...(this.editingProduct?.images?.slice(2) ?? [])].filter(Boolean),
+      threeModelType: this.productForm.threeModelType || null,
       modelUrl: this.productForm.modelUrl.trim() || null,
-      rating: this.editingProduct ? this.editingProduct.rating : 5.0,
-      reviewCount: this.editingProduct ? this.editingProduct.reviewCount : 0,
     };
 
     if (this.editingProduct) {
@@ -1037,7 +1196,7 @@ export class AdminComponent implements OnInit, OnDestroy {
           this.showProductModal = false;
           this.recordAudit('Sản Phẩm', 'Chỉnh sửa sản phẩm', payload.name, 'SUCCESS');
         },
-        error: () => this.showToast('Không lưu được sản phẩm vào server', 'error')
+        error: (err) => this.showToast(err?.error?.error || 'Không lưu được sản phẩm vào server', 'error')
       });
     } else {
       this.productService.addProduct(payload).subscribe({
@@ -1046,7 +1205,7 @@ export class AdminComponent implements OnInit, OnDestroy {
           this.showProductModal = false;
           this.recordAudit('Sản Phẩm', 'Thêm mới sản phẩm', payload.name, 'SUCCESS');
         },
-        error: () => this.showToast('Không thêm được sản phẩm vào server', 'error')
+        error: (err) => this.showToast(err?.error?.error || 'Không thêm được sản phẩm vào server', 'error')
       });
     }
   }
@@ -1079,27 +1238,26 @@ export class AdminComponent implements OnInit, OnDestroy {
 
   saveCategory(): void {
     if (!this.categoryForm.name.trim()) return;
+    const isEdit = !!this.editingCategory;
+    const name = this.categoryForm.name.trim();
     if (this.editingCategory) {
-      Object.assign(this.editingCategory, this.categoryForm);
-      this.showToast(`Đã cập nhật danh mục "${this.categoryForm.name}"`, 'success');
-      this.recordAudit('Danh Mục', 'Cập nhật danh mục', this.categoryForm.name, 'INFO');
+      Object.assign(this.editingCategory, this.categoryForm, { name });
     } else {
-      const newCat = {
-        id: 'cat-' + (this.categories.length + 1),
-        ...this.categoryForm,
-        productCount: 0,
-      };
-      this.categories.push(newCat);
-      this.showToast(`Đã thêm danh mục mới "${newCat.name}"`, 'success');
-      this.recordAudit('Danh Mục', 'Thêm danh mục', newCat.name, 'SUCCESS');
+      this.categories.push({ id: 'cat-' + Date.now(), ...this.categoryForm, name, productCount: 0 });
     }
-    this.showCategoryModal = false;
+    this.saveConfig('categories', this.categories, () => {
+      this.showCategoryModal = false;
+      this.showToast(isEdit ? `Đã cập nhật danh mục "${name}"` : `Đã thêm danh mục mới "${name}"`, 'success');
+      this.recordAudit('Danh Mục', isEdit ? 'Cập nhật danh mục' : 'Thêm danh mục', name, isEdit ? 'INFO' : 'SUCCESS');
+    });
   }
 
   toggleCategoryStatus(cat: any): void {
     cat.active = !cat.active;
-    this.showToast(`Danh mục "${cat.name}" hiện đã ${cat.active ? 'HIỂN THỊ' : 'ẨN'}`, 'info');
-    this.recordAudit('Danh Mục', 'Đổi trạng thái danh mục', `${cat.name} -> ${cat.active ? 'ACTIVE' : 'HIDDEN'}`, 'INFO');
+    this.saveConfig('categories', this.categories, () => {
+      this.showToast(`Danh mục "${cat.name}" hiện đã ${cat.active ? 'HIỂN THỊ' : 'ẨN'}`, 'info');
+      this.recordAudit('Danh Mục', 'Đổi trạng thái danh mục', `${cat.name} -> ${cat.active ? 'ACTIVE' : 'HIDDEN'}`, 'INFO');
+    });
   }
 
   // --- Inventory ---
@@ -1121,17 +1279,25 @@ export class AdminComponent implements OnInit, OnDestroy {
 
   submitStockAdjust(): void {
     if (!this.selectedStockItem) return;
-    this.selectedStockItem.currentStock += this.stockAdjustQty;
-    if (this.selectedStockItem.currentStock <= 0) {
-      this.selectedStockItem.status = 'OUT';
-    } else if (this.selectedStockItem.currentStock <= this.selectedStockItem.minThreshold) {
-      this.selectedStockItem.status = 'LOW';
-    } else {
-      this.selectedStockItem.status = 'SAFE';
+    const item = this.selectedStockItem;
+    const qty = Number(this.stockAdjustQty);
+    if (!Number.isInteger(qty) || qty === 0) {
+      this.showToast('Số lượng điều chỉnh phải là số nguyên khác 0', 'warning');
+      return;
     }
-    this.showToast(`Đã điều chỉnh tồn kho cho ${this.selectedStockItem.name}: ${this.selectedStockItem.currentStock} cái`, 'success');
-    this.recordAudit('Kho Hàng', 'Điều chỉnh tồn kho', `${this.selectedStockItem.sku}: +${this.stockAdjustQty} (${this.stockAdjustReason})`, 'SUCCESS');
-    this.showStockModal = false;
+    const next = item.currentStock + qty;
+    if (next < 0) {
+      this.showToast(`Tồn kho hiện chỉ còn ${item.currentStock} cái, không thể xuất ${-qty} cái`, 'warning');
+      return;
+    }
+    this.productService.updateProduct(item.id, { inStock: next }).subscribe({
+      next: () => {
+        this.showStockModal = false;
+        this.showToast(`Đã điều chỉnh tồn kho cho ${item.name}: ${next} cái`, 'success');
+        this.recordAudit('Kho Hàng', 'Điều chỉnh tồn kho', `${item.sku}: ${qty > 0 ? '+' : ''}${qty} (${this.stockAdjustReason})`, 'SUCCESS');
+      },
+      error: err => this.showToast(err?.error?.error || 'Không lưu được tồn kho lên server', 'error'),
+    });
   }
 
   // --- Suppliers ---
@@ -1149,20 +1315,18 @@ export class AdminComponent implements OnInit, OnDestroy {
 
   saveSupplier(): void {
     if (!this.supplierForm.name.trim()) return;
+    const isEdit = !!this.editingSupplier;
+    const name = this.supplierForm.name.trim();
     if (this.editingSupplier) {
-      Object.assign(this.editingSupplier, this.supplierForm);
-      this.showToast(`Đã cập nhật nhà cung cấp "${this.supplierForm.name}"`, 'success');
-      this.recordAudit('Nhà Cung Cấp', 'Cập nhật nhà cung cấp', this.supplierForm.name, 'INFO');
+      Object.assign(this.editingSupplier, this.supplierForm, { name });
     } else {
-      const newSup = {
-        id: 'sup-' + (this.suppliers.length + 1),
-        ...this.supplierForm,
-      };
-      this.suppliers.push(newSup);
-      this.showToast(`Đã thêm nhà cung cấp mới "${newSup.name}"`, 'success');
-      this.recordAudit('Nhà Cung Cấp', 'Thêm nhà cung cấp', newSup.name, 'SUCCESS');
+      this.suppliers.push({ id: 'sup-' + Date.now(), ...this.supplierForm, name });
     }
-    this.showSupplierModal = false;
+    this.saveConfig('suppliers', this.suppliers, () => {
+      this.showSupplierModal = false;
+      this.showToast(isEdit ? `Đã cập nhật nhà cung cấp "${name}"` : `Đã thêm nhà cung cấp mới "${name}"`, 'success');
+      this.recordAudit('Nhà Cung Cấp', isEdit ? 'Cập nhật nhà cung cấp' : 'Thêm nhà cung cấp', name, isEdit ? 'INFO' : 'SUCCESS');
+    });
   }
 
   // --- 3D Custom Requests ---
@@ -1287,43 +1451,111 @@ export class AdminComponent implements OnInit, OnDestroy {
   }
 
   // --- Dashboard (tính từ đơn hàng & sản phẩm thật) ---
+  salesRange: SalesRange = 7;
+  salesFrom = '';
+  salesTo = '';
+
   /** Đơn tính doanh thu: bỏ đơn huỷ và đơn giao thất bại. */
   private isRevenueOrder(o: Order): boolean {
     return o.status !== 'CANCELLED' && o.status !== 'RETURNED';
   }
 
-  /** Doanh số 7 ngày gần nhất (hôm nay là cột cuối), chiều cao cột theo ngày cao nhất. */
-  get weeklySales(): { day: string; date: string; amount: number; orders: number; height: string; isPeak: boolean }[] {
-    const days = Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(this.today);
-      d.setHours(0, 0, 0, 0);
-      d.setDate(d.getDate() - (6 - i));
-      return d;
-    });
-    const rows = days.map(d => {
-      const list = this.orders.filter(o => this.isRevenueOrder(o) && new Date(o.createdAt).toDateString() === d.toDateString());
-      return {
-        day: d.getDay() === 0 ? 'CN' : 'T' + (d.getDay() + 1),
-        date: d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }),
+  private startOfToday(): Date {
+    const d = new Date(this.today);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }
+
+  private parseDateValue(value: string): Date | null {
+    const [year, month, day] = value.split('-').map(Number);
+    return year && month && day ? new Date(year, month - 1, day) : null;
+  }
+
+  onSalesRangeSelected({ range, from, to }: SalesRangeSelection): void {
+    this.salesRange = range;
+    this.salesFrom = from;
+    this.salesTo = to;
+  }
+
+  /** Khoảng ngày đang xem (tính cả 2 đầu). */
+  private get salesPeriod(): { start: Date; end: Date } | null {
+    if (this.salesRange === 'custom') {
+      const start = this.parseDateValue(this.salesFrom);
+      const end = this.parseDateValue(this.salesTo);
+      return start && end && start <= end ? { start, end } : null;
+    }
+    const end = this.startOfToday();
+    const start = new Date(end);
+    start.setDate(start.getDate() - (this.salesRange - 1));
+    return { start, end };
+  }
+
+  /** Nhãn khoảng đang xem, dùng ở nút chọn và dòng tổng. */
+  get salesRangeLabel(): string {
+    if (this.salesRange !== 'custom') return `${this.salesRange} ngày qua`;
+    const period = this.salesPeriod;
+    if (!period) return '';
+    const format = (d: Date) => d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    return `${format(period.start)} – ${format(period.end)}`;
+  }
+
+  /** Khoảng dài thì gộp cột theo tuần/tháng để biểu đồ vẫn đọc được. */
+  private get salesUnit(): 'day' | 'week' | 'month' {
+    const period = this.salesPeriod;
+    if (!period) return 'day';
+    const dayCount = Math.round((period.end.getTime() - period.start.getTime()) / DAY_MS) + 1;
+    if (dayCount <= MAX_DAILY_SALES_BARS) return 'day';
+    return dayCount <= MAX_WEEKLY_SALES_DAYS ? 'week' : 'month';
+  }
+
+  get salesUnitLabel(): string {
+    return { day: 'Ngày', week: 'Tuần', month: 'Tháng' }[this.salesUnit];
+  }
+
+  /** Doanh số trong khoảng đang chọn (cột cuối là ngày mới nhất), chiều cao cột theo cột cao nhất. */
+  get salesBars(): { day: string; date: string; amount: number; orders: number; height: string; isPeak: boolean; showLabel: boolean }[] {
+    const period = this.salesPeriod;
+    if (!period) return [];
+    const unit = this.salesUnit;
+    const endTime = period.end.getTime() + DAY_MS;
+
+    const rows = [];
+    let start = new Date(period.start);
+    while (start.getTime() < endTime) {
+      const next = unit === 'month'
+        ? new Date(start.getFullYear(), start.getMonth() + 1, 1)
+        : new Date(start.getFullYear(), start.getMonth(), start.getDate() + (unit === 'week' ? 7 : 1));
+      const list = this.orders.filter(o => {
+        const time = new Date(o.createdAt).getTime();
+        return this.isRevenueOrder(o) && time >= start.getTime() && time < Math.min(next.getTime(), endTime);
+      });
+      rows.push({
+        day: unit === 'month' ? `Th${start.getMonth() + 1}` : unit === 'week' ? 'Tuần' : start.getDay() === 0 ? 'CN' : 'T' + (start.getDay() + 1),
+        date: unit === 'month' ? String(start.getFullYear()) : start.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }),
         amount: list.reduce((sum, o) => sum + o.total, 0),
         orders: list.length,
-      };
-    });
+      });
+      start = next;
+    }
+
     const max = Math.max(...rows.map(r => r.amount));
-    return rows.map(r => ({
+    const labelStep = Math.ceil(rows.length / MAX_SALES_LABELS);
+    return rows.map((r, i) => ({
       ...r,
       // Ngày không có đơn vẫn hiện 1 vạch mỏng để biết là 0 chứ không phải lỗi.
       height: max > 0 ? Math.max(2, Math.round((r.amount / max) * 95)) + '%' : '2%',
       isPeak: max > 0 && r.amount === max,
+      // Nhiều cột thì chỉ ghi nhãn cách quãng, tính từ cột mới nhất để cột cuối luôn có nhãn.
+      showLabel: (rows.length - 1 - i) % labelStep === 0,
     }));
   }
 
-  get weekTotal(): number {
-    return this.weeklySales.reduce((sum, r) => sum + r.amount, 0);
+  get salesTotal(): number {
+    return this.salesBars.reduce((sum, r) => sum + r.amount, 0);
   }
 
-  get weekPeak(): { day: string; date: string; amount: number; orders: number } | null {
-    const peak = this.weeklySales.find(r => r.isPeak);
+  get salesPeak(): { day: string; date: string; amount: number; orders: number } | null {
+    const peak = this.salesBars.find(r => r.isPeak);
     return peak || null;
   }
 
@@ -1440,58 +1672,158 @@ export class AdminComponent implements OnInit, OnDestroy {
 
   // --- Promotions ---
   openAddCouponModal(): void {
-    this.couponForm = { code: '', description: '', discountPercent: 10, maxDiscount: 50000, minSpend: 200000, limitCount: 500, endDate: '31/12/2026' };
+    this.couponForm = { code: '', description: '', discountPercent: 10, maxDiscount: 50000, minSpend: 200000, limitCount: 500, endDate: '' };
     this.showCouponModal = true;
   }
 
   saveCoupon(): void {
-    if (!this.couponForm.code.trim()) return;
-    const newCoupon = {
-      code: this.couponForm.code.toUpperCase().trim(),
+    const code = this.couponForm.code.toUpperCase().trim();
+    if (!code) {
+      this.showToast('Vui lòng nhập mã voucher', 'warning');
+      return;
+    }
+    this.adminData.createCoupon({
+      code,
       description: this.couponForm.description.trim(),
       discountPercent: Number(this.couponForm.discountPercent),
       maxDiscount: Number(this.couponForm.maxDiscount),
       minSpend: Number(this.couponForm.minSpend),
-      usedCount: 0,
       limitCount: Number(this.couponForm.limitCount),
-      status: 'ACTIVE',
-      endDate: this.couponForm.endDate,
-    };
-    this.coupons.unshift(newCoupon);
-    this.showCouponModal = false;
-    this.showToast(`Đã tạo mã khuyến mãi "${newCoupon.code}"!`, 'success');
-    this.recordAudit('Khuyến Mãi', 'Tạo Voucher mới', newCoupon.code, 'SUCCESS');
+      endDate: this.couponForm.endDate || null,
+    }).subscribe({
+      next: res => {
+        this.coupons.unshift(res.coupon);
+        this.showCouponModal = false;
+        this.showToast(`Đã tạo mã khuyến mãi "${code}"!`, 'success');
+        this.recordAudit('Khuyến Mãi', 'Tạo voucher mới', code, 'SUCCESS');
+      },
+      error: err => this.showToast(err?.error?.error || 'Không tạo được voucher', 'error'),
+    });
   }
 
   toggleCoupon(c: any): void {
-    c.status = c.status === 'ACTIVE' ? 'PAUSED' : 'ACTIVE';
-    this.showToast(`Mã khuyến mãi ${c.code} hiện đã ${c.status === 'ACTIVE' ? 'BẬT' : 'TẠM NGƯNG'}`, 'info');
-    this.recordAudit('Khuyến Mãi', 'Đổi trạng thái Voucher', `${c.code} -> ${c.status}`, 'INFO');
+    this.adminData.setCouponActive(c.code, !c.active).subscribe({
+      next: res => {
+        Object.assign(c, res.coupon);
+        this.showToast(`Mã khuyến mãi ${c.code} hiện đã ${c.active ? 'BẬT' : 'TẠM NGƯNG'}`, 'info');
+        this.recordAudit('Khuyến Mãi', 'Đổi trạng thái voucher', `${c.code} -> ${c.status}`, 'INFO');
+      },
+      error: err => this.showToast(err?.error?.error || 'Không đổi được trạng thái voucher', 'error'),
+    });
   }
 
   // --- Banners ---
-  openAddBannerModal(): void {
-    this.bannerForm = { title: '', subtitle: '', ctaText: 'Khám Phá', ctaLink: '/catalog', imageUrl: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1200&q=80', position: 'HERO_HOME', order: this.banners.length + 1 };
+  /** Chỉ nhận vị trí đang có; popup lưu từ bản cũ mang id riêng nên nhận theo position. */
+  private toBannerOverrides(entries: any[]): Record<string, any> {
+    const overrides: Record<string, any> = {};
+    for (const entry of entries) {
+      if (BANNER_SLOTS.some(s => s.id === entry.id)) overrides[entry.id] = entry;
+    }
+    const legacyPopup = entries.find(e => e.position === 'POPUP_HOME');
+    if (!overrides['popup-home'] && legacyPopup) overrides['popup-home'] = { ...legacyPopup, id: 'popup-home' };
+    return overrides;
+  }
+
+  bannerValue(slot: BannerSlot, key: string): string {
+    return this.bannerOverrides[slot.id]?.[key] || (slot.defaults as Record<string, string>)[key] || '';
+  }
+
+  isBannerActive(slot: BannerSlot): boolean {
+    return this.bannerOverrides[slot.id]?.active !== false;
+  }
+
+  openEditBannerModal(slot: BannerSlot): void {
+    this.editingBannerSlot = slot;
+    // Vị trí chỉ dùng video không có ảnh, không đưa vào form để khỏi bị bắt buộc nhập.
+    this.bannerForm = slot.imageRatio ? { imageUrl: this.bannerValue(slot, 'imageUrl') } : {};
+    for (const field of slot.fields) this.bannerForm[field.key] = this.bannerValue(slot, field.key);
     this.showBannerModal = true;
   }
 
-  saveBanner(): void {
-    if (!this.bannerForm.title.trim()) return;
-    const newBanner = {
-      id: 'b-' + (this.banners.length + 1),
-      ...this.bannerForm,
-      active: true,
-    };
-    this.banners.push(newBanner);
-    this.showBannerModal = false;
-    this.showToast(`Đã tạo banner mới: "${newBanner.title}"`, 'success');
-    this.recordAudit('Banner', 'Thêm Banner mới', newBanner.title, 'SUCCESS');
+  /** GIF không qua bước cắt để giữ chuyển động. */
+  onBannerImageSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = ''; // Cho phép chọn lại đúng file đó sau khi tải lỗi.
+    if (!file) return;
+    if (file.type === 'image/gif') this.uploadBannerImage(file);
+    else this.bannerCropFile = file;
   }
 
-  toggleBanner(b: any): void {
-    b.active = !b.active;
-    this.showToast(`Banner "${b.title}" hiện đã ${b.active ? 'HIỂN THỊ' : 'ẨN'}`, 'info');
-    this.recordAudit('Banner', 'Đổi trạng thái banner', `${b.title} -> ${b.active ? 'ACTIVE' : 'HIDDEN'}`, 'INFO');
+  onBannerImageCropped(file: File): void {
+    this.bannerCropFile = null;
+    this.uploadBannerImage(file);
+  }
+
+  onBannerCropFailed(): void {
+    this.bannerCropFile = null;
+    this.showToast('Không đọc được file ảnh này', 'error');
+  }
+
+  private uploadBannerImage(file: File): void {
+    const form = this.bannerForm;
+    this.uploadingBannerImage = true;
+    this.productService.uploadImage(file).subscribe({
+      next: (url) => {
+        form['imageUrl'] = url;
+        this.uploadingBannerImage = false;
+      },
+      error: (err) => {
+        this.uploadingBannerImage = false;
+        this.showToast(err?.error?.error || 'Không tải được ảnh lên server', 'error');
+      }
+    });
+  }
+
+  saveBanner(): void {
+    const slot = this.editingBannerSlot;
+    if (!slot) return;
+    const entry: any = { id: slot.id };
+    if (this.bannerOverrides[slot.id]?.active === false) entry.active = false;
+
+    for (const key of Object.keys(this.bannerForm)) {
+      const value = (this.bannerForm[key] || '').trim();
+      const label = slot.fields.find(f => f.key === key)?.label || 'Ảnh';
+      if (!value) {
+        this.showToast(`Vui lòng nhập: ${label}`, 'warning');
+        return;
+      }
+      if (key === 'ctaLink' && !/^\/(?!\/)/.test(value)) {
+        this.showToast('Link phải là đường dẫn trong web, bắt đầu bằng / (vd. /catalog)', 'warning');
+        return;
+      }
+      const isDefault = value === (slot.defaults as Record<string, string>)[key];
+      if (key === 'videoUrl' && !isDefault && !/^https?:\/\//.test(value)) {
+        this.showToast('URL video phải bắt đầu bằng http:// hoặc https://', 'warning');
+        return;
+      }
+      if (!isDefault) entry[key] = value;
+    }
+
+    this.saveBannerOverrides({ ...this.bannerOverrides, [slot.id]: entry }, () => {
+      this.showBannerModal = false;
+      this.showToast(`Đã cập nhật: ${slot.name}`, 'success');
+      this.recordAudit('Banner', 'Sửa banner', slot.name, 'SUCCESS');
+    });
+  }
+
+  toggleBanner(slot: BannerSlot): void {
+    const active = !this.isBannerActive(slot);
+    const entry = { ...this.bannerOverrides[slot.id], id: slot.id };
+    if (active) delete entry.active;
+    else entry.active = false;
+
+    this.saveBannerOverrides({ ...this.bannerOverrides, [slot.id]: entry }, () => {
+      this.showToast(`${slot.name} hiện đã ${active ? 'HIỂN THỊ' : 'ẨN'}`, 'info');
+      this.recordAudit('Banner', 'Đổi trạng thái banner', `${slot.name} -> ${active ? 'ACTIVE' : 'HIDDEN'}`, 'INFO');
+    });
+  }
+
+  private saveBannerOverrides(overrides: Record<string, any>, onSaved: () => void): void {
+    this.saveConfig('banners', Object.values(overrides), () => {
+      this.bannerOverrides = overrides;
+      onSaved();
+    });
   }
 
   // --- Cộng đồng (kiểm duyệt) ---
@@ -1840,33 +2172,80 @@ export class AdminComponent implements OnInit, OnDestroy {
       phone: '',
       department: 'Chăm Sóc Khách Hàng',
       role: 'Customer Care',
-      status: 'ACTIVE',
+      password: '',
     };
     this.showStaffModal = true;
   }
 
   saveStaff(): void {
-    if (!this.staffForm.name.trim() || !this.staffForm.username.trim()) return;
-    const newStaff = {
-      id: 'st-' + (this.staffList.length + 1),
-      ...this.staffForm,
-      joinedDate: new Date().toLocaleDateString('vi-VN'),
-    };
-    this.staffList.push(newStaff);
-    this.showStaffModal = false;
-    this.showToast(`Đã thêm nhân viên mới "${newStaff.name}"!`, 'success');
-    this.recordAudit('Nhân Sự', 'Thêm nhân viên mới', `${newStaff.name} (${newStaff.role})`, 'SUCCESS');
+    const { code, name, username, email, phone, department, role, password } = this.staffForm;
+    if (!name.trim() || !username.trim()) {
+      this.showToast('Vui lòng nhập họ tên và tên đăng nhập', 'warning');
+      return;
+    }
+    this.adminData.createStaff({ code, fullName: name, username, email, phone, department, role, password }).subscribe({
+      next: res => {
+        this.staffList.push(this.toStaffRow(res.staff));
+        this.showStaffModal = false;
+        this.showToast(`Đã thêm nhân viên mới "${res.staff.fullName}"!`, 'success');
+        this.refreshAuditLogs();
+      },
+      error: err => this.showToast(err?.status === 500 ? 'Tên đăng nhập có thể đã tồn tại' : (err?.error?.error || 'Không tạo được nhân viên'), 'error'),
+    });
+  }
+
+  /** Vai trò được phép gán: chỉ Super Admin mới gán được Super Admin. */
+  get assignableRoles(): { id: string; name: string }[] {
+    return this.roles.filter(r => r.id !== 'r-1' || this.adminAuth.isSuperAdmin());
+  }
+
+  /** Không tự đổi vai trò của mình; chỉ Super Admin được đổi vai trò của Super Admin. */
+  canEditStaffRole(st: any): boolean {
+    if (!this.adminAuth.can('staff.edit') || st.id === this.adminAuth.adminId) return false;
+    return st.role !== 'Super Admin' || this.adminAuth.isSuperAdmin();
+  }
+
+  changeStaffRole(st: any, role: string): void {
+    if (!role || role === st.role) return;
+    this.adminData.setStaffRole(st.id, role).subscribe({
+      next: res => {
+        Object.assign(st, this.toStaffRow(res.staff));
+        this.showToast(`Đã đổi vai trò của ${st.name} thành ${st.role}`, 'success');
+        this.refreshAuditLogs();
+      },
+      error: err => {
+        this.showToast(err?.error?.error || 'Không đổi được vai trò nhân viên', 'error');
+        const previous = st.role;
+        st.role = role;
+        setTimeout(() => st.role = previous);
+      },
+    });
   }
 
   toggleStaffStatus(st: any): void {
-    st.status = st.status === 'ACTIVE' ? 'LOCKED' : 'ACTIVE';
-    this.showToast(`Nhân viên ${st.name} hiện đã ${st.status === 'ACTIVE' ? 'KÍCH HOẠT' : 'KHÓA TRUY CẬP'}!`, 'warning');
-    this.recordAudit('Nhân Sự', 'Đổi trạng thái nhân sự', `${st.name} -> ${st.status}`, 'WARNING');
+    const active = st.status !== 'ACTIVE';
+    this.adminData.setStaffActive(st.id, active).subscribe({
+      next: res => {
+        Object.assign(st, this.toStaffRow(res.staff));
+        this.showToast(`Nhân viên ${st.name} hiện đã ${active ? 'KÍCH HOẠT' : 'KHÓA TRUY CẬP'}!`, 'warning');
+        this.refreshAuditLogs();
+      },
+      error: err => this.showToast(err?.error?.error || 'Không đổi được trạng thái nhân viên', 'error'),
+    });
   }
 
   // --- Roles & Permissions ---
   selectRole(roleId: string): void {
     this.selectedRoleId = roleId;
+  }
+
+  get selectedRoleName(): string {
+    return this.roles.find(r => r.id === this.selectedRoleId)?.name || '';
+  }
+
+  /** Chỉ Super Admin được sửa bảng quyền; riêng vai trò Super Admin luôn toàn quyền. */
+  get canEditPermissions(): boolean {
+    return this.adminAuth.isSuperAdmin() && this.selectedRoleId !== 'r-1';
   }
 
   togglePermission(roleId: string, moduleKey: string, permKey: 'view' | 'create' | 'edit' | 'delete' | 'approve'): void {
@@ -1877,8 +2256,10 @@ export class AdminComponent implements OnInit, OnDestroy {
       this.permissionsMatrix[roleId][moduleKey] = { view: false, create: false, edit: false, delete: false, approve: false };
     }
     this.permissionsMatrix[roleId][moduleKey][permKey] = !this.permissionsMatrix[roleId][moduleKey][permKey];
-    this.showToast(`Đã cập nhật quyền ${permKey.toUpperCase()} cho module ${moduleKey}`, 'info');
-    this.recordAudit('Phân Quyền', 'Cập nhật phân quyền', `Role ${roleId} - Module ${moduleKey} - ${permKey}`, 'INFO');
+    this.saveConfig('permissions', this.permissionsMatrix, () => {
+      this.showToast(`Đã cập nhật quyền ${permKey.toUpperCase()} cho module ${moduleKey}`, 'info');
+      this.recordAudit('Phân Quyền', 'Cập nhật phân quyền', `Role ${roleId} - Module ${moduleKey} - ${permKey}`, 'INFO');
+    });
   }
 
   hasPermission(roleId: string, moduleKey: string, permKey: 'view' | 'create' | 'edit' | 'delete' | 'approve'): boolean {
@@ -1887,8 +2268,10 @@ export class AdminComponent implements OnInit, OnDestroy {
 
   // --- Settings ---
   saveSettings(): void {
-    this.showToast('Đã lưu thành công toàn bộ cài đặt hệ thống Luméa!', 'success');
-    this.recordAudit('Cài Đặt', 'Cập nhật cài đặt hệ thống', 'Lưu thông tin cửa hàng, bảng giá in 3D & thanh toán', 'SUCCESS');
+    this.saveConfig('settings', this.settings, () => {
+      this.showToast('Đã lưu thành công toàn bộ cài đặt hệ thống Luméa!', 'success');
+      this.recordAudit('Cài Đặt', 'Cập nhật cài đặt hệ thống', 'Lưu thông tin cửa hàng, bảng giá in 3D & thanh toán', 'SUCCESS');
+    });
   }
 
   // --- Audit Log ---
@@ -1903,31 +2286,126 @@ export class AdminComponent implements OnInit, OnDestroy {
   }
 
   exportAuditLogs(): void {
-    const csvContent = 'data:text/csv;charset=utf-8,' +
-      'Thời gian,Tài khoản,Phân hệ,Hành động,Chi tiết,IP,Mức độ\n' +
-      this.auditLogs.map(e => `"${e.timestamp}","${e.actor}","${e.module}","${e.action}","${e.detail}","${e.ip}","${e.level}"`).join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `lumea_audit_log_${new Date().toISOString().slice(0, 10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    this.showToast('Đã xuất file Audit Log thành công!', 'success');
+    this.downloadCsv('lumea_audit_log', ['Thời gian', 'Tài khoản', 'Phân hệ', 'Hành động', 'Chi tiết', 'IP', 'Mức độ'],
+      this.auditLogs.map(e => [e.timestamp, e.actor, e.module, e.action, e.detail, e.ip, e.level]));
   }
 
-  private recordAudit(module: string, action: string, detail: string, level: string): void {
-    const newLog = {
-      id: 'log-' + (this.auditLogs.length + 1),
-      timestamp: new Date().toLocaleDateString('vi-VN') + ' ' + new Date().toLocaleTimeString('vi-VN'),
-      actor: `${this.adminAuth.currentAdmin()?.username || 'admin'} (${this.adminAuth.currentAdmin()?.fullName || 'Super Admin'})`,
-      module,
-      action,
-      detail,
-      ip: '192.168.1.10',
-      level,
+  exportOrders(): void {
+    this.downloadCsv('lumea_don_hang', ['Mã đơn', 'Ngày đặt', 'Khách hàng', 'SĐT', 'Thành phố', 'Sản phẩm', 'Tổng tiền', 'Thanh toán', 'Trạng thái thanh toán', 'Trạng thái đơn'],
+      this.filteredOrders.map(o => [o.orderNumber, this.orderDateLabel(o), o.shippingAddress?.fullName, o.shippingAddress?.phone, o.shippingAddress?.city,
+        this.getOrderItemName(o), o.total, this.paymentMethodLabel(o.paymentMethod), this.paymentStatusLabel(o), this.orderStatusLabel(o.status)]));
+  }
+
+  exportProducts(): void {
+    this.downloadCsv('lumea_san_pham', ['Mã', 'Tên sản phẩm', 'Danh mục', 'Loại sản xuất', 'Giá bán', 'Giá gốc', 'Tồn kho', 'Đánh giá', 'Số đánh giá'],
+      this.filteredProducts.map(p => [p.id, p.name, p.categoryName, p.productionType, p.basePrice, p.originalPrice ?? '', p.inStock, p.rating, p.reviewCount]));
+  }
+
+  exportCustomers(): void {
+    this.downloadCsv('lumea_khach_hang', ['Khách hàng', 'SĐT', 'Email', 'Khu vực', 'Số đơn', 'Nhận thành công', 'Đã huỷ', 'Hoàn hàng', 'Đã chi'],
+      this.filteredCustomers.map(c => [c.name, c.phone, c.email, c.city, c.orders.length, c.deliveredCount, c.cancelledCount, c.returnedCount, c.totalSpend]));
+  }
+
+  /** CSV kèm BOM để Excel đọc đúng tiếng Việt. Ô bắt đầu bằng = + - @ được chèn dấu ' để Excel không chạy như công thức. */
+  private downloadCsv(name: string, headers: string[], rows: unknown[][]): void {
+    const cell = (value: unknown): string => {
+      if (typeof value === 'number') return String(value);
+      const text = String(value ?? '');
+      return `"${(/^[=+\-@]/.test(text) ? "'" + text : text).replace(/"/g, '""')}"`;
     };
-    this.auditLogs.unshift(newLog);
+    const csv = [headers, ...rows].map(row => row.map(cell).join(',')).join('\r\n');
+    const url = URL.createObjectURL(new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${name}_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+    this.showToast(`Đã xuất ${rows.length} dòng ra file CSV`, 'success');
+  }
+
+  /** Ghi nhật ký lên server; tài khoản, IP và thời gian do server xác định. */
+  private recordAudit(module: string, action: string, detail: string, level: string): void {
+    this.adminData.addAuditLog({ module, action, detail, level }).subscribe({
+      next: res => {
+        if (res.log) this.auditLogs.unshift(this.toAuditRow(res.log));
+      },
+      error: err => console.warn('Không ghi được nhật ký', err),
+    });
+  }
+
+  // --- Bảo hành ---
+  get filteredWarranties(): any[] {
+    const q = this.warrantySearch.toLowerCase().trim();
+    return this.warranties.filter(w => !q ||
+      w.warrantyCode.toLowerCase().includes(q) || w.orderNumber.toLowerCase().includes(q) ||
+      w.customerName.toLowerCase().includes(q) || w.customerPhone.includes(q));
+  }
+
+  warrantyStatus(w: any): 'ACTIVE' | 'CLAIMED' | 'EXPIRED' {
+    if (w.status === 'CLAIMED') return 'CLAIMED';
+    return w.status === 'EXPIRED' || new Date(w.expiresAt) < this.today ? 'EXPIRED' : 'ACTIVE';
+  }
+
+  openAddWarrantyModal(): void {
+    this.warrantyForm = { orderNumber: '', productName: '', customerName: '', customerPhone: '', warrantyMonths: 12 };
+    this.showWarrantyModal = true;
+  }
+
+  /** Nhập đúng mã đơn thì tự điền thông tin khách và sản phẩm. */
+  fillWarrantyFromOrder(): void {
+    const code = this.warrantyForm.orderNumber.trim().toUpperCase();
+    const order = this.orders.find(o => o.orderNumber === code);
+    if (!order) return;
+    this.warrantyForm.orderNumber = code;
+    this.warrantyForm.productName = this.getOrderItemName(order);
+    this.warrantyForm.customerName = order.shippingAddress?.fullName || '';
+    this.warrantyForm.customerPhone = order.shippingAddress?.phone || '';
+  }
+
+  saveWarranty(): void {
+    this.adminData.createWarranty({ ...this.warrantyForm, warrantyMonths: Number(this.warrantyForm.warrantyMonths) }).subscribe({
+      next: res => {
+        this.warranties.unshift(res.warranty);
+        this.showWarrantyModal = false;
+        this.showToast(`Đã tạo phiếu bảo hành ${res.warranty.warrantyCode}`, 'success');
+        this.recordAudit('Bảo Hành', 'Tạo phiếu bảo hành', `${res.warranty.warrantyCode} - đơn ${res.warranty.orderNumber}`, 'SUCCESS');
+      },
+      error: err => this.showToast(err?.error?.error || 'Không tạo được phiếu bảo hành', 'error'),
+    });
+  }
+
+  resolveWarranty(w: any): void {
+    this.adminData.resolveWarrantyClaim(w.warrantyCode, 'Đã xử lý yêu cầu bảo hành').subscribe({
+      next: res => {
+        Object.assign(w, res.warranty);
+        this.showToast(`Đã đóng yêu cầu của phiếu ${w.warrantyCode}`, 'success');
+        this.recordAudit('Bảo Hành', 'Đóng yêu cầu bảo hành', w.warrantyCode, 'INFO');
+      },
+      error: err => this.showToast(err?.error?.error || 'Không đóng được yêu cầu', 'error'),
+    });
+  }
+
+  // --- Thông báo: các việc đang cần xử lý, tính trực tiếp từ dữ liệu thật ---
+  get notifications(): { label: string; count: number; tab: AdminTab; icon: string }[] {
+    const openClaims = this.warranties.filter(w => w.status === 'CLAIMED').length;
+    return [
+      { label: 'Đơn COD chờ gọi xác nhận', count: this.orderCount('PENDING'), tab: 'orders' as AdminTab, icon: 'cart' },
+      { label: 'Tin nhắn chưa đọc', count: this.chatService.totalUnread(), tab: 'messages' as AdminTab, icon: 'message' },
+      { label: 'Yêu cầu in 3D chờ báo giá', count: this.pendingRequestsCount, tab: 'custom-requests' as AdminTab, icon: 'printer' },
+      { label: 'Yêu cầu bảo hành chờ xử lý', count: openClaims, tab: 'warranty' as AdminTab, icon: 'shield-check' },
+      { label: 'Đánh giá xấu chưa phản hồi', count: this.reviewCount('NEEDS_ACTION'), tab: 'reviews' as AdminTab, icon: 'star' },
+      { label: 'Bài cộng đồng bị chặn cần xem', count: this.rejectedPostsCount, tab: 'community' as AdminTab, icon: 'sparkles' },
+      { label: 'Sản phẩm hết hoặc sắp hết hàng', count: this.stockAlerts.outOfStock.length + this.stockAlerts.lowStock.length, tab: 'inventory' as AdminTab, icon: 'archive' },
+    ].filter(n => n.count > 0);
+  }
+
+  get notificationTotal(): number {
+    return this.notifications.reduce((sum, n) => sum + n.count, 0);
+  }
+
+  openNotification(tab: AdminTab): void {
+    this.showNotifications = false;
+    this.activeTab = tab;
   }
 
   get readyStockProducts(): Product[] {

@@ -4,7 +4,7 @@ const CommunityPost = require('../models/CommunityPost');
 const Notification = require('../models/Notification');
 const { awardVoucher } = require('../utils/vouchers');
 const { checkContent } = require('../utils/moderation');
-const { requireAdminId, validId } = require('../middleware/auth');
+const { requirePermission, attachUserId } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -29,7 +29,7 @@ router.get('/', async (_req, res) => {
 });
 
 // Admin — mọi bài kể cả bị ẩn/bị chặn, kèm postedAt thật để lọc "đăng hôm nay".
-router.get('/admin', requireAdminId, async (_req, res) => {
+router.get('/admin', requirePermission('content.view'), async (_req, res) => {
   try {
     const posts = await CommunityPost.find().sort({ _id: -1 }).lean();
     res.json({
@@ -42,7 +42,7 @@ router.get('/admin', requireAdminId, async (_req, res) => {
 });
 
 // Admin — đổi trạng thái hiển thị (ẩn / mở lại) và/hoặc gắn nhãn "Staff Pick".
-router.patch('/:id/moderation', requireAdminId, async (req, res) => {
+router.patch('/:id/moderation', requirePermission('content.approve'), async (req, res) => {
   try {
     const { status, reason, isStaffPick } = req.body;
     const update = {};
@@ -75,7 +75,7 @@ router.patch('/:id/moderation', requireAdminId, async (req, res) => {
   }
 });
 
-router.delete('/:id', requireAdminId, async (req, res) => {
+router.delete('/:id', requirePermission('content.delete'), async (req, res) => {
   try {
     await CommunityPost.deleteOne({ id: req.params.id });
     res.json({ success: true });
@@ -84,11 +84,11 @@ router.delete('/:id', requireAdminId, async (req, res) => {
   }
 });
 
-router.post('/', async (req, res) => {
+router.post('/', attachUserId, async (req, res) => {
   try {
     // Không cho client tự đặt các trường kiểm duyệt / số liệu.
-    const { userId: rawUserId, status: _s, moderationReason: _r, moderatedBy: _b, moderatedAt: _a, isStaffPick: _p, postedAt: _t, ...body } = req.body;
-    const userId = validId(rawUserId);
+    const { userId: _u, status: _s, moderationReason: _r, moderatedBy: _b, moderatedAt: _a, isStaffPick: _p, postedAt: _t, ...body } = req.body;
+    const { userId } = req;
 
 
     const violation = checkContent(body.title, body.caption, ...(Array.isArray(body.tags) ? body.tags : []));

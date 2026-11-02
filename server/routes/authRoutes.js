@@ -2,27 +2,19 @@ const express = require('express');
 const { sendError } = require('../utils/http-error');
 const bcrypt = require('bcryptjs');
 const axios = require('axios');
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
 const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
+const UserAvatar = require('../models/UserAvatar');
 const OtpCode = require('../models/OtpCode');
 const { generateOtpCode, sendOtpSms, sendOtpEmail } = require('../utils/otp');
-const { requireUserId } = require('../middleware/auth');
+const { requireUserId, createUserToken } = require('../middleware/auth');
+const { IMAGE_TYPES, INVALID_TYPE_ERROR, uploadImage, sendStoredImage } = require('../utils/images');
 const { awardVoucher } = require('../utils/vouchers');
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 
 const router = express.Router();
-
-const uploadDir = path.join(__dirname, '../uploads/avatars');
-fs.mkdirSync(uploadDir, { recursive: true });
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 },
-});
 
 const PHONE_REGEX = /^0\d{9}$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -159,7 +151,7 @@ router.post('/register', async (req, res) => {
       fullName: String(fullName || '').trim(),
       lastLogin: new Date(),
     });
-    res.json({ success: true, user });
+    res.json({ success: true, user, token: createUserToken(user) });
   } catch (err) {
     console.error('register error', err);
     sendError(res, err);
@@ -240,7 +232,7 @@ router.post('/google', async (req, res) => {
     if (!user.active) {
       return res.status(403).json({ success: false, error: 'Tài khoản đã bị khoá.' });
     }
-    res.json({ success: true, user });
+    res.json({ success: true, user, token: createUserToken(user) });
   } catch (err) {
     console.error('google login error', err);
     res.status(400).json({ success: false, error: 'Đăng nhập Google thất bại, vui lòng thử lại.' });
@@ -286,7 +278,7 @@ router.post('/facebook', async (req, res) => {
     if (!user.active) {
       return res.status(403).json({ success: false, error: 'Tài khoản đã bị khoá.' });
     }
-    res.json({ success: true, user });
+    res.json({ success: true, user, token: createUserToken(user) });
   } catch (err) {
     console.error('facebook login error', err.response?.data || err);
     res.status(400).json({ success: false, error: 'Đăng nhập Facebook thất bại, vui lòng thử lại.' });
@@ -321,7 +313,7 @@ router.post('/login', async (req, res) => {
     }
     user.lastLogin = new Date();
     await user.save();
-    res.json({ success: true, user });
+    res.json({ success: true, user, token: createUserToken(user) });
   } catch (err) {
     console.error('login error', err);
     sendError(res, err);
@@ -385,7 +377,7 @@ router.post('/reset-password', async (req, res) => {
     }
     user.password = await bcrypt.hash(newPassword, 10);
     await user.save();
-    res.json({ success: true, user });
+    res.json({ success: true, user, token: createUserToken(user) });
   } catch (err) {
     console.error('reset-password error', err);
     sendError(res, err);
@@ -437,28 +429,33 @@ router.put('/profile', requireUserId, async (req, res) => {
   }
 });
 
-// multer phải chạy trước requireUserId: userId nằm trong form multipart, chưa parse thì req.body rỗng (-> 401).
-router.post('/avatar', upload.single('avatar'), requireUserId, async (req, res) => {
+router.post('/avatar', requireUserId, uploadImage('avatar'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ success: false, error: 'Thiếu file ảnh' });
-    if (!/^image\//.test(req.file.mimetype || '')) {
-      return res.status(400).json({ success: false, error: 'File phải là ảnh (JPG, PNG, WEBP...)' });
+    if (!IMAGE_TYPES.includes(req.file.mimetype)) {
+      return res.status(400).json({ success: false, error: INVALID_TYPE_ERROR });
     }
 
-    const ext = path.extname(req.file.originalname || '').toLowerCase() || '.jpg';
-    const filename = `avatar-${req.userId}-${Date.now()}${ext}`;
-    fs.writeFileSync(path.join(uploadDir, filename), req.file.buffer);
-
+    const avatar = await UserAvatar.create({ user: req.userId, data: req.file.buffer, contentType: req.file.mimetype });
     const user = await User.findByIdAndUpdate(
       req.userId,
-      { avatar: `/uploads/avatars/${filename}` },
+      { avatar: `/api/auth/avatars/${avatar._id}` },
       { new: true }
     );
     if (!user) return res.status(404).json({ success: false, error: 'Không tìm thấy tài khoản' });
+    await UserAvatar.deleteMany({ user: req.userId, _id: { $ne: avatar._id } });
 
     res.json({ success: true, user });
   } catch (err) {
     console.error('avatar upload error', err);
+    sendError(res, err);
+  }
+});
+
+router.get('/avatars/:avatarId', async (req, res) => {
+  try {
+    await sendStoredImage(UserAvatar, req.params.avatarId, res);
+  } catch (err) {
     sendError(res, err);
   }
 });

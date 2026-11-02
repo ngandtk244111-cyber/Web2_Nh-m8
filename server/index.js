@@ -10,13 +10,18 @@ const { attachSocket } = require('./socket');
 const app = express();
 const corsOrigins = (process.env.CORS_ORIGINS || 'http://localhost:4200').split(',').map(s => s.trim());
 
-app.use(cors({ origin: corsOrigins }));
+// Render đặt server sau proxy: cần dòng này để req.ip là IP thật của nhân viên trong Audit Log.
+app.set('trust proxy', 1);
+// maxAge: trình duyệt nhớ kết quả preflight 10 phút, không phải hỏi lại trước mỗi request có token.
+app.use(cors({ origin: corsOrigins, maxAge: 600 }));
 app.use(express.json());
-// Ảnh avatar upload — phục vụ tĩnh qua /uploads/... (xem authRoutes.js route POST /avatar).
+// Avatar cũ chưa chuyển sang MongoDB (seed/migrate-storage.js). Ảnh mới lưu trong DB, không qua thư mục này.
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/me/data', require('./routes/userDataRoutes'));
 app.use('/api/admin/auth', require('./routes/adminAuthRoutes'));
+app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/orders', require('./routes/orderRoutes'));
 app.use('/api/warranty', require('./routes/warrantyRoutes'));
 app.use('/api/payments', require('./routes/paymentRoutes'));
@@ -29,6 +34,7 @@ app.use('/api/custom-requests', require('./routes/customRequestRoutes'));
 app.use('/api/community', require('./routes/communityRoutes'));
 app.use('/api/news', require('./routes/newsRoutes'));
 app.use('/api/videos', require('./routes/videoRoutes'));
+app.use('/api/banners', require('./routes/bannerRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/newsletter', require('./routes/newsletterRoutes'));
 app.use('/api/coupons', require('./routes/couponRoutes'));
@@ -50,6 +56,7 @@ const PORT = process.env.PORT || 4300;
 
 connectDB()
   .then(() => require('./models/User').unsetNullLoginIds())
+  .then(() => require('./utils/permissions').ensureSuperAdmin())
   .then(() => {
     httpServer.listen(PORT, () => {
       console.log(`Luméa server listening on http://localhost:${PORT}`);

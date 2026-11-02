@@ -13,4 +13,7 @@ const notificationSchema = new mongoose.Schema({
   refKey: { type: String, default: null },
 }, { timestamps: true });
 
+notificationSchema.index({ userId: 1, createdAt: -1 });
+notificationSchema.index({ userId: 1, refKey: 1 });
+
 module.exports = mongoose.model('Notification', notificationSchema);

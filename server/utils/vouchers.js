@@ -97,6 +97,18 @@ class VoucherError extends Error {}
  * Giữ chỗ mã TRƯỚC khi tạo đơn; tạo đơn lỗi thì gọi release(), tạo xong thì attach(orderNumber).
  * Mã không hợp lệ / đã dùng / chưa đủ giá trị tối thiểu -> ném VoucherError (thông điệp tiếng Việt).
  */
+/** Số lượt đã dùng của từng mã công khai. */
+async function couponUsageCounts() {
+  const rows = await CouponUsage.aggregate([{ $group: { _id: '$code', count: { $sum: 1 } } }]);
+  return new Map(rows.map(r => [r._id, r.count]));
+}
+
+/** Mã còn hạn và còn lượt dùng (mã bị tắt được lọc riêng bằng active). */
+function isCouponOpen(coupon, usedCount) {
+  if (coupon.endDate && new Date(coupon.endDate) <= new Date()) return false;
+  return !coupon.limitCount || usedCount < coupon.limitCount;
+}
+
 async function reserveDiscountCode({ code, userId, phone, subtotal }) {
   const none = { discount: 0, release: async () => {}, attach: async () => {} };
   const clean = String(code || '').trim().toUpperCase();
@@ -104,6 +116,9 @@ async function reserveDiscountCode({ code, userId, phone, subtotal }) {
 
   const coupon = await Coupon.findOne({ code: clean, active: true }).lean();
   if (coupon) {
+    if (coupon.endDate && new Date(coupon.endDate) <= new Date()) {
+      throw new VoucherError(`Mã ${clean} đã hết hạn.`);
+    }
     if (subtotal < (coupon.minSpend || 0)) {
       throw new VoucherError(`Mã ${clean} chỉ áp dụng cho đơn từ ${coupon.minSpend.toLocaleString('vi-VN')}đ.`);
     }
@@ -115,6 +130,11 @@ async function reserveDiscountCode({ code, userId, phone, subtotal }) {
     } catch (err) {
       if (err.code === 11000) throw new VoucherError(`Bạn đã dùng mã ${clean} rồi — mỗi mã chỉ dùng được 1 lần.`);
       throw err;
+    }
+    // Đếm sau khi ghi để 2 đơn đặt cùng lúc không vượt tổng lượt của mã.
+    if (coupon.limitCount && (await CouponUsage.countDocuments({ code: clean })) > coupon.limitCount) {
+      await CouponUsage.deleteOne({ _id: usage._id });
+      throw new VoucherError(`Mã ${clean} đã hết lượt sử dụng.`);
     }
     return {
       discount: voucherDiscount(coupon, subtotal),
@@ -158,6 +178,8 @@ async function usedCouponCodes(userId) {
 }
 
 module.exports = {
+  couponUsageCounts,
+  isCouponOpen,
   VOUCHER_TIERS, VOUCHER_TTL_DAYS, awardVoucher, voucherDiscount, findUsableVoucher, tierDescription,
   reserveDiscountCode, releaseCodesForOrder, usedCouponCodes, VoucherError,
 };

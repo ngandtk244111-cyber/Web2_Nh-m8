@@ -4,9 +4,8 @@ import { AdminAuthService } from '../services/admin-auth.service';
 
 /**
  * Chặn vào dashboard nếu chưa đăng nhập — tham khảo admin-auth.guard.ts của AuraPC-main
- * (functional guard + redirect '/login'), nhưng chỉ kiểm tra signal cục bộ (không verify token
- * với server) vì Lam-a-main không dùng token cho admin, đúng mức bảo mật "tin id client gửi lên"
- * đã áp dụng xuyên suốt project.
+ * (functional guard + redirect '/login'). Token do server kiểm tra ở mỗi request; hết hạn thì
+ * admin-auth.interceptor.ts đưa về trang đăng nhập.
  */
 export const adminAuthGuard: CanActivateFn = () => {
   const adminAuth = inject(AdminAuthService);

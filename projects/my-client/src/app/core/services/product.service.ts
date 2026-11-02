@@ -1,7 +1,7 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, catchError, map, of, tap } from 'rxjs';
-import { Product, ProductCategory, ProductionType, SpaceKey } from '../models/product.model';
+import { Product, ProductCategory, ProductionType, ProductReview, SpaceKey } from '../models/product.model';
 import { environment } from '../../../environments/environment';
 import { MascotService } from './mascot.service';
 import { FlashSaleService } from './flash-sale.service';
@@ -124,8 +124,19 @@ export class ProductService {
     this.productsSignal().filter(p => p.categoryGroup === 'DECOR')
   );
 
+  private lastSyncAt = Date.now();
+
   constructor() {
     this.refresh();
+    // Khách quay lại tab đang mở thì lấy dữ liệu mới (tối đa 1 lần/phút); không bật mascot loading.
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState !== 'visible' || Date.now() - this.lastSyncAt < 60_000) return;
+      this.lastSyncAt = Date.now();
+      this.http.get<{ success: boolean; products: Product[] }>(BASE).subscribe({
+        next: (res) => { if (res.success) this.productsSignal.set(res.products); },
+        error: (err) => console.warn('Failed to sync products from backend', err),
+      });
+    });
   }
 
   refresh(): void {
@@ -320,6 +331,14 @@ export class ProductService {
   deleteProduct(id: string): Observable<{ success: boolean }> {
     return this.http.delete<{ success: boolean }>(`${BASE}/${id}`).pipe(
       tap(() => this.refresh())
+    );
+  }
+
+  /** Danh sách sản phẩm không kèm nội dung đánh giá, trang chi tiết tải riêng qua đây. */
+  fetchReviews(slug: string): Observable<ProductReview[]> {
+    return this.http.get<{ success: boolean; product: Product }>(`${BASE}/slug/${encodeURIComponent(slug)}`).pipe(
+      map(res => res.product?.reviews ?? []),
+      catchError(() => of([]))
     );
   }
 

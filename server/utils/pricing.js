@@ -103,9 +103,12 @@ async function verifyAndPriceOrderItems(items, Product) {
     const unitPrice = resolveUnitPrice(dbProduct, item.selectedCustomization);
     const totalPrice = unitPrice * quantity;
 
+    // Dùng dữ liệu sản phẩm THẬT từ DB, không dùng bản client gửi lên. Đơn chỉ cần bản chụp sản phẩm,
+    // không sao chép đánh giá của khách khác.
+    const { reviews: _reviews, ...productSnapshot } = dbProduct;
     return {
       ...item,
-      product: dbProduct, // dùng dữ liệu sản phẩm THẬT từ DB, không dùng bản client gửi lên
+      product: productSnapshot,
       quantity,
       unitPrice,
       totalPrice,

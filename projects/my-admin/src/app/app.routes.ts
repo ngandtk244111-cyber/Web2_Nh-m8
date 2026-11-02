@@ -6,8 +6,10 @@ export const routes: Routes = [
     path: 'login',
     loadComponent: () => import('./pages/login/login.component').then(m => m.LoginComponent),
   },
+  { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+  // Mỗi tab có URL riêng (/orders, /products...) để tải lại trang không về Dashboard.
   {
-    path: '',
+    path: ':tab',
     canActivate: [adminAuthGuard],
     loadComponent: () => import('./pages/dashboard/admin.component').then(m => m.AdminComponent),
   },

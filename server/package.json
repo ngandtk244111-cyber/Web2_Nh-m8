@@ -8,7 +8,8 @@
     "dev": "node --watch index.js",
     "seed:all": "node seed/seed-all.js",
     "seed:verify": "node seed/verify-seed.js",
-    "seed:product-content": "node seed/enrich-product-content.js"
+    "seed:product-content": "node seed/enrich-product-content.js",
+    "migrate:storage": "node seed/migrate-storage.js"
   },
   "dependencies": {
     "axios": "^1.7.9",

@@ -9,8 +9,8 @@
       <app-icon name="x" [size]="18"></app-icon>
     </button>
 
-    <a [routerLink]="link" class="pp_link" (click)="close()" aria-label="Minimalist Furniture — Shop now">
-      <img [src]="image" alt="Minimalist Furniture — Luméa" class="pp_image" draggable="false">
+    <a [href]="popup().link" class="pp_link" (click)="openLink($event)" [attr.aria-label]="popup().title">
+      <img [src]="popup().imageUrl" [alt]="popup().title" class="pp_image" draggable="false">
     </a>
   </div>
 </div>

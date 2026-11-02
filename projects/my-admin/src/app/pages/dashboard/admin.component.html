@@ -1,169 +1,167 @@
 <div class="admin-shell flex h-screen overflow-hidden bg-[#F7F2E7] text-[#1F1712] font-sans antialiased" [class.is-collapsed]="isSidebarCollapsed">
 
   <!-- ========================================================================= -->
-  <!-- SIDEBAR NAVIGATION (thu gọn được — pattern từ my-admin-vita)              -->
+  <!-- SIDEBAR NAVIGATION (bố cục theo my-admin-vita, màu Luméa)                 -->
   <!-- ========================================================================= -->
-  <aside class="sidebar shrink-0 bg-white flex flex-col select-none z-10">
+  <aside class="sidebar shrink-0 flex flex-col select-none z-30">
 
-    <!-- Brand: nối liền với topbar thành một dải đỏ như header client -->
-    <button type="button" (click)="activeTab = 'dashboard'" class="sidebar-brand relative z-10 h-[72px] shrink-0 bg-[#A3152D] flex items-center gap-3 px-5 text-left shadow-[0_2px_12px_rgba(31,23,18,0.12)]">
-      <img src="/logo/lumea-mark.png" alt="Luméa" class="w-9 h-9 object-cover mix-blend-lighten shrink-0">
-      <span class="nav-text leading-none">
-        <span class="block text-[20px] font-bold tracking-[0.16em] text-white">LUMÉA</span>
-        <span class="block mt-1 text-[9px] font-semibold uppercase tracking-[0.3em] text-white/70">Admin Portal</span>
-      </span>
+    <!-- Logo: cùng màu với topbar -->
+    <button type="button" (click)="activeTab = 'dashboard'" class="sidebar-brand" title="Tổng quan">
+      <img [src]="isSidebarCollapsed ? '/logo/lumea-mark.png' : '/logo/lumea-logo-white.png'" alt="Luméa Interior & 3D">
     </button>
 
     <!-- Nav -->
     <nav class="sidebar-scroll flex-1 overflow-y-auto overflow-x-hidden py-4 border-r border-[#E8DEC9]">
 
-      <button (click)="activeTab = 'dashboard'" [class.is-active]="activeTab === 'dashboard'" class="nav-item" title="Dashboard">
+      <button *ngIf="canViewTab('dashboard')" (click)="activeTab = 'dashboard'" [class.is-active]="activeTab === 'dashboard'" class="nav-item" title="Dashboard">
         <app-icon name="dashboard" [size]="18"></app-icon>
         <span class="nav-text">Dashboard</span>
       </button>
 
+      <div *ngIf="canViewNavGroup('Thương mại & kho')" class="nav-section" (mouseenter)="onNavSectionEnter($event)">
       <button type="button" class="nav-group-toggle" [class.is-open]="isNavGroupOpen('Thương mại & kho')" [class.has-active]="tabMeta[activeTab].group === 'Thương mại & kho'" (click)="toggleNavGroup('Thương mại & kho')" title="Thương mại & kho">
         <app-icon name="tag" [size]="18"></app-icon>
         <span class="nav-text">Thương mại & kho</span>
         <app-icon [name]="isNavGroupOpen('Thương mại & kho') ? 'chevron-down' : 'chevron-right'" [size]="14" class="nav-group-chevron nav-text"></app-icon>
       </button>
       <div class="nav-group" [class.is-closed]="!isNavGroupOpen('Thương mại & kho')">
-        <button (click)="activeTab = 'products'" [class.is-active]="activeTab === 'products'" class="nav-item" title="Sản phẩm">
+        <button *ngIf="canViewTab('products')" (click)="activeTab = 'products'" [class.is-active]="activeTab === 'products'" class="nav-item" title="Sản phẩm">
           <app-icon name="box" [size]="18"></app-icon>
           <span class="nav-text">Sản phẩm</span>
           <span class="nav-count">{{ products.length }}</span>
         </button>
-        <button (click)="activeTab = 'categories'" [class.is-active]="activeTab === 'categories'" class="nav-item" title="Danh mục">
+        <button *ngIf="canViewTab('categories')" (click)="activeTab = 'categories'" [class.is-active]="activeTab === 'categories'" class="nav-item" title="Danh mục">
           <app-icon name="layers" [size]="18"></app-icon>
           <span class="nav-text">Danh mục</span>
           <span class="nav-count">{{ categories.length }}</span>
         </button>
-        <button (click)="activeTab = 'inventory'" [class.is-active]="activeTab === 'inventory'" class="nav-item" title="Kho hàng">
+        <button *ngIf="canViewTab('inventory')" (click)="activeTab = 'inventory'" [class.is-active]="activeTab === 'inventory'" class="nav-item" title="Kho hàng">
           <app-icon name="archive" [size]="18"></app-icon>
           <span class="nav-text">Kho hàng</span>
           <span *ngIf="stockAlerts.outOfStock.length + stockAlerts.lowStock.length > 0" class="nav-count nav-count--alert" title="Sản phẩm hết hoặc sắp hết hàng">{{ stockAlerts.outOfStock.length + stockAlerts.lowStock.length }}</span>
         </button>
-        <button (click)="activeTab = 'suppliers'" [class.is-active]="activeTab === 'suppliers'" class="nav-item" title="Nhà cung cấp">
+        <button *ngIf="canViewTab('suppliers')" (click)="activeTab = 'suppliers'" [class.is-active]="activeTab === 'suppliers'" class="nav-item" title="Nhà cung cấp">
           <app-icon name="truck" [size]="18"></app-icon>
           <span class="nav-text">Nhà cung cấp</span>
         </button>
 
       </div>
+      </div>
 
+      <div *ngIf="canViewNavGroup('Vận hành & sản xuất')" class="nav-section" (mouseenter)="onNavSectionEnter($event)">
       <button type="button" class="nav-group-toggle" [class.is-open]="isNavGroupOpen('Vận hành & sản xuất')" [class.has-active]="tabMeta[activeTab].group === 'Vận hành & sản xuất'" (click)="toggleNavGroup('Vận hành & sản xuất')" title="Vận hành & sản xuất">
         <app-icon name="sliders" [size]="18"></app-icon>
         <span class="nav-text">Vận hành & sản xuất</span>
         <app-icon [name]="isNavGroupOpen('Vận hành & sản xuất') ? 'chevron-down' : 'chevron-right'" [size]="14" class="nav-group-chevron nav-text"></app-icon>
       </button>
       <div class="nav-group" [class.is-closed]="!isNavGroupOpen('Vận hành & sản xuất')">
-        <button (click)="activeTab = 'orders'" [class.is-active]="activeTab === 'orders'" class="nav-item" title="Đơn hàng">
+        <button *ngIf="canViewTab('orders')" (click)="activeTab = 'orders'" [class.is-active]="activeTab === 'orders'" class="nav-item" title="Đơn hàng">
           <app-icon name="cart" [size]="18"></app-icon>
           <span class="nav-text">Đơn hàng</span>
           <span class="nav-count">{{ orders.length }}</span>
         </button>
-        <button (click)="activeTab = 'custom-requests'" [class.is-active]="activeTab === 'custom-requests'" class="nav-item" title="Yêu cầu in 3D">
+        <button *ngIf="canViewTab('custom-requests')" (click)="activeTab = 'custom-requests'" [class.is-active]="activeTab === 'custom-requests'" class="nav-item" title="Yêu cầu in 3D">
           <app-icon name="printer" [size]="18"></app-icon>
           <span class="nav-text">Yêu cầu in 3D</span>
           <span *ngIf="pendingRequestsCount > 0" class="nav-count nav-count--alert">{{ pendingRequestsCount }}</span>
         </button>
+        <button *ngIf="canViewTab('warranty')" (click)="activeTab = 'warranty'" [class.is-active]="activeTab === 'warranty'" class="nav-item" title="Bảo hành">
+          <app-icon name="shield-check" [size]="18"></app-icon>
+          <span class="nav-text">Bảo hành</span>
+          <span class="nav-count">{{ warranties.length }}</span>
+        </button>
 
       </div>
+      </div>
 
+      <div *ngIf="canViewNavGroup('Khách hàng & CSKH')" class="nav-section" (mouseenter)="onNavSectionEnter($event)">
       <button type="button" class="nav-group-toggle" [class.is-open]="isNavGroupOpen('Khách hàng & CSKH')" [class.has-active]="tabMeta[activeTab].group === 'Khách hàng & CSKH'" (click)="toggleNavGroup('Khách hàng & CSKH')" title="Khách hàng & CSKH">
         <app-icon name="heart" [size]="18"></app-icon>
         <span class="nav-text">Khách hàng & CSKH</span>
         <app-icon [name]="isNavGroupOpen('Khách hàng & CSKH') ? 'chevron-down' : 'chevron-right'" [size]="14" class="nav-group-chevron nav-text"></app-icon>
       </button>
       <div class="nav-group" [class.is-closed]="!isNavGroupOpen('Khách hàng & CSKH')">
-        <button (click)="activeTab = 'customers'" [class.is-active]="activeTab === 'customers'" class="nav-item" title="Khách hàng">
+        <button *ngIf="canViewTab('customers')" (click)="activeTab = 'customers'" [class.is-active]="activeTab === 'customers'" class="nav-item" title="Khách hàng">
           <app-icon name="users" [size]="18"></app-icon>
           <span class="nav-text">Khách hàng</span>
           <span class="nav-count">{{ customers.length }}</span>
         </button>
-        <button (click)="activeTab = 'messages'" [class.is-active]="activeTab === 'messages'" class="nav-item" title="Tin nhắn hỗ trợ">
+        <button *ngIf="canViewTab('messages')" (click)="activeTab = 'messages'" [class.is-active]="activeTab === 'messages'" class="nav-item" title="Tin nhắn hỗ trợ">
           <app-icon name="message" [size]="18"></app-icon>
           <span class="nav-text">Tin nhắn</span>
           <span *ngIf="chatService.totalUnread() > 0" class="nav-count nav-count--alert">{{ chatService.totalUnread() }}</span>
         </button>
-        <button (click)="activeTab = 'reviews'" [class.is-active]="activeTab === 'reviews'" class="nav-item" title="Đánh giá">
+        <button *ngIf="canViewTab('reviews')" (click)="activeTab = 'reviews'" [class.is-active]="activeTab === 'reviews'" class="nav-item" title="Đánh giá">
           <app-icon name="star" [size]="18"></app-icon>
           <span class="nav-text">Đánh giá</span>
           <span *ngIf="reviewCount('NEEDS_ACTION') > 0; else reviewTotal" class="nav-count nav-count--alert" title="Đánh giá 1–2 sao chưa phản hồi">{{ reviewCount('NEEDS_ACTION') }}</span>
           <ng-template #reviewTotal><span class="nav-count">{{ reviews.length }}</span></ng-template>
         </button>
-        <button (click)="activeTab = 'promotions'" [class.is-active]="activeTab === 'promotions'" class="nav-item" title="Khuyến mãi & voucher">
+        <button *ngIf="canViewTab('promotions')" (click)="activeTab = 'promotions'" [class.is-active]="activeTab === 'promotions'" class="nav-item" title="Khuyến mãi & voucher">
           <app-icon name="percent" [size]="18"></app-icon>
           <span class="nav-text">Khuyến mãi & voucher</span>
         </button>
 
       </div>
+      </div>
 
+      <div *ngIf="canViewNavGroup('Nội dung & truyền thông')" class="nav-section" (mouseenter)="onNavSectionEnter($event)">
       <button type="button" class="nav-group-toggle" [class.is-open]="isNavGroupOpen('Nội dung & truyền thông')" [class.has-active]="tabMeta[activeTab].group === 'Nội dung & truyền thông'" (click)="toggleNavGroup('Nội dung & truyền thông')" title="Nội dung & truyền thông">
         <app-icon name="send" [size]="18"></app-icon>
         <span class="nav-text">Nội dung</span>
         <app-icon [name]="isNavGroupOpen('Nội dung & truyền thông') ? 'chevron-down' : 'chevron-right'" [size]="14" class="nav-group-chevron nav-text"></app-icon>
       </button>
       <div class="nav-group" [class.is-closed]="!isNavGroupOpen('Nội dung & truyền thông')">
-        <button (click)="activeTab = 'banners'" [class.is-active]="activeTab === 'banners'" class="nav-item" title="Banner">
+        <button *ngIf="canViewTab('banners')" (click)="activeTab = 'banners'" [class.is-active]="activeTab === 'banners'" class="nav-item" title="Banner">
           <app-icon name="image" [size]="18"></app-icon>
           <span class="nav-text">Banner</span>
         </button>
-        <button (click)="activeTab = 'community'" [class.is-active]="activeTab === 'community'" class="nav-item" title="Cộng đồng">
+        <button *ngIf="canViewTab('community')" (click)="activeTab = 'community'" [class.is-active]="activeTab === 'community'" class="nav-item" title="Cộng đồng">
           <app-icon name="sparkles" [size]="18"></app-icon>
           <span class="nav-text">Cộng đồng</span>
           <span *ngIf="rejectedPostsCount > 0" class="nav-count nav-count--alert" title="Bài bị chặn tự động cần xem lại">{{ rejectedPostsCount }}</span>
         </button>
-        <button (click)="activeTab = 'articles'" [class.is-active]="activeTab === 'articles'" class="nav-item" title="Tin tức">
+        <button *ngIf="canViewTab('articles')" (click)="activeTab = 'articles'" [class.is-active]="activeTab === 'articles'" class="nav-item" title="Tin tức">
           <app-icon name="file-text" [size]="18"></app-icon>
           <span class="nav-text">Tin tức</span>
           <span class="nav-count">{{ articles.length }}</span>
         </button>
-        <button (click)="activeTab = 'videos'" [class.is-active]="activeTab === 'videos'" class="nav-item" title="Video">
+        <button *ngIf="canViewTab('videos')" (click)="activeTab = 'videos'" [class.is-active]="activeTab === 'videos'" class="nav-item" title="Video">
           <app-icon name="video" [size]="18"></app-icon>
           <span class="nav-text">Video</span>
           <span class="nav-count">{{ videos.length }}</span>
         </button>
 
       </div>
+      </div>
 
+      <div *ngIf="canViewNavGroup('Hệ thống & nhân sự')" class="nav-section" (mouseenter)="onNavSectionEnter($event)">
       <button type="button" class="nav-group-toggle" [class.is-open]="isNavGroupOpen('Hệ thống & nhân sự')" [class.has-active]="tabMeta[activeTab].group === 'Hệ thống & nhân sự'" (click)="toggleNavGroup('Hệ thống & nhân sự')" title="Hệ thống & nhân sự">
         <app-icon name="shield" [size]="18"></app-icon>
         <span class="nav-text">Hệ thống & nhân sự</span>
         <app-icon [name]="isNavGroupOpen('Hệ thống & nhân sự') ? 'chevron-down' : 'chevron-right'" [size]="14" class="nav-group-chevron nav-text"></app-icon>
       </button>
       <div class="nav-group" [class.is-closed]="!isNavGroupOpen('Hệ thống & nhân sự')">
-        <button (click)="activeTab = 'staff'" [class.is-active]="activeTab === 'staff'" class="nav-item" title="Nhân viên">
+        <button *ngIf="canViewTab('staff')" (click)="activeTab = 'staff'" [class.is-active]="activeTab === 'staff'" class="nav-item" title="Nhân viên">
           <app-icon name="award" [size]="18"></app-icon>
           <span class="nav-text">Nhân viên</span>
         </button>
-        <button (click)="activeTab = 'roles'" [class.is-active]="activeTab === 'roles'" class="nav-item" title="Vai trò & phân quyền">
+        <button *ngIf="canViewTab('roles')" (click)="activeTab = 'roles'" [class.is-active]="activeTab === 'roles'" class="nav-item" title="Vai trò & phân quyền">
           <app-icon name="shield-check" [size]="18"></app-icon>
           <span class="nav-text">Vai trò & phân quyền</span>
         </button>
-        <button (click)="activeTab = 'settings'" [class.is-active]="activeTab === 'settings'" class="nav-item" title="Cài đặt hệ thống">
+        <button *ngIf="canViewTab('settings')" (click)="activeTab = 'settings'" [class.is-active]="activeTab === 'settings'" class="nav-item" title="Cài đặt hệ thống">
           <app-icon name="settings" [size]="18"></app-icon>
           <span class="nav-text">Cài đặt hệ thống</span>
         </button>
-        <button (click)="activeTab = 'audit-log'" [class.is-active]="activeTab === 'audit-log'" class="nav-item" title="Audit Log">
+        <button *ngIf="canViewTab('audit-log')" (click)="activeTab = 'audit-log'" [class.is-active]="activeTab === 'audit-log'" class="nav-item" title="Audit Log">
           <app-icon name="activity" [size]="18"></app-icon>
           <span class="nav-text">Audit Log</span>
         </button>
       </div>
+      </div>
 
     </nav>
-
-    <!-- Footer -->
-    <div class="shrink-0 py-2 space-y-0.5 border-t border-r border-[#E8DEC9]">
-      <a [href]="clientAppUrl" target="_blank" class="nav-item" title="Xem cửa hàng">
-        <app-icon name="home" [size]="18"></app-icon>
-        <span class="nav-text">Xem cửa hàng</span>
-        <app-icon name="external-link" [size]="13" class="nav-text ml-auto"></app-icon>
-      </a>
-      <button (click)="logout()" class="nav-item" title="Đăng xuất">
-        <app-icon name="x" [size]="18"></app-icon>
-        <span class="nav-text">Đăng xuất</span>
-      </button>
-    </div>
 
   </aside>
 
@@ -172,21 +170,15 @@
   <!-- ========================================================================= -->
   <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
 
-    <!-- TOPBAR (đỏ MUJI như header client, nối liền với brand của sidebar) -->
-    <header class="h-[72px] shrink-0 bg-[#A3152D] text-white px-4 lg:px-6 flex items-center justify-between gap-6 z-20 shadow-[0_2px_12px_rgba(31,23,18,0.12)]">
+    <!-- TOPBAR (theo my-admin-vita: nút thu gọn bên trái, thông báo + tài khoản bên phải) -->
+    <header class="top-bar">
 
-      <div class="flex items-center gap-3 min-w-0">
-        <button
-          (click)="toggleSidebar()"
-          [title]="isSidebarCollapsed ? 'Mở rộng menu' : 'Thu gọn menu'"
-          class="topbar-btn">
-          <app-icon name="menu" [size]="20"></app-icon>
-        </button>
-        <span class="hidden md:inline-flex items-center gap-2 h-9 px-3.5 rounded-full bg-white/10 border border-white/15 text-[12.5px] font-medium text-white/90 truncate">
-          <app-icon name="clock" [size]="14" class="text-white/70"></app-icon>
-          Hôm nay, {{ today | date:'dd/MM/yyyy' }}
-        </span>
-      </div>
+      <button
+        (click)="toggleSidebar()"
+        [title]="isSidebarCollapsed ? 'Mở rộng menu' : 'Thu gọn menu'"
+        class="topbar-btn">
+        <app-icon name="chevron-right" [size]="24" class="inline-flex" [class.rotate-180]="!isSidebarCollapsed"></app-icon>
+      </button>
 
       <div class="flex items-center gap-1 shrink-0">
         <button
@@ -197,20 +189,30 @@
         </button>
 
         <button
+          *ngIf="canViewTab('messages')"
           (click)="activeTab = 'messages'"
           title="Tin nhắn hỗ trợ"
           class="topbar-btn">
           <app-icon name="message" [size]="18"></app-icon>
-          <span *ngIf="chatService.totalUnread() > 0" class="absolute top-0.5 right-0.5 min-w-[17px] h-[17px] px-1 bg-white text-[#A3152D] text-[10px] font-bold rounded-full flex items-center justify-center ring-2 ring-[#A3152D]">{{ chatService.totalUnread() }}</span>
+          <span *ngIf="chatService.totalUnread() > 0" class="absolute top-0.5 right-0.5 min-w-[17px] h-[17px] px-1 bg-white text-[#A3152D] text-[10px] font-bold rounded-full flex items-center justify-center ring-2 ring-[#891226]">{{ chatService.totalUnread() }}</span>
         </button>
 
-        <button
-          (click)="activeTab = 'custom-requests'"
-          title="Thông báo"
-          class="topbar-btn">
-          <app-icon name="bell" [size]="18"></app-icon>
-          <span *ngIf="pendingRequestsCount > 0" class="absolute top-0.5 right-0.5 min-w-[17px] h-[17px] px-1 bg-white text-[#A3152D] text-[10px] font-bold rounded-full flex items-center justify-center ring-2 ring-[#A3152D]">{{ pendingRequestsCount }}</span>
-        </button>
+        <div class="relative">
+          <button (click)="showNotifications = !showNotifications" title="Thông báo" class="topbar-btn">
+            <app-icon name="bell" [size]="18"></app-icon>
+            <span *ngIf="notificationTotal > 0" class="absolute top-0.5 right-0.5 min-w-[17px] h-[17px] px-1 bg-white text-[#A3152D] text-[10px] font-bold rounded-full flex items-center justify-center ring-2 ring-[#891226]">{{ notificationTotal }}</span>
+          </button>
+          <div *ngIf="showNotifications" class="fixed inset-0 z-20" (click)="showNotifications = false"></div>
+          <div *ngIf="showNotifications" class="absolute right-0 mt-2 w-80 bg-white text-[#1F1712] rounded-xl shadow-lift border border-[#E8DEC9] overflow-hidden z-30 animate-fade-in">
+            <div class="px-4 py-3 border-b border-[#EFE6D3] text-[13px] font-semibold">Việc cần xử lý</div>
+            <button *ngFor="let n of notifications" (click)="openNotification(n.tab)" class="profile-menu-item">
+              <app-icon [name]="n.icon" [size]="16"></app-icon>
+              <span class="flex-1">{{ n.label }}</span>
+              <span class="nav-count nav-count--alert">{{ n.count }}</span>
+            </button>
+            <div *ngIf="notifications.length === 0" class="px-4 py-6 text-center text-[13px] text-[#7A6F67]">Hiện không có việc nào cần xử lý.</div>
+          </div>
+        </div>
 
         <div class="h-7 w-px bg-white/20 mx-3"></div>
 
@@ -219,12 +221,12 @@
           <button
             (click)="showProfileMenu = !showProfileMenu"
             class="flex items-center gap-2.5 h-11 pl-1 pr-3 rounded-full hover:bg-white/10 transition text-left">
-            <div class="w-9 h-9 rounded-full bg-white text-[#A3152D] flex items-center justify-center text-[15px] font-bold">
+            <div class="w-10 h-10 rounded-full bg-white/20 text-white flex items-center justify-center text-[14px] font-bold">
               {{ (adminAuth.currentAdmin()?.fullName || 'A').charAt(0) }}
             </div>
             <div class="hidden sm:block">
               <span class="text-[13px] font-semibold text-white block leading-tight">{{ adminAuth.currentAdmin()?.fullName || 'Super Admin' }}</span>
-              <span class="text-[11px] text-white/70 leading-tight">Quản trị cấp cao</span>
+              <span class="text-[11px] text-white/70 leading-tight">{{ adminAuth.currentAdmin()?.role || 'Chưa có vai trò' }}</span>
             </div>
             <app-icon name="chevron-down" [size]="14" class="text-white/70"></app-icon>
           </button>
@@ -248,7 +250,7 @@
                 <span class="flex-1">Xem cửa hàng</span>
                 <app-icon name="external-link" [size]="13" class="text-[#93877E]"></app-icon>
               </a>
-              <button (click)="showProfileMenu = false; activeTab = 'settings'" class="profile-menu-item">
+              <button *ngIf="canViewTab('settings')" (click)="showProfileMenu = false; activeTab = 'settings'" class="profile-menu-item">
                 <app-icon name="settings" [size]="16"></app-icon>
                 <span>Cài đặt hệ thống</span>
               </button>
@@ -271,75 +273,92 @@
 
     <!-- CONTENT BODY (Scrollable Container) -->
     <main class="flex-1 overflow-y-auto">
-     <div class="max-w-[1440px] mx-auto px-6 lg:px-8 py-6 space-y-6">
+     <div class="max-w-[1600px] mx-auto px-6 lg:px-8 py-6 space-y-6">
 
-      <!-- Breadcrumb + Page header -->
-      <div class="space-y-3">
-        <!-- Breadcrumb: "Luméa Admin" về Dashboard; tên nhóm mở trang đầu tiên của nhóm (và mở nhóm đó trên sidebar) -->
-        <nav class="flex items-center gap-2 text-[12px] text-[#7A6F67] select-none" aria-label="Breadcrumb">
+      <!-- Breadcrumb + Page header (theo my-admin-vita) -->
+      <div class="space-y-2">
+        <nav class="flex items-center gap-1.5 text-[13px] font-medium text-[#93877E] select-none" aria-label="Breadcrumb">
           <button type="button" (click)="activeTab = 'dashboard'" class="hover:text-[#A3152D] transition">Luméa Admin</button>
           <ng-container *ngIf="activeTab !== 'dashboard'">
-            <app-icon name="chevron-right" [size]="11" class="text-[#93877E]"></app-icon>
+            <span>/</span>
             <button type="button" (click)="goToGroup(tabMeta[activeTab].group)" class="hover:text-[#A3152D] transition"
               [title]="'Đến mục đầu tiên của nhóm ' + tabMeta[activeTab].group">{{ tabMeta[activeTab].group }}</button>
           </ng-container>
-          <app-icon name="chevron-right" [size]="11" class="text-[#93877E]"></app-icon>
-          <span class="font-semibold text-[#A3152D]" aria-current="page">{{ tabMeta[activeTab].title }}</span>
+          <span>/</span>
+          <span class="text-[#A3152D]" aria-current="page">{{ tabMeta[activeTab].title }}</span>
         </nav>
 
         <div class="page-header">
-          <div class="min-w-0">
-            <h1 class="font-serif text-[28px] leading-tight text-[#1F1712] truncate">{{ tabMeta[activeTab].title }}</h1>
-            <p class="mt-1 text-[13.5px] text-[#7A6F67]">{{ tabMeta[activeTab].subtitle }}</p>
-          </div>
-          <span class="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-[#E8DEC9] text-[12px] font-medium text-[#3C332D] shrink-0">
-            <span class="w-2 h-2 rounded-full bg-[#2D6A4F] animate-pulse"></span>
-            Dữ liệu trực tiếp
-          </span>
+          <h1 class="content-title">{{ tabMeta[activeTab].title }}</h1>
+          <p class="content-subtitle">{{ tabMeta[activeTab].subtitle }}</p>
         </div>
       </div>
 
       <!-- =================================================================== -->
       <!-- TAB 1: DASHBOARD                                                    -->
       <!-- =================================================================== -->
-      <div *ngIf="activeTab === 'dashboard'" class="space-y-8 animate-fade-in">
+      <div *ngIf="activeTab === 'dashboard' && adminAuth.permissions() && !adminAuth.can('orders.view')" class="bg-white p-10 rounded-2xl border border-[#E8DEC9] shadow-card text-center animate-fade-in">
+        <h3 class="font-serif text-xl font-medium text-[#1F1712]">Xin chào, {{ adminAuth.currentAdmin()?.fullName || adminAuth.currentAdmin()?.username }}</h3>
+        <p *ngIf="adminAuth.currentAdmin()?.role; else noStaffRole" class="mt-2 text-[13px] text-[#7A6F67]">Số liệu doanh thu chỉ dành cho vai trò xem được đơn hàng. Hãy chọn mục cần làm ở menu bên trái.</p>
+        <ng-template #noStaffRole>
+          <p class="mt-2 text-[13px] text-[#7A6F67]">Tài khoản của bạn chưa được gán vai trò nên chưa dùng được chức năng nào. Hãy nhờ Super Admin gán vai trò ở tab Nhân viên.</p>
+        </ng-template>
+      </div>
+
+      <div *ngIf="activeTab === 'dashboard' && adminAuth.can('orders.view')" class="space-y-8 animate-fade-in">
         
         <!-- Doanh thu (trái) + cột số liệu (phải) — bố cục tham khảo my-admin-vita -->
-        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,62fr)_minmax(0,38fr)] gap-8">
 
           <!-- Chart Column (2 cols) -->
-          <div class="xl:col-span-2 bg-white p-6 flex flex-col rounded-2xl border border-[#E8DEC9] shadow-card space-y-5">
-            <div class="flex items-center justify-between">
+          <div class="bg-white p-6 flex flex-col rounded-2xl border border-[#E8DEC9] shadow-card space-y-5">
+            <div class="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <h3 class="font-serif text-xl font-medium text-[#1F1712]">Doanh Số 7 Ngày Gần Nhất</h3>
+                <h3 class="font-serif text-xl font-medium text-[#1F1712]">Doanh Số</h3>
                 <p class="text-xs text-[#7A6F67]">Theo ngày đặt, không tính đơn huỷ và đơn giao thất bại</p>
               </div>
-              <span class="text-xs font-semibold bg-[#F9F1F2] text-[#A3152D] px-3 py-1.5 rounded-full">
-                Tổng 7 ngày: {{ weekTotal | vnd }}
-              </span>
+              <app-sales-range-picker
+                [range]="salesRange"
+                [from]="salesFrom"
+                [to]="salesTo"
+                [label]="salesRangeLabel"
+                (selected)="onSalesRangeSelected($event)">
+              </app-sales-range-picker>
+            </div>
+
+            <div>
+              <p class="text-[11px] font-semibold text-[#7A6F67] uppercase tracking-[0.12em]">Tổng doanh số</p>
+              <div class="mt-1 text-[28px] leading-none font-bold tracking-tight text-[#1F1712] tabular-nums">{{ salesTotal | vnd }}</div>
             </div>
 
             <!-- Castlery styled SVG bar graph -->
-            <div class="flex-1 min-h-[260px] pt-4 flex items-stretch justify-between gap-2 px-2 sm:px-4 border-b border-[#E8DEC9]">
-              <div *ngFor="let bar of weeklySales" class="flex-1 max-w-[56px] h-full flex flex-col items-center justify-end gap-2 group">
+            <div *ngIf="!salesPeak" class="flex-1 min-h-[260px] flex flex-col items-center justify-center text-center">
+              <div class="w-14 h-14 rounded-full bg-[#F9F1F2] text-[#A3152D] flex items-center justify-center">
+                <app-icon name="activity" [size]="24"></app-icon>
+              </div>
+              <p class="mt-4 text-[14px] font-semibold text-[#1F1712]">Chưa có doanh số trong khoảng này</p>
+              <p class="mt-1 text-[13px] text-[#7A6F67]">Thử chọn khoảng thời gian khác hoặc chờ đơn hàng mới.</p>
+            </div>
+            <div *ngIf="salesPeak" class="flex-1 min-h-[260px] pt-4 flex items-stretch justify-between px-2 sm:px-4 border-b border-[#E8DEC9]" [ngClass]="salesBars.length > 15 ? 'gap-0.5' : 'gap-2'">
+              <div *ngFor="let bar of salesBars" class="flex-1 min-w-0 max-w-[56px] h-full flex flex-col items-center justify-end gap-2 group">
                 <div class="text-[10px] text-center text-[#7A6F67] opacity-0 group-hover:opacity-100 transition duration-150 font-medium whitespace-nowrap">
+                  <ng-container *ngIf="!bar.showLabel">{{ bar.day }} {{ bar.date }}<br></ng-container>
                   {{ bar.amount | vnd }}<br>{{ bar.orders }} đơn
                 </div>
                 <div class="w-full max-w-[36px] rounded-t-lg transition duration-200" [ngClass]="bar.isPeak ? 'bg-[#A3152D]' : bar.amount > 0 ? 'bg-[#E2B4BC] group-hover:bg-[#B7485B]' : 'bg-[#EFE6D3]'" [style.height]="bar.height"></div>
-                <span class="text-xs font-medium text-[#3C332D] text-center leading-tight">{{ bar.day }}<br><span class="text-[10px] font-normal text-[#93877E]">{{ bar.date }}</span></span>
+                <span class="text-xs font-medium text-[#3C332D] text-center leading-tight whitespace-nowrap" [class.invisible]="!bar.showLabel">{{ bar.day }}<br><span class="text-[10px] font-normal text-[#93877E]">{{ bar.date }}</span></span>
               </div>
             </div>
-            <div class="flex items-center justify-between text-xs text-[#7A6F67] pt-1">
-              <span *ngIf="weekPeak; else noSales">Cao nhất: {{ weekPeak.day }} {{ weekPeak.date }} ({{ weekPeak.orders }} đơn, {{ weekPeak.amount | vnd }})</span>
-              <ng-template #noSales><span>Chưa có đơn nào trong 7 ngày qua</span></ng-template>
+            <div *ngIf="salesPeak" class="flex flex-wrap items-center justify-between gap-2 text-xs text-[#7A6F67] pt-1">
+              <span>Cao nhất: {{ salesPeak.day }} {{ salesPeak.date }} ({{ salesPeak.orders }} đơn, {{ salesPeak.amount | vnd }})</span>
               <span class="flex items-center gap-2">
-                <span class="w-3 h-3 rounded-sm bg-[#A3152D]"></span> Ngày cao nhất
+                <span class="w-3 h-3 rounded-sm bg-[#A3152D]"></span> {{ salesUnitLabel }} cao nhất
               </span>
             </div>
           </div>
 
           <!-- Summary Stats Column -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 xl:auto-rows-fr gap-6">
             <div class="stat-card stat-card--row">
               <div class="min-w-0">
                 <p class="text-[11px] font-semibold text-[#7A6F67] uppercase tracking-[0.12em]">Doanh thu tháng này</p>
@@ -488,10 +507,10 @@
       <div *ngIf="activeTab === 'products'" class="space-y-6 animate-fade-in">
         
         <!-- Action bar -->
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-[#E8DEC9] shadow-card">
+        <div class="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-[#E8DEC9] shadow-card">
           
           <!-- Sub-tabs -->
-          <div class="flex items-center gap-1.5 p-1 bg-[#FBF8F1] border border-[#E8DEC9] rounded-lg">
+          <div class="flex shrink-0 items-center gap-1.5 p-1 bg-[#FBF8F1] border border-[#E8DEC9] rounded-lg whitespace-nowrap">
             <button
               (click)="productSubTab = 'all'"
               [class]="productSubTab === 'all' ? 'bg-white shadow-xs font-medium text-[#1F1712]' : 'text-[#7A6F67] hover:text-[#1F1712]'"
@@ -513,7 +532,7 @@
           </div>
 
           <!-- Search & Filter -->
-          <div class="flex items-center gap-3">
+          <div class="flex flex-wrap items-center gap-3">
             <label class="search-field sm:w-64">
               <app-icon name="search" [size]="15"></app-icon>
               <input type="text" [(ngModel)]="productSearch" placeholder="Tìm theo tên sản phẩm...">
@@ -526,6 +545,7 @@
               <option *ngFor="let opt of productCategoryOptions" [value]="opt.value">{{ opt.section }} › {{ opt.label }}</option>
             </select>
 
+            <button (click)="exportProducts()" class="px-3.5 py-2 bg-white hover:bg-[#FBF8F1] border border-[#E3D5BA] text-[#1F1712] rounded-lg text-xs font-medium transition whitespace-nowrap">Xuất Excel (CSV)</button>
             <button
               (click)="openAddProductModal()"
               class="px-3.5 py-2 bg-[#A3152D] hover:bg-[#891226] text-white rounded-lg text-xs font-medium transition flex items-center gap-1.5 shadow-sm whitespace-nowrap">
@@ -548,7 +568,7 @@
                   <th>Giá Bán</th>
                   <th>Tồn Kho</th>
                   <th>Đánh Giá</th>
-                  <th class="text-right">Thao Tác</th>
+                  <th class="text-right col-actions">Thao Tác</th>
                 </tr>
               </thead>
               <tbody>
@@ -597,7 +617,7 @@
                       <span class="text-[#93877E] text-[10px]">({{ p.reviewCount || 0 }})</span>
                     </div>
                   </td>
-                  <td class="text-right">
+                  <td class="text-right col-actions">
                     <div class="inline-flex items-center gap-1.5">
                       <button
                         (click)="openEditProductModal(p)"
@@ -717,7 +737,7 @@
                 <tr>
                   <th>Mã SKU</th>
                   <th>Tên Mặt Hàng</th>
-                  <th>Vị Trí Kho</th>
+                  <th>Danh Mục</th>
                   <th>Tồn Hiện Tại</th>
                   <th>Ngưỡng An Toàn</th>
                   <th>Đã Bán</th>
@@ -874,7 +894,7 @@
             <app-icon name="search" [size]="15"></app-icon>
             <input type="text" [(ngModel)]="orderSearch" placeholder="Tìm mã đơn, tên hoặc SĐT khách...">
           </label>
-          <span class="toolbar__meta">Hiển thị <strong class="text-[#1F1712]">{{ filteredOrders.length }}</strong> đơn hàng</span>
+          <div class="flex items-center gap-3"><span class="toolbar__meta">Hiển thị <strong class="text-[#1F1712]">{{ filteredOrders.length }}</strong> đơn hàng</span><button (click)="exportOrders()" class="px-3.5 py-2 bg-white hover:bg-[#FBF8F1] border border-[#E3D5BA] text-[#1F1712] rounded-lg text-xs font-medium transition whitespace-nowrap">Xuất Excel (CSV)</button></div>
         </div>
 
         <div class="card overflow-hidden">
@@ -1114,7 +1134,7 @@
             <app-icon name="search" [size]="15"></app-icon>
             <input type="text" [(ngModel)]="customerSearch" placeholder="Tìm theo tên, SĐT, email...">
           </label>
-          <span class="toolbar__meta">Tổng hợp từ đơn hàng, gom theo số điện thoại người nhận</span>
+          <div class="flex items-center gap-3"><span class="toolbar__meta">Tổng hợp từ đơn hàng, gom theo số điện thoại người nhận</span><button (click)="exportCustomers()" class="px-3.5 py-2 bg-white hover:bg-[#FBF8F1] border border-[#E3D5BA] text-[#1F1712] rounded-lg text-xs font-medium transition whitespace-nowrap">Xuất Excel (CSV)</button></div>
         </div>
 
         <div class="card overflow-hidden">
@@ -1493,7 +1513,7 @@
               </div>
               <span class="text-[11px] px-2.5 py-0.5 rounded-full font-medium"
                 [class]="c.status === 'ACTIVE' ? 'bg-[#EDF7F1] text-[#2D6A4F] border border-[#C6E7D2]' : 'bg-[#FBF8F1] text-[#7A6F67] border border-[#E8DEC9]'">
-                {{ c.status === 'ACTIVE' ? 'Đang kích hoạt' : 'Tạm ngưng' }}
+                {{ c.status === 'ACTIVE' ? 'Đang kích hoạt' : c.status === 'EXPIRED' ? 'Hết hạn / hết lượt' : 'Tạm ngưng' }}
               </span>
             </div>
 
@@ -1508,11 +1528,11 @@
               </div>
               <div>
                 <span class="text-[#7A6F67] block">Đã sử dụng:</span>
-                <span class="font-semibold text-[#1F1712]">{{ c.usedCount }} / {{ c.limitCount }} lượt</span>
+                <span class="font-semibold text-[#1F1712]">{{ c.usedCount }} / {{ c.limitCount || 'Không giới hạn' }} lượt</span>
               </div>
               <div>
                 <span class="text-[#7A6F67] block">Hạn sử dụng:</span>
-                <span class="font-semibold text-[#1F1712]">{{ c.endDate }}</span>
+                <span class="font-semibold text-[#1F1712]">{{ c.endDate ? (c.endDate | date:'dd/MM/yyyy') : 'Không hết hạn' }}</span>
               </div>
             </div>
 
@@ -1520,7 +1540,7 @@
               <button
                 (click)="toggleCoupon(c)"
                 class="px-3 py-1 text-xs border border-[#E8DEC9] hover:bg-[#FBF8F1] rounded transition text-[#1F1712] font-medium">
-                {{ c.status === 'ACTIVE' ? 'Tạm Dừng Mã' : 'Kích Hoạt Lại' }}
+                {{ c.active ? 'Tạm Dừng Mã' : 'Kích Hoạt Lại' }}
               </button>
             </div>
           </div>
@@ -1529,46 +1549,106 @@
       </div>
 
       <!-- =================================================================== -->
+      <!-- TAB: BẢO HÀNH                                                        -->
+      <!-- =================================================================== -->
+      <div *ngIf="activeTab === 'warranty'" class="space-y-6 animate-fade-in">
+        <div class="toolbar">
+          <label class="search-field">
+            <app-icon name="search" [size]="15"></app-icon>
+            <input type="text" [(ngModel)]="warrantySearch" placeholder="Tìm mã phiếu, mã đơn, tên hoặc SĐT...">
+          </label>
+          <div class="flex items-center gap-3">
+            <span class="toolbar__meta">Hiển thị <strong class="text-[#1F1712]">{{ filteredWarranties.length }}</strong> phiếu</span>
+            <button (click)="openAddWarrantyModal()" class="px-3.5 py-2 bg-[#A3152D] hover:bg-[#891226] text-white rounded-lg text-xs font-medium transition flex items-center gap-1.5 shadow-sm whitespace-nowrap">
+              <app-icon name="plus" [size]="14"></app-icon>
+              <span>Tạo phiếu bảo hành</span>
+            </button>
+          </div>
+        </div>
+        <div class="bg-white rounded-2xl border border-[#E8DEC9] shadow-card overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="castlery-table">
+              <thead>
+                <tr>
+                  <th>Mã Phiếu</th>
+                  <th>Đơn Hàng</th>
+                  <th>Sản Phẩm</th>
+                  <th>Khách Hàng</th>
+                  <th>Hết Hạn</th>
+                  <th>Trạng Thái</th>
+                  <th class="text-right">Thao Tác</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let w of filteredWarranties">
+                  <td class="font-mono text-xs font-semibold">{{ w.warrantyCode }}</td>
+                  <td class="font-mono text-xs">{{ w.orderNumber }}</td>
+                  <td>{{ w.productName }}</td>
+                  <td>
+                    <div>{{ w.customerName }}</div>
+                    <div class="text-[11px] text-[#7A6F67]">{{ w.customerPhone }}</div>
+                  </td>
+                  <td class="whitespace-nowrap">{{ w.expiresAt | date:'dd/MM/yyyy' }}</td>
+                  <td>
+                    <span class="status-badge whitespace-nowrap" [ngClass]="warrantyStatus(w) === 'ACTIVE' ? 'bg-[#EDF7F1] text-[#2D6A4F]' : warrantyStatus(w) === 'CLAIMED' ? 'bg-[#FEF3C7] text-[#92400E]' : 'bg-[#EFE6D3] text-[#7A6F67]'">
+                      {{ warrantyStatus(w) === 'ACTIVE' ? 'Còn hiệu lực' : warrantyStatus(w) === 'CLAIMED' ? 'Đang xử lý yêu cầu' : 'Hết hạn' }}
+                    </span>
+                    <div *ngIf="w.status === 'CLAIMED' && w.claimHistory?.length" class="mt-1 text-[11px] text-[#7A6F67]">{{ w.claimHistory[w.claimHistory.length - 1].note }}</div>
+                  </td>
+                  <td class="text-right">
+                    <button *ngIf="w.status === 'CLAIMED'" (click)="resolveWarranty(w)" class="px-2.5 py-1 bg-[#FBF8F1] hover:bg-[#EFE6D3] border border-[#E3D5BA] rounded text-xs font-medium whitespace-nowrap">Đóng yêu cầu</button>
+                  </td>
+                </tr>
+                <tr *ngIf="filteredWarranties.length === 0">
+                  <td colspan="7" class="empty-state">Không có phiếu bảo hành phù hợp.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- =================================================================== -->
       <!-- TAB 11: QUẢN LÝ BANNER                                               -->
       <!-- =================================================================== -->
       <div *ngIf="activeTab === 'banners'" class="space-y-6 animate-fade-in">
-        
+
         <div class="toolbar">
           <div>
-            <h3 class="font-serif text-lg font-medium text-[#1F1712]">Quản Lý Banner & Hero Khung Hình</h3>
-            <p class="text-xs text-[#7A6F67]">Banner quảng bá trang chủ, catalog và không gian phòng mẫu 3D</p>
+            <h3 class="font-serif text-lg font-medium text-[#1F1712]">Quản Lý Poster & Banner</h3>
+            <p class="text-xs text-[#7A6F67]">Các vị trí đang hiển thị trên cửa hàng. Bấm Sửa để thay ảnh hoặc đổi nội dung, khách thấy thay đổi khi tải lại trang.</p>
           </div>
-          <button
-            (click)="openAddBannerModal()"
-            class="px-3.5 py-2 bg-[#A3152D] hover:bg-[#891226] text-white rounded-lg text-xs font-medium transition flex items-center gap-1.5 shadow-sm">
-            <app-icon name="plus" [size]="14"></app-icon>
-            <span>Tạo Banner mới</span>
-          </button>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div *ngFor="let b of banners" class="bg-white rounded-2xl border border-[#E8DEC9] shadow-card overflow-hidden space-y-3">
-            <div class="h-44 w-full bg-[#FBF8F1] relative overflow-hidden">
-              <img [src]="b.imageUrl" [alt]="b.title" class="w-full h-full object-cover">
-              <span class="absolute top-2.5 right-2.5 px-2 py-0.5 rounded text-[10px] font-semibold bg-[#A3152D]/80 text-white backdrop-blur-xs">
-                {{ b.position }}
-              </span>
-            </div>
-            <div class="p-4 space-y-2">
-              <h4 class="font-serif text-base font-semibold text-[#1F1712]">{{ b.title }}</h4>
-              <p class="text-xs text-[#7A6F67]">{{ b.subtitle }}</p>
-              <div class="pt-2 flex items-center justify-between text-xs">
-                <span class="text-[#B7485B] font-medium">Nút: {{ b.ctaText }} ({{ b.ctaLink }})</span>
-                <button
-                  (click)="toggleBanner(b)"
-                  class="text-xs font-medium hover:underline"
-                  [class]="b.active ? 'text-[#2D6A4F]' : 'text-[#7A6F67]'">
-                  {{ b.active ? 'Đang hiện' : 'Đang ẩn' }}
-                </button>
+        <section *ngFor="let group of bannerGroups" class="space-y-3">
+          <h4 class="font-serif text-base font-semibold text-[#1F1712]">{{ group.name }}</h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div *ngFor="let slot of group.slots" class="bg-white rounded-2xl border border-[#E8DEC9] shadow-card overflow-hidden">
+              <div class="h-44 w-full bg-[#FBF8F1] overflow-hidden flex items-center justify-center">
+                <img *ngIf="slot.imageRatio; else noImage" [src]="bannerValue(slot, 'imageUrl')" [alt]="slot.name" class="w-full h-full object-contain">
+                <ng-template #noImage>
+                  <span class="text-xs text-[#7A6F67]">Vị trí này dùng video</span>
+                </ng-template>
+              </div>
+              <div class="p-4 flex items-center justify-between gap-3">
+                <div class="min-w-0">
+                  <p class="font-serif text-sm font-semibold text-[#1F1712]">{{ slot.name }}</p>
+                  <p *ngIf="bannerValue(slot, 'ctaLink') as link" class="text-xs text-[#B7485B] truncate">{{ link }}</p>
+                </div>
+                <div class="flex items-center gap-3 flex-shrink-0">
+                  <button (click)="openEditBannerModal(slot)" class="text-xs font-medium text-[#1F1712] hover:underline">Sửa</button>
+                  <button
+                    *ngIf="slot.canToggle"
+                    (click)="toggleBanner(slot)"
+                    class="text-xs font-medium hover:underline"
+                    [class]="isBannerActive(slot) ? 'text-[#2D6A4F]' : 'text-[#7A6F67]'">
+                    {{ isBannerActive(slot) ? 'Đang hiện' : 'Đang ẩn' }}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </section>
 
       </div>
 
@@ -1907,9 +1987,19 @@
                   <td class="text-xs text-[#7A6F67]">{{ st.username }}</td>
                   <td class="text-xs text-[#3C332D]">{{ st.department }}</td>
                   <td>
-                    <span class="text-[11px] px-2.5 py-0.5 rounded-full font-medium bg-[#EFE6D3] text-[#1F1712] border border-[#E8DEC9]">
-                      {{ st.role }}
-                    </span>
+                    <select
+                      *ngIf="canEditStaffRole(st); else staffRoleLabel"
+                      [attr.aria-label]="'Vai trò của ' + st.name"
+                      (change)="changeStaffRole(st, $any($event.target).value)"
+                      class="text-[11px] px-2 py-1 rounded-lg font-medium bg-[#EFE6D3] text-[#1F1712] border border-[#E8DEC9]">
+                      <option value="" [selected]="!st.role" disabled>Chưa có vai trò</option>
+                      <option *ngFor="let r of assignableRoles" [value]="r.name" [selected]="r.name === st.role">{{ r.name }}</option>
+                    </select>
+                    <ng-template #staffRoleLabel>
+                      <span class="text-[11px] px-2.5 py-0.5 rounded-full font-medium bg-[#EFE6D3] text-[#1F1712] border border-[#E8DEC9]">
+                        {{ st.role || 'Chưa có vai trò' }}
+                      </span>
+                    </ng-template>
                   </td>
                   <td class="text-xs text-[#7A6F67]">{{ st.phone }} • {{ st.email }}</td>
                   <td>
@@ -1968,10 +2058,12 @@
               <div>
                 <span class="text-xs text-[#7A6F67]">Đang cấu hình:</span>
                 <h4 class="font-serif text-base font-semibold text-[#1F1712]">
-                  {{ roles[0].id === selectedRoleId ? roles[0].name : roles[1].id === selectedRoleId ? roles[1].name : 'Chuyên Viên 3D' }}
+                  {{ selectedRoleName }}
                 </h4>
               </div>
-              <span class="text-xs text-[#2D6A4F] bg-[#EDF7F1] px-2.5 py-1 rounded-full font-medium">Tự động lưu thay đổi</span>
+              <span class="text-xs text-[#2D6A4F] bg-[#EDF7F1] px-2.5 py-1 rounded-full font-medium">
+                {{ canEditPermissions ? 'Tự động lưu thay đổi' : selectedRoleId === 'r-1' ? 'Luôn toàn quyền' : 'Chỉ Super Admin được sửa' }}
+              </span>
             </div>
 
             <div class="overflow-x-auto">
@@ -1994,35 +2086,40 @@
                         type="checkbox"
                         [checked]="hasPermission(selectedRoleId, mod.key, 'view')"
                         (change)="togglePermission(selectedRoleId, mod.key, 'view')"
-                        class="rounded accent-[#A3152D] cursor-pointer w-4 h-4">
+                        [disabled]="!canEditPermissions"
+                        class="rounded accent-[#A3152D] cursor-pointer w-4 h-4 disabled:cursor-not-allowed disabled:opacity-60">
                     </td>
                     <td class="text-center">
                       <input
                         type="checkbox"
                         [checked]="hasPermission(selectedRoleId, mod.key, 'create')"
                         (change)="togglePermission(selectedRoleId, mod.key, 'create')"
-                        class="rounded accent-[#A3152D] cursor-pointer w-4 h-4">
+                        [disabled]="!canEditPermissions"
+                        class="rounded accent-[#A3152D] cursor-pointer w-4 h-4 disabled:cursor-not-allowed disabled:opacity-60">
                     </td>
                     <td class="text-center">
                       <input
                         type="checkbox"
                         [checked]="hasPermission(selectedRoleId, mod.key, 'edit')"
                         (change)="togglePermission(selectedRoleId, mod.key, 'edit')"
-                        class="rounded accent-[#A3152D] cursor-pointer w-4 h-4">
+                        [disabled]="!canEditPermissions"
+                        class="rounded accent-[#A3152D] cursor-pointer w-4 h-4 disabled:cursor-not-allowed disabled:opacity-60">
                     </td>
                     <td class="text-center">
                       <input
                         type="checkbox"
                         [checked]="hasPermission(selectedRoleId, mod.key, 'delete')"
                         (change)="togglePermission(selectedRoleId, mod.key, 'delete')"
-                        class="rounded accent-[#A3152D] cursor-pointer w-4 h-4">
+                        [disabled]="!canEditPermissions"
+                        class="rounded accent-[#A3152D] cursor-pointer w-4 h-4 disabled:cursor-not-allowed disabled:opacity-60">
                     </td>
                     <td class="text-center">
                       <input
                         type="checkbox"
                         [checked]="hasPermission(selectedRoleId, mod.key, 'approve')"
                         (change)="togglePermission(selectedRoleId, mod.key, 'approve')"
-                        class="rounded accent-[#A3152D] cursor-pointer w-4 h-4">
+                        [disabled]="!canEditPermissions"
+                        class="rounded accent-[#A3152D] cursor-pointer w-4 h-4 disabled:cursor-not-allowed disabled:opacity-60">
                     </td>
                   </tr>
                 </tbody>
@@ -2289,8 +2386,17 @@
           </div>
 
           <div class="sm:col-span-2">
-            <label class="block text-xs font-semibold text-[#3C332D] mb-1">URL Hình Ảnh Chính</label>
-            <input type="text" [(ngModel)]="productForm.image1" class="w-full text-xs bg-[#FBF8F1] border border-[#E3D5BA] rounded-lg p-2.5 text-[#1F1712]">
+            <label class="block text-xs font-semibold text-[#3C332D] mb-1">Hình Ảnh Chính *</label>
+            <div class="flex items-center gap-3 bg-[#FBF8F1] border border-[#E3D5BA] rounded-lg p-2.5">
+              <img *ngIf="productForm.image1" [src]="productForm.image1" alt="Ảnh sản phẩm" class="w-16 h-16 rounded-lg object-cover border border-[#E3D5BA] flex-shrink-0">
+              <div class="min-w-0">
+                <input #productImageInput type="file" accept="image/jpeg,image/png,image/webp,image/gif" class="hidden" (change)="onProductImageSelected($event)">
+                <button type="button" (click)="productImageInput.click()" [disabled]="uploadingProductImage" class="px-3 py-1.5 bg-white border border-[#E3D5BA] hover:bg-[#F3ECDD] disabled:opacity-60 rounded-lg text-xs font-medium text-[#1F1712] transition">
+                  {{ uploadingProductImage ? 'Đang tải lên...' : (productForm.image1 ? 'Đổi ảnh' : 'Tải ảnh lên') }}
+                </button>
+                <p class="text-[11px] text-[#7A6F63] mt-1">JPG, PNG, WEBP hoặc GIF, tối đa 5MB</p>
+              </div>
+            </div>
           </div>
 
           <div class="sm:col-span-2">
@@ -2304,7 +2410,7 @@
         <button (click)="showProductModal = false" class="px-4 py-2 border border-[#E3D5BA] bg-white rounded-lg text-xs font-medium text-[#1F1712] hover:bg-[#FBF8F1]">
           Hủy bỏ
         </button>
-        <button (click)="saveProduct()" class="px-5 py-2 bg-[#A3152D] hover:bg-[#891226] text-white rounded-lg text-xs font-medium transition shadow-xs">
+        <button (click)="saveProduct()" [disabled]="uploadingProductImage" class="px-5 py-2 bg-[#A3152D] hover:bg-[#891226] disabled:opacity-60 text-white rounded-lg text-xs font-medium transition shadow-xs">
           {{ editingProduct ? 'Lưu Thay Đổi' : 'Tạo Sản Phẩm' }}
         </button>
       </div>
@@ -2884,6 +2990,271 @@
       <div class="pt-3 border-t border-[#EFE6D3] flex justify-end gap-2">
         <button (click)="showChangePasswordModal = false" class="px-3.5 py-2 border border-[#E3D5BA] rounded-lg text-xs font-medium text-[#1F1712]">Hủy</button>
         <button (click)="changePassword()" class="px-4 py-2 bg-[#A3152D] hover:bg-[#891226] text-white rounded-lg text-xs font-medium transition shadow-xs">Cập Nhật</button>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="showCategoryModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+    <div class="bg-white rounded-2xl border border-[#E8DEC9] shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col animate-fade-in">
+      <div class="px-6 py-4 border-b border-[#E8DEC9] flex items-center justify-between">
+        <h3 class="font-serif text-lg font-medium text-[#1F1712]">{{ editingCategory ? 'Sửa Danh Mục' : 'Thêm Danh Mục' }}</h3>
+        <button (click)="showCategoryModal = false" class="p-1.5 text-[#7A6F67] hover:text-[#1F1712]"><app-icon name="x" [size]="16"></app-icon></button>
+      </div>
+      <div class="p-6 overflow-y-auto">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-[#3C332D] mb-1">Tên danh mục *</label>
+            <input type="text" [(ngModel)]="categoryForm.name" class="w-full text-xs bg-[#FBF8F1] border border-[#E3D5BA] rounded-lg p-2.5 text-[#1F1712]">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-[#3C332D] mb-1">Slug</label>
+            <input type="text" [(ngModel)]="categoryForm.slug" class="w-full text-xs bg-[#FBF8F1] border border-[#E3D5BA] rounded-lg p-2.5 text-[#1F1712]">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-[#3C332D] mb-1">Nhóm</label>
+            <select [(ngModel)]="categoryForm.group" class="w-full text-xs bg-[#FBF8F1] border border-[#E3D5BA] rounded-lg p-2.5 text-[#1F1712]">
+              <option value="FURNITURE">Nội thất</option>
+              <option value="DECOR">Decor</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-[#3C332D] mb-1">Icon</label>
+            <input type="text" [(ngModel)]="categoryForm.icon" class="w-full text-xs bg-[#FBF8F1] border border-[#E3D5BA] rounded-lg p-2.5 text-[#1F1712]">
+          </div>
+          <div class="col-span-2">
+            <label class="block text-xs font-semibold text-[#3C332D] mb-1">Mô tả</label>
+            <input type="text" [(ngModel)]="categoryForm.desc" class="w-full text-xs bg-[#FBF8F1] border border-[#E3D5BA] rounded-lg p-2.5 text-[#1F1712]">
+          </div>
+        </div>
+      </div>
+      <div class="px-6 py-4 border-t border-[#EFE6D3] flex justify-end gap-2">
+        <button (click)="showCategoryModal = false" class="px-3.5 py-2 border border-[#E3D5BA] rounded-lg text-xs font-medium text-[#1F1712]">Hủy</button>
+        <button (click)="saveCategory()" class="px-4 py-2 bg-[#A3152D] hover:bg-[#891226] text-white rounded-lg text-xs font-medium transition shadow-xs">Lưu Danh Mục</button>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="showSupplierModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+    <div class="bg-white rounded-2xl border border-[#E8DEC9] shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col animate-fade-in">
+      <div class="px-6 py-4 border-b border-[#E8DEC9] flex items-center justify-between">
+        <h3 class="font-serif text-lg font-medium text-[#1F1712]">{{ editingSupplier ? 'Sửa Nhà Cung Cấp' : 'Thêm Nhà Cung Cấp' }}</h3>
+        <button (click)="showSupplierModal = false" class="p-1.5 text-[#7A6F67] hover:text-[#1F1712]"><app-icon name="x" [size]="16"></app-icon></button>
+      </div>
+      <div class="p-6 overflow-y-auto">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-[#3C332D] mb-1">Mã</label>
+            <input type="text" [(ngModel)]="supplierForm.code" class="w-full text-xs bg-[#FBF8F1] border border-[#E3D5BA] rounded-lg p-2.5 text-[#1F1712]">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-[#3C332D] mb-1">Đánh giá (0–5)</label>
+            <input type="number" min="0" max="5" step="0.1" [(ngModel)]="supplierForm.rating" class="w-full text-xs bg-[#FBF8F1] border border-[#E3D5BA] rounded-lg p-2.5 text-[#1F1712]">
+          </div>
+          <div class="col-span-2">
+            <label class="block text-xs font-semibold text-[#3C332D] mb-1">Tên nhà cung cấp *</label>
+            <input type="text" [(ngModel)]="supplierForm.name" class="w-full text-xs bg-[#FBF8F1] border border-[#E3D5BA] rounded-lg p-2.5 text-[#1F1712]">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-[#3C332D] mb-1">Người liên hệ</label>
+            <input type="text" [(ngModel)]="supplierForm.contact" class="w-full text-xs bg-[#FBF8F1] border border-[#E3D5BA] rounded-lg p-2.5 text-[#1F1712]">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-[#3C332D] mb-1">Số điện thoại</label>
+            <input type="text" [(ngModel)]="supplierForm.phone" class="w-full text-xs bg-[#FBF8F1] border border-[#E3D5BA] rounded-lg p-2.5 text-[#1F1712]">
+          </div>
+          <div class="col-span-2">
+            <label class="block text-xs font-semibold text-[#3C332D] mb-1">Email</label>
+            <input type="email" [(ngModel)]="supplierForm.email" class="w-full text-xs bg-[#FBF8F1] border border-[#E3D5BA] rounded-lg p-2.5 text-[#1F1712]">
+          </div>
+          <div class="col-span-2">
+            <label class="block text-xs font-semibold text-[#3C332D] mb-1">Địa chỉ</label>
+            <input type="text" [(ngModel)]="supplierForm.address" class="w-full text-xs bg-[#FBF8F1] border border-[#E3D5BA] rounded-lg p-2.5 text-[#1F1712]">
+          </div>
+          <div class="col-span-2">
+            <label class="block text-xs font-semibold text-[#3C332D] mb-1">Mặt hàng cung cấp</label>
+            <input type="text" [(ngModel)]="supplierForm.category" class="w-full text-xs bg-[#FBF8F1] border border-[#E3D5BA] rounded-lg p-2.5 text-[#1F1712]">
+          </div>
+        </div>
+      </div>
+      <div class="px-6 py-4 border-t border-[#EFE6D3] flex justify-end gap-2">
+        <button (click)="showSupplierModal = false" class="px-3.5 py-2 border border-[#E3D5BA] rounded-lg text-xs font-medium text-[#1F1712]">Hủy</button>
+        <button (click)="saveSupplier()" class="px-4 py-2 bg-[#A3152D] hover:bg-[#891226] text-white rounded-lg text-xs font-medium transition shadow-xs">Lưu Nhà Cung Cấp</button>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="showCouponModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+    <div class="bg-white rounded-2xl border border-[#E8DEC9] shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col animate-fade-in">
+      <div class="px-6 py-4 border-b border-[#E8DEC9] flex items-center justify-between">
+        <h3 class="font-serif text-lg font-medium text-[#1F1712]">Tạo Voucher Mới</h3>
+        <button (click)="showCouponModal = false" class="p-1.5 text-[#7A6F67] hover:text-[#1F1712]"><app-icon name="x" [size]="16"></app-icon></button>
+      </div>
+      <div class="p-6 overflow-y-auto">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-[#3C332D] mb-1">Mã voucher *</label>
+            <input type="text" [(ngModel)]="couponForm.code" class="w-full text-xs bg-[#FBF8F1] border border-[#E3D5BA] rounded-lg p-2.5 text-[#1F1712]">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-[#3C332D] mb-1">Giảm (%) *</label>
+            <input type="number" min="0" max="100" [(ngModel)]="couponForm.discountPercent" class="w-full text-xs bg-[#FBF8F1] border border-[#E3D5BA] rounded-lg p-2.5 text-[#1F1712]">
+          </div>
+          <div class="col-span-2">
+            <label class="block text-xs font-semibold text-[#3C332D] mb-1">Mô tả</label>
+            <input type="text" [(ngModel)]="couponForm.description" class="w-full text-xs bg-[#FBF8F1] border border-[#E3D5BA] rounded-lg p-2.5 text-[#1F1712]">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-[#3C332D] mb-1">Giảm tối đa (VNĐ) *</label>
+            <input type="number" min="0" [(ngModel)]="couponForm.maxDiscount" class="w-full text-xs bg-[#FBF8F1] border border-[#E3D5BA] rounded-lg p-2.5 text-[#1F1712]">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-[#3C332D] mb-1">Đơn tối thiểu (VNĐ)</label>
+            <input type="number" min="0" [(ngModel)]="couponForm.minSpend" class="w-full text-xs bg-[#FBF8F1] border border-[#E3D5BA] rounded-lg p-2.5 text-[#1F1712]">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-[#3C332D] mb-1">Tổng lượt dùng (0 = không giới hạn)</label>
+            <input type="number" min="0" [(ngModel)]="couponForm.limitCount" class="w-full text-xs bg-[#FBF8F1] border border-[#E3D5BA] rounded-lg p-2.5 text-[#1F1712]">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-[#3C332D] mb-1">Hạn dùng (trống = không hết hạn)</label>
+            <input type="date" [(ngModel)]="couponForm.endDate" class="w-full text-xs bg-[#FBF8F1] border border-[#E3D5BA] rounded-lg p-2.5 text-[#1F1712]">
+          </div>
+        </div>
+      </div>
+      <div class="px-6 py-4 border-t border-[#EFE6D3] flex justify-end gap-2">
+        <button (click)="showCouponModal = false" class="px-3.5 py-2 border border-[#E3D5BA] rounded-lg text-xs font-medium text-[#1F1712]">Hủy</button>
+        <button (click)="saveCoupon()" class="px-4 py-2 bg-[#A3152D] hover:bg-[#891226] text-white rounded-lg text-xs font-medium transition shadow-xs">Tạo Voucher</button>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="showBannerModal && editingBannerSlot as slot" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+    <div class="bg-white rounded-2xl border border-[#E8DEC9] shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col animate-fade-in">
+      <div class="px-6 py-4 border-b border-[#E8DEC9] flex items-center justify-between">
+        <h3 class="font-serif text-lg font-medium text-[#1F1712]">Sửa: {{ slot.name }}</h3>
+        <button (click)="showBannerModal = false" class="p-1.5 text-[#7A6F67] hover:text-[#1F1712]"><app-icon name="x" [size]="16"></app-icon></button>
+      </div>
+      <div class="p-6 overflow-y-auto space-y-3">
+        <div *ngIf="slot.imageRatio">
+          <label class="block text-xs font-semibold text-[#3C332D] mb-1">Hình ảnh</label>
+          <div class="flex items-center gap-3 bg-[#FBF8F1] border border-[#E3D5BA] rounded-lg p-2.5">
+            <img [src]="bannerForm['imageUrl']" alt="Ảnh banner" class="w-16 h-16 rounded-lg object-contain border border-[#E3D5BA] flex-shrink-0">
+            <div class="min-w-0">
+              <input #bannerImageInput type="file" accept="image/jpeg,image/png,image/webp,image/gif" class="hidden" (change)="onBannerImageSelected($event)">
+              <button type="button" (click)="bannerImageInput.click()" [disabled]="uploadingBannerImage" class="px-3 py-1.5 bg-white border border-[#E3D5BA] hover:bg-[#F3ECDD] disabled:opacity-60 rounded-lg text-xs font-medium text-[#1F1712] transition">
+                {{ uploadingBannerImage ? 'Đang tải lên...' : 'Thay ảnh' }}
+              </button>
+              <p class="text-[11px] text-[#7A6F63] mt-1">Chọn ảnh rồi cắt theo khung. Ảnh GIF không qua bước cắt nên có thể bị lệch khung.</p>
+              <p *ngIf="slot.imageHint" class="text-[11px] text-[#7A6F63] mt-1">{{ slot.imageHint }}</p>
+            </div>
+          </div>
+        </div>
+        <div *ngFor="let field of slot.fields">
+          <label class="block text-xs font-semibold text-[#3C332D] mb-1">{{ field.label }} *</label>
+          <input type="text" [(ngModel)]="bannerForm[field.key]" class="w-full text-xs bg-[#FBF8F1] border border-[#E3D5BA] rounded-lg p-2.5 text-[#1F1712]">
+        </div>
+      </div>
+      <div class="px-6 py-4 border-t border-[#EFE6D3] flex justify-end gap-2">
+        <button (click)="showBannerModal = false" class="px-3.5 py-2 border border-[#E3D5BA] rounded-lg text-xs font-medium text-[#1F1712]">Hủy</button>
+        <button (click)="saveBanner()" [disabled]="uploadingBannerImage" class="px-4 py-2 bg-[#A3152D] hover:bg-[#891226] disabled:opacity-60 text-white rounded-lg text-xs font-medium transition shadow-xs">Lưu Banner</button>
+      </div>
+    </div>
+
+    <app-image-cropper
+      *ngIf="bannerCropFile"
+      [file]="bannerCropFile"
+      [ratio]="slot.imageRatio!"
+      [hint]="slot.imageHint || ''"
+      (cropped)="onBannerImageCropped($event)"
+      (cancelled)="bannerCropFile = null"
+      (failed)="onBannerCropFailed()">
+    </app-image-cropper>
+  </div>
+
+  <div *ngIf="showStaffModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+    <div class="bg-white rounded-2xl border border-[#E8DEC9] shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col animate-fade-in">
+      <div class="px-6 py-4 border-b border-[#E8DEC9] flex items-center justify-between">
+        <h3 class="font-serif text-lg font-medium text-[#1F1712]">Thêm Nhân Viên</h3>
+        <button (click)="showStaffModal = false" class="p-1.5 text-[#7A6F67] hover:text-[#1F1712]"><app-icon name="x" [size]="16"></app-icon></button>
+      </div>
+      <div class="p-6 overflow-y-auto">
+        <div class="grid grid-cols-2 gap-3">
+          <div class="col-span-2">
+            <label class="block text-xs font-semibold text-[#3C332D] mb-1">Họ tên *</label>
+            <input type="text" [(ngModel)]="staffForm.name" class="w-full text-xs bg-[#FBF8F1] border border-[#E3D5BA] rounded-lg p-2.5 text-[#1F1712]">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-[#3C332D] mb-1">Tên đăng nhập *</label>
+            <input type="text" autocomplete="off" [(ngModel)]="staffForm.username" class="w-full text-xs bg-[#FBF8F1] border border-[#E3D5BA] rounded-lg p-2.5 text-[#1F1712]">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-[#3C332D] mb-1">Mật khẩu * (tối thiểu 8 ký tự)</label>
+            <input type="password" autocomplete="new-password" [(ngModel)]="staffForm.password" class="w-full text-xs bg-[#FBF8F1] border border-[#E3D5BA] rounded-lg p-2.5 text-[#1F1712]">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-[#3C332D] mb-1">Mã nhân viên</label>
+            <input type="text" [(ngModel)]="staffForm.code" class="w-full text-xs bg-[#FBF8F1] border border-[#E3D5BA] rounded-lg p-2.5 text-[#1F1712]">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-[#3C332D] mb-1">Số điện thoại</label>
+            <input type="text" [(ngModel)]="staffForm.phone" class="w-full text-xs bg-[#FBF8F1] border border-[#E3D5BA] rounded-lg p-2.5 text-[#1F1712]">
+          </div>
+          <div class="col-span-2">
+            <label class="block text-xs font-semibold text-[#3C332D] mb-1">Email</label>
+            <input type="email" [(ngModel)]="staffForm.email" class="w-full text-xs bg-[#FBF8F1] border border-[#E3D5BA] rounded-lg p-2.5 text-[#1F1712]">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-[#3C332D] mb-1">Phòng ban</label>
+            <input type="text" [(ngModel)]="staffForm.department" class="w-full text-xs bg-[#FBF8F1] border border-[#E3D5BA] rounded-lg p-2.5 text-[#1F1712]">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-[#3C332D] mb-1">Vai trò</label>
+            <select [(ngModel)]="staffForm.role" class="w-full text-xs bg-[#FBF8F1] border border-[#E3D5BA] rounded-lg p-2.5 text-[#1F1712]">
+              <option *ngFor="let r of assignableRoles" [value]="r.name">{{ r.name }}</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="px-6 py-4 border-t border-[#EFE6D3] flex justify-end gap-2">
+        <button (click)="showStaffModal = false" class="px-3.5 py-2 border border-[#E3D5BA] rounded-lg text-xs font-medium text-[#1F1712]">Hủy</button>
+        <button (click)="saveStaff()" class="px-4 py-2 bg-[#A3152D] hover:bg-[#891226] text-white rounded-lg text-xs font-medium transition shadow-xs">Tạo Tài Khoản</button>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="showWarrantyModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+    <div class="bg-white rounded-2xl border border-[#E8DEC9] shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col animate-fade-in">
+      <div class="px-6 py-4 border-b border-[#E8DEC9] flex items-center justify-between">
+        <h3 class="font-serif text-lg font-medium text-[#1F1712]">Tạo Phiếu Bảo Hành</h3>
+        <button (click)="showWarrantyModal = false" class="p-1.5 text-[#7A6F67] hover:text-[#1F1712]"><app-icon name="x" [size]="16"></app-icon></button>
+      </div>
+      <div class="p-6 overflow-y-auto">
+        <div class="grid grid-cols-2 gap-3">
+          <div class="col-span-2">
+            <label class="block text-xs font-semibold text-[#3C332D] mb-1">Mã đơn hàng *</label>
+            <input type="text" [(ngModel)]="warrantyForm.orderNumber" (blur)="fillWarrantyFromOrder()" placeholder="Nhập mã đơn để tự điền thông tin" class="w-full text-xs bg-[#FBF8F1] border border-[#E3D5BA] rounded-lg p-2.5 text-[#1F1712]">
+          </div>
+          <div class="col-span-2">
+            <label class="block text-xs font-semibold text-[#3C332D] mb-1">Sản phẩm *</label>
+            <input type="text" [(ngModel)]="warrantyForm.productName" class="w-full text-xs bg-[#FBF8F1] border border-[#E3D5BA] rounded-lg p-2.5 text-[#1F1712]">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-[#3C332D] mb-1">Khách hàng *</label>
+            <input type="text" [(ngModel)]="warrantyForm.customerName" class="w-full text-xs bg-[#FBF8F1] border border-[#E3D5BA] rounded-lg p-2.5 text-[#1F1712]">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-[#3C332D] mb-1">Số điện thoại *</label>
+            <input type="text" [(ngModel)]="warrantyForm.customerPhone" class="w-full text-xs bg-[#FBF8F1] border border-[#E3D5BA] rounded-lg p-2.5 text-[#1F1712]">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-[#3C332D] mb-1">Thời hạn (tháng)</label>
+            <input type="number" min="1" [(ngModel)]="warrantyForm.warrantyMonths" class="w-full text-xs bg-[#FBF8F1] border border-[#E3D5BA] rounded-lg p-2.5 text-[#1F1712]">
+          </div>
+        </div>
+      </div>
+      <div class="px-6 py-4 border-t border-[#EFE6D3] flex justify-end gap-2">
+        <button (click)="showWarrantyModal = false" class="px-3.5 py-2 border border-[#E3D5BA] rounded-lg text-xs font-medium text-[#1F1712]">Hủy</button>
+        <button (click)="saveWarranty()" class="px-4 py-2 bg-[#A3152D] hover:bg-[#891226] text-white rounded-lg text-xs font-medium transition shadow-xs">Tạo Phiếu</button>
       </div>
     </div>
   </div>

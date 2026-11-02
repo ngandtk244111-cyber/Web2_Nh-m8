@@ -172,6 +172,36 @@
               {
                 "glob": "**/*",
                 "input": "projects/my-admin/public"
+              },
+              {
+                "glob": "popup-poster.jpg",
+                "input": "projects/my-client/src/assets/campaign",
+                "output": "assets/campaign"
+              },
+              {
+                "glob": "*.png",
+                "input": "projects/my-client/src/assets/hero-banner",
+                "output": "assets/hero-banner"
+              },
+              {
+                "glob": "*.jpg",
+                "input": "projects/my-client/src/assets/promo-cards",
+                "output": "assets/promo-cards"
+              },
+              {
+                "glob": "side-*.jpg",
+                "input": "projects/my-client/src/assets/floating-banners",
+                "output": "assets/floating-banners"
+              },
+              {
+                "glob": "room-3d-collection.png",
+                "input": "projects/my-client/src/assets/promo-banner",
+                "output": "assets/promo-banner"
+              },
+              {
+                "glob": "lumea-mascot.png",
+                "input": "projects/my-client/src/assets/mascot",
+                "output": "assets/mascot"
               }
             ],
             "styles": [

@@ -49,7 +49,7 @@ async function seedDefaultAdmin() {
   const password = process.env.ADMIN_DEFAULT_PASSWORD || 'admin123';
   const hashed = await bcrypt.hash(password, 10);
 
-  await Admin.create({ username, password: hashed, fullName: 'Quản trị viên Luméa' });
+  await Admin.create({ username, password: hashed, fullName: 'Quản trị viên Luméa', role: 'Super Admin' });
   console.log(`[seed] Admin: đã tạo tài khoản mặc định "${username}" — nhớ đổi mật khẩu trước khi deploy thật.`);
 }
 

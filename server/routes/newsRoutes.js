@@ -3,7 +3,7 @@ const { sendError } = require('../utils/http-error');
 const NewsArticle = require('../models/NewsArticle');
 const NewsComment = require('../models/NewsComment');
 const User = require('../models/User');
-const { requireAdminId, requireUserId } = require('../middleware/auth');
+const { requirePermission, requireUserId } = require('../middleware/auth');
 
 const COMMENT_MAX_LENGTH = 1000;
 
@@ -109,7 +109,7 @@ function slugify(text) {
     .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 }
 
-router.post('/', requireAdminId, async (req, res) => {
+router.post('/', requirePermission('content.create'), async (req, res) => {
   try {
     // Admin không nhập slug thì tự sinh từ tiêu đề; thêm hậu tố nếu trùng bài đã có.
     let slug = slugify(req.body.slug || req.body.title);
@@ -131,7 +131,7 @@ router.post('/', requireAdminId, async (req, res) => {
   }
 });
 
-router.put('/:id', requireAdminId, async (req, res) => {
+router.put('/:id', requirePermission('content.edit'), async (req, res) => {
   try {
     const article = await NewsArticle.findOneAndUpdate({ id: req.params.id }, req.body, { new: true });
     if (!article) return res.status(404).json({ success: false, error: 'Không tìm thấy bài viết' });
@@ -141,7 +141,7 @@ router.put('/:id', requireAdminId, async (req, res) => {
   }
 });
 
-router.delete('/:id', requireAdminId, async (req, res) => {
+router.delete('/:id', requirePermission('content.delete'), async (req, res) => {
   try {
     await NewsArticle.deleteOne({ id: req.params.id });
     await NewsComment.deleteMany({ articleId: req.params.id });

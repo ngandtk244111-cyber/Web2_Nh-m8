@@ -6,6 +6,7 @@ import { Address } from '../models/address.model';
 import { environment } from '../../../environments/environment';
 
 const STORAGE_KEY = 'deco3d_user';
+const TOKEN_KEY = 'deco3d_user_token';
 
 export interface LoggedUser {
   _id: string;
@@ -25,11 +26,9 @@ export interface LoggedUser {
 }
 
 /**
- * Đăng nhập bằng số điện thoại + mật khẩu, KHÔNG dùng JWT — tham khảo đúng cơ chế của
- * VitaCare-main: sau khi login/register thành công, server trả thẳng object user (trừ
- * password), client lưu nguyên vào localStorage và giữ trong 1 signal. Các request cần xác
- * thực sau đó tự gửi kèm `userId` (xem AddressService/VoucherService/OrderService), server tin
- * tưởng thẳng giá trị này — đánh đổi để giống đúng mô hình của Vita, không còn access token.
+ * Sau khi login/register thành công, server trả object user (trừ password) và token do server ký.
+ * Client lưu cả hai vào localStorage. authInterceptor gắn token vào mọi request, server xác định
+ * khách từ token. `userId` một số service còn gửi kèm chỉ để lọc phía client, server không tin giá trị đó.
  */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -37,14 +36,20 @@ export class AuthService {
   private confirmDialog = inject(ConfirmDialogService);
 
   readonly currentUser = signal<LoggedUser | null>(null);
+  token: string | null = null;
 
   constructor() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
+      const token = localStorage.getItem(TOKEN_KEY);
+      if (raw && token) {
         const user = JSON.parse(raw) as LoggedUser;
         // Tài khoản đăng ký bằng email / Google có thể không có SĐT — chỉ cần có _id là hợp lệ.
-        if (user?._id) this.currentUser.set(user);
+        // Phiên lưu từ trước khi có token thì coi như chưa đăng nhập.
+        if (user?._id) {
+          this.token = token;
+          this.currentUser.set(user);
+        }
       }
     } catch {
       // ignore invalid stored user
@@ -55,10 +60,14 @@ export class AuthService {
     try {
       if (user) localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
       else localStorage.removeItem(STORAGE_KEY);
+      if (this.token) localStorage.setItem(TOKEN_KEY, this.token);
+      else localStorage.removeItem(TOKEN_KEY);
     } catch { }
   }
 
-  setUser(user: LoggedUser): void {
+  /** `token` có khi vừa đăng nhập; cập nhật hồ sơ thì giữ token hiện tại. */
+  setUser(user: LoggedUser, token?: string): void {
+    if (token) this.token = token;
     this.currentUser.set(user);
     this.persistUser(user);
   }
@@ -88,6 +97,7 @@ export class AuthService {
   }
 
   logout(): void {
+    this.token = null;
     this.currentUser.set(null);
     this.persistUser(null);
   }

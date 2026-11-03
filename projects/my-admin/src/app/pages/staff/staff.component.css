@@ -1,0 +1,9 @@
+.code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+}
+
+.role-select {
+  min-width: 160px;
+  font-size: 13px;
+}

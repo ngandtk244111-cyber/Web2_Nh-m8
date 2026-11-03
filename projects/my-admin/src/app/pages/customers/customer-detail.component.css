@@ -1,0 +1,23 @@
+/* Bảng nằm trong info-card: bỏ viền/bóng của khung bảng để không thành thẻ lồng thẻ. */
+.table-scrollable.flat {
+  border: none;
+  box-shadow: none;
+  border-radius: var(--radius-md);
+}
+
+.order-code {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.order-code:hover {
+  text-decoration: underline;
+}
+
+.cell-product {
+  max-width: 260px;
+}
+
+a.btn-header {
+  text-decoration: none;
+}

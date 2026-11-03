@@ -1,0 +1,36 @@
+/* Hộp xác nhận theo modal "Xác nhận xóa" của Vita (ordermanage.html). */
+:host .modal-overlay {
+  z-index: 2000;
+}
+
+.cd-body {
+  padding: 20px 24px 12px;
+}
+
+.cd-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.cd-title.danger {
+  color: var(--color-danger);
+}
+
+.cd-message {
+  margin: 10px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+.cd-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 8px 24px 20px;
+}

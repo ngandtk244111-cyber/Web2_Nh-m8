@@ -9,6 +9,7 @@ const { verifyAndPriceOrderItems, resolveShippingFee } = require('../utils/prici
 const { shippingOptions, findCarrier, trackingUrlFor, isDevMode, devTrackingCode } = require('../utils/shipping');
 const { StockError, reserveStock, restoreStockForOrder } = require('../utils/stock');
 const { canViewOrder, isLocked, recordFailure } = require('../utils/order-access');
+const { codNeedsPhoneConfirm } = require('../utils/cod-policy');
 
 /** Lý do khách được tự chọn khi huỷ đơn (trang đơn hàng phía khách). */
 // Giữ khớp với CANCEL_REASONS ở projects/my-client/src/app/core/data/cancel-reasons.ts
@@ -112,14 +113,17 @@ router.post('/', attachUserId, async (req, res) => {
       };
     }
 
+    // COD lớn hoặc có hàng in 3D: chờ nhân viên gọi xác nhận (PENDING) rồi mới sản xuất/giao — tránh
+    // in đồ khắc tên riêng cho đơn ảo. COD nhỏ và đơn trả trước (chuyển khoản, ví) vào thẳng xác nhận/sản xuất.
+    const phoneConfirmRequired = paymentMethod === 'COD' && await codNeedsPhoneConfirm(total, hasPOD);
+
     let order;
     try {
       order = await createWithUniqueNumber({
       userId: req.userId || null,
       createdAtLabel: nowLabel(),
-      // COD: chờ nhân viên gọi xác nhận (PENDING) rồi mới sản xuất/giao — tránh in đồ khắc tên
-      // riêng cho đơn ảo. Đơn trả trước (chuyển khoản, ví) vào thẳng sản xuất/xác nhận.
-      status: paymentMethod === 'COD' ? 'PENDING' : hasPOD ? 'IN_PRODUCTION' : 'CONFIRMED',
+      status: phoneConfirmRequired ? 'PENDING' : hasPOD ? 'IN_PRODUCTION' : 'CONFIRMED',
+      phoneConfirmRequired,
       hasPrintOnDemandItems: hasPOD,
       productionProgress,
       items: pricedItems,
@@ -301,7 +305,7 @@ router.patch('/:orderNumber/ship', requirePermission('orders.edit'), async (req,
     const order = await loadOpenOrder(req, res);
     if (!order) return;
     if (order.status === 'SHIPPED') return res.status(400).json({ success: false, error: 'Đơn đang được giao rồi' });
-    if (order.paymentMethod === 'COD' && !order.phoneConfirmedAt) {
+    if (order.paymentMethod === 'COD' && order.phoneConfirmRequired !== false && !order.phoneConfirmedAt) {
       return res.status(400).json({ success: false, error: 'Đơn COD phải gọi xác nhận với khách trước khi giao' });
     }
 

@@ -1,0 +1,154 @@
+<div class="admin-page">
+  <div class="page-breadcrumb">
+    Hệ thống <span class="sep">/</span> <span class="current">Nhân viên</span>
+  </div>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Nhân viên</h1>
+      <p class="page-subtitle">Tài khoản nội bộ, vai trò và trạng thái truy cập</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn-header" (click)="reload()"><i class="bi bi-arrow-clockwise"></i> Tải lại</button>
+      <button type="button" class="btn-add-action" *ngIf="canCreate" (click)="openCreate()">
+        <i class="bi bi-plus-lg"></i> Thêm nhân viên
+      </button>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <button type="button" *ngFor="let f of filters" class="stat-card" [ngClass]="f.tone"
+      [class.active]="filter() === f.key" (click)="setFilter(f.key)">
+      <span class="stat-label">{{ f.label }}</span>
+      <span class="stat-value">{{ count(f.key) }}</span>
+    </button>
+  </div>
+
+  <div class="filter-bar">
+    <div class="filter-left">
+      <div class="search-wrapper">
+        <input type="text" class="search-input" placeholder="Tên, username, mã NV, phòng ban..."
+          [ngModel]="search()" (ngModelChange)="onSearch($event)">
+        <i class="bi bi-search search-icon"></i>
+      </div>
+    </div>
+    <div class="actions-group">
+      <span class="selection-info">{{ filtered().length }} nhân viên</span>
+    </div>
+  </div>
+
+  <app-mascot-loading *ngIf="loading()" message="Đang tải danh sách nhân viên…" [overlay]="false"></app-mascot-loading>
+
+  <div class="table-scrollable" *ngIf="!loading()">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Mã NV</th>
+          <th>Nhân viên</th>
+          <th>Phòng ban</th>
+          <th>Vai trò</th>
+          <th>Liên hệ</th>
+          <th>Trạng thái</th>
+          <th class="text-right">Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let st of visible(); trackBy: trackById">
+          <td class="cell-strong code">{{ st.code || '—' }}</td>
+          <td>
+            {{ st.name }} <span class="tag primary" *ngIf="isSelf(st)">Bạn</span>
+            <span class="cell-sub">{{ st.username }}<span *ngIf="st.joinedDate"> · từ {{ st.joinedDate }}</span></span>
+          </td>
+          <td>{{ st.department || '—' }}</td>
+          <td>
+            <select *ngIf="canManage(st); else roleLabel" #roleSelect class="form-select form-select-sm role-select"
+              [attr.aria-label]="'Vai trò của ' + st.name" [disabled]="busyId() === st.id"
+              (change)="changeRole(st, roleSelect)">
+              <option value="" [selected]="!st.role" disabled>Chưa có vai trò</option>
+              <option *ngFor="let r of assignableRoles" [value]="r.name" [selected]="r.name === st.role">{{ r.name }}</option>
+            </select>
+            <ng-template #roleLabel><span class="tag">{{ st.role || 'Chưa có vai trò' }}</span></ng-template>
+          </td>
+          <td>
+            {{ st.phone || '—' }}
+            <span class="cell-sub">{{ st.email }}</span>
+          </td>
+          <td>
+            <span class="status-badge" [ngClass]="st.status === 'ACTIVE' ? 'status-green' : 'status-red'">
+              {{ st.status === 'ACTIVE' ? 'Đang làm việc' : 'Khoá truy cập' }}
+            </span>
+          </td>
+          <td class="text-right">
+            <button type="button" *ngIf="canManage(st)" class="action-btn sm"
+              [ngClass]="st.status === 'ACTIVE' ? 'danger' : 'success'"
+              [disabled]="busyId() === st.id" (click)="toggleStatus(st)">
+              <i class="bi" [ngClass]="st.status === 'ACTIVE' ? 'bi-lock' : 'bi-unlock'"></i>
+              {{ st.status === 'ACTIVE' ? 'Khoá' : 'Mở khoá' }}
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="empty-state" *ngIf="filtered().length === 0">
+      <i class="bi bi-people"></i>
+      Không có nhân viên khớp bộ lọc.
+    </div>
+    <app-pager [total]="filtered().length" [page]="page()" [pageSize]="pageSize" (pageChange)="page.set($event)"></app-pager>
+  </div>
+</div>
+
+<!-- Thêm nhân viên -->
+<div class="modal-overlay" *ngIf="showModal" (click)="showModal = false">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">Thêm nhân viên</h3>
+      <button type="button" class="close-btn" (click)="showModal = false">&times;</button>
+    </div>
+    <form class="modal-body" (ngSubmit)="save()">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Họ tên <span class="req">*</span></label>
+          <input class="form-control" name="name" [(ngModel)]="form.name">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Mã nhân viên</label>
+          <input class="form-control" name="code" [(ngModel)]="form.code">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Tên đăng nhập <span class="req">*</span></label>
+          <input class="form-control" name="username" autocomplete="off" [(ngModel)]="form.username">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Mật khẩu <span class="req">*</span></label>
+          <input type="password" class="form-control" name="password" autocomplete="new-password" [(ngModel)]="form.password">
+          <div class="form-hint">Ít nhất 8 ký tự. Nhân viên tự đổi sau khi đăng nhập.</div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Số điện thoại</label>
+          <input class="form-control" name="phone" [(ngModel)]="form.phone">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-control" name="email" [(ngModel)]="form.email">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Phòng ban</label>
+          <input class="form-control" name="department" [(ngModel)]="form.department">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Vai trò</label>
+          <select class="form-select" name="role" [(ngModel)]="form.role">
+            <option *ngFor="let r of assignableRoles" [value]="r.name">{{ r.name }}</option>
+          </select>
+        </div>
+      </div>
+      <button type="submit" hidden></button>
+    </form>
+    <div class="modal-footer">
+      <button type="button" class="btn-cancel" (click)="showModal = false">Huỷ</button>
+      <button type="button" class="btn-save" [disabled]="saving" (click)="save()">
+        <i class="bi bi-check2"></i> Tạo tài khoản
+      </button>
+    </div>
+  </div>
+</div>

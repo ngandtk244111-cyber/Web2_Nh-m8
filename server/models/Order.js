@@ -58,6 +58,9 @@ const orderSchema = new mongoose.Schema({
   // --- Cơ chế COD ---
   // Nhân viên gọi xác nhận với khách trước khi giao (bắt buộc với COD) — giảm đơn ảo/bom hàng.
   phoneConfirmedAt: { type: Date, default: null },
+  // Chốt lúc đặt theo ngưỡng trong Cài đặt (utils/cod-policy.js): false = đơn COD nhỏ, giao không cần gọi.
+  // Đơn cũ không có trường này coi như phải gọi.
+  phoneConfirmRequired: { type: Boolean, default: true },
   phoneConfirmedBy: { type: String, default: null },
   // Shipper đã thu tiền COD khi giao thành công; tiền còn nằm ở hãng vận chuyển tới khi đối soát
   // (lúc đó nhân viên xác nhận → paymentStatus PAID).

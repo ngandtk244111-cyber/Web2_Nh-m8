@@ -1,0 +1,213 @@
+<div class="admin-page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Tổng quan hoạt động</h1>
+      <p class="page-subtitle">Doanh thu, đơn hàng và tình trạng xưởng in 3D — hôm nay {{ today | date:'dd/MM/yyyy' }}</p>
+    </div>
+    <div class="header-actions" *ngIf="canSeeSales">
+      <div class="export-dropdown">
+        <button type="button" class="btn-header primary" (click)="toggleExportMenu($event)">
+          <i class="bi bi-download"></i> Xuất báo cáo <i class="bi bi-chevron-down small"></i>
+        </button>
+        <div class="export-menu" *ngIf="exportMenuOpen" (click)="$event.stopPropagation()">
+          <button type="button" class="export-menu-item" (click)="exportReport('pdf')"><i class="bi bi-file-earmark-pdf"></i> PDF (.pdf)</button>
+          <button type="button" class="export-menu-item" (click)="exportReport('xlsx')"><i class="bi bi-file-earmark-spreadsheet"></i> Excel (.xlsx)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tài khoản không xem được đơn hàng -->
+  <div class="info-card text-center" *ngIf="!canSeeSales">
+    <h3 class="section-title justify-content-center">Xin chào, {{ adminName }}</h3>
+    <p class="mb-0 text-muted-2" *ngIf="adminAuth.currentAdmin()?.role; else noRole">
+      Số liệu doanh thu chỉ dành cho vai trò xem được đơn hàng. Hãy chọn mục cần làm ở menu bên trái.
+    </p>
+    <ng-template #noRole>
+      <p class="mb-0 text-muted-2">Tài khoản của bạn chưa được gán vai trò nên chưa dùng được chức năng nào. Hãy nhờ Super Admin gán vai trò ở mục Nhân viên.</p>
+    </ng-template>
+  </div>
+
+  <ng-container *ngIf="canSeeSales">
+    <app-mascot-loading *ngIf="loading()" message="Đang tải dữ liệu tổng quan…" [overlay]="false"></app-mascot-loading>
+
+    <div [hidden]="loading()">
+      <!-- Doanh số + cột số liệu -->
+      <div class="main-dashboard-grid">
+        <div class="info-card chart-card mb-0">
+          <div class="chart-head">
+            <div>
+              <h3 class="section-title mb-1">Doanh số</h3>
+              <p class="chart-note">Theo ngày đặt, không tính đơn huỷ và đơn giao thất bại · {{ salesRangeLabel() }}</p>
+            </div>
+            <div class="chip-tabs mb-0">
+              <button type="button" class="chip-tab" [class.active]="salesRange() === 7" (click)="setRange(7)">7 ngày</button>
+              <button type="button" class="chip-tab" [class.active]="salesRange() === 30" (click)="setRange(30)">30 ngày</button>
+              <button type="button" class="chip-tab" [class.active]="salesRange() === 90" (click)="setRange(90)">90 ngày</button>
+              <button type="button" class="chip-tab" [class.active]="salesRange() === 'custom'" (click)="setRange('custom')">Tuỳ chọn</button>
+            </div>
+          </div>
+
+          <div class="custom-range" *ngIf="salesRange() === 'custom'">
+            <input type="text" class="form-control" placeholder="Từ ngày" appDatePicker [ngModel]="salesFrom()" (ngModelChange)="salesFrom.set($event)">
+            <span>–</span>
+            <input type="text" class="form-control" placeholder="Đến ngày" appDatePicker [ngModel]="salesTo()" (ngModelChange)="salesTo.set($event)">
+          </div>
+
+          <div class="sales-total">
+            <div>
+              <span class="stat-label">Tổng doanh số</span>
+              <div class="total-value">{{ salesTotal() | vnd }}</div>
+            </div>
+            <div class="text-end">
+              <span class="stat-label">Số đơn</span>
+              <div class="total-orders">{{ salesOrders() }}</div>
+            </div>
+          </div>
+
+          <div class="chart-box">
+            <canvas #revenueChart></canvas>
+            <div class="chart-empty" *ngIf="!salesPeak()">
+              <i class="bi bi-bar-chart"></i>
+              Chưa có doanh số trong khoảng này
+            </div>
+          </div>
+          <p class="chart-note mb-0" *ngIf="salesPeak() as peak">
+            Cao nhất: {{ peak.fullLabel }} — {{ peak.amount | vnd }} ({{ peak.orders }} đơn)
+          </p>
+        </div>
+
+        <div class="stats-column">
+          <button type="button" class="stat-card-mini" (click)="openStat('revenue')">
+            <span class="stat-info">
+              <span class="label">Doanh thu tháng này</span>
+              <span class="value">{{ monthRevenue().current | vnd }}</span>
+              <span class="subtext" *ngIf="monthRevenue().changePct !== null; else noPrev">
+                <b [class.up]="monthRevenue().changePct! >= 0" [class.down]="monthRevenue().changePct! < 0">
+                  <i class="bi" [ngClass]="monthRevenue().changePct! >= 0 ? 'bi-arrow-up' : 'bi-arrow-down'"></i>
+                  {{ monthRevenue().changePct! >= 0 ? monthRevenue().changePct : -monthRevenue().changePct! }}%
+                </b> so với tháng trước
+              </span>
+              <ng-template #noPrev><span class="subtext">Tháng trước chưa có doanh thu</span></ng-template>
+            </span>
+            <span class="stat-icon-bg tone-primary"><i class="bi bi-wallet2"></i></span>
+          </button>
+
+          <button type="button" class="stat-card-mini" (click)="openStat('orders')">
+            <span class="stat-info">
+              <span class="label">Đơn hàng</span>
+              <span class="value">{{ orders().length }}</span>
+              <span class="subtext"><b>{{ podOrdersCount() }}</b> đơn có công đoạn in 3D</span>
+            </span>
+            <span class="stat-icon-bg tone-info"><i class="bi bi-receipt"></i></span>
+          </button>
+
+          <button type="button" class="stat-card-mini" [disabled]="!can('custom3d.view')" (click)="openStat('requests')">
+            <span class="stat-info">
+              <span class="label">Brief in 3D chờ xử lý</span>
+              <span class="value">{{ pendingRequests() }}</span>
+              <span class="subtext">Cần duyệt & báo giá</span>
+            </span>
+            <span class="stat-icon-bg tone-purple"><i class="bi bi-printer"></i></span>
+          </button>
+
+          <button type="button" class="stat-card-mini" [disabled]="!can('inventory.view')" (click)="openStat('stock')">
+            <span class="stat-info">
+              <span class="label">Cảnh báo tồn kho</span>
+              <span class="value">{{ stockAlerts().out.length + stockAlerts().low.length }}</span>
+              <span class="subtext" [title]="'Sắp hết = còn ≤ ' + threshold + ' sản phẩm'">
+                <b [class.down]="stockAlerts().out.length > 0">{{ stockAlerts().out.length }} hết hàng</b> · {{ stockAlerts().low.length }} sắp hết
+              </span>
+            </span>
+            <span class="stat-icon-bg tone-warning"><i class="bi bi-archive"></i></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Biểu đồ tròn -->
+      <div class="mid-charts-grid">
+        <div class="info-card mb-0">
+          <h3 class="section-title">Trạng thái đơn hàng</h3>
+          <div class="mini-canvas"><canvas #statusChart></canvas></div>
+          <div class="chart-empty-sm" *ngIf="!statusSlices().length">Chưa có đơn hàng</div>
+        </div>
+        <div class="info-card mb-0">
+          <h3 class="section-title">Hình thức thanh toán</h3>
+          <div class="mini-canvas"><canvas #paymentChart></canvas></div>
+          <div class="chart-empty-sm" *ngIf="!paymentSlices().length">Chưa có đơn hàng</div>
+        </div>
+        <div class="info-card mb-0">
+          <h3 class="section-title">Yêu cầu in 3D riêng</h3>
+          <div class="mini-canvas"><canvas #requestChart></canvas></div>
+          <div class="chart-empty-sm" *ngIf="!requestSlices().length">Chưa có yêu cầu nào</div>
+        </div>
+      </div>
+
+      <!-- Hàng đợi xưởng in 3D -->
+      <div class="info-card">
+        <h3 class="section-title">
+          Hàng đợi xưởng in 3D
+          <a routerLink="/orders" [queryParams]="{ status: 'IN_PRODUCTION' }" class="action-btn sm">Xem các đơn đang in <i class="bi bi-arrow-right"></i></a>
+        </h3>
+        <div class="queue-grid">
+          <div class="queue-step" *ngFor="let step of printQueue(); let i = index">
+            <span class="queue-icon"><i class="bi" [ngClass]="step.icon"></i></span>
+            <span class="queue-info">
+              <b>{{ i + 1 }}. {{ step.label }}</b>
+              <span>{{ step.hint }}</span>
+            </span>
+            <span class="tag" [class.warning]="step.count > 0">{{ step.count }} đơn</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bản đồ -->
+      <app-lumea-map class="mb-3"
+        [orders]="orders()"
+        [suppliers]="suppliers()"
+        [showroomAddress]="showroomAddress()"
+        (orderSelect)="openOrder($event)">
+      </app-lumea-map>
+
+      <!-- Đơn gần đây -->
+      <div class="section-head">
+        <h3 class="section-title mb-0">Đơn hàng gần đây</h3>
+        <div class="actions-group">
+          <a routerLink="/products/create" class="action-btn" *ngIf="can('products.create')"><i class="bi bi-plus-lg"></i> Thêm sản phẩm</a>
+          <a routerLink="/orders" class="action-btn"><i class="bi bi-list-ul"></i> Xem toàn bộ đơn hàng</a>
+        </div>
+      </div>
+      <div class="table-scrollable">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Mã đơn</th>
+              <th>Khách hàng</th>
+              <th>Sản phẩm</th>
+              <th>Trạng thái</th>
+              <th>Thanh toán</th>
+              <th class="text-right">Tổng tiền</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let o of recentOrders()" class="clickable" (click)="openOrder(o)">
+              <td class="cell-strong">{{ o.orderNumber }}</td>
+              <td>
+                {{ o.shippingAddress.fullName }}
+                <span class="cell-sub">{{ o.shippingAddress.phone }}</span>
+              </td>
+              <td class="cell-product">{{ itemName(o) }}</td>
+              <td><span class="status-badge" [ngClass]="statusClass(o.status)">{{ statusLabel(o.status) }}</span></td>
+              <td><span class="status-badge" [ngClass]="payClass(o)">{{ payLabel(o) }}</span></td>
+              <td class="text-right money">{{ o.total | vnd }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="empty-state" *ngIf="recentOrders().length === 0">
+          <i class="bi bi-inbox"></i>
+          Chưa có đơn hàng nào.
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</div>

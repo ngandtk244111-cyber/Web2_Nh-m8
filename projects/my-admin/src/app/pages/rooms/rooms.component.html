@@ -1,0 +1,166 @@
+<div class="admin-page">
+  <div class="page-breadcrumb">
+    Nội dung <span class="sep">/</span> <span class="current">Phòng mẫu 3D</span>
+  </div>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Phòng mẫu 3D</h1>
+      <p class="page-subtitle">Không gian trưng bày ở trang Shop the room — mỗi điểm gắn trong phòng dẫn tới 1 sản phẩm</p>
+    </div>
+    <div class="header-actions">
+      <a class="btn-header" [href]="clientAppUrl + '/shop-the-room'" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i> Xem trên cửa hàng</a>
+      <button type="button" class="btn-add-action" *ngIf="adminAuth.can('content.create')" (click)="openCreate()">
+        <i class="bi bi-plus-lg"></i> Thêm phòng
+      </button>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card static">
+      <span class="stat-label">Số phòng mẫu</span>
+      <span class="stat-value">{{ rooms().length }}</span>
+    </div>
+  </div>
+
+  <div class="table-scrollable">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Phòng</th>
+          <th>Kiểu dựng</th>
+          <th>Sản phẩm gắn</th>
+          <th class="text-right">Giá trọn bộ</th>
+          <th class="text-right">Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let r of rooms()" class="clickable" (click)="openEdit(r)">
+          <td>
+            <div class="cell-media">
+              <img class="thumb room-thumb" *ngIf="r.coverImage; else noCover" [src]="r.coverImage" [alt]="r.name">
+              <ng-template #noCover><span class="thumb room-thumb no-cover"><i class="bi bi-house-door"></i></span></ng-template>
+              <div>
+                <span class="cell-strong">{{ r.name }}</span>
+                <span class="cell-sub">{{ r.theme }}<span *ngIf="r.tagline"> · {{ r.tagline }}</span></span>
+              </div>
+            </div>
+          </td>
+          <td>{{ roomTypeLabel(r.roomType) }}</td>
+          <td>
+            <span class="cell-strong">{{ r.hotspots.length }} điểm</span>
+            <span class="cell-sub product-names">{{ productNames(r) || '—' }}</span>
+            <span class="tag danger" *ngIf="missingProducts(r) > 0">{{ missingProducts(r) }} sản phẩm không còn tồn tại</span>
+          </td>
+          <td class="text-right money">{{ lookPrice(r) | vnd }}</td>
+          <td (click)="$event.stopPropagation()">
+            <div class="row-actions">
+              <button type="button" class="icon-btn" [title]="adminAuth.can('content.edit') ? 'Sửa' : 'Xem'" (click)="openEdit(r)">
+                <i class="bi" [ngClass]="adminAuth.can('content.edit') ? 'bi-pencil' : 'bi-eye'"></i>
+              </button>
+              <button type="button" class="icon-btn danger" title="Xoá" *ngIf="adminAuth.can('content.delete')" (click)="remove(r)"><i class="bi bi-trash"></i></button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="empty-state" *ngIf="rooms().length === 0">
+      <i class="bi bi-house-door"></i>
+      Chưa có phòng mẫu nào.
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showModal" (click)="showModal = false">
+  <div class="modal-box lg" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">{{ editing ? (adminAuth.can('content.edit') ? 'Sửa phòng: ' : 'Phòng: ') + editing.name : 'Thêm phòng mẫu' }}</h3>
+      <button type="button" class="close-btn" (click)="showModal = false">&times;</button>
+    </div>
+    <fieldset class="modal-body" [disabled]="editing ? !adminAuth.can('content.edit') : false">
+      <div class="row g-3">
+        <div class="col-md-8">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Tên phòng <span class="req">*</span></label>
+              <input class="form-control" [(ngModel)]="form.name">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Chủ đề / phong cách</label>
+              <input class="form-control" [(ngModel)]="form.theme" placeholder="VD: Japandi">
+            </div>
+            <div class="col-12">
+              <label class="form-label">Câu giới thiệu ngắn</label>
+              <input class="form-control" [(ngModel)]="form.tagline">
+            </div>
+            <div class="col-12">
+              <label class="form-label">Mô tả</label>
+              <textarea class="form-control" rows="3" [(ngModel)]="form.description"></textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Kiểu dựng phòng</label>
+              <select class="form-select" [(ngModel)]="form.roomType">
+                <option *ngFor="let t of roomTypes" [value]="t.value">{{ t.label }}</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Giá trọn bộ (đ)</label>
+              <input type="number" min="0" class="form-control" [(ngModel)]="form.totalLookPrice" placeholder="Bỏ trống = cộng giá sản phẩm">
+            </div>
+            <div class="col-12" *ngIf="form.roomType === 'glb_scene'">
+              <label class="form-label">Đường dẫn file mô hình (.glb) <span class="req">*</span></label>
+              <input class="form-control" [(ngModel)]="form.modelUrl" placeholder="assets/models/phong-khach.glb">
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Ảnh bìa</label>
+          <div class="cover-box">
+            <img *ngIf="form.coverImage; else noImg" [src]="form.coverImage" alt="Ảnh bìa">
+            <ng-template #noImg><span><i class="bi bi-image"></i> Chưa có ảnh</span></ng-template>
+          </div>
+          <input #coverInput type="file" hidden accept="image/jpeg,image/png,image/webp" (change)="onCoverSelected($event)">
+          <button type="button" class="action-btn w-100 justify-content-center mt-2" [disabled]="uploading" (click)="coverInput.click()">
+            <i class="bi" [ngClass]="uploading ? 'bi-hourglass-split' : 'bi-upload'"></i> {{ uploading ? 'Đang tải lên...' : 'Tải ảnh lên' }}
+          </button>
+          <input class="form-control mt-2" [(ngModel)]="form.coverImage" placeholder="hoặc dán link ảnh">
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <h4 class="section-title">
+        Điểm gắn sản phẩm ({{ form.hotspots.length }})
+        <button type="button" class="action-btn sm" (click)="addHotspot()"><i class="bi bi-plus-lg"></i> Thêm điểm</button>
+      </h4>
+      <p class="form-hint mb-2">Vị trí 3D của điểm được giữ nguyên — điểm mới đặt ở giữa phòng, canh chỉnh lại trong cảnh 3D.</p>
+
+      <div class="hotspot-row" *ngFor="let h of form.hotspots; let i = index">
+        <span class="hotspot-index">{{ i + 1 }}</span>
+        <div class="hotspot-fields">
+          <div class="row g-2">
+            <div class="col-md-6">
+              <select class="form-select form-select-sm" [(ngModel)]="h.productId" (ngModelChange)="onHotspotProduct(h)">
+                <option value="">— Chọn sản phẩm —</option>
+                <option *ngFor="let p of products()" [value]="p.id">{{ p.name }}</option>
+              </select>
+              <span class="tag danger mt-1" *ngIf="h.productId && !product(h.productId)">Sản phẩm không còn tồn tại</span>
+            </div>
+            <div class="col-md-6">
+              <input class="form-control form-control-sm" [(ngModel)]="h.label" placeholder="Nhãn hiển thị">
+            </div>
+            <div class="col-12">
+              <input class="form-control form-control-sm" [(ngModel)]="h.annotationNote" placeholder="Ghi chú phối đồ (tuỳ chọn)">
+            </div>
+          </div>
+        </div>
+        <button type="button" class="icon-btn danger" title="Bỏ điểm này" (click)="removeHotspot(i)"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="empty-state py-3" *ngIf="form.hotspots.length === 0">Phòng chưa gắn sản phẩm nào.</div>
+    </fieldset>
+    <div class="modal-footer">
+      <button type="button" class="btn-cancel" (click)="showModal = false">{{ editing && !adminAuth.can('content.edit') ? 'Đóng' : 'Huỷ' }}</button>
+      <button type="button" class="btn-save" *ngIf="editing ? adminAuth.can('content.edit') : adminAuth.can('content.create')"
+        [disabled]="saving || uploading" (click)="save()"><i class="bi bi-save"></i> Lưu phòng</button>
+    </div>
+  </div>
+</div>

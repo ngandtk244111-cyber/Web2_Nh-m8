@@ -1,0 +1,469 @@
+/* Layout theo my-admin-vita/layout: sidebar màu đậm + topbar đậm hơn, nội dung nền sáng. */
+:host {
+  display: block;
+  height: 100vh;
+}
+
+.admin-wrapper {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  background: var(--color-bg-light);
+}
+
+/* ---------- SIDEBAR ---------- */
+.sidebar {
+  width: var(--sidebar-width);
+  background: var(--sidebar-bg);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  flex-shrink: 0;
+  transition: width 0.14s ease-out;
+  z-index: 2;
+}
+
+.admin-wrapper.collapsed .sidebar {
+  width: var(--sidebar-collapsed-width);
+}
+
+.sidebar-header {
+  height: var(--topbar-height);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+  background: var(--main-dark);
+  text-decoration: none;
+}
+
+.logo-full {
+  max-height: 34px;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+/* Logo mark là nét trắng nền trong suốt — đặt thẳng trên nền đỏ sẫm. */
+.logo-mark {
+  height: 38px;
+  width: 38px;
+  object-fit: contain;
+}
+
+.sidebar-nav {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 8px 0 12px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+}
+
+.admin-wrapper.collapsed .sidebar-nav {
+  overflow: visible;
+}
+
+.sidebar-nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sidebar-nav > ul {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nav-item {
+  position: relative;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 11px 16px;
+  color: #fff;
+  font-size: 0.92rem;
+  font-weight: 500;
+  text-decoration: none;
+  opacity: 0.85;
+  transition: background-color 0.14s ease-out, opacity 0.14s ease-out;
+}
+
+.nav-link-button {
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.92rem;
+}
+
+.nav-link:hover {
+  background: rgba(255, 255, 255, 0.1);
+  opacity: 1;
+}
+
+.nav-link.active,
+.nav-item.group-active > .nav-link {
+  background: rgba(255, 255, 255, 0.16);
+  opacity: 1;
+}
+
+.icon-wrapper {
+  width: 22px;
+  display: flex;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 1.1rem;
+}
+
+.text {
+  white-space: nowrap;
+}
+
+.submenu-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex: 1;
+}
+
+.submenu-title i {
+  font-size: 0.75rem;
+}
+
+.submenu {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.submenu-link {
+  display: block;
+  padding: 8px 16px 8px 52px;
+  color: #fff;
+  font-size: 0.86rem;
+  text-decoration: none;
+  opacity: 0.8;
+  border-left: 3px solid transparent;
+  transition: background-color 0.14s ease-out, opacity 0.14s ease-out;
+}
+
+.submenu-link:hover,
+.submenu-link.active {
+  background: rgba(255, 255, 255, 0.14);
+  opacity: 1;
+  border-left-color: #F4C7CF;
+}
+
+.admin-wrapper.collapsed .text {
+  display: none;
+}
+
+.admin-wrapper.collapsed .nav-link {
+  justify-content: center;
+  padding: 12px 0;
+}
+
+/* Menu bay khi sidebar thu gọn */
+.float-menu {
+  position: fixed;
+  left: var(--sidebar-collapsed-width);
+  min-width: 210px;
+  background: var(--sidebar-bg);
+  border-radius: 0 10px 10px 0;
+  box-shadow: var(--shadow-lg);
+  padding: 6px 0;
+  z-index: 1100;
+}
+
+.float-title {
+  padding: 6px 16px 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  opacity: 0.7;
+}
+
+.float-menu .submenu-link {
+  padding-left: 16px;
+}
+
+/* ---------- MAIN ---------- */
+.main-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.top-bar {
+  height: var(--topbar-height);
+  flex-shrink: 0;
+  background: var(--main-dark);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px 0 12px;
+  z-index: 3;
+}
+
+.menu-toggle {
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #fff;
+  font-size: 1.3rem;
+  cursor: pointer;
+}
+
+.menu-toggle:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.store-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #fff;
+  opacity: 0.85;
+  font-size: 0.88rem;
+  text-decoration: none;
+  padding: 6px 10px;
+  border-radius: 8px;
+}
+
+.store-link:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.header-dropdown {
+  position: relative;
+}
+
+.notice-btn {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-size: 1.15rem;
+  cursor: pointer;
+}
+
+.notice-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.notice-count {
+  position: absolute;
+  top: -2px;
+  right: -4px;
+  min-width: 19px;
+  height: 19px;
+  padding: 0 5px;
+  border-radius: 10px;
+  background: #FFC93C;
+  color: #3B1A00;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 19px;
+  text-align: center;
+}
+
+.header-user-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: none;
+  background: transparent;
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.header-user-profile:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.avatar-circle {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.user-info .name {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.user-info .role {
+  font-size: 0.75rem;
+  opacity: 0.75;
+}
+
+.caret {
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
+.dropdown-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  background: #fff;
+  color: var(--color-text-primary);
+  border-radius: 12px;
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--color-neutral-30);
+  overflow: hidden;
+  z-index: 1200;
+}
+
+.notice-panel {
+  width: 340px;
+}
+
+.panel-head {
+  padding: 12px 16px;
+  font-weight: 700;
+  font-size: 14px;
+  text-transform: uppercase;
+  color: var(--color-primary);
+  border-bottom: 1px solid var(--color-neutral-30);
+}
+
+.notice-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 10px 16px;
+  text-align: left;
+  font-size: 14px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--color-neutral-20);
+}
+
+.notice-item:hover {
+  background: var(--color-primary-bg);
+}
+
+.notice-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--color-primary-bg);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.notice-label {
+  flex: 1;
+}
+
+.notice-num {
+  font-weight: 800;
+  color: var(--color-primary);
+}
+
+.panel-empty {
+  padding: 22px 16px;
+  text-align: center;
+  color: var(--color-text-tertiary);
+  font-size: 14px;
+}
+
+.profile-panel {
+  width: 250px;
+}
+
+.profile-head {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--color-neutral-30);
+}
+
+.profile-head .name {
+  font-weight: 700;
+}
+
+.profile-head .meta {
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+  word-break: break-all;
+}
+
+.profile-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 11px 16px;
+  text-align: left;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.profile-item:hover {
+  background: var(--color-primary-bg);
+}
+
+.profile-item.danger {
+  color: var(--color-danger);
+}
+
+.content-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px 20px 24px;
+}
+
+@media (max-width: 900px) {
+  .user-info,
+  .store-link span {
+    display: none;
+  }
+}

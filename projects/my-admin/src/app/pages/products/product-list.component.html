@@ -1,0 +1,120 @@
+<div class="admin-page">
+  <div class="page-breadcrumb">
+    Sản phẩm & kho <span class="sep">/</span> <span class="current">Sản phẩm</span>
+  </div>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Quản lý sản phẩm</h1>
+      <p class="page-subtitle">Sản phẩm có sẵn và sản phẩm in 3D tuỳ biến đang bán trên cửa hàng</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn-header" (click)="exportExcel()"><i class="bi bi-file-earmark-excel"></i> Xuất Excel</button>
+      <a *ngIf="adminAuth.can('products.create')" routerLink="/products/create" class="btn-add-action text-decoration-none">
+        <i class="bi bi-plus-lg"></i> Thêm sản phẩm
+      </a>
+    </div>
+  </div>
+
+  <div class="chip-tabs">
+    <a routerLink="/products" class="chip-tab active">Sản phẩm</a>
+    <a routerLink="/categories" class="chip-tab">Danh mục</a>
+  </div>
+
+  <div class="stats-grid">
+    <button type="button" *ngFor="let f of filters" class="stat-card" [ngClass]="f.tone"
+      [class.active]="filter() === f.key" (click)="setFilter(f.key)">
+      <span class="stat-label">{{ f.label }}</span>
+      <span class="stat-value">{{ count(f.key) }}</span>
+    </button>
+  </div>
+
+  <div class="filter-bar">
+    <div class="filter-left">
+      <div class="search-wrapper">
+        <input type="text" class="search-input" placeholder="Tên, mã hoặc danh mục..."
+          [ngModel]="search()" (ngModelChange)="onSearch($event)">
+        <i class="bi bi-search search-icon"></i>
+      </div>
+      <select class="form-select filter-select" [ngModel]="category()" (ngModelChange)="category.set($event); page.set(1)">
+        <option value="ALL">Mọi danh mục</option>
+        <optgroup *ngFor="let s of sections" [label]="s.section">
+          <option *ngFor="let o of s.options" [value]="o.value">{{ o.label }}</option>
+        </optgroup>
+      </select>
+    </div>
+    <div class="actions-group">
+      <span class="selection-info">{{ filtered().length }} sản phẩm</span>
+      <button type="button" class="action-btn" (click)="clearFilters()" [disabled]="!search() && category() === 'ALL'">
+        <i class="bi bi-x-circle"></i> Xoá lọc
+      </button>
+    </div>
+  </div>
+
+  <app-mascot-loading *ngIf="products().length === 0" message="Đang tải danh sách sản phẩm…" [overlay]="false"></app-mascot-loading>
+
+  <div class="table-scrollable" *ngIf="products().length > 0">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Sản phẩm</th>
+          <th>Danh mục</th>
+          <th>Loại</th>
+          <th class="text-right">Giá bán</th>
+          <th class="text-right">Tồn kho</th>
+          <th class="text-center">Đánh giá</th>
+          <th class="text-right">Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let p of visible(); trackBy: trackById" class="clickable" (click)="openEdit(p)">
+          <td>
+            <div class="cell-media">
+              <img class="thumb" [src]="p.images[0]" [alt]="p.name" loading="lazy">
+              <div>
+                <span class="cell-strong">{{ p.name }}</span>
+                <span class="cell-sub">{{ p.id }}<ng-container *ngIf="p.badge"> · {{ p.badge }}</ng-container></span>
+              </div>
+            </div>
+          </td>
+          <td>{{ p.categoryName }}</td>
+          <td>
+            <span class="tag" [class.warning]="p.productionType === 'PRINT_ON_DEMAND'">{{ typeLabel(p.productionType) }}</span>
+            <span class="cell-sub" *ngIf="p.customizable"><i class="bi bi-palette"></i> Cho tuỳ biến</span>
+          </td>
+          <td class="text-right">
+            <span class="money">{{ p.basePrice | vnd }}</span>
+            <span class="cell-sub price-old" *ngIf="p.originalPrice && p.originalPrice > p.basePrice">{{ p.originalPrice | vnd }}</span>
+          </td>
+          <td class="text-right">
+            <span class="status-badge" [ngClass]="stockClass(p)">
+              {{ p.productionType === 'READY_STOCK' ? p.inStock : 'In theo đơn' }}
+            </span>
+          </td>
+          <td class="text-center">
+            <i class="bi bi-star-fill text-warning"></i> {{ p.rating | number:'1.1-1' }}
+            <span class="cell-sub">{{ p.reviewCount }} đánh giá</span>
+          </td>
+          <td (click)="$event.stopPropagation()">
+            <div class="row-actions">
+              <a class="icon-btn" [href]="clientAppUrl + '/product/' + p.slug" target="_blank" rel="noopener" title="Xem trên cửa hàng">
+                <i class="bi bi-box-arrow-up-right"></i>
+              </a>
+              <button type="button" class="icon-btn" (click)="openEdit(p)" [title]="adminAuth.can('products.edit') ? 'Sửa' : 'Xem'">
+                <i class="bi" [ngClass]="adminAuth.can('products.edit') ? 'bi-pencil' : 'bi-eye'"></i>
+              </button>
+              <button type="button" class="icon-btn danger" *ngIf="adminAuth.can('products.delete')" (click)="remove(p)" title="Xoá">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="empty-state" *ngIf="filtered().length === 0">
+      <i class="bi bi-box-seam"></i>
+      Không có sản phẩm nào khớp bộ lọc.
+    </div>
+    <app-pager [total]="filtered().length" [page]="page()" [pageSize]="pageSize" (pageChange)="page.set($event)"></app-pager>
+  </div>
+</div>

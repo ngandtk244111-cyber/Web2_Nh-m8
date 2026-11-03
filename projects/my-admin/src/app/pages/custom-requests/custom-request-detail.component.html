@@ -1,0 +1,166 @@
+<div class="admin-page">
+  <div class="empty-state" *ngIf="!request() && !loaded()">
+    <span class="spinner-border spinner-border-sm"></span> Đang tải yêu cầu…
+  </div>
+
+  <div class="empty-state" *ngIf="!request() && loaded()">
+    <i class="bi bi-search"></i>
+    <p>Không tìm thấy yêu cầu in 3D.</p>
+    <button type="button" class="btn-header" (click)="goBack()"><i class="bi bi-arrow-return-left"></i> Quay lại danh sách</button>
+  </div>
+
+  <ng-container *ngIf="request() as r">
+    <div class="page-breadcrumb">
+      <a routerLink="/custom-requests">Yêu cầu in 3D</a> <span class="sep">/</span> <span class="current">{{ r.requestCode }}</span>
+    </div>
+
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">{{ r.title }}</h1>
+        <p class="page-subtitle">
+          {{ r.requestCode }} · gửi lúc {{ r.createdAt }} ·
+          <span class="status-badge" [ngClass]="statusClass(r.status)">{{ statusLabel(r.status) }}</span>
+        </p>
+      </div>
+      <div class="header-actions">
+        <button type="button" class="btn-header" (click)="goBack()"><i class="bi bi-arrow-return-left"></i> Quay lại</button>
+        <button type="button" class="btn-header" *ngIf="canEdit && !isClosed(r)" [disabled]="busy()" (click)="reject(r)">
+          <i class="bi bi-x-octagon"></i> Huỷ yêu cầu
+        </button>
+      </div>
+    </div>
+
+    <div class="layout-grid">
+      <!-- CỘT TRÁI -->
+      <div>
+        <div class="info-card">
+          <div class="status-steps" *ngIf="r.status !== 'REJECTED'; else rejectedTpl">
+            <div *ngFor="let s of flow; let i = index" class="step-item" [ngClass]="flowState(r, s)">
+              <div class="step-badge">
+                <i class="bi" [ngClass]="flowState(r, s) === 'done' ? 'bi-check-lg' : ['bi-inbox', 'bi-cash-coin', 'bi-badge-3d', 'bi-hand-thumbs-up', 'bi-bag-check'][i]"></i>
+              </div>
+              <div class="step-label">{{ statusLabel(s) }}</div>
+            </div>
+          </div>
+          <ng-template #rejectedTpl>
+            <div class="notice-box warning mb-3"><b>Yêu cầu đã bị huỷ.</b></div>
+          </ng-template>
+
+          <h3 class="section-title">Brief thiết kế</h3>
+          <div class="brief-grid">
+            <div><span class="label">Dòng sản phẩm</span><span class="value">{{ r.brief.productType || '—' }}</span></div>
+            <div><span class="label">Chủ đề</span><span class="value">{{ r.brief.theme || '—' }}</span></div>
+            <div><span class="label">Phong cách</span><span class="value">{{ r.brief.style || '—' }}</span></div>
+            <div><span class="label">Màu sắc</span><span class="value">{{ r.brief.color || 'Tự do' }}</span></div>
+            <div><span class="label">Kích thước</span><span class="value">{{ r.brief.size || '—' }}</span></div>
+            <div><span class="label">Mục đích dùng</span><span class="value">{{ r.brief.usage || '—' }}</span></div>
+            <div><span class="label">Khắc chữ</span><span class="value">{{ r.brief.customText || 'Không' }}</span></div>
+            <div><span class="label">Ngân sách dự kiến</span><span class="value">{{ r.brief.estimatedBudget || '—' }}</span></div>
+          </div>
+          <div class="brief-notes" *ngIf="r.brief.notes">
+            <span class="label">Mô tả ý tưởng của khách</span>
+            <p>{{ r.brief.notes }}</p>
+          </div>
+
+          <ng-container *ngIf="r.aiConceptImage || r.customerImages?.length">
+            <div class="divider"></div>
+            <h3 class="section-title">Hình ảnh tham khảo</h3>
+            <div class="image-grid">
+              <figure *ngIf="r.aiConceptImage" (click)="zoomImage = r.aiConceptImage!">
+                <img [src]="r.aiConceptImage" alt="Ảnh concept AI">
+                <figcaption>Concept AI</figcaption>
+              </figure>
+              <figure *ngFor="let img of r.customerImages; let i = index" (click)="zoomImage = img">
+                <img [src]="img" [alt]="'Ảnh khách gửi ' + (i + 1)">
+                <figcaption>Ảnh khách gửi {{ i + 1 }}</figcaption>
+              </figure>
+            </div>
+          </ng-container>
+        </div>
+
+        <!-- Trao đổi với khách -->
+        <div class="info-card">
+          <h3 class="section-title">Trao đổi với khách ({{ r.messages.length }})</h3>
+          <div class="thread" #thread>
+            <div class="empty-state" *ngIf="r.messages.length === 0">Chưa có tin nhắn nào.</div>
+            <div *ngFor="let m of r.messages" class="msg-row" [class.mine]="m.sender === 'SHOP_SPECIALIST'" [class.bot]="m.sender === 'AI_ASSISTANT'">
+              <div class="msg-author">{{ m.senderName }} · {{ m.timestamp }}</div>
+              <div class="bubble">{{ m.text }}</div>
+              <div class="msg-attachments" *ngIf="m.attachments?.length">
+                <img *ngFor="let a of m.attachments" [src]="a" alt="Tệp đính kèm" (click)="zoomImage = a">
+              </div>
+            </div>
+          </div>
+          <div class="composer" *ngIf="canEdit && r.status !== 'REJECTED'">
+            <textarea class="form-control" rows="2" [(ngModel)]="messageDraft" (keydown)="onMessageKeydown($event, r)"
+              placeholder="Trả lời khách… (Enter để gửi, Shift+Enter xuống dòng)"></textarea>
+            <button type="button" class="btn-save" [disabled]="busy() || !messageDraft.trim()" (click)="sendMessage(r)">
+              <i class="bi bi-send"></i> Gửi
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- CỘT PHẢI -->
+      <div>
+        <div class="info-card">
+          <h3 class="section-title">Khách hàng</h3>
+          <div class="info-row"><span class="label">Họ tên</span><span class="value">{{ r.customerName }}</span></div>
+          <div class="info-row" *ngIf="r.customerPhone"><span class="label">Điện thoại</span><span class="value"><a [href]="'tel:' + r.customerPhone">{{ r.customerPhone }}</a></span></div>
+          <div class="info-row"><span class="label">Email</span><span class="value">{{ r.customerEmail || '—' }}</span></div>
+          <div class="info-row"><span class="label">Cập nhật lần cuối</span><span class="value">{{ r.updatedAt }}</span></div>
+        </div>
+
+        <div class="info-card">
+          <h3 class="section-title">Báo giá</h3>
+          <div class="info-row" *ngIf="r.quotationPrice">
+            <span class="label">Đã báo</span>
+            <span class="value money text-primary-lm">{{ r.quotationPrice | vnd }} · {{ r.estimatedDays }} ngày</span>
+          </div>
+          <ng-container *ngIf="canEdit && !isClosed(r) && r.status !== 'APPROVED'; else quoteLocked">
+            <div class="row g-2">
+              <div class="col-7">
+                <label class="form-label">Giá báo (đ) <span class="req">*</span></label>
+                <input type="number" min="0" step="1000" class="form-control" [(ngModel)]="quotePrice" placeholder="VD: 450000">
+              </div>
+              <div class="col-5">
+                <label class="form-label">Số ngày làm</label>
+                <input type="number" min="1" class="form-control" [(ngModel)]="quoteDays">
+              </div>
+            </div>
+            <p class="form-hint">Khách nhận tin báo giá trong khung trao đổi và có thể duyệt để đặt hàng.</p>
+            <button type="button" class="btn-save w-100 justify-content-center mt-2" [disabled]="busy()" (click)="submitQuotation(r)">
+              <i class="bi bi-cash-coin"></i> {{ r.quotationPrice ? 'Cập nhật báo giá' : 'Gửi báo giá' }}
+            </button>
+          </ng-container>
+          <ng-template #quoteLocked>
+            <p class="small text-muted-2 mb-0" *ngIf="!r.quotationPrice">Chưa có báo giá.</p>
+            <p class="small text-muted-2 mb-0" *ngIf="r.status === 'APPROVED'">Khách đã duyệt báo giá — không sửa giá nữa.</p>
+          </ng-template>
+        </div>
+
+        <div class="info-card" *ngIf="canEdit && !isClosed(r)">
+          <h3 class="section-title">3D Preview</h3>
+          <div class="info-row" *ngIf="r.preview3dModelType">
+            <span class="label">Đang cấp</span><span class="value">{{ r.preview3dModelType }}</span>
+          </div>
+          <label class="form-label">Mẫu mô phỏng</label>
+          <select class="form-select" [(ngModel)]="previewModel">
+            <option *ngFor="let m of previewModels" [value]="m.value">{{ m.label }}</option>
+          </select>
+          <button type="button" class="action-btn w-100 justify-content-center mt-2" [disabled]="busy()" (click)="setPreviewReady(r)">
+            <i class="bi bi-badge-3d"></i> Cấp 3D Preview cho khách duyệt
+          </button>
+          <button type="button" class="action-btn w-100 justify-content-center mt-2" *ngIf="r.status === 'PENDING_REVIEW'" [disabled]="busy()" (click)="markInDiscussion(r)">
+            <i class="bi bi-chat-left-text"></i> Cần trao đổi thêm với khách
+          </button>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</div>
+
+<!-- Xem ảnh lớn -->
+<div class="modal-overlay" *ngIf="zoomImage" (click)="zoomImage = null">
+  <img class="zoomed" [src]="zoomImage" alt="Ảnh phóng to" (click)="$event.stopPropagation()">
+</div>

@@ -1,0 +1,26 @@
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--color-neutral-30);
+  color: var(--color-text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.avatar.has-account {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.customer-name {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.customer-name:hover {
+  text-decoration: underline;
+}

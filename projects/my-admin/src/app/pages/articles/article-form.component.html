@@ -1,0 +1,117 @@
+<div class="admin-page">
+  <div class="page-breadcrumb">
+    <a routerLink="/articles">Tin tức</a> <span class="sep">/</span>
+    <span class="current">{{ isEdit ? 'Sửa bài viết' : 'Viết bài mới' }}</span>
+  </div>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">{{ isEdit ? (canSave ? 'Sửa bài viết' : 'Xem bài viết') : 'Viết bài mới' }}</h1>
+      <p class="page-subtitle" *ngIf="editing">{{ editing.viewsCount || 0 }} lượt xem · đăng {{ editing.publishedAt | date:'dd/MM/yyyy' }}</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn-header" (click)="goBack()"><i class="bi bi-arrow-return-left"></i> Quay lại</button>
+      <button type="button" class="btn-header primary" *ngIf="canSave" [disabled]="saving || uploading" (click)="save()">
+        <i class="bi bi-save"></i> {{ isEdit ? 'Lưu thay đổi' : 'Đăng bài' }}
+      </button>
+    </div>
+  </div>
+
+  <app-mascot-loading *ngIf="loading()" message="Đang tải bài viết…" [overlay]="false"></app-mascot-loading>
+
+  <div class="empty-state" *ngIf="notFound()">
+    <i class="bi bi-search"></i>
+    <p>Không tìm thấy bài viết.</p>
+    <button type="button" class="btn-header" (click)="goBack()">Quay lại danh sách</button>
+  </div>
+
+  <div class="notice-box warning" *ngIf="isEdit && !canSave && !loading() && !notFound()">
+    Tài khoản của bạn chỉ có quyền xem bài viết.
+  </div>
+
+  <div class="layout-grid" *ngIf="!loading() && !notFound()">
+    <!-- Nội dung -->
+    <div>
+      <div class="info-card">
+        <h3 class="section-title">Nội dung bài viết</h3>
+        <div class="mb-3">
+          <label class="form-label">Tiêu đề <span class="req">*</span></label>
+          <input class="form-control form-control-lg title-input" [(ngModel)]="form.title" [disabled]="!canSave" placeholder="VD: 5 mẹo decor phòng ngủ nhỏ">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Tóm tắt (hiện ở danh sách tin)</label>
+          <textarea class="form-control" rows="3" [(ngModel)]="form.excerpt" [disabled]="!canSave" maxlength="400"></textarea>
+          <div class="form-hint">{{ form.excerpt.length }}/400 ký tự</div>
+        </div>
+        <div>
+          <label class="form-label">Nội dung <span class="req">*</span></label>
+          <div class="quill-editor-wrap">
+            <quill-editor [(ngModel)]="form.contentHtml" [modules]="editorModules" [readOnly]="!canSave"
+              placeholder="Viết nội dung bài..." format="html" [styles]="{ minHeight: '320px' }"></quill-editor>
+          </div>
+          <div class="form-hint">Trang Tin tức hiển thị được: tiêu đề mục, chữ in đậm và gạch đầu dòng.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Thông tin -->
+    <div>
+      <div class="info-card">
+        <h3 class="section-title">Ảnh bìa</h3>
+        <div class="cover-preview">
+          <img *ngIf="form.coverImage; else noCover" [src]="form.coverImage" alt="Ảnh bìa">
+          <ng-template #noCover><span><i class="bi bi-image"></i> Chưa có ảnh bìa</span></ng-template>
+        </div>
+        <ng-container *ngIf="canSave">
+          <input #coverInput type="file" hidden accept="image/jpeg,image/png,image/webp" (change)="onCoverSelected($event)">
+          <button type="button" class="action-btn w-100 justify-content-center mt-2" [disabled]="uploading" (click)="coverInput.click()">
+            <i class="bi" [ngClass]="uploading ? 'bi-hourglass-split' : 'bi-upload'"></i> {{ uploading ? 'Đang tải lên...' : 'Tải ảnh lên' }}
+          </button>
+        </ng-container>
+        <label class="form-label mt-3">Hoặc dán link ảnh</label>
+        <input class="form-control" [(ngModel)]="form.coverImage" [disabled]="!canSave" placeholder="https://...">
+      </div>
+
+      <div class="info-card">
+        <h3 class="section-title">Thông tin bài</h3>
+        <div class="mb-3">
+          <label class="form-label">Chuyên mục</label>
+          <select class="form-select" [(ngModel)]="form.category" [disabled]="!canSave">
+            <option *ngFor="let c of categories" [value]="c">{{ c }}</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Thời gian đọc</label>
+          <div class="input-group">
+            <input class="form-control" [(ngModel)]="form.readTime" [disabled]="!canSave">
+            <button type="button" class="btn btn-outline-primary" *ngIf="canSave" (click)="estimateReadTime()" title="Tính theo độ dài nội dung">Tự tính</button>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Link video (TikTok / Reel / YouTube)</label>
+          <input class="form-control" [(ngModel)]="form.videoUrl" [disabled]="!canSave" placeholder="https://...">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Thẻ (cách nhau bằng dấu phẩy)</label>
+          <input class="form-control" [(ngModel)]="form.tags" [disabled]="!canSave" placeholder="decor, phòng ngủ, in 3D">
+        </div>
+        <div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" id="featured" [(ngModel)]="form.featured" [disabled]="!canSave">
+          <label class="form-check-label" for="featured">Bài nổi bật (hiện đầu trang Tin tức)</label>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <h3 class="section-title">Tác giả</h3>
+        <div class="mb-3">
+          <label class="form-label">Tên hiển thị</label>
+          <input class="form-control" [(ngModel)]="form.authorName" [disabled]="!canSave">
+        </div>
+        <div>
+          <label class="form-label">Chức danh</label>
+          <input class="form-control" [(ngModel)]="form.authorRole" [disabled]="!canSave">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

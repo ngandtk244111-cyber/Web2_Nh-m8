@@ -1,9 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AdminAuthService } from '../../core/services/admin-auth.service';
 
+/** Đăng nhập nhân viên — bố cục 2 cột như login/ của Vita (minh hoạ trái, thẻ đăng nhập phải). */
 @Component({
   selector: 'app-login',
   standalone: true,
@@ -11,17 +12,27 @@ import { AdminAuthService } from '../../core/services/admin-auth.service';
   templateUrl: './login.component.html',
   styleUrl: './login.component.css'
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
+  private adminAuth = inject(AdminAuthService);
+  private router = inject(Router);
+
   username = '';
   password = '';
   submitting = false;
   error = '';
   showPassword = false;
 
-  constructor(private adminAuth: AdminAuthService, private router: Router) {}
+  ngOnInit(): void {
+    // Đã đăng nhập thì vào thẳng Tổng quan (token hết hạn sẽ bị interceptor đưa lại về đây).
+    if (this.adminAuth.currentAdmin() && this.adminAuth.token) this.router.navigate(['/dashboard']);
+  }
 
   submit(): void {
-    if (!this.username.trim() || !this.password.trim() || this.submitting) return;
+    if (this.submitting) return;
+    if (!this.username.trim() || !this.password.trim()) {
+      this.error = 'Vui lòng nhập tên đăng nhập và mật khẩu';
+      return;
+    }
 
     this.submitting = true;
     this.error = '';
@@ -30,7 +41,7 @@ export class LoginComponent {
       next: (res) => {
         this.submitting = false;
         if (res.success) {
-          this.router.navigate(['/']);
+          this.router.navigate(['/dashboard']);
         } else {
           this.error = res.error || 'Sai tên đăng nhập hoặc mật khẩu';
         }

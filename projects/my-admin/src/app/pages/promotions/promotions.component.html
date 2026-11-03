@@ -1,0 +1,136 @@
+<div class="admin-page">
+  <div class="page-breadcrumb">
+    Marketing <span class="sep">/</span> <span class="current">Khuyến mãi</span>
+  </div>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Khuyến mãi & voucher</h1>
+      <p class="page-subtitle">Mã giảm giá khách nhập ở giỏ hàng — mỗi khách dùng mỗi mã 1 lần</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn-header" (click)="exportExcel()"><i class="bi bi-file-earmark-excel"></i> Xuất Excel</button>
+      <button type="button" class="btn-add-action" *ngIf="adminAuth.can('marketing.create')" (click)="openCreate()">
+        <i class="bi bi-plus-lg"></i> Tạo mã giảm giá
+      </button>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <button type="button" *ngFor="let f of filters" class="stat-card" [ngClass]="f.tone"
+      [class.active]="filter() === f.key" (click)="setFilter(f.key)">
+      <span class="stat-label">{{ f.label }}</span>
+      <span class="stat-value">{{ count(f.key) }}</span>
+    </button>
+  </div>
+
+  <div class="filter-bar">
+    <div class="filter-left">
+      <div class="search-wrapper">
+        <input type="text" class="search-input" placeholder="Tìm mã hoặc mô tả..." [ngModel]="search()" (ngModelChange)="onSearch($event)">
+        <i class="bi bi-search search-icon"></i>
+      </div>
+    </div>
+    <div class="actions-group">
+      <span class="selection-info">{{ filtered().length }} mã</span>
+      <button type="button" class="action-btn" (click)="reload()"><i class="bi bi-arrow-clockwise"></i> Tải lại</button>
+    </div>
+  </div>
+
+  <app-mascot-loading *ngIf="loading()" message="Đang tải mã giảm giá…" [overlay]="false"></app-mascot-loading>
+
+  <div class="table-scrollable" *ngIf="!loading()">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Mã</th>
+          <th>Ưu đãi</th>
+          <th>Điều kiện</th>
+          <th>Lượt dùng</th>
+          <th>Hết hạn</th>
+          <th>Trạng thái</th>
+          <th class="text-right">Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let c of visible()">
+          <td>
+            <span class="coupon-code">{{ c.code }}</span>
+            <span class="cell-sub">{{ c.description || 'Không có mô tả' }}</span>
+          </td>
+          <td>
+            <span class="cell-strong">Giảm {{ c.discountPercent }}%</span>
+            <span class="cell-sub" *ngIf="c.maxDiscount">Tối đa {{ c.maxDiscount | vnd }}</span>
+          </td>
+          <td>{{ c.minSpend ? 'Đơn từ ' + (c.minSpend | vnd) : 'Mọi đơn' }}</td>
+          <td class="usage-cell">
+            <span>{{ c.usedCount }} / {{ c.limitCount || '∞' }}</span>
+            <div class="progress usage-bar" *ngIf="c.limitCount">
+              <div class="progress-bar" [style.width.%]="usagePercent(c)"></div>
+            </div>
+          </td>
+          <td>{{ c.endDate ? (c.endDate | date:'dd/MM/yyyy') : 'Không giới hạn' }}</td>
+          <td><span class="status-badge" [ngClass]="statusView[c.status].cls">{{ statusView[c.status].label }}</span></td>
+          <td class="text-right">
+            <button type="button" class="action-btn sm" [class.danger]="c.active" [class.success]="!c.active"
+              *ngIf="adminAuth.can('marketing.edit')" (click)="toggle(c)">
+              <i class="bi" [ngClass]="c.active ? 'bi-pause-circle' : 'bi-play-circle'"></i> {{ c.active ? 'Tạm ngưng' : 'Bật lại' }}
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="empty-state" *ngIf="filtered().length === 0">
+      <i class="bi bi-ticket-perforated"></i>
+      Chưa có mã giảm giá nào khớp bộ lọc.
+    </div>
+    <app-pager [total]="filtered().length" [page]="page()" [pageSize]="pageSize" (pageChange)="page.set($event)"></app-pager>
+  </div>
+</div>
+
+<!-- Tạo mã -->
+<div class="modal-overlay" *ngIf="showModal" (click)="showModal = false">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">Tạo mã giảm giá</h3>
+      <button type="button" class="close-btn" (click)="showModal = false">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Mã voucher <span class="req">*</span></label>
+          <input class="form-control text-uppercase" [(ngModel)]="form.code" placeholder="VD: LUMEA10" maxlength="30">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Ngày hết hạn</label>
+          <input type="text" class="form-control" appDatePicker [(ngModel)]="form.endDate" placeholder="Bỏ trống = không giới hạn">
+        </div>
+        <div class="col-12">
+          <label class="form-label">Mô tả hiển thị cho khách</label>
+          <input class="form-control" [(ngModel)]="form.description" placeholder="VD: Giảm 10% cho đơn từ 200.000đ">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Phần trăm giảm (%) <span class="req">*</span></label>
+          <input type="number" min="1" max="100" class="form-control" [(ngModel)]="form.discountPercent">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Giảm tối đa (đ)</label>
+          <input type="number" min="0" class="form-control" [(ngModel)]="form.maxDiscount">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Đơn tối thiểu (đ)</label>
+          <input type="number" min="0" class="form-control" [(ngModel)]="form.minSpend">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Giới hạn lượt dùng</label>
+          <input type="number" min="0" class="form-control" [(ngModel)]="form.limitCount">
+          <div class="form-hint">0 = không giới hạn</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn-cancel" (click)="showModal = false">Huỷ</button>
+      <button type="button" class="btn-save" [disabled]="saving" (click)="save()"><i class="bi bi-save"></i> Tạo mã</button>
+    </div>
+  </div>
+</div>

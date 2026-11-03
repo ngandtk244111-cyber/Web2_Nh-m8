@@ -1,0 +1,146 @@
+<div class="admin-page">
+  <div class="page-breadcrumb">
+    Sản phẩm & kho <span class="sep">/</span> <span class="current">Danh mục</span>
+  </div>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Danh mục sản phẩm</h1>
+      <p class="page-subtitle">Nhóm sản phẩm hiển thị trên menu cửa hàng — số sản phẩm tính từ dữ liệu thật</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn-add-action" *ngIf="adminAuth.can('products.create')" [disabled]="!configLoaded()" (click)="openAdd()">
+        <i class="bi bi-plus-lg"></i> Thêm danh mục
+      </button>
+    </div>
+  </div>
+
+  <div class="chip-tabs">
+    <a routerLink="/products" class="chip-tab">Sản phẩm</a>
+    <a routerLink="/categories" class="chip-tab active">Danh mục</a>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card static">
+      <span class="stat-label">Danh mục</span>
+      <span class="stat-value">{{ categories().length }}</span>
+    </div>
+    <div class="stat-card static tone-success">
+      <span class="stat-label">Đang hiển thị</span>
+      <span class="stat-value">{{ activeCount }}</span>
+    </div>
+    <div class="stat-card static tone-neutral">
+      <span class="stat-label">Đang ẩn</span>
+      <span class="stat-value">{{ categories().length - activeCount }}</span>
+    </div>
+    <div class="stat-card static tone-info">
+      <span class="stat-label">Tổng sản phẩm</span>
+      <span class="stat-value">{{ totalProducts }}</span>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <div class="filter-left">
+      <div class="search-wrapper">
+        <input type="text" class="search-input" placeholder="Tìm danh mục..." [ngModel]="search()" (ngModelChange)="search.set($event)">
+        <i class="bi bi-search search-icon"></i>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-scrollable">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Danh mục</th>
+          <th>Đường dẫn</th>
+          <th>Nhóm</th>
+          <th class="text-right">Sản phẩm</th>
+          <th>Trạng thái</th>
+          <th class="text-right">Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let c of filtered()">
+          <td>
+            <div class="cell-media">
+              <span class="cat-icon"><i class="bi" [ngClass]="c.icon"></i></span>
+              <div>
+                <span class="cell-strong">{{ c.name }}</span>
+                <span class="cell-sub">{{ c.desc }}</span>
+              </div>
+            </div>
+          </td>
+          <td><code>/{{ c.slug }}</code></td>
+          <td><span class="tag">{{ c.group === 'FURNITURE' ? 'Nội thất' : 'Decor' }}</span></td>
+          <td class="text-right cell-strong">{{ c.productCount }}</td>
+          <td><span class="status-badge" [ngClass]="c.active ? 'status-green' : 'status-gray'">{{ c.active ? 'Hiển thị' : 'Đang ẩn' }}</span></td>
+          <td>
+            <div class="row-actions" *ngIf="adminAuth.can('products.edit')">
+              <button type="button" class="icon-btn" title="Sửa" (click)="openEdit(c)"><i class="bi bi-pencil"></i></button>
+              <button type="button" class="icon-btn" [title]="c.active ? 'Ẩn' : 'Hiển thị'" [disabled]="saving" (click)="toggleActive(c)">
+                <i class="bi" [ngClass]="c.active ? 'bi-eye-slash' : 'bi-eye'"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="empty-state" *ngIf="filtered().length === 0">
+      <i class="bi bi-tags"></i>
+      Không có danh mục nào.
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showModal" (click)="showModal = false">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">{{ editingId ? 'Sửa danh mục' : 'Thêm danh mục' }}</h3>
+      <button type="button" class="close-btn" (click)="showModal = false">&times;</button>
+    </div>
+    <form class="modal-body" (ngSubmit)="save()">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Tên danh mục <span class="req">*</span></label>
+          <input class="form-control" name="name" [(ngModel)]="form.name">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Đường dẫn (slug)</label>
+          <input class="form-control" name="slug" [(ngModel)]="form.slug" placeholder="Bỏ trống để tự sinh">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Nhóm</label>
+          <select class="form-select" name="group" [(ngModel)]="form.group">
+            <option value="FURNITURE">Nội thất</option>
+            <option value="DECOR">Decor</option>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Trạng thái</label>
+          <div class="form-check form-switch mt-2">
+            <input class="form-check-input" type="checkbox" id="catActive" name="active" [(ngModel)]="form.active">
+            <label class="form-check-label" for="catActive">{{ form.active ? 'Hiển thị' : 'Ẩn' }}</label>
+          </div>
+        </div>
+        <div class="col-12">
+          <label class="form-label">Biểu tượng</label>
+          <div class="icon-picker">
+            <button type="button" *ngFor="let i of icons" class="icon-btn" [class.picked]="form.icon === i" (click)="form.icon = i">
+              <i class="bi" [ngClass]="i"></i>
+            </button>
+          </div>
+        </div>
+        <div class="col-12">
+          <label class="form-label">Mô tả ngắn</label>
+          <textarea class="form-control" rows="2" name="desc" [(ngModel)]="form.desc"></textarea>
+        </div>
+      </div>
+      <button type="submit" hidden></button>
+    </form>
+    <div class="modal-footer">
+      <button type="button" class="btn-cancel" (click)="showModal = false">Huỷ</button>
+      <button type="button" class="btn-save" [disabled]="saving" (click)="save()"><i class="bi bi-check2"></i> Lưu</button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,25 @@
+.date-range {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.date-range .form-control,
+.date-range ::ng-deep .form-control {
+  width: 130px;
+  font-size: 14px;
+  padding: 8px 10px;
+}
+
+.order-code {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.order-code:hover {
+  text-decoration: underline;
+}
+
+.cell-product {
+  max-width: 280px;
+}

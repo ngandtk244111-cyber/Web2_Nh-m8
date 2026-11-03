@@ -1,5 +1,6 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Observable, map, tap } from 'rxjs';
 import { Room } from '../models/room.model';
 import { Product } from '../models/product.model';
 import { ProductService } from './product.service';
@@ -56,5 +57,26 @@ export class RoomService {
     return productIds
       .map(id => this.productService.getProductById(id))
       .filter((p): p is Product => p !== undefined);
+  }
+
+  create(data: Partial<Room>): Observable<Room> {
+    return this.http.post<{ success: boolean; room: Room }>(BASE, data).pipe(
+      map(res => res.room),
+      tap(room => this.roomsSignal.update(list => [...list, room]))
+    );
+  }
+
+  update(id: string, data: Partial<Room>): Observable<Room> {
+    return this.http.put<{ success: boolean; room: Room }>(`${BASE}/${encodeURIComponent(id)}`, data).pipe(
+      map(res => res.room),
+      tap(room => this.roomsSignal.update(list => list.map(r => r.id === id ? room : r)))
+    );
+  }
+
+  delete(id: string): Observable<void> {
+    return this.http.delete<{ success: boolean }>(`${BASE}/${encodeURIComponent(id)}`).pipe(
+      map(() => undefined),
+      tap(() => this.roomsSignal.update(list => list.filter(r => r.id !== id)))
+    );
   }
 }

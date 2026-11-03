@@ -1,0 +1,33 @@
+.min-w-0 {
+  min-width: 0;
+}
+
+.img-main {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-neutral-30);
+  background: var(--color-neutral-20);
+}
+
+.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-neutral-50);
+  font-size: 36px;
+  border-style: dashed;
+}
+
+.img-second {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.thumb.lg {
+  width: 80px;
+  height: 80px;
+  font-size: 24px;
+}

@@ -26,7 +26,7 @@ const F = {
   eyebrow: { key: 'eyebrow', label: 'Dòng chữ nhỏ phía trên' },
   badge: { key: 'eyebrow', label: 'Nhãn' },
   cta: { key: 'ctaText', label: 'Chữ trên nút' },
-  link: { key: 'ctaLink', label: 'Link (bắt đầu bằng /)' },
+  link: { key: 'ctaLink', label: 'Nút dẫn tới trang' },
   code: { key: 'code', label: 'Mã ưu đãi' },
   video: { key: 'videoUrl', label: 'URL video (link trực tiếp .mp4)' },
   alt: { key: 'title', label: 'Mô tả ảnh (cho trình đọc màn hình)' },

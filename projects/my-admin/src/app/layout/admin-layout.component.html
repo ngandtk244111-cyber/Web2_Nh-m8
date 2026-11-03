@@ -1,0 +1,147 @@
+<div class="admin-wrapper" [class.collapsed]="isSidebarCollapsed">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <a class="sidebar-header" routerLink="/dashboard" title="Tổng quan">
+      <img *ngIf="!isSidebarCollapsed" src="logo/lumea-logo-white.png" alt="Luméa" class="logo-full">
+      <img *ngIf="isSidebarCollapsed" src="logo/lumea-mark.png" alt="Luméa" class="logo-mark">
+    </a>
+
+    <nav class="sidebar-nav">
+      <ul>
+        <li class="nav-item">
+          <a [routerLink]="'/' + dashboardNav.path" routerLinkActive="active" class="nav-link" [title]="dashboardNav.label">
+            <span class="icon-wrapper"><i class="bi" [ngClass]="dashboardNav.icon"></i></span>
+            <span class="text">{{ dashboardNav.label }}</span>
+          </a>
+        </li>
+
+        <li *ngFor="let group of groups" class="nav-item has-submenu"
+          [class.open]="isGroupOpen(group)" [class.group-active]="isGroupActive(group)"
+          (mouseenter)="onGroupEnter(group, $event)" (mouseleave)="onGroupLeave()">
+          <button type="button" class="nav-link nav-link-button" (click)="toggleGroup(group)" [title]="group.label">
+            <span class="icon-wrapper"><i class="bi" [ngClass]="group.icon"></i></span>
+            <span class="text submenu-title">
+              {{ group.label }}
+              <i class="bi" [ngClass]="isGroupOpen(group) ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+            </span>
+          </button>
+
+          <ul class="submenu" *ngIf="isGroupOpen(group) && !isSidebarCollapsed">
+            <li *ngFor="let item of visibleItems(group)">
+              <a [routerLink]="'/' + item.path" routerLinkActive="active" class="submenu-link">{{ item.label }}</a>
+            </li>
+          </ul>
+
+          <!-- Sidebar thu gọn: menu bay khi rê chuột -->
+          <div class="float-menu" *ngIf="isSidebarCollapsed && flyoutGroup === group.key" [style.top.px]="flyoutTop">
+            <div class="float-title">{{ group.label }}</div>
+            <ul>
+              <li *ngFor="let item of visibleItems(group)">
+                <a [routerLink]="'/' + item.path" routerLinkActive="active" class="submenu-link">{{ item.label }}</a>
+              </li>
+            </ul>
+          </div>
+        </li>
+      </ul>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <main class="main-content">
+    <header class="top-bar">
+      <div class="header-left">
+        <button type="button" class="menu-toggle" (click)="toggleSidebar()" [title]="isSidebarCollapsed ? 'Mở rộng menu' : 'Thu gọn menu'">
+          <i class="bi" [ngClass]="isSidebarCollapsed ? 'bi-chevron-right' : 'bi-chevron-left'"></i>
+        </button>
+      </div>
+
+      <div class="header-right">
+        <a class="store-link" [href]="clientAppUrl" target="_blank" rel="noopener">
+          <i class="bi bi-shop"></i><span>Xem cửa hàng</span>
+        </a>
+
+        <!-- Thông báo -->
+        <div class="header-dropdown">
+          <button type="button" class="notice-btn" (click)="toggleNotice($event)" title="Việc cần xử lý">
+            <i class="bi bi-bell"></i>
+            <span class="notice-count" *ngIf="notice.total() > 0">{{ notice.total() > 99 ? '99+' : notice.total() }}</span>
+          </button>
+          <div class="dropdown-panel notice-panel" *ngIf="isNoticeOpen" (click)="$event.stopPropagation()">
+            <div class="panel-head">Việc cần xử lý</div>
+            <button type="button" class="notice-item" *ngFor="let n of notice.notices()" (click)="openNotice(n.link, n.query)">
+              <span class="notice-icon"><i class="bi" [ngClass]="n.icon"></i></span>
+              <span class="notice-label">{{ n.label }}</span>
+              <span class="notice-num">{{ n.count }}</span>
+            </button>
+            <div class="panel-empty" *ngIf="notice.notices().length === 0">
+              <i class="bi bi-check2-circle"></i> Không có việc nào đang chờ
+            </div>
+          </div>
+        </div>
+
+        <!-- Tài khoản -->
+        <div class="header-dropdown">
+          <button type="button" class="header-user-profile" (click)="toggleProfile($event)">
+            <span class="avatar-circle">{{ adminInitials }}</span>
+            <span class="user-info">
+              <span class="name">{{ adminName }}</span>
+              <span class="role">{{ adminRole }}</span>
+            </span>
+            <i class="bi bi-chevron-down caret"></i>
+          </button>
+          <div class="dropdown-panel profile-panel" *ngIf="isProfileOpen" (click)="$event.stopPropagation()">
+            <div class="profile-head">
+              <div class="name">{{ adminName }}</div>
+              <div class="meta">{{ adminAuth.currentAdmin()?.username }}<span *ngIf="adminAuth.currentAdmin()?.email"> · {{ adminAuth.currentAdmin()?.email }}</span></div>
+            </div>
+            <button type="button" class="profile-item" (click)="openPasswordModal()">
+              <i class="bi bi-key"></i> Đổi mật khẩu
+            </button>
+            <button type="button" class="profile-item danger" (click)="logout()">
+              <i class="bi bi-box-arrow-right"></i> Đăng xuất
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="content-body">
+      <router-outlet></router-outlet>
+    </div>
+  </main>
+</div>
+
+<!-- Đổi mật khẩu -->
+<div class="modal-overlay" *ngIf="showPasswordModal" (click)="showPasswordModal = false">
+  <div class="modal-box sm" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">Đổi mật khẩu</h3>
+      <button type="button" class="close-btn" (click)="showPasswordModal = false">&times;</button>
+    </div>
+    <form class="modal-body" (ngSubmit)="changePassword()">
+      <div class="mb-3">
+        <label class="form-label">Mật khẩu hiện tại</label>
+        <input [type]="showPasswords ? 'text' : 'password'" class="form-control" name="old" [(ngModel)]="passwordForm.old" autocomplete="current-password">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Mật khẩu mới</label>
+        <input [type]="showPasswords ? 'text' : 'password'" class="form-control" name="next" [(ngModel)]="passwordForm.next" autocomplete="new-password">
+      </div>
+      <div class="mb-2">
+        <label class="form-label">Nhập lại mật khẩu mới</label>
+        <input [type]="showPasswords ? 'text' : 'password'" class="form-control" name="confirm" [(ngModel)]="passwordForm.confirm" autocomplete="new-password">
+      </div>
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" id="showPw" name="showPw" [(ngModel)]="showPasswords">
+        <label class="form-check-label" for="showPw">Hiện mật khẩu</label>
+      </div>
+      <button type="submit" hidden></button>
+    </form>
+    <div class="modal-footer">
+      <button type="button" class="btn-cancel" (click)="showPasswordModal = false">Huỷ</button>
+      <button type="button" class="btn-save" [disabled]="savingPassword" (click)="changePassword()">
+        <i class="bi bi-check2"></i> Lưu mật khẩu
+      </button>
+    </div>
+  </div>
+</div>

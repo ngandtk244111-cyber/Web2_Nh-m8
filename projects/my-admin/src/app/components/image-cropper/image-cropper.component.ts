@@ -14,6 +14,7 @@ const JPEG_QUALITY = 0.92;
   standalone: true,
   imports: [CommonModule],
   templateUrl: './image-cropper.component.html',
+  styleUrl: './image-cropper.component.css',
 })
 export class ImageCropperComponent implements OnInit, OnDestroy {
   @Input({ required: true }) file!: File;

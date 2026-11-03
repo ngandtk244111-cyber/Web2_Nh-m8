@@ -1,0 +1,163 @@
+<div class="admin-page">
+  <div class="page-breadcrumb">
+    Nội dung <span class="sep">/</span> <span class="current">Video</span>
+  </div>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Video trang chủ</h1>
+      <p class="page-subtitle">Video YouTube phát ở mục video của trang chủ — thứ tự trong bảng là thứ tự khách thấy</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn-add-action" *ngIf="adminAuth.can('content.create')" (click)="openCreate()">
+        <i class="bi bi-plus-lg"></i> Thêm video
+      </button>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card static">
+      <span class="stat-label">Tổng video</span>
+      <span class="stat-value">{{ sorted().length }}</span>
+    </div>
+    <div class="stat-card static tone-success">
+      <span class="stat-label">Đang hiển thị</span>
+      <span class="stat-value">{{ activeCount() }}</span>
+    </div>
+    <div class="stat-card static tone-neutral">
+      <span class="stat-label">Đang ẩn</span>
+      <span class="stat-value">{{ sorted().length - activeCount() }}</span>
+    </div>
+  </div>
+
+  <div class="table-scrollable">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th class="text-center">#</th>
+          <th>Video</th>
+          <th>Nút bấm</th>
+          <th>Trạng thái</th>
+          <th class="text-right">Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let v of sorted(); let i = index; let last = last">
+          <td class="text-center order-cell">
+            <span class="cell-strong">{{ i + 1 }}</span>
+            <div class="order-buttons" *ngIf="adminAuth.can('content.edit')">
+              <button type="button" class="icon-btn sm-btn" title="Lên" [disabled]="i === 0 || moving" (click)="move(v, -1)"><i class="bi bi-chevron-up"></i></button>
+              <button type="button" class="icon-btn sm-btn" title="Xuống" [disabled]="last || moving" (click)="move(v, 1)"><i class="bi bi-chevron-down"></i></button>
+            </div>
+          </td>
+          <td>
+            <div class="cell-media">
+              <button type="button" class="video-thumb" (click)="playing = v" title="Xem video">
+                <img [src]="thumb(v.youtubeId)" [alt]="v.title" (error)="onThumbError($event, v.poster)">
+                <i class="bi bi-play-circle-fill"></i>
+              </button>
+              <div>
+                <span class="cell-strong">{{ v.title }}</span>
+                <span class="cell-sub video-desc">{{ v.description }}</span>
+              </div>
+            </div>
+          </td>
+          <td>
+            <span *ngIf="v.link; else noLink">{{ v.ctaLabel || 'Xem thêm' }}<span class="cell-sub">{{ v.link }}</span></span>
+            <ng-template #noLink><span class="text-muted-2">—</span></ng-template>
+          </td>
+          <td><span class="status-badge" [ngClass]="v.active ? 'status-green' : 'status-gray'">{{ v.active ? 'Đang hiện' : 'Đang ẩn' }}</span></td>
+          <td>
+            <div class="row-actions">
+              <button type="button" class="icon-btn" [title]="v.active ? 'Ẩn khỏi trang chủ' : 'Hiện trên trang chủ'" *ngIf="adminAuth.can('content.edit')" (click)="toggleActive(v)">
+                <i class="bi" [ngClass]="v.active ? 'bi-eye-slash' : 'bi-eye'"></i>
+              </button>
+              <button type="button" class="icon-btn" title="Sửa" *ngIf="adminAuth.can('content.edit')" (click)="openEdit(v)"><i class="bi bi-pencil"></i></button>
+              <button type="button" class="icon-btn danger" title="Xoá" *ngIf="adminAuth.can('content.delete')" (click)="remove(v)"><i class="bi bi-trash"></i></button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="empty-state" *ngIf="sorted().length === 0">
+      <i class="bi bi-play-btn"></i>
+      Chưa có video nào.
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showModal" (click)="showModal = false">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">{{ editing ? 'Sửa video' : 'Thêm video' }}</h3>
+      <button type="button" class="close-btn" (click)="showModal = false">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="row g-3">
+        <div class="col-12">
+          <label class="form-label">Link YouTube <span class="req">*</span></label>
+          <input class="form-control" [(ngModel)]="form.youtubeId" placeholder="https://www.youtube.com/watch?v=... hoặc youtu.be/...">
+          <div class="form-hint text-danger" *ngIf="form.youtubeId && !previewId">Không đọc được ID video từ link này</div>
+        </div>
+        <div class="col-12" *ngIf="previewId">
+          <div class="ratio ratio-16x9 preview-player">
+            <iframe [src]="embedUrl(previewId, false)" title="Xem trước video" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+          </div>
+          <div class="form-hint">Đây là video khách sẽ xem trên trang chủ — kiểm tra đúng nội dung trước khi lưu.</div>
+        </div>
+        <div class="col-12">
+          <label class="form-label">Tiêu đề <span class="req">*</span></label>
+          <input class="form-control" [(ngModel)]="form.title">
+        </div>
+        <div class="col-12">
+          <label class="form-label">Mô tả ngắn</label>
+          <textarea class="form-control" rows="2" [(ngModel)]="form.description"></textarea>
+        </div>
+        <div class="col-12">
+          <label class="form-label">Ảnh dự phòng (không bắt buộc)</label>
+          <input class="form-control" [(ngModel)]="form.poster" placeholder="https://...">
+          <div class="form-hint">Cửa hàng luôn hiện ảnh của chính video YouTube. Ảnh này chỉ hiện khi video bị xoá, để riêng tư hoặc không phát được.</div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Chữ trên nút</label>
+          <input class="form-control" [(ngModel)]="form.ctaLabel">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Link nút</label>
+          <input class="form-control" [(ngModel)]="form.link" placeholder="/catalog">
+        </div>
+        <div class="col-12">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="videoActive" [(ngModel)]="form.active">
+            <label class="form-check-label" for="videoActive">Hiển thị trên trang chủ</label>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn-cancel" (click)="showModal = false">Huỷ</button>
+      <button type="button" class="btn-save" [disabled]="saving" (click)="save()"><i class="bi bi-save"></i> {{ editing ? 'Lưu' : 'Đăng video' }}</button>
+    </div>
+  </div>
+</div>
+
+<!-- Xem video ngay trong admin -->
+<div class="modal-overlay" *ngIf="playing" (click)="playing = null">
+  <div class="modal-box lg" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">{{ playing.title }}</h3>
+      <button type="button" class="close-btn" (click)="playing = null">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="ratio ratio-16x9 preview-player">
+        <iframe [src]="embedUrl(playing.youtubeId)" [title]="playing.title" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+      </div>
+      <p class="mt-3 mb-0 text-muted-2 small">{{ playing.description }}</p>
+    </div>
+    <div class="modal-footer">
+      <a class="btn-cancel me-auto text-decoration-none" [href]="'https://youtu.be/' + playing.youtubeId" target="_blank" rel="noopener"><i class="bi bi-youtube"></i> Mở trên YouTube</a>
+      <button type="button" class="btn-cancel" (click)="playing = null">Đóng</button>
+      <button type="button" class="btn-save" *ngIf="adminAuth.can('content.edit')" (click)="openEdit(playing); playing = null"><i class="bi bi-pencil"></i> Sửa video</button>
+    </div>
+  </div>
+</div>

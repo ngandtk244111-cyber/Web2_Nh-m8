@@ -1,0 +1,146 @@
+<div class="admin-page">
+  <div class="page-breadcrumb">
+    Khách hàng <span class="sep">/</span> <span class="current">Đánh giá</span>
+  </div>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Đánh giá sản phẩm</h1>
+      <p class="page-subtitle">Đánh giá đăng ngay không cần duyệt — phản hồi khách chưa hài lòng, ghim đánh giá hay, ẩn nội dung vi phạm</p>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <button type="button" *ngFor="let f of filters" class="stat-card" [ngClass]="f.tone"
+      [class.active]="filter() === f.key" (click)="setFilter(f.key)">
+      <span class="stat-label">{{ f.label }}</span>
+      <span class="stat-value">{{ count(f.key) }}</span>
+    </button>
+  </div>
+
+  <div class="reviews-layout">
+    <!-- Danh sách -->
+    <div>
+      <div class="filter-bar">
+        <div class="filter-left">
+          <div class="search-wrapper">
+            <input type="text" class="search-input" placeholder="Sản phẩm, khách hoặc nội dung..."
+              [ngModel]="search()" (ngModelChange)="search.set($event); page.set(1)">
+            <i class="bi bi-search search-icon"></i>
+          </div>
+          <select class="form-select filter-select" [ngModel]="starFilter() + ''" (ngModelChange)="setStar($event)">
+            <option value="ALL">Mọi số sao</option>
+            <option *ngFor="let s of stars" [value]="s + ''">{{ s }} sao</option>
+          </select>
+        </div>
+        <span class="selection-info">{{ filtered().length }} đánh giá</span>
+      </div>
+
+      <div class="table-scrollable">
+        <div class="review-item" *ngFor="let r of visible()" [class.hidden-review]="r.status === 'HIDDEN'">
+          <div class="review-head">
+            <img class="thumb" [src]="r.productImage" [alt]="r.productName" loading="lazy">
+            <div class="flex-grow-1 min-w-0">
+              <a class="product-link" [href]="productUrl(r)" target="_blank" rel="noopener">{{ r.productName }} <i class="bi bi-box-arrow-up-right"></i></a>
+              <div class="review-meta">
+                <span class="stars"><i *ngFor="let on of starArray(r.rating)" class="bi" [ngClass]="on ? 'bi-star-fill' : 'bi-star'"></i></span>
+                <b>{{ r.author }}</b>
+                <span class="tag success" *ngIf="r.verifiedPurchase"><i class="bi bi-patch-check"></i> Đã mua</span>
+                <span class="tag info" *ngIf="r.pinned"><i class="bi bi-pin-angle"></i> Đang ghim</span>
+                <span class="tag" *ngIf="r.status === 'HIDDEN'"><i class="bi bi-eye-slash"></i> Đã ẩn</span>
+                <span class="text-muted-2">{{ r.date }}</span>
+              </div>
+            </div>
+          </div>
+
+          <p class="review-comment">{{ r.comment || '(Không có nội dung)' }}</p>
+          <div class="review-images" *ngIf="r.images?.length">
+            <a *ngFor="let img of r.images" [href]="img" target="_blank" rel="noopener"><img [src]="img" alt="Ảnh đánh giá" class="thumb"></a>
+          </div>
+
+          <div class="notice-box warning mb-2" *ngIf="r.status === 'HIDDEN' && r.hiddenReason">
+            Lý do ẩn: {{ r.hiddenReason }}
+          </div>
+
+          <div class="reply" *ngIf="r.reply?.text && replyingId !== key(r)">
+            <div class="reply-title"><i class="bi bi-reply"></i> Luméa phản hồi · {{ r.reply?.date }}</div>
+            <div>{{ r.reply?.text }}</div>
+          </div>
+
+          <!-- Soạn phản hồi -->
+          <div class="reply-editor" *ngIf="replyingId === key(r)">
+            <div class="d-flex gap-2 flex-wrap mb-2">
+              <button type="button" class="chip-tab" *ngFor="let t of replyTemplates" (click)="replyText = t" [title]="t">{{ t.slice(0, 34) }}…</button>
+            </div>
+            <textarea class="form-control mb-2" rows="3" [(ngModel)]="replyText" placeholder="Nội dung phản hồi công khai..."></textarea>
+            <div class="d-flex gap-2 justify-content-end">
+              <button type="button" class="btn-cancel" (click)="cancelReply()">Huỷ</button>
+              <button type="button" class="btn-save" [disabled]="busy" (click)="saveReply(r)"><i class="bi bi-send"></i> Đăng phản hồi</button>
+            </div>
+          </div>
+
+          <div class="review-actions" *ngIf="canEdit && replyingId !== key(r)">
+            <ng-container *ngIf="r.status !== 'HIDDEN'">
+              <button type="button" class="action-btn sm" (click)="startReply(r)">
+                <i class="bi" [ngClass]="r.reply?.text ? 'bi-pencil' : 'bi-reply'"></i> {{ r.reply?.text ? 'Sửa phản hồi' : 'Phản hồi' }}
+              </button>
+              <button type="button" class="action-btn sm danger" *ngIf="r.reply?.text" [disabled]="busy" (click)="deleteReply(r)">
+                <i class="bi bi-trash"></i> Xoá phản hồi
+              </button>
+              <button type="button" class="action-btn sm" [class.active]="r.pinned" [disabled]="busy" (click)="togglePinned(r)">
+                <i class="bi bi-pin-angle"></i> {{ r.pinned ? 'Bỏ ghim' : 'Ghim' }}
+              </button>
+              <button type="button" class="action-btn sm danger" (click)="openHide(r)"><i class="bi bi-eye-slash"></i> Ẩn</button>
+            </ng-container>
+            <button type="button" class="action-btn sm success" *ngIf="r.status === 'HIDDEN'" [disabled]="busy" (click)="showAgain(r)">
+              <i class="bi bi-eye"></i> Hiện lại
+            </button>
+          </div>
+        </div>
+
+        <div class="empty-state" *ngIf="filtered().length === 0">
+          <i class="bi bi-chat-square-heart"></i>
+          {{ filter() === 'NEEDS_ACTION' ? 'Không có đánh giá xấu nào đang chờ phản hồi.' : 'Không có đánh giá nào khớp bộ lọc.' }}
+        </div>
+        <app-pager [total]="filtered().length" [page]="page()" [pageSize]="pageSize" (pageChange)="page.set($event)"></app-pager>
+      </div>
+    </div>
+
+    <!-- Tổng quan điểm -->
+    <div class="info-card summary">
+      <h3 class="section-title">Điểm đánh giá</h3>
+      <div class="avg">
+        <span class="avg-num">{{ stats().average | number:'1.1-1' }}</span>
+        <span class="stars"><i *ngFor="let on of starArray(stats().average + 0.5)" class="bi" [ngClass]="on ? 'bi-star-fill' : 'bi-star'"></i></span>
+        <span class="text-muted-2 small">{{ stats().total }} đánh giá đang hiển thị</span>
+      </div>
+      <button type="button" class="dist-row" *ngFor="let s of stats().byStar" (click)="setStar(s.star + '')" [class.active]="starFilter() === s.star">
+        <span class="dist-label">{{ s.star }} <i class="bi bi-star-fill"></i></span>
+        <span class="dist-bar"><span [style.width.%]="s.percent"></span></span>
+        <span class="dist-count">{{ s.count }}</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Ẩn đánh giá -->
+<div class="modal-overlay" *ngIf="hiding as r" (click)="hiding = null">
+  <div class="modal-box sm" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">Ẩn đánh giá</h3>
+      <button type="button" class="close-btn" (click)="hiding = null">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p class="small text-muted-2">Đánh giá của <b>{{ r.author }}</b> cho “{{ r.productName }}” sẽ không hiện với khách nữa.</p>
+      <label class="form-label">Lý do</label>
+      <select class="form-select mb-2" [(ngModel)]="hideReason">
+        <option *ngFor="let x of hideReasons" [value]="x">{{ x }}</option>
+      </select>
+      <input class="form-control" [(ngModel)]="hideReason" placeholder="Hoặc nhập lý do khác">
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn-cancel" (click)="hiding = null">Huỷ</button>
+      <button type="button" class="btn-save danger" [disabled]="busy || !hideReason.trim()" (click)="confirmHide()"><i class="bi bi-eye-slash"></i> Ẩn đánh giá</button>
+    </div>
+  </div>
+</div>

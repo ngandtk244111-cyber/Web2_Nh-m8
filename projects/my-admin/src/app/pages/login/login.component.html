@@ -1,95 +1,55 @@
 <div class="login-wrapper">
   <div class="login-container">
-
-    <!-- Trái: logo + hình minh hoạ -->
+    <!-- Trái: thương hiệu & minh hoạ -->
     <div class="left-panel">
-      <div class="brand-header">
-        <img src="/logo/lumea-logo.png" alt="Luméa Interior & 3D">
-      </div>
-
+      <img src="logo/lumea-logo.png" alt="Luméa" class="brand-logo">
       <div class="illustration-box">
-        <svg class="illustration-main" viewBox="0 0 800 560" role="img" aria-label="Phòng khách với sofa, đèn và cây xanh">
-          <circle cx="330" cy="250" r="210" fill="#E2B4BC" opacity="0.55"/>
-          <circle cx="540" cy="190" r="140" fill="#A3152D" opacity="0.14"/>
-
-          <!-- Khung tranh -->
-          <rect x="300" y="110" width="120" height="150" rx="6" fill="#FFFFFF" stroke="#E3D5BA" stroke-width="4"/>
-          <path d="M322 232v-62a38 38 0 0 1 76 0v62" fill="none" stroke="#A3152D" stroke-width="6"/>
-          <rect x="450" y="140" width="90" height="90" rx="6" fill="#FFFFFF" stroke="#E3D5BA" stroke-width="4"/>
-          <circle cx="495" cy="185" r="24" fill="#B7485B" opacity="0.75"/>
-
-          <!-- Đèn cây -->
-          <rect x="166" y="210" width="6" height="280" fill="#3C332D"/>
-          <rect x="136" y="486" width="66" height="8" rx="4" fill="#3C332D"/>
-          <path d="M124 214l22-76h46l22 76z" fill="#FBF8F1" stroke="#E3D5BA" stroke-width="3"/>
-          <path d="M124 214h90l60 150H64z" fill="#FBF8F1" opacity="0.5"/>
-
-          <!-- Sofa -->
-          <rect x="250" y="300" width="340" height="120" rx="26" fill="#891226"/>
-          <rect x="226" y="350" width="60" height="130" rx="24" fill="#A3152D"/>
-          <rect x="554" y="350" width="60" height="130" rx="24" fill="#A3152D"/>
-          <rect x="270" y="400" width="300" height="72" rx="18" fill="#A3152D"/>
-          <rect x="280" y="326" width="134" height="84" rx="18" fill="#B7485B"/>
-          <rect x="426" y="326" width="134" height="84" rx="18" fill="#B7485B"/>
-          <rect x="270" y="472" width="12" height="24" rx="3" fill="#3C332D"/>
-          <rect x="558" y="472" width="12" height="24" rx="3" fill="#3C332D"/>
-
-          <!-- Cây -->
-          <path d="M680 410c-50-30-54-88-40-120 34 18 60 62 40 120z" fill="#2D6A4F"/>
-          <path d="M682 410c44-34 58-82 40-128-32 26-56 72-40 128z" fill="#40916C"/>
-          <path d="M681 414c-6-40-4-72 2-108" fill="none" stroke="#1B4332" stroke-width="3"/>
-          <path d="M642 410h78l-12 86h-54z" fill="#FBF8F1" stroke="#E3D5BA" stroke-width="3"/>
-
-          <!-- Sàn -->
-          <rect x="70" y="494" width="680" height="6" rx="3" fill="#E3D5BA"/>
-        </svg>
+        <img src="mascot/lumea-mascot.png" alt="" class="illustration-main">
       </div>
+      <p class="brand-caption">Trang quản trị Luméa — nội thất tối giản & decor in 3D</p>
     </div>
 
-    <!-- Phải: form đăng nhập -->
+    <!-- Phải: thẻ đăng nhập -->
     <div class="right-panel">
       <div class="login-card">
         <h2 class="form-title">Đăng nhập</h2>
+        <p class="form-sub">Dành cho nhân viên Luméa</p>
 
-        <div *ngIf="error" class="alert-error">{{ error }}</div>
+        <div class="alert-error" *ngIf="error" role="alert">
+          <i class="bi bi-exclamation-circle"></i> {{ error }}
+        </div>
 
-        <form (ngSubmit)="submit()">
+        <form (ngSubmit)="submit()" novalidate>
           <div class="form-group">
             <label for="username">Tên đăng nhập<span class="required">*</span></label>
-            <input
-              id="username"
-              type="text"
-              [(ngModel)]="username"
-              name="username"
-              autocomplete="username"
-              placeholder="Nhập tên đăng nhập"
-              [disabled]="submitting">
+            <div class="input-icon">
+              <i class="bi bi-person"></i>
+              <input id="username" name="username" type="text" class="form-control" autocomplete="username"
+                placeholder="Nhập tên đăng nhập" [(ngModel)]="username" (input)="error = ''" autofocus>
+            </div>
           </div>
 
           <div class="form-group">
             <label for="password">Mật khẩu<span class="required">*</span></label>
-            <div class="password-wrapper">
-              <input
-                id="password"
-                [type]="showPassword ? 'text' : 'password'"
-                [(ngModel)]="password"
-                name="password"
-                autocomplete="current-password"
-                placeholder="Nhập mật khẩu"
-                [disabled]="submitting">
+            <div class="input-icon">
+              <i class="bi bi-lock"></i>
+              <input id="password" name="password" [type]="showPassword ? 'text' : 'password'" class="form-control"
+                autocomplete="current-password" placeholder="Nhập mật khẩu" [(ngModel)]="password" (input)="error = ''">
               <button type="button" class="toggle-btn" (click)="showPassword = !showPassword"
                 [attr.aria-label]="showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'">
-                <i class="eye-icon" [class.visible]="showPassword"></i>
+                <i class="bi" [ngClass]="showPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
               </button>
             </div>
           </div>
 
-          <button type="submit" class="submit-btn" [disabled]="!username.trim() || !password.trim() || submitting">
-            {{ submitting ? 'Đang xử lý...' : 'Đăng nhập' }}
+          <p class="hint-text"><i class="bi bi-info-circle"></i> Quên mật khẩu? Liên hệ Super Admin để được cấp lại.</p>
+
+          <button type="submit" class="submit-btn" [disabled]="submitting">
+            <span *ngIf="submitting" class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+            {{ submitting ? 'Đang đăng nhập…' : 'Đăng nhập' }}
           </button>
         </form>
       </div>
     </div>
-
   </div>
 </div>

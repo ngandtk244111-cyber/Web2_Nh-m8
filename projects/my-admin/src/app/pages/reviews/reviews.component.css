@@ -1,0 +1,170 @@
+.reviews-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 16px;
+  align-items: start;
+}
+
+.min-w-0 {
+  min-width: 0;
+}
+
+.review-item {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--color-neutral-30);
+}
+
+.review-item.hidden-review {
+  background: var(--color-neutral-20);
+}
+
+.review-head {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.product-link {
+  font-weight: 700;
+  color: var(--color-text-primary);
+  text-decoration: none;
+}
+
+.product-link:hover {
+  color: var(--color-primary);
+}
+
+.product-link i {
+  font-size: 11px;
+}
+
+.review-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  margin-top: 2px;
+}
+
+.stars {
+  color: #F2A900;
+  white-space: nowrap;
+}
+
+.review-comment {
+  margin: 10px 0 8px;
+  font-size: 14px;
+  line-height: 1.55;
+  white-space: pre-line;
+}
+
+.review-images {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.reply {
+  background: var(--color-bg-light);
+  border-left: 3px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.reply-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: 2px;
+}
+
+.reply-editor {
+  margin-top: 6px;
+}
+
+.review-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.summary {
+  position: sticky;
+  top: 0;
+}
+
+.avg {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.avg-num {
+  font-size: 40px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--color-primary);
+}
+
+.dist-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.dist-row:hover,
+.dist-row.active {
+  background: var(--color-primary-bg);
+}
+
+.dist-label {
+  width: 34px;
+  white-space: nowrap;
+}
+
+.dist-label i {
+  color: #F2A900;
+  font-size: 11px;
+}
+
+.dist-bar {
+  flex: 1;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--color-neutral-30);
+  overflow: hidden;
+}
+
+.dist-bar span {
+  display: block;
+  height: 100%;
+  background: #F2A900;
+}
+
+.dist-count {
+  width: 30px;
+  text-align: right;
+  font-weight: 600;
+}
+
+@media (max-width: 1100px) {
+  .reviews-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .summary {
+    position: static;
+    order: -1;
+  }
+}

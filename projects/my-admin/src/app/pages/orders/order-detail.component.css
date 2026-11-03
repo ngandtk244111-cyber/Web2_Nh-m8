@@ -1,0 +1,127 @@
+.item-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-neutral-30);
+}
+
+.item-row:last-of-type {
+  border-bottom: none;
+}
+
+.item-row .thumb {
+  width: 60px;
+  height: 60px;
+}
+
+.item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.item-name {
+  font-weight: 600;
+}
+
+.item-meta {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin: 2px 0;
+}
+
+.item-qty {
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  min-width: 40px;
+  text-align: right;
+}
+
+.item-price {
+  min-width: 110px;
+  text-align: right;
+}
+
+.totals {
+  max-width: 360px;
+  margin-left: auto;
+}
+
+.info-row.grand {
+  font-size: 17px;
+  border-top: 1px solid var(--color-neutral-40);
+  margin-top: 4px;
+  padding-top: 10px;
+}
+
+.info-row.grand .value {
+  color: var(--color-primary);
+  font-weight: 800;
+}
+
+.progress {
+  height: 8px;
+  background: var(--color-neutral-30);
+}
+
+.progress-bar {
+  background: var(--color-primary);
+}
+
+.step-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.carrier-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.carrier {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  border: 1px solid var(--color-neutral-40);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.carrier input {
+  margin-top: 4px;
+  accent-color: var(--color-primary);
+}
+
+.carrier.selected {
+  border-color: var(--color-primary);
+  background: var(--color-primary-bg);
+}
+
+.carrier.unsuitable {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.pay-actions,
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.stack .btn-save,
+.stack .btn-cancel {
+  display: flex;
+}
+
+.reason-box {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  background: var(--color-neutral-20);
+}

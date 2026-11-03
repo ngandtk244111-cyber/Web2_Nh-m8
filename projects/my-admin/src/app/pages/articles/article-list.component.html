@@ -1,0 +1,107 @@
+<div class="admin-page">
+  <div class="page-breadcrumb">
+    Nội dung <span class="sep">/</span> <span class="current">Tin tức</span>
+  </div>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Tin tức & mẹo sống</h1>
+      <p class="page-subtitle">Bài viết do nhân viên Luméa soạn, hiển thị ở trang Tin tức của cửa hàng</p>
+    </div>
+    <div class="header-actions">
+      <a class="btn-header" [href]="clientAppUrl + '/news'" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i> Xem trang Tin tức</a>
+      <a class="btn-add-action text-decoration-none" *ngIf="adminAuth.can('content.create')" routerLink="/articles/create">
+        <i class="bi bi-plus-lg"></i> Viết bài mới
+      </a>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <button type="button" class="stat-card" [class.active]="!featuredOnly()" (click)="showFeatured(false)">
+      <span class="stat-label">Tổng bài viết</span>
+      <span class="stat-value">{{ articles().length }}</span>
+    </button>
+    <button type="button" class="stat-card tone-warning" [class.active]="featuredOnly()" (click)="showFeatured(true)">
+      <span class="stat-label">Bài nổi bật</span>
+      <span class="stat-value">{{ featuredCount() }}</span>
+    </button>
+    <div class="stat-card static tone-info">
+      <span class="stat-label">Tổng lượt xem</span>
+      <span class="stat-value">{{ totalViews() | number }}</span>
+    </div>
+  </div>
+
+  <div class="chip-tabs">
+    <button type="button" class="chip-tab" [class.active]="category() === 'ALL'" (click)="setCategory('ALL')">Tất cả</button>
+    <button type="button" *ngFor="let c of categories" class="chip-tab" [class.active]="category() === c" (click)="setCategory(c)">
+      {{ c }} ({{ categoryCount(c) }})
+    </button>
+  </div>
+
+  <div class="filter-bar">
+    <div class="filter-left">
+      <div class="search-wrapper">
+        <input type="text" class="search-input" placeholder="Tiêu đề, tác giả hoặc thẻ..." [ngModel]="search()" (ngModelChange)="onSearch($event)">
+        <i class="bi bi-search search-icon"></i>
+      </div>
+    </div>
+    <span class="selection-info">{{ filtered().length }} bài</span>
+  </div>
+
+  <div class="table-scrollable">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Bài viết</th>
+          <th>Chuyên mục</th>
+          <th>Tác giả</th>
+          <th>Ngày đăng</th>
+          <th class="text-right">Lượt xem</th>
+          <th class="text-right">Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let a of visible()" class="clickable" (click)="edit(a)">
+          <td>
+            <div class="cell-media">
+              <img class="thumb cover-thumb" [src]="a.coverImage" [alt]="a.title" *ngIf="a.coverImage; else noCover">
+              <ng-template #noCover><span class="thumb cover-thumb no-cover"><i class="bi bi-image"></i></span></ng-template>
+              <div>
+                <span class="cell-strong article-title">{{ a.title }}</span>
+                <span class="cell-sub">
+                  <span class="tag warning" *ngIf="a.featured"><i class="bi bi-star-fill"></i> Nổi bật</span>
+                  <span *ngIf="a.videoUrl"> <i class="bi bi-play-btn"></i> Có video</span>
+                  {{ a.readTime }}
+                </span>
+              </div>
+            </div>
+          </td>
+          <td><span class="tag primary">{{ a.category }}</span></td>
+          <td>
+            {{ a.author.name }}
+            <span class="cell-sub">{{ a.author.role }}</span>
+          </td>
+          <td>{{ a.publishedAt | date:'dd/MM/yyyy' }}</td>
+          <td class="text-right">{{ (a.viewsCount || 0) | number }}</td>
+          <td (click)="$event.stopPropagation()">
+            <div class="row-actions">
+              <button type="button" class="icon-btn" [title]="a.featured ? 'Bỏ nổi bật' : 'Đặt nổi bật'" *ngIf="adminAuth.can('content.edit')" (click)="toggleFeatured(a)">
+                <i class="bi" [ngClass]="a.featured ? 'bi-star-fill text-warning' : 'bi-star'"></i>
+              </button>
+              <a class="icon-btn" title="Xem trên cửa hàng" [href]="clientAppUrl + '/news/' + a.slug" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i></a>
+              <button type="button" class="icon-btn" [title]="adminAuth.can('content.edit') ? 'Sửa' : 'Xem'" (click)="edit(a)">
+                <i class="bi" [ngClass]="adminAuth.can('content.edit') ? 'bi-pencil' : 'bi-eye'"></i>
+              </button>
+              <button type="button" class="icon-btn danger" title="Xoá" *ngIf="adminAuth.can('content.delete')" (click)="remove(a)"><i class="bi bi-trash"></i></button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="empty-state" *ngIf="filtered().length === 0">
+      <i class="bi bi-newspaper"></i>
+      Chưa có bài viết nào khớp bộ lọc.
+    </div>
+    <app-pager [total]="filtered().length" [page]="page()" [pageSize]="pageSize" (pageChange)="page.set($event)"></app-pager>
+  </div>
+</div>

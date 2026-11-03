@@ -1,0 +1,49 @@
+<div class="link-picker">
+  <div class="lp-row">
+    <select class="form-select" [ngModel]="selectValue" (ngModelChange)="onSelect($event)" (blur)="onTouched()" [disabled]="disabled">
+      <option value="" disabled>— Chọn trang —</option>
+      <optgroup label="Trang của cửa hàng">
+        <option *ngFor="let p of pages" [value]="p.link">{{ p.label }}</option>
+      </optgroup>
+      <optgroup label="Khác">
+        <option value="__product">Một sản phẩm cụ thể…</option>
+        <option value="__custom">Tự nhập đường dẫn…</option>
+      </optgroup>
+    </select>
+    <a class="action-btn lp-open" [class.disabled-link]="!isValid" [attr.href]="isValid ? previewUrl : null"
+      target="_blank" rel="noopener" title="Mở trang này trên cửa hàng">
+      <i class="bi bi-box-arrow-up-right"></i> Mở thử
+    </a>
+  </div>
+
+  <!-- Một sản phẩm -->
+  <div class="lp-extra" *ngIf="mode() === 'product'">
+    <div class="lp-selected" *ngIf="selectedProduct() as p">
+      <img class="thumb" [src]="p.images[0]" [alt]="p.name">
+      <span>{{ p.name }}</span>
+    </div>
+    <div class="lp-selected missing" *ngIf="value() && !selectedProduct()">
+      <i class="bi bi-exclamation-triangle"></i> Không tìm thấy sản phẩm của link {{ value() }}
+    </div>
+    <div class="lp-search" *ngIf="!disabled">
+      <input type="text" class="form-control" placeholder="Gõ tên sản phẩm để tìm…"
+        [ngModel]="productQuery()" (ngModelChange)="productQuery.set($event)">
+      <div class="lp-results" *ngIf="productResults().length">
+        <button type="button" *ngFor="let p of productResults()" (click)="pickProduct(p)">
+          <img class="thumb" [src]="p.images[0]" [alt]="p.name">
+          <span>{{ p.name }}</span>
+        </button>
+      </div>
+      <div class="form-hint" *ngIf="productQuery() && !productResults().length">Không có sản phẩm nào khớp.</div>
+    </div>
+  </div>
+
+  <!-- Tự nhập -->
+  <div class="lp-extra" *ngIf="mode() === 'custom'">
+    <input type="text" class="form-control" placeholder="/catalog?sale=1" [ngModel]="value()"
+      (ngModelChange)="onCustomInput($event)" [disabled]="disabled" [class.is-invalid]="value() && !isValid">
+    <div class="form-hint">Mở trang trên cửa hàng, copy link trên thanh địa chỉ rồi chỉ giữ phần từ dấu / sau tên miền.</div>
+  </div>
+
+  <div class="form-hint">Khách bấm nút sẽ tới: <b>{{ value() || '(chưa chọn)' }}</b></div>
+</div>

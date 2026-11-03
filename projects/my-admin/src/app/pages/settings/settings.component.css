@@ -1,0 +1,34 @@
+fieldset.info-card {
+  min-width: 0;
+}
+
+.pay-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.pay-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-neutral-40);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.pay-option .form-check-input {
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+
+.pay-option.on {
+  border-color: var(--color-primary);
+  background: var(--color-primary-bg);
+}
+
+fieldset:disabled .pay-option {
+  cursor: default;
+}

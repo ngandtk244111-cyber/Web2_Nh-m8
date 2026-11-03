@@ -1,0 +1,198 @@
+<div class="admin-page">
+  <div class="page-breadcrumb">
+    <a routerLink="/products">Sản phẩm</a> <span class="sep">/</span>
+    <span class="current">{{ isEdit() ? 'Sửa sản phẩm' : 'Thêm sản phẩm' }}</span>
+  </div>
+
+  <app-mascot-loading *ngIf="loadingProduct && !notFound" message="Đang tải sản phẩm…" [overlay]="false"></app-mascot-loading>
+
+  <div class="empty-state" *ngIf="notFound">
+    <i class="bi bi-search"></i>
+    <p>Không tìm thấy sản phẩm.</p>
+    <button type="button" class="btn-header" (click)="goBack()"><i class="bi bi-arrow-return-left"></i> Quay lại danh sách</button>
+  </div>
+
+  <ng-container *ngIf="!loadingProduct">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">{{ isEdit() ? (readOnly ? 'Chi tiết sản phẩm' : 'Sửa sản phẩm') : 'Thêm sản phẩm mới' }}</h1>
+        <p class="page-subtitle" *ngIf="editing() as p">{{ p.id }} · {{ p.reviewCount }} đánh giá · {{ p.rating | number:'1.1-1' }}★</p>
+      </div>
+      <div class="header-actions">
+        <button type="button" class="btn-header" (click)="goBack()"><i class="bi bi-arrow-return-left"></i> Quay lại</button>
+        <a *ngIf="editing() as p" class="btn-header text-decoration-none" [href]="clientAppUrl + '/product/' + p.slug" target="_blank" rel="noopener">
+          <i class="bi bi-box-arrow-up-right"></i> Xem trên cửa hàng
+        </a>
+        <button type="button" class="btn-header" *ngIf="isEdit() && adminAuth.can('products.delete')" (click)="remove()">
+          <i class="bi bi-trash"></i> Xoá
+        </button>
+        <button type="button" class="btn-header primary" *ngIf="!readOnly" [disabled]="saving || uploading" (click)="save()">
+          <i class="bi bi-check2"></i> {{ saving ? 'Đang lưu…' : isEdit() ? 'Lưu thay đổi' : 'Tạo sản phẩm' }}
+        </button>
+      </div>
+    </div>
+
+    <div class="notice-box info" *ngIf="readOnly">
+      <i class="bi bi-lock"></i> Tài khoản của bạn chỉ có quyền xem sản phẩm.
+    </div>
+
+    <form class="layout-grid" (ngSubmit)="save()">
+      <fieldset [disabled]="readOnly" class="m-0 p-0 border-0 min-w-0">
+        <!-- Thông tin chung -->
+        <div class="info-card">
+          <h3 class="section-title">Thông tin chung</h3>
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label">Tên sản phẩm <span class="req">*</span></label>
+              <input class="form-control" name="name" [ngModel]="form.name" (ngModelChange)="onNameChange($event)"
+                placeholder="VD: Đèn Ngủ Mặt Trăng Moon Lamp 3D">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Đường dẫn (slug)</label>
+              <input class="form-control" name="slug" [ngModel]="form.slug" (ngModelChange)="onSlugChange($event)" placeholder="tu-sinh-theo-ten">
+              <div class="form-hint">/product/{{ form.slug || '…' }}</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Nhãn hiển thị (badge)</label>
+              <input class="form-control" name="badge" [(ngModel)]="form.badge" placeholder="VD: Mới Ra Mắt, Bán Chạy">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Danh mục</label>
+              <select class="form-select" name="category" [ngModel]="form.category" (ngModelChange)="onCategoryChange($event)">
+                <optgroup *ngFor="let s of sections" [label]="s.section">
+                  <option *ngFor="let o of s.options" [value]="o.value">{{ o.label }}</option>
+                </optgroup>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Loại sản xuất</label>
+              <select class="form-select" name="productionType" [(ngModel)]="form.productionType">
+                <option value="READY_STOCK">Hàng có sẵn</option>
+                <option value="PRINT_ON_DEMAND">In 3D theo yêu cầu</option>
+              </select>
+            </div>
+            <div class="col-12">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="customizable" name="customizable" [(ngModel)]="form.customizable">
+                <label class="form-check-label" for="customizable">Cho khách tuỳ biến (màu, chất liệu, kích thước, khắc chữ)</label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Giá & kho -->
+        <div class="info-card">
+          <h3 class="section-title">Giá & tồn kho</h3>
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label">Giá bán (đ) <span class="req">*</span></label>
+              <input type="number" min="0" class="form-control" name="basePrice" [(ngModel)]="form.basePrice">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Giá gốc niêm yết (đ)</label>
+              <input type="number" min="0" class="form-control" name="originalPrice" [(ngModel)]="form.originalPrice">
+              <div class="form-hint">Cao hơn giá bán thì cửa hàng hiện giá gạch.</div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Tồn kho</label>
+              <input type="number" min="0" step="1" class="form-control" name="inStock" [(ngModel)]="form.inStock">
+              <div class="form-hint" *ngIf="form.productionType === 'PRINT_ON_DEMAND'">Hàng in theo đơn — tồn kho chỉ để tham khảo.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mô tả -->
+        <div class="info-card">
+          <h3 class="section-title">Thông số & mô tả</h3>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Kích thước</label>
+              <input class="form-control" name="dimensions" [(ngModel)]="form.dimensions" placeholder="18 x 18 x 25 cm">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Chất liệu & hoàn thiện</label>
+              <input class="form-control" name="materialInfo" [(ngModel)]="form.materialInfo" placeholder="Nhựa sinh học PLA, đế gỗ tần bì...">
+            </div>
+            <div class="col-12">
+              <label class="form-label">Mô tả sản phẩm</label>
+              <textarea class="form-control" rows="4" name="description" [(ngModel)]="form.description"></textarea>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Câu chuyện thiết kế</label>
+              <textarea class="form-control" rows="3" name="story" [(ngModel)]="form.story" placeholder="Cảm hứng, ý tưởng đằng sau sản phẩm"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3D -->
+        <div class="info-card">
+          <h3 class="section-title">Xem trước 3D</h3>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Mô hình dựng sẵn</label>
+              <select class="form-select" name="threeModelType" [(ngModel)]="form.threeModelType">
+                <option value="">Không dùng</option>
+                <option *ngFor="let m of modelTypes" [value]="m.value">{{ m.label }}</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">URL file GLB/GLTF</label>
+              <input class="form-control" name="modelUrl" [(ngModel)]="form.modelUrl" placeholder="https://… hoặc /assets/models/…">
+              <div class="form-hint">Có URL thì cửa hàng ưu tiên dùng file này.</div>
+            </div>
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- CỘT PHẢI -->
+      <div>
+        <div class="info-card">
+          <h3 class="section-title">Hình ảnh</h3>
+          <label class="form-label">Ảnh chính <span class="req">*</span></label>
+          <div class="img-slot">
+            <img *ngIf="form.image1; else noImg1" [src]="form.image1" alt="Ảnh chính" class="img-main">
+            <ng-template #noImg1><div class="img-main placeholder"><i class="bi bi-image"></i></div></ng-template>
+            <ng-container *ngIf="!readOnly">
+              <input #img1 type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden (change)="onImageSelected($event, 'image1')">
+              <button type="button" class="action-btn mt-2" [disabled]="uploading" (click)="img1.click()">
+                <i class="bi bi-upload"></i> {{ uploading === 'image1' ? 'Đang tải lên…' : form.image1 ? 'Đổi ảnh' : 'Tải ảnh lên' }}
+              </button>
+            </ng-container>
+          </div>
+
+          <div class="divider"></div>
+          <label class="form-label">Ảnh phụ (khi rê chuột)</label>
+          <div class="img-second">
+            <img *ngIf="form.image2; else noImg2" [src]="form.image2" alt="Ảnh phụ" class="thumb lg">
+            <ng-template #noImg2><div class="thumb lg placeholder"><i class="bi bi-image"></i></div></ng-template>
+            <div class="flex-grow-1" *ngIf="!readOnly">
+              <input class="form-control form-control-sm mb-2" name="image2" [(ngModel)]="form.image2" placeholder="Dán URL ảnh hoặc tải lên">
+              <input #img2 type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden (change)="onImageSelected($event, 'image2')">
+              <div class="d-flex gap-2">
+                <button type="button" class="action-btn sm" [disabled]="uploading" (click)="img2.click()">
+                  <i class="bi bi-upload"></i> {{ uploading === 'image2' ? 'Đang tải…' : 'Tải lên' }}
+                </button>
+                <button type="button" class="action-btn sm danger" *ngIf="form.image2" (click)="removeImage2()"><i class="bi bi-x"></i> Bỏ</button>
+              </div>
+            </div>
+          </div>
+          <div class="form-hint" *ngIf="(editing()?.images?.length || 0) > 2">Sản phẩm còn {{ (editing()?.images?.length || 0) - 2 }} ảnh khác, được giữ nguyên.</div>
+          <div class="form-hint">JPG, PNG, WEBP hoặc GIF, tối đa 5MB.</div>
+        </div>
+
+        <div class="info-card">
+          <h3 class="section-title">Xem nhanh</h3>
+          <div class="info-row"><span class="label">Danh mục</span><span class="value">{{ form.categoryName }}</span></div>
+          <div class="info-row"><span class="label">Loại</span><span class="value">{{ form.productionType === 'PRINT_ON_DEMAND' ? 'In 3D theo yêu cầu' : 'Hàng có sẵn' }}</span></div>
+          <div class="info-row"><span class="label">Giá bán</span><span class="value money text-primary-lm">{{ form.basePrice || 0 | vnd }}</span></div>
+          <div class="info-row" *ngIf="discountPercent > 0">
+            <span class="label">Giá gốc</span><span class="value"><s>{{ form.originalPrice | vnd }}</s> <span class="tag danger">-{{ discountPercent }}%</span></span>
+          </div>
+          <div class="info-row"><span class="label">Tồn kho</span><span class="value">{{ form.inStock }}</span></div>
+          <div class="info-row" *ngIf="form.badge"><span class="label">Nhãn</span><span class="value"><span class="tag primary">{{ form.badge }}</span></span></div>
+        </div>
+      </div>
+      <button type="submit" hidden></button>
+    </form>
+  </ng-container>
+</div>

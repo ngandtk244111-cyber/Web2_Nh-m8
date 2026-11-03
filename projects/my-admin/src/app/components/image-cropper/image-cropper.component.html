@@ -1,13 +1,16 @@
-<div class="fixed inset-0 z-[60] flex items-center justify-center p-4 modal-backdrop">
-  <div class="bg-white rounded-2xl border border-[#E8DEC9] shadow-2xl max-w-full max-h-[90vh] flex flex-col animate-fade-in">
-    <div class="px-6 py-4 border-b border-[#E8DEC9]">
-      <h3 class="font-serif text-lg font-medium text-[#1F1712]">Cắt ảnh</h3>
-      <p class="text-xs text-[#7A6F67] mt-0.5">Kéo ảnh để chọn vùng hiển thị, phần trong khung là phần khách sẽ thấy.</p>
+<div class="modal-overlay cropper-overlay">
+  <div class="modal-box cropper-box">
+    <div class="modal-header">
+      <div>
+        <h3 class="modal-title">Cắt ảnh</h3>
+        <p class="cropper-sub">Kéo ảnh để chọn vùng hiển thị, phần trong khung là phần khách sẽ thấy.</p>
+      </div>
+      <button type="button" class="close-btn" (click)="cancelled.emit()">&times;</button>
     </div>
 
-    <div class="p-6 overflow-y-auto space-y-3">
+    <div class="modal-body">
       <div
-        class="relative overflow-hidden rounded-lg bg-[#F3ECDD] cursor-move touch-none mx-auto select-none"
+        class="crop-frame"
         [style.width.px]="frameWidth"
         [style.height.px]="frameHeight"
         (pointerdown)="onPointerDown($event)"
@@ -19,34 +22,26 @@
           [src]="objectUrl"
           alt="Ảnh đang cắt"
           draggable="false"
-          class="absolute top-0 left-0 pointer-events-none"
-          [style.max-width]="'none'"
+          class="crop-image"
           [style.width.px]="naturalWidth || null"
           [style.height.px]="naturalHeight || null"
-          [style.transform-origin]="'0 0'"
           [style.transform]="'translate(' + x + 'px, ' + y + 'px) scale(' + scale + ')'"
           (load)="onImageLoad(sourceImage)"
           (error)="failed.emit()">
       </div>
 
-      <label class="flex items-center gap-3 text-xs font-semibold text-[#3C332D]">
-        <span class="flex-shrink-0">Phóng to</span>
-        <input
-          type="range"
-          min="1"
-          [max]="maxZoom"
-          step="0.01"
-          [value]="zoom"
-          (input)="onZoomChange($any($event.target).value)"
-          class="w-full accent-[#A3152D]">
+      <label class="zoom-row" [style.max-width.px]="frameWidth">
+        <span>Phóng to</span>
+        <input type="range" class="form-range" min="1" [max]="maxZoom" step="0.01" [value]="zoom"
+          (input)="onZoomChange($any($event.target).value)">
       </label>
 
-      <p *ngIf="hint" class="text-[11px] text-[#7A6F63]" [style.max-width.px]="frameWidth">{{ hint }}</p>
+      <p *ngIf="hint" class="form-hint mx-auto" [style.max-width.px]="frameWidth">{{ hint }}</p>
     </div>
 
-    <div class="px-6 py-4 border-t border-[#EFE6D3] flex justify-end gap-2">
-      <button type="button" (click)="cancelled.emit()" class="px-3.5 py-2 border border-[#E3D5BA] rounded-lg text-xs font-medium text-[#1F1712]">Hủy</button>
-      <button type="button" (click)="confirm()" class="px-4 py-2 bg-[#A3152D] hover:bg-[#891226] text-white rounded-lg text-xs font-medium transition shadow-xs">Dùng ảnh này</button>
+    <div class="modal-footer">
+      <button type="button" class="btn-cancel" (click)="cancelled.emit()">Huỷ</button>
+      <button type="button" class="btn-save" (click)="confirm()"><i class="bi bi-crop"></i> Dùng ảnh này</button>
     </div>
   </div>
 </div>

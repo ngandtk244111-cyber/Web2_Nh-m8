@@ -109,7 +109,35 @@ router.post('/', requirePermission('products.create'), async (req, res) => {
   }
 });
 
-router.post('/images', requirePermission('products.create', 'products.edit', 'marketing.edit'), uploadImage('image'), async (req, res) => {
+// Nhập hàng loạt từ file Excel của my-admin. Tạo từng dòng để 1 dòng lỗi (vd trùng slug) không chặn cả lô.
+const BULK_LIMIT = 500;
+router.post('/bulk', requirePermission('products.create'), async (req, res) => {
+  try {
+    const rows = Array.isArray(req.body.products) ? req.body.products : [];
+    if (!rows.length) return res.status(400).json({ success: false, error: 'Không có sản phẩm nào để nhập' });
+    if (rows.length > BULK_LIMIT) {
+      return res.status(400).json({ success: false, error: `Mỗi lần nhập tối đa ${BULK_LIMIT} sản phẩm` });
+    }
+
+    const stamp = Date.now();
+    let created = 0;
+    const failed = [];
+    for (const [index, row] of rows.entries()) {
+      try {
+        await Product.create({ ...pickEditable(row || {}), id: `prod-${stamp}-${index}` });
+        created++;
+      } catch (err) {
+        failed.push({ index, error: err.code === 11000 ? 'Slug đã tồn tại' : err.message });
+      }
+    }
+    res.json({ success: true, created, failed });
+  } catch (err) {
+    console.error('bulk create products error', err);
+    sendError(res, err);
+  }
+});
+
+router.post('/images',requirePermission('products.create', 'products.edit', 'marketing.edit'), uploadImage('image'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ success: false, error: 'Thiếu file ảnh' });
     if (!IMAGE_TYPES.includes(req.file.mimetype)) {

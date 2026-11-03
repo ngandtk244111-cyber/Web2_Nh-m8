@@ -132,6 +132,13 @@ export class ProductService {
     );
   }
 
+  /** Nhập hàng loạt (từ file Excel). Server bỏ qua dòng lỗi và trả về chỉ số các dòng đó. */
+  bulkAddProducts(products: Omit<Product, 'id'>[]): Observable<{ success: boolean; created: number; failed: { index: number; error: string }[] }> {
+    return this.http.post<{ success: boolean; created: number; failed: { index: number; error: string }[] }>(
+      `${BASE}/bulk`, { products, adminId: this.adminAuth.adminId }
+    ).pipe(tap(() => this.refresh()));
+  }
+
   updateProduct(id: string, updates: Partial<Product>): Observable<{ success: boolean; product: Product }> {
     return this.http.put<{ success: boolean; product: Product }>(`${BASE}/${id}`, { ...updates, adminId: this.adminAuth.adminId }).pipe(
       tap(() => this.refresh())

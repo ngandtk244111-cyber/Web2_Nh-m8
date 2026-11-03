@@ -14,7 +14,8 @@ import { PagerComponent, pageSlice } from '../../components/pager/pager.componen
 import { MascotLoadingComponent } from '../../components/mascot-loading/mascot-loading.component';
 import { exportXlsx } from '../../shared/utils/export';
 import { environment } from '../../../environments/environment';
-import { PRODUCT_CATEGORY_SECTIONS, productionTypeLabel } from './product-options';
+import { PRODUCT_BADGE_OPTIONS, PRODUCT_CATEGORY_SECTIONS, productionTypeLabel } from './product-options';
+import { ImportRow, ImportValues, PRODUCTION_TYPE_TEXT, downloadImportTemplate, readProductFile, validateRows } from './product-import';
 
 export type ProductFilter = 'ALL' | 'READY' | 'POD' | 'CUSTOMIZABLE' | 'LOW';
 
@@ -146,5 +147,147 @@ export class ProductListComponent implements OnInit {
         p.basePrice, p.originalPrice ?? '', p.inStock, p.rating, p.reviewCount]),
       'Sản phẩm');
     this.toast.success(`Đã xuất ${rows.length} sản phẩm ra file Excel`);
+  }
+
+  // ---------------------------------------------------------------- nhập Excel
+
+  showImport = false;
+  importFileName = '';
+  importRows: ImportRow[] = [];
+  importing = false;
+  readonly downloadTemplate = downloadImportTemplate;
+  readonly badgeOptions = PRODUCT_BADGE_OPTIONS;
+  readonly productionTypeTexts = Object.values(PRODUCTION_TYPE_TEXT);
+
+  /** Dòng đang mở xem chi tiết + bản nháp đang sửa (chỉ ghi vào danh sách khi bấm Lưu). */
+  reviewLine: number | null = null;
+  draft: ImportValues | null = null;
+  draftRow: ImportRow | null = null;
+
+  private existingSlugs(): Set<string> {
+    return new Set(this.products().map(p => p.slug));
+  }
+
+  private revalidate(rows: { line: number; values: ImportValues }[]): void {
+    this.importRows = validateRows(rows, this.existingSlugs());
+  }
+
+  get reviewIndex(): number {
+    return this.importRows.findIndex(r => r.line === this.reviewLine);
+  }
+
+  get importValid(): ImportRow[] {
+    return this.importRows.filter(r => !r.errors.length);
+  }
+
+  get importErrorCount(): number {
+    return this.importRows.length - this.importValid.length;
+  }
+
+  openImport(): void {
+    this.importFileName = '';
+    this.importRows = [];
+    this.closeReview();
+    this.showImport = true;
+  }
+
+  openReview(row: ImportRow): void {
+    const p = row.payload;
+    this.reviewLine = row.line;
+    // Đưa giá trị về đúng dạng các ô chọn; giá trị không nhận ra được giữ nguyên để vẫn thấy lỗi
+    this.draft = {
+      ...row.values,
+      category: p.categoryName ? p.category : row.values.category,
+      productionType: row.errors.some(e => e.startsWith('Loại sản xuất'))
+        ? row.values.productionType
+        : PRODUCTION_TYPE_TEXT[p.productionType],
+      customizable: p.customizable ? 'Có' : 'Không',
+      badge: p.badge || row.values.badge,
+      slug: p.slug,
+    };
+    this.onDraftChange();
+  }
+
+  closeReview(): void {
+    this.reviewLine = null;
+    this.draft = null;
+    this.draftRow = null;
+  }
+
+  /** Kiểm tra bản nháp ngay khi gõ, trong ngữ cảnh cả danh sách (để bắt slug trùng dòng khác). */
+  onDraftChange(): void {
+    if (!this.draft) return;
+    const rows = this.importRows.map(r => r.line === this.reviewLine ? { line: r.line, values: this.draft! } : r);
+    this.draftRow = validateRows(rows, this.existingSlugs()).find(r => r.line === this.reviewLine) || null;
+  }
+
+  setDraftCustomizable(on: boolean): void {
+    if (this.draft) this.draft.customizable = on ? 'Có' : 'Không';
+  }
+
+  saveReview(): void {
+    if (!this.draft) return;
+    const draft = this.draft;
+    this.revalidate(this.importRows.map(r => r.line === this.reviewLine ? { line: r.line, values: { ...draft } } : r));
+    this.toast.success(`Đã cập nhật dòng ${this.reviewLine}`);
+    this.closeReview();
+  }
+
+  removeImportRow(row: ImportRow): void {
+    this.revalidate(this.importRows.filter(r => r.line !== row.line));
+    if (this.reviewLine === row.line) this.closeReview();
+  }
+
+  /** Sang dòng trước/sau để duyệt lần lượt (bỏ thay đổi chưa lưu). */
+  stepReview(delta: number): void {
+    const next = this.importRows[this.reviewIndex + delta];
+    if (next) this.openReview(next);
+  }
+
+  closeImport(): void {
+    if (!this.importing) this.showImport = false;
+  }
+
+  async onImportFile(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = ''; // Cho phép chọn lại đúng file đó sau khi sửa.
+    if (!file) return;
+    try {
+      const rows = await readProductFile(file);
+      if (!rows.length) {
+        this.toast.warning('File không có dòng sản phẩm nào');
+        return;
+      }
+      this.importFileName = file.name;
+      this.closeReview();
+      this.revalidate(rows);
+    } catch (err: any) {
+      this.toast.warning(err?.message || 'Không đọc được file Excel');
+    }
+  }
+
+  confirmImport(): void {
+    const rows = this.importValid;
+    if (!rows.length || this.importing) return;
+    this.importing = true;
+    this.productService.bulkAddProducts(rows.map(r => r.payload)).subscribe({
+      next: res => {
+        this.importing = false;
+        // Dòng server từ chối (vd slug vừa bị người khác dùng) → giữ lại trong bảng để xem lỗi
+        const failed = new Map(res.failed.map(f => [rows[f.index], f.error]));
+        this.importRows = [...failed].map(([row, error]) => ({ ...row, errors: [error] }));
+        if (res.created) {
+          this.toast.success(`Đã nhập ${res.created} sản phẩm từ file Excel`);
+          this.audit.record('Sản Phẩm', 'Nhập sản phẩm từ Excel', `${res.created} sản phẩm từ ${this.importFileName}`, 'SUCCESS');
+        }
+        if (failed.size) this.toast.warning(`${failed.size} dòng không nhập được — xem chi tiết trong bảng`);
+        else this.showImport = false;
+      },
+      error: err => {
+        this.importing = false;
+        this.toast.apiError(err, 'Không nhập được sản phẩm');
+      },
+    });
   }
 }

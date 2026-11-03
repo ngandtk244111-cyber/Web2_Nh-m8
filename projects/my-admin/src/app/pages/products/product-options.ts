@@ -52,6 +52,17 @@ export const THREE_MODEL_TYPES: { value: NonNullable<Product['threeModelType']>;
   { value: 'abstract_sculpture', label: 'Tượng trừu tượng' },
 ];
 
+/** Nhãn badge hiển thị trên thẻ sản phẩm bên my-client. Rỗng = không gắn nhãn. */
+export const PRODUCT_BADGE_OPTIONS: string[] = [
+  'Mới',
+  'Bán chạy',
+  'Giảm giá',
+  'Thanh lý',
+  'Có Sẵn Giao Nhanh',
+  'In 3D Độc Bản',
+  'In 3D Theo Yêu Cầu',
+];
+
 export function productionTypeLabel(type: string): string {
   return type === 'PRINT_ON_DEMAND' ? 'In 3D theo yêu cầu' : 'Hàng có sẵn';
 }

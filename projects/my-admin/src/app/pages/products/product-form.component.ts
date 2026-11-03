@@ -12,7 +12,7 @@ import { VndPipe } from '../../shared/pipes/vnd.pipe';
 import { MascotLoadingComponent } from '../../components/mascot-loading/mascot-loading.component';
 import { slugify } from '../../shared/utils/order-labels';
 import { environment } from '../../../environments/environment';
-import { PRODUCT_CATEGORY_OPTIONS, PRODUCT_CATEGORY_SECTIONS, THREE_MODEL_TYPES } from './product-options';
+import { PRODUCT_BADGE_OPTIONS, PRODUCT_CATEGORY_OPTIONS, PRODUCT_CATEGORY_SECTIONS, THREE_MODEL_TYPES } from './product-options';
 
 interface ProductForm {
   name: string;
@@ -75,6 +75,7 @@ export class ProductFormComponent implements OnInit {
 
   readonly sections = PRODUCT_CATEGORY_SECTIONS;
   readonly modelTypes = THREE_MODEL_TYPES;
+  readonly badgeOptions = PRODUCT_BADGE_OPTIONS;
   readonly clientAppUrl = environment.clientAppUrl;
 
   private editId = signal<string | null>(null);

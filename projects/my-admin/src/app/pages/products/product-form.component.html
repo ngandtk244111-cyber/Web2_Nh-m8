@@ -54,7 +54,12 @@
             </div>
             <div class="col-md-6">
               <label class="form-label">Nhãn hiển thị (badge)</label>
-              <input class="form-control" name="badge" [(ngModel)]="form.badge" placeholder="VD: Mới Ra Mắt, Bán Chạy">
+              <select class="form-select" name="badge" [(ngModel)]="form.badge">
+                <option value="">— Không gắn nhãn —</option>
+                <option *ngFor="let b of badgeOptions" [value]="b">{{ b }}</option>
+                <!-- Giữ nhãn cũ (dữ liệu nhập tay trước đây) để không bị mất khi lưu -->
+                <option *ngIf="form.badge && !badgeOptions.includes(form.badge)" [value]="form.badge">{{ form.badge }}</option>
+              </select>
             </div>
             <div class="col-md-6">
               <label class="form-label">Danh mục</label>

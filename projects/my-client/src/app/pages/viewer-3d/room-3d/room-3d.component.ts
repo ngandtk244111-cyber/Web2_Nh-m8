@@ -52,6 +52,8 @@ interface CameraFlight {
   onDone?: () => void;
 }
 
+/** Máy có card đồ hoạ dựng phòng trong vài giây; quá mốc này thường là Chrome đang vẽ 3D bằng CPU. */
+const SLOW_LOAD_MS = 20000;
 /** Walkthrough: tâm xoay đặt ngay trước mắt camera -> đứng yên nhìn quanh. */
 const WALK_PIVOT = 0.05;
 /** Bấm chấm: camera tiến tới còn ~42% khoảng cách tới món đồ, theo đúng hướng đang nhìn. */
@@ -87,6 +89,11 @@ export class Room3dComponent implements AfterViewInit, OnDestroy {
   readonly status = computed(() => (this.room() ? 'ready' : this.rooms().length ? 'not-found' : 'loading'));
 
   readonly modelLoaded = signal(false);
+  /** Trình duyệt không tạo được WebGL (đang tắt tăng tốc phần cứng, card đồ hoạ lỗi, quá nhiều tab 3D...). */
+  readonly webglError = signal(false);
+  /** Đã chờ lâu bất thường mà phòng chưa dựng xong -> hiện gợi ý + nút tải lại. */
+  readonly slowLoad = signal(false);
+  private slowTimer: ReturnType<typeof setTimeout> | null = null;
   readonly textVisible = signal(false);
   readonly active = signal<Spot | null>(null);
   /** Ngăn "Mua trọn bộ phòng" bên phải. */
@@ -126,12 +133,23 @@ export class Room3dComponent implements AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
-    this.initThree();
+    try {
+      this.initThree();
+    } catch (err) {
+      console.error('Không tạo được WebGL cho phòng 3D', err);
+      this.webglError.set(true);
+      return;
+    }
     this.viewReady.set(true);
+  }
+
+  reload(): void {
+    location.reload();
   }
 
   ngOnDestroy(): void {
     if (this.textTimer) clearTimeout(this.textTimer);
+    if (this.slowTimer) clearTimeout(this.slowTimer);
     cancelAnimationFrame(this.animationId);
     window.removeEventListener('resize', this.onResize);
     this.controls?.dispose();
@@ -217,7 +235,10 @@ export class Room3dComponent implements AfterViewInit, OnDestroy {
     this.selectedProductIds = new Set(room.hotspots.map(h => h.productId));
     this.modelLoaded.set(false);
     this.textVisible.set(false);
+    this.slowLoad.set(false);
     if (this.textTimer) clearTimeout(this.textTimer);
+    if (this.slowTimer) clearTimeout(this.slowTimer);
+    this.slowTimer = setTimeout(() => this.slowLoad.set(true), SLOW_LOAD_MS);
 
     const cam = room.cameraInitial || { x: 0, y: 1.8, z: 4.2, fov: 46 };
     const lookAt = room.cameraLookAt || [0, 0.6, 0];
@@ -281,6 +302,8 @@ export class Room3dComponent implements AfterViewInit, OnDestroy {
       }
       this.ngZone.run(() => {
         this.modelLoaded.set(true);
+        this.slowLoad.set(false);
+        if (this.slowTimer) clearTimeout(this.slowTimer);
         this.textTimer = setTimeout(() => this.textVisible.set(true), 700);
       });
     });

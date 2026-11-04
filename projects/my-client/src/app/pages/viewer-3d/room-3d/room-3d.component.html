@@ -10,6 +10,20 @@
     <p class="r3__intro-text">Đang dựng phòng 3D…</p>
   </div>
 
+  <!-- Không mở được 3D / tải quá lâu: báo rõ thay vì để màn chờ chạy mãi -->
+  <div *ngIf="webglError() || (slowLoad() && !modelLoaded())" class="r3__help" role="alert">
+    <h2>{{ webglError() ? 'Trình duyệt chưa mở được chế độ 3D' : 'Phòng 3D đang tải lâu hơn bình thường' }}</h2>
+    <p>Máy có card đồ hoạ thường dựng phòng trong vài giây. Bạn thử:</p>
+    <ul>
+      <li>Đóng bớt các tab Luméa / tab có hình 3D khác rồi tải lại.</li>
+      <li>Bật <b>“Sử dụng tính năng tăng tốc đồ họa khi có”</b> trong cài đặt Chrome (chrome://settings/system) và mở lại trình duyệt.</li>
+    </ul>
+    <div class="r3__help-actions">
+      <button type="button" class="r3__msg-btn" (click)="reload()">Tải lại trang</button>
+      <a routerLink="/shop-the-room" class="r3__help-link">Về danh sách phòng</a>
+    </div>
+  </div>
+
   <div *ngIf="status() === 'not-found'" class="r3__msg">
     <app-icon name="room" [size]="30"></app-icon>
     <h1>Không tìm thấy phòng</h1>

@@ -17,10 +17,10 @@ export interface FloatingSideBanner {
 const FLOATING_SIDE_BANNERS: FloatingSideBanner[] = [
   {
     side: 'left',
-    badge: 'AI Thiết Kế',
-    title: 'Decor Theo Ý Bạn',
-    ctaLabel: 'Thử ngay',
-    link: '/custom-request/new',
+    badge: 'Luméa Living',
+    title: 'Tin Tức & Mẹo Sống',
+    ctaLabel: 'Đọc ngay',
+    link: '/news',
     image: 'assets/floating-banners/side-decor-shelf.jpg',
   },
   {

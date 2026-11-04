@@ -9,6 +9,7 @@ import { AppIconComponent } from '../../components/icon/icon.component';
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
 import { ToastService } from '../../core/services/toast.service';
 import { NewsCommentsComponent } from './news-comments/news-comments.component';
+import { ProductPhotoComponent } from '../../components/product-photo/product-photo.component';
 
 interface TextRun {
   text: string;
@@ -25,7 +26,7 @@ interface ContentBlock {
 @Component({
   selector: 'app-news',
   standalone: true,
-  imports: [CommonModule, RouterLink, AppIconComponent, VndPipe, NewsCommentsComponent],
+  imports: [ProductPhotoComponent, CommonModule, RouterLink, AppIconComponent, VndPipe, NewsCommentsComponent],
   templateUrl: './news.component.html',
   styleUrl: './news.component.css'
 })

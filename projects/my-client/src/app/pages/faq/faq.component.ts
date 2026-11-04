@@ -86,17 +86,17 @@ const FAQ_RIGHT_COLUMN: FaqCategory[] = [
     ],
   },
   {
-    title: 'Tuỳ biến & In 3D',
+    title: 'Sản phẩm 3D & In 3D',
     items: [
       {
         id: 'custom-1',
-        question: 'Sản phẩm nào có thể tuỳ biến 3D?',
-        answer: 'Chỉ những sản phẩm được đánh dấu "Có thể tùy biến" (hiển thị nút Tuỳ biến 3D trên trang chi tiết) mới hỗ trợ đổi màu, chất liệu, kích thước hoặc khắc tên.',
+        question: 'Tôi muốn đặt một món theo kích thước / mẫu riêng thì làm sao?',
+        answer: 'Bạn gửi yêu cầu thiết kế riêng (mục "Gửi yêu cầu thiết kế riêng" trên menu) kèm mô tả và ảnh tham khảo — Luméa sẽ tư vấn và báo giá.',
       },
       {
         id: 'custom-2',
         question: 'Tôi có thể xem trước mô hình 3D trước khi mua không?',
-        answer: 'Với các sản phẩm có gắn nhãn "Xem 3D", bạn có thể xoay và phóng to mô hình 3D ngay trên trang chi tiết sản phẩm trước khi đặt hàng hoặc tuỳ biến.',
+        answer: 'Với các sản phẩm có gắn nhãn "Xem 3D", bạn có thể xoay và phóng to mô hình 3D ngay trên trang chi tiết sản phẩm trước khi đặt hàng.',
       },
     ],
   },

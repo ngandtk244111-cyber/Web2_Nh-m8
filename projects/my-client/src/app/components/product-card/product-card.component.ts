@@ -12,11 +12,12 @@ import { ProductService } from '../../core/services/product.service';
 import { departmentOf, has3DModel, subcategoriesOf } from '../../core/data/catalog-taxonomy';
 import { AppIconComponent } from '../icon/icon.component';
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
+import { ProductPhotoComponent } from '../../components/product-photo/product-photo.component';
 
 @Component({
   selector: 'app-product-card',
   standalone: true,
-  imports: [CommonModule, RouterLink, AppIconComponent, VndPipe],
+  imports: [ProductPhotoComponent, CommonModule, RouterLink, AppIconComponent, VndPipe],
   templateUrl: './product-card.component.html',
   styleUrl: './product-card.component.css'
 })
@@ -24,7 +25,7 @@ export class ProductCardComponent {
   @Input({ required: true }) product!: Product;
   /** 'grid' (mặc định, card đứng) hoặc 'list' (card ngang — dùng ở trang Tất cả sản phẩm khi bật chế độ danh sách). */
   @Input() layout: 'grid' | 'list' = 'grid';
-  @ViewChild('cardImg') cardImg?: ElementRef<HTMLImageElement>;
+  @ViewChild('cardImg', { read: ElementRef }) cardImg?: ElementRef<HTMLElement>;
 
   constructor(
     private cartService: CartService,

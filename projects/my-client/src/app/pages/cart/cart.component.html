@@ -101,51 +101,8 @@
 
       <h3 class="font-serif text-lg font-bold text-amber-800 border-b border-neutral-200 pb-3">Tóm Tắt Đơn Hàng</h3>
 
-      <!-- Voucher: khách tự chọn trong danh sách (hoặc không dùng) -->
-      <button type="button" class="cd_promo-btn" (click)="showVoucherList = !showVoucherList" [class.cd_promo-btn--active]="cartService.appliedCoupon()" [attr.aria-expanded]="showVoucherList">
-        <app-icon name="tag" [size]="15"></app-icon>
-        <span class="cd_promo-btn__text">
-          <ng-container *ngIf="cartService.appliedCoupon() as coupon; else noCoupon">
-            Đã chọn mã <strong>{{ coupon.code }}</strong>
-          </ng-container>
-          <ng-template #noCoupon>Chọn hoặc nhập voucher ({{ voucherOptions().length }} mã)</ng-template>
-        </span>
-        <app-icon [name]="showVoucherList ? 'chevron-down' : 'chevron-right'" [size]="14"></app-icon>
-      </button>
-
-      <div *ngIf="showVoucherList" class="space-y-3">
-        <div class="flex gap-2">
-          <input
-            type="text"
-            [(ngModel)]="couponCodeInput"
-            (keydown.enter)="addCouponCode()"
-            placeholder="Nhập mã voucher, ví dụ: LUMEANEW"
-            class="flex-1 min-w-0 text-xs border border-neutral-300 rounded-xl px-3 py-2 uppercase placeholder:normal-case focus:outline-none focus:border-amber-400 bg-neutral-100 text-neutral-800">
-          <button type="button" (click)="addCouponCode()" class="px-3.5 py-2 bg-neutral-200 hover:bg-neutral-300 text-amber-700 text-xs font-semibold rounded-xl border border-neutral-300 transition">
-            Lưu mã
-          </button>
-        </div>
-
-        <p *ngIf="voucherOptions().length === 0" class="text-xs text-neutral-500">
-          Chưa có voucher nào.
-          <a routerLink="/voucher" class="text-amber-600 font-semibold hover:underline">Chơi game nhận voucher →</a>
-        </p>
-
-        <div class="cd_voucher-list">
-          <app-voucher-card
-            *ngFor="let v of voucherOptions()"
-            [voucher]="v"
-            [selectable]="true"
-            [selected]="isVoucherSelected(v)"
-            [disabledReason]="voucherDisabledReason(v)"
-            (pick)="toggleVoucher($event)">
-          </app-voucher-card>
-        </div>
-        <p *ngIf="cartService.appliedCoupon()" class="text-[11px] text-neutral-500">Bấm lại vào voucher đang chọn để bỏ chọn.</p>
-      </div>
-      <div *ngIf="couponMessage" [class]="couponSuccess ? 'text-xs text-emerald-600' : 'text-xs text-red-500'">
-        {{ couponMessage }}
-      </div>
+      <!-- Voucher: chọn / nhập mã (dùng chung với trang Thanh toán) -->
+      <app-voucher-picker [subtotal]="selectedSubtotal()"></app-voucher-picker>
 
       <!-- Breakdown -->
       <div class="space-y-1.5 text-xs text-neutral-600 pt-1">

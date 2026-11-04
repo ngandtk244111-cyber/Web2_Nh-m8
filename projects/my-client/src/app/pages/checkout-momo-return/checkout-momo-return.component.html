@@ -1,4 +1,6 @@
 <div class="max-w-md mx-auto px-4 py-16 text-center space-y-5">
+  <p *ngIf="checking" class="py-10 text-sm text-neutral-500">Đang xác nhận kết quả thanh toán...</p>
+  <ng-container *ngIf="!checking">
   <div
     class="w-16 h-16 rounded-full mx-auto flex items-center justify-center"
     [class.bg-emerald-50]="isSuccess"
@@ -19,10 +21,26 @@
   </p>
 
   <a
+    *ngIf="isSuccess && orderNumber"
+    [href]="invoiceLink()"
+    target="_blank"
+    rel="noopener"
+    class="inline-flex px-6 py-3 mr-2 rounded-xl bg-[#A3152D] hover:bg-[#891226] text-white font-extrabold text-sm shadow-md">
+    Tải hóa đơn PDF
+  </a>
+  <a
+    *ngIf="canSwitch"
+    routerLink="/checkout"
+    [queryParams]="{ doiPhuongThuc: orderNumber }"
+    class="inline-flex px-6 py-3 mr-2 rounded-xl bg-[#A3152D] hover:bg-[#891226] text-white font-extrabold text-sm shadow-md">
+    Chọn phương thức khác
+  </a>
+  <a
     *ngIf="orderNumber"
     [routerLink]="['/orders/track']"
     [queryParams]="{ orderNumber }"
     class="inline-flex px-6 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-600 text-white font-extrabold text-sm shadow-md">
     Xem tiến độ đơn hàng
   </a>
+  </ng-container>
 </div>

@@ -3,8 +3,10 @@
       <!-- Canvas Container -->
       <div
         #canvasContainer
-        class="w-full h-full cursor-grab active:cursor-grabbing"
-        [class.pointer-events-none]="hasError">
+        class="w-full h-full"
+        [ngClass]="interactive ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'"
+        [class.pointer-events-none]="hasError"
+        (click)="!interactive && openRoom.emit()">
       </div>
 
       <!-- Điểm đánh dấu sản phẩm (chiếu từ toạ độ 3D). Vị trí cập nhật trực tiếp qua translate3d trong
@@ -38,11 +40,17 @@
       <div class="absolute top-4 left-4 right-4 flex items-start justify-between gap-3 pointer-events-none z-10">
         <div class="rv_glass rv_hint pointer-events-auto">
           <span class="rv_hint__dot">1</span>
-          <span class="hidden md:inline">Chạm vào số để xem sản phẩm · kéo để xoay phòng</span>
-          <span class="md:hidden">Chạm số để xem đồ</span>
+          <ng-container *ngIf="interactive; else staticHint">
+            <span class="hidden md:inline">Chạm vào số để xem sản phẩm · kéo để xoay phòng</span>
+            <span class="md:hidden">Chạm số để xem đồ</span>
+          </ng-container>
+          <ng-template #staticHint>
+            <span class="hidden md:inline">Bấm vào phòng để xem 3D &amp; xoay 360°</span>
+            <span class="md:hidden">Bấm để xem phòng 3D</span>
+          </ng-template>
         </div>
 
-        <div class="rv_glass rv_quality hidden sm:flex pointer-events-auto">
+        <div *ngIf="showQuality" class="rv_glass rv_quality hidden sm:flex pointer-events-auto">
           <button
             type="button"
             *ngFor="let opt of qualityOptions"
@@ -84,7 +92,7 @@
       </div>
 
       <!-- Nút đặt lại góc nhìn -->
-      <div class="absolute bottom-4 left-4 flex items-center gap-2 z-20 pointer-events-none">
+      <div *ngIf="interactive" class="absolute bottom-4 left-4 flex items-center gap-2 z-20 pointer-events-none">
         <button type="button" (click)="resetCamera()" class="rv_glass rv_reset pointer-events-auto">
           <app-icon name="rotate" [size]="14"></app-icon>
           <span>Góc nhìn chuẩn</span>

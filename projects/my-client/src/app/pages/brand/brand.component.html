@@ -1,7 +1,12 @@
 <div class="br" *ngIf="style() as st; else notFound">
 
   <!-- Dải giới thiệu thương hiệu -->
-  <div class="br-strip">Luméa {{ st }} — {{ tagline() }}</div>
+  <header class="br-strip">
+    <span class="br-strip__eyebrow">Bộ sưu tập</span>
+    <h1 class="br-strip__name">Luméa <em>{{ st }}</em></h1>
+    <p class="br-strip__tagline">{{ tagline() }}</p>
+    <span class="br-strip__tag" *ngIf="hashtag()">{{ hashtag() }}</span>
+  </header>
 
   <div class="br-container">
 
@@ -89,10 +94,10 @@
       <p class="br-desc">Chúng tôi giới thiệu những ý tưởng phối đồ hợp tiện lợi và thú vị cùng các sản phẩm phong cách sống mà ngay cả đội ngũ Luméa cũng yêu thích sử dụng.</p>
       <div class="br-car">
         <div class="br-row" #roomRow>
-          <a *ngFor="let r of rooms()" routerLink="/shop-the-room" class="br-post br-post--room">
+          <a *ngFor="let r of rooms(); let i = index" routerLink="/shop-the-room" class="br-post br-post--room">
             <span class="br-post__img"><img [src]="r.coverImage" [alt]="r.name" loading="lazy"></span>
             <span class="br-staff">
-              <img src="assets/mascot/lumea-mascot.png" alt="" class="br-staff__avatar">
+              <img [src]="staffAvatars[i % staffAvatars.length]" alt="" class="br-staff__avatar">
               <span class="br-staff__text">
                 <span class="br-staff__name">Đội ngũ Luméa</span>
                 <span class="br-staff__sub">{{ r.theme }}</span>
@@ -115,7 +120,7 @@
       <div class="br-car">
         <div class="br-row" #saleRow>
           <a *ngFor="let p of saleProducts()" [routerLink]="['/product', p.slug]" class="br-prod">
-            <span class="br-prod__img"><img [src]="p.images[0]" [alt]="p.name" loading="lazy"></span>
+            <span class="br-prod__img"><app-product-photo [images]="p.images" [alt]="p.name"></app-product-photo></span>
             <span class="br-prod__name">{{ p.name }}</span>
             <span class="br-prod__off">Giảm giá</span>
             <span class="br-prod__price">
@@ -144,7 +149,7 @@
       <div class="br-car">
         <div class="br-row" #newRow>
           <a *ngFor="let p of newProducts()" [routerLink]="['/product', p.slug]" class="br-prod br-prod--plain">
-            <span class="br-prod__img"><img [src]="p.images[0]" [alt]="p.name" loading="lazy"></span>
+            <span class="br-prod__img"><app-product-photo [images]="p.images" [alt]="p.name"></app-product-photo></span>
             <span class="br-prod__name">{{ p.name }}</span>
             <span class="br-prod__price"><strong>{{ p.basePrice | vnd }}</strong></span>
           </a>

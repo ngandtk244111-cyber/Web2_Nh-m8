@@ -30,6 +30,7 @@ import {
   subcategoriesOf,
   subcategoryLink,
 } from '../../core/data/catalog-taxonomy';
+import { ProductPhotoComponent } from '../../components/product-photo/product-photo.component';
 
 type ReviewFilter = 'all' | 'with-images' | '5' | '4' | 'low';
 type InfoPanel = 'dimensions' | 'details' | 'delivery' | 'care';
@@ -84,18 +85,13 @@ const PRODUCT_FAQ: FaqCategory[] = [
       {
         id: 'return',
         question: 'Chính sách đổi trả sản phẩm áp dụng như thế nào?',
-        answer: 'Sản phẩm có sẵn được đổi trả trong 7 ngày nếu lỗi sản xuất, hư hỏng khi vận chuyển hoặc giao sai mẫu. Sản phẩm in theo yêu cầu hoặc tuỳ biến 3D chỉ đổi trả khi lỗi thuộc về sản xuất.',
+        answer: 'Sản phẩm có sẵn được đổi trả trong 7 ngày nếu lỗi sản xuất, hư hỏng khi vận chuyển hoặc giao sai mẫu. Sản phẩm in theo yêu cầu chỉ đổi trả khi lỗi thuộc về sản xuất.',
       },
       {
         id: 'broken',
         question: 'Sản phẩm bị nứt, vỡ khi nhận hàng thì tôi phải làm gì?',
         answer: 'Vui lòng quay video lúc mở hộp và chụp ảnh sản phẩm, sau đó liên hệ Luméa trong vòng 48 giờ kể từ khi nhận hàng. Chúng tôi sẽ in lại hoặc đổi mới sản phẩm miễn phí cho bạn.',
-      },
-      {
-        id: 'custom',
-        question: 'Sản phẩm nào có thể tuỳ biến 3D?',
-        answer: 'Chỉ những sản phẩm được đánh dấu "Có thể tùy biến" mới hỗ trợ đổi màu, chất liệu, kích thước hoặc khắc tên thông qua trình tùy biến 3D.',
-      },
+      }
     ],
   },
 ];
@@ -134,7 +130,7 @@ const SAMPLE_REVIEWS: ProductReview[] = [
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [
+  imports: [ProductPhotoComponent, 
     CommonModule,
     FormsModule,
     RouterLink,
@@ -390,7 +386,6 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     } else if (p.inStock > 0) {
       perks.push({ icon: 'truck', title: 'Có sẵn', text: 'Giao hàng nhanh toàn quốc' });
     }
-    if (p.customizable) perks.push({ icon: 'sliders', title: 'Tuỳ biến', text: 'Chọn màu, chất liệu, kích thước' });
     if (p.modelUrl || p.threeModelType) perks.push({ icon: 'rotate', title: 'Xem 3D', text: 'Xoay 360° trước khi mua' });
     if (p.reviewCount > 0) perks.push({ icon: 'star', title: `${p.rating.toFixed(1)}/5 sao`, text: `Từ ${p.reviewCount} đánh giá` });
     perks.push({ icon: 'rotate', title: 'Đổi trả 7 ngày', text: 'Kiểm tra hàng trước khi nhận' });
@@ -456,7 +451,6 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     if (!p.customization?.colors?.length && p.color) rows.push({ label: 'Màu sắc', value: p.color });
     const spaces = this.spaceLinks.map(sp => sp.label);
     if (spaces.length) rows.push({ label: 'Không gian phù hợp', value: spaces.join(', ') });
-    if (p.customizable) rows.push({ label: 'Tùy chọn custom', value: this.customOptionsLabel(p) });
     if (has3DModel(p)) rows.push({ label: 'Mô hình 3D', value: 'Có — xoay, phóng to trực tiếp trên trang' });
     if (p.printTechnology) rows.push({ label: 'Công nghệ in 3D', value: p.printTechnology });
     if (p.customization?.colors?.length) {

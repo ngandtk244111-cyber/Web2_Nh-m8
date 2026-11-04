@@ -49,7 +49,7 @@ const CATEGORY_LINKS: NavLink[] = [
   { label: 'Decor', link: '/catalog', queryParams: { dept: 'decor' } },
   { label: 'Phụ kiện', link: '/catalog', queryParams: { dept: 'do-dung' } },
   { label: 'Đang giảm giá', link: '/catalog', queryParams: { sale: '1' } },
-  { label: '3D Custom', link: '/customizer-3d' },
+  { label: 'Đặt làm riêng', link: '/custom-request/new' },
 ];
 
 const ROOMS: RoomCard[] = [
@@ -85,7 +85,7 @@ const DISCOVER: (NavLink & { image: string })[] = [
   { label: 'Tượng & figure', image: 'tuong-mo-hinh', link: '/catalog', queryParams: { cat: 'tuong-figure' } },
   { label: 'Đèn', image: 'den-chieu-sang', link: '/catalog', queryParams: { dept: 'anh-sang' } },
   { label: 'Chậu cây', image: 'chau-cay', link: '/catalog', queryParams: { cat: 'chau-cay' } },
-  { label: '3D Custom', image: '3d-custom', link: '/customizer-3d' },
+  { label: 'Đặt làm riêng', image: '3d-custom', link: '/custom-request/new' },
 ];
 
 @Component({

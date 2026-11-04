@@ -1,0 +1,174 @@
+<div class="rv">
+  <!-- Tiêu đề + tìm kiếm -->
+  <div class="rv__head">
+    <div>
+      <h3 class="rv__title">Quản Lý Đánh Giá</h3>
+      <p class="rv__sub">Theo dõi và đánh giá các sản phẩm trong đơn đã giao của bạn</p>
+    </div>
+    <label class="rv__search">
+      <app-icon name="search" [size]="15"></app-icon>
+      <input type="text" [ngModel]="search()" (ngModelChange)="search.set($event)" placeholder="Tìm theo mã đơn hàng hoặc tên sản phẩm">
+    </label>
+  </div>
+
+  <!-- Chưa đánh giá / Đã đánh giá -->
+  <div class="rv__tabs" role="tablist">
+    <button type="button" role="tab" class="rv__tab" [class.rv__tab--on]="tab === 'pending'" (click)="tab = 'pending'">
+      Chưa đánh giá
+      <span *ngIf="pendingCount() > 0" class="rv__count">{{ pendingCount() }}</span>
+    </button>
+    <button type="button" role="tab" class="rv__tab" [class.rv__tab--on]="tab === 'reviewed'" (click)="tab = 'reviewed'">
+      Đã đánh giá
+    </button>
+  </div>
+
+  <div *ngIf="loading" class="rv__empty">Đang tải...</div>
+
+  <!-- ===== Chưa đánh giá ===== -->
+  <ng-container *ngIf="!loading && tab === 'pending'">
+    <div *ngIf="pendingList().length === 0" class="rv__empty">
+      <app-icon name="star" [size]="28"></app-icon>
+      <p>{{ search() ? 'Không có sản phẩm nào khớp tìm kiếm.' : 'Bạn đã đánh giá hết các sản phẩm đã nhận. Cảm ơn bạn!' }}</p>
+    </div>
+
+    <article *ngFor="let it of pendingList()" class="rv__card">
+      <header class="rv__card-head">
+        <span class="rv__badge">Chưa đánh giá</span>
+        <span class="rv__meta">{{ it.date | date: 'dd/MM/yyyy' }} <span class="rv__sep">|</span> {{ it.orderNumber }}</span>
+      </header>
+      <div class="rv__item">
+        <img [src]="it.image" [alt]="it.name" class="rv__img">
+        <div class="rv__info">
+          <a [routerLink]="['/product', it.slug]" class="rv__name">{{ it.name }}</a>
+          <span class="rv__unit">{{ it.unitPrice | vnd }}</span>
+        </div>
+        <div class="rv__qty">
+          <span>Số lượng: {{ it.quantity }}</span>
+          <strong>{{ it.totalPrice | vnd }}</strong>
+        </div>
+      </div>
+      <footer class="rv__card-foot">
+        <span class="rv__total">Tổng tiền ({{ it.quantity }} sản phẩm): <strong>{{ it.totalPrice | vnd }}</strong></span>
+        <div class="rv__actions">
+          <button type="button" class="rv__btn rv__btn--ghost" (click)="buyAgain(it)">Mua lại</button>
+          <button type="button" class="rv__btn" (click)="openReview(it)">Đánh giá</button>
+        </div>
+      </footer>
+    </article>
+  </ng-container>
+
+  <!-- ===== Đã đánh giá ===== -->
+  <ng-container *ngIf="!loading && tab === 'reviewed'">
+    <div *ngIf="reviewedList().length === 0" class="rv__empty">
+      <app-icon name="star" [size]="28"></app-icon>
+      <p>{{ search() ? 'Không có đánh giá nào khớp tìm kiếm.' : 'Bạn chưa có đánh giá nào.' }}</p>
+    </div>
+
+    <article *ngFor="let it of reviewedList()" class="rv__card">
+      <header class="rv__card-head">
+        <span class="rv__badge rv__badge--done">Đã đánh giá</span>
+        <span class="rv__meta">
+          {{ (it.review?.createdAt || it.date) | date: 'dd/MM/yyyy HH:mm' }} <span class="rv__sep">|</span> {{ it.orderNumber }}
+        </span>
+      </header>
+      <div class="rv__item">
+        <img [src]="it.image" [alt]="it.name" class="rv__img">
+        <div class="rv__info">
+          <a [routerLink]="['/product', it.slug]" class="rv__name">{{ it.name }}</a>
+        </div>
+        <div class="rv__qty"><strong>{{ it.unitPrice | vnd }}</strong></div>
+      </div>
+      <div *ngIf="it.review as r" class="rv__review">
+        <div class="rv__review-top">
+          <span class="rv__stars" [attr.aria-label]="r.rating + ' sao'">
+            <span *ngFor="let s of stars" [class.on]="s <= r.rating">★</span>
+          </span>
+          <span class="rv__author">{{ r.author }}</span>
+          <span *ngIf="r.editedAt" class="rv__edited">· đã chỉnh sửa</span>
+        </div>
+        <p class="rv__comment">{{ r.comment }}</p>
+        <div *ngIf="r.images?.length" class="rv__photos">
+          <img *ngFor="let img of r.images" [src]="img" alt="Ảnh đánh giá">
+        </div>
+        <div *ngIf="r.reply?.text" class="rv__reply">
+          <strong>Phản hồi của Luméa:</strong> {{ r.reply?.text }}
+        </div>
+      </div>
+      <footer class="rv__card-foot rv__card-foot--end">
+        <button type="button" class="rv__btn" (click)="openReview(it)">
+          <app-icon name="pencil" [size]="13"></app-icon>
+          Xem lại đánh giá
+        </button>
+      </footer>
+    </article>
+  </ng-container>
+</div>
+
+<!-- ===== Hộp đánh giá đơn hàng ===== -->
+<div *ngIf="editing as it" class="rvm" (click)="closeReview()" role="dialog" aria-modal="true" aria-label="Đánh giá đơn hàng">
+  <div class="rvm__box" (click)="$event.stopPropagation()">
+    <header class="rvm__head">
+      <span>{{ it.review ? 'Xem lại đánh giá' : 'Đánh giá đơn hàng' }}</span>
+      <button type="button" class="rvm__close" (click)="closeReview()" aria-label="Đóng">
+        <app-icon name="x" [size]="16"></app-icon>
+      </button>
+    </header>
+
+    <div class="rvm__body">
+      <div class="rvm__product">
+        <img [src]="it.image" [alt]="it.name">
+        <span>{{ it.name }}</span>
+      </div>
+
+      <!-- Chọn số sao -->
+      <div class="rvm__rate">
+        <div class="rvm__stars" (mouseleave)="hoverRating = 0">
+          <button
+            *ngFor="let s of stars"
+            type="button"
+            [class.on]="s <= (hoverRating || rating)"
+            (mouseenter)="hoverRating = s"
+            (click)="rating = s"
+            [attr.aria-label]="s + ' sao'">★</button>
+        </div>
+        <span class="rvm__rate-label">{{ ratingLabel(hoverRating || rating) }}</span>
+      </div>
+
+      <div class="rvm__text">
+        <textarea [(ngModel)]="comment" [maxlength]="maxLength" rows="4" placeholder="Chia sẻ cảm nhận về chất lượng, màu sắc, đóng gói... của sản phẩm"></textarea>
+        <span class="rvm__counter">{{ comment.length }}/{{ maxLength }}</span>
+      </div>
+
+      <!-- Ảnh kèm đánh giá -->
+      <div>
+        <p class="rvm__label">Thêm hình ảnh <span>({{ images.length }}/{{ maxImages }})</span></p>
+        <input #reviewImages type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple class="hidden" (change)="onImagesSelected($event)">
+        <div class="rvm__photos">
+          <div *ngFor="let img of images; let i = index" class="rvm__photo">
+            <img [src]="img" alt="Ảnh đánh giá">
+            <button type="button" (click)="removeImage(i)" aria-label="Xoá ảnh"><app-icon name="x" [size]="11"></app-icon></button>
+          </div>
+          <button
+            *ngIf="images.length < maxImages"
+            type="button"
+            class="rvm__add"
+            [disabled]="uploading"
+            (click)="reviewImages.click()">
+            <span *ngIf="uploading" class="rvm__spin"></span>
+            <ng-container *ngIf="!uploading">
+              <app-icon name="plus" [size]="18"></app-icon>
+              <span>Tải ảnh</span>
+            </ng-container>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <footer class="rvm__foot">
+      <button type="button" class="rv__btn rv__btn--ghost" (click)="closeReview()" [disabled]="submitting">Hủy</button>
+      <button type="button" class="rv__btn" (click)="submit()" [disabled]="submitting || uploading">
+        {{ submitting ? 'Đang gửi...' : (it.review ? 'Cập nhật đánh giá' : 'Gửi đánh giá') }}
+      </button>
+    </footer>
+  </div>
+</div>

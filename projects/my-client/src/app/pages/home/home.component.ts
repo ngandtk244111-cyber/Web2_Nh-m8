@@ -16,23 +16,17 @@ import { Room } from '../../core/models/room.model';
 import { CartService } from '../../core/services/cart.service';
 import { MascotService } from '../../core/services/mascot.service';
 import { RoomService } from '../../core/services/room.service';
-import { AiAssistantService } from '../../core/services/ai-assistant.service';
 import { CommunityService } from '../../core/services/community.service';
-import { NewsService } from '../../core/services/news.service';
-import { ARTICLE_CATEGORIES, ArticleCategory, NewsArticle } from '../../core/models/news.model';
 import { ProductCarouselComponent } from '../../components/product-carousel/product-carousel.component';
 import { RoomViewerComponent } from '../../components/room-viewer/room-viewer.component';
 import { RecentlyViewedSectionComponent } from '../../components/recently-viewed-section/recently-viewed-section.component';
 import { HeroBannerComponent } from '../../components/hero-banner/hero-banner.component';
-import { PromoCardsComponent } from '../../components/promo-cards/promo-cards.component';
 import { PromoBannerGridComponent } from '../../components/promo-banner-grid/promo-banner-grid.component';
 import { DecorDealsComponent } from '../../components/decor-deals/decor-deals.component';
 import { TipPopupComponent } from '../../components/tip-popup/tip-popup.component';
-import { PosterPopupComponent } from '../../components/poster-popup/poster-popup.component';
 import { FavoriteStylesComponent } from '../../components/favorite-styles/favorite-styles.component';
 import { VideoTopicsComponent } from '../../components/video-topics/video-topics.component';
 import { AppIconComponent } from '../../components/icon/icon.component';
-import { VndPipe } from '../../shared/pipes/vnd.pipe';
 import { ScrollRevealDirective } from '../../shared/directives/scroll-reveal.directive';
 
 @Component({
@@ -45,22 +39,18 @@ import { ScrollRevealDirective } from '../../shared/directives/scroll-reveal.dir
     RoomViewerComponent,
     RecentlyViewedSectionComponent,
     HeroBannerComponent,
-    PromoCardsComponent,
     PromoBannerGridComponent,
     DecorDealsComponent,
     TipPopupComponent,
-    PosterPopupComponent,
     FavoriteStylesComponent,
     VideoTopicsComponent,
     AppIconComponent,
-    VndPipe,
     ScrollRevealDirective
   ],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css'
 })
 export class HomeComponent implements OnInit {
-  customizableProducts: any[] = [];
   readyStockProducts: any[] = [];
   activeRoom: Room | undefined;
   /** Các phòng hiển thị ở section Shop The Room — chỉ phòng dựng sẵn có điểm sản phẩm
@@ -70,22 +60,13 @@ export class HomeComponent implements OnInit {
   roomProducts: { product: Product; note: string; pin: number }[] = [];
   @ViewChild(RoomViewerComponent) roomViewer?: RoomViewerComponent;
   communityPosts: any[] = [];
-  /** "Tin tức & Mẹo sống" (Luméa Living): toàn bộ bài + bài nổi bật đang hiển thị theo chuyên mục đã chọn. */
-  livingArticlesAll: NewsArticle[] = [];
-  livingArticles: NewsArticle[] = [];
-  livingCategory: ArticleCategory | 'ALL' = 'ALL';
-  readonly livingFilters: { label: string; value: ArticleCategory | 'ALL' }[] = [
-    { label: 'Tất cả', value: 'ALL' },
-    ...ARTICLE_CATEGORIES.map(c => ({ label: c, value: c })),
-  ];
-  private readonly livingLimit = 6;
 
   /** Dải chữ chạy ngang giữa trang — không ghi số tiền/mốc freeship để tránh lệch với trang chính sách. */
   readonly marqueeItems = [
     'Nội thất & Decor',
     'Sofa · Giường · Bàn · Ghế · Tủ · Kệ',
     'Sản phẩm in 3D theo yêu cầu',
-    'Tuỳ biến màu sắc & kích thước',
+    'Shop The Room 3D',
     'Xem trước mô hình 3D',
     'Thiết kế cùng trợ lý AI',
     'Giao hàng toàn quốc',
@@ -112,9 +93,7 @@ export class HomeComponent implements OnInit {
   constructor(
     private productService: ProductService,
     private roomService: RoomService,
-    private aiService: AiAssistantService,
     private communityService: CommunityService,
-    private newsService: NewsService,
     private cartService: CartService,
     private mascotService: MascotService
   ) {
@@ -122,12 +101,12 @@ export class HomeComponent implements OnInit {
     // thay vì chỉ đọc 1 lần lúc ngOnInit (lúc đó dữ liệu có thể chưa kịp tải về).
     effect(() => {
       const products = this.productService.products();
-      this.customizableProducts = this.productService.customizableProducts().slice(0, 10);
       this.readyStockProducts = this.productService.readyStockProducts().slice(0, 10);
     });
     effect(() => {
       this.productService.products();
-      this.showcaseRooms = this.roomService.rooms().filter(r => r.roomType !== 'glb_scene' && r.hotspots.length > 0);
+      // Chỉ hiện phòng có điểm sản phẩm để mua (phòng .glb nay đã nhẹ và có hotspot nên được hiện).
+      this.showcaseRooms = this.roomService.rooms().filter(r => r.hotspots.length > 0);
       if (!this.activeRoom || !this.showcaseRooms.some(r => r.id === this.activeRoom!.id)) {
         this.activeRoom = this.showcaseRooms[0] ?? this.roomService.getActiveRoom();
       }
@@ -136,13 +115,20 @@ export class HomeComponent implements OnInit {
     effect(() => {
       this.communityPosts = this.communityService.posts().slice(0, 5);
     });
-    effect(() => {
-      this.livingArticlesAll = this.newsService.articles();
-      this.updateLivingArticles();
-    });
   }
 
   ngOnInit(): void {}
+
+  /** Danh sách "Chọn phòng" nổi trên khung 3D có thể thu gọn. */
+  roomListCollapsed = false;
+
+  activeRoomIndex(): number {
+    return this.showcaseRooms.findIndex(r => r.id === this.activeRoom?.id) + 1;
+  }
+
+  roomShortName(room: Room): string {
+    return room.name.split('(')[0].trim();
+  }
 
   selectRoom(room: Room): void {
     if (room.id === this.activeRoom?.id) return;
@@ -150,17 +136,9 @@ export class HomeComponent implements OnInit {
     this.updateRoomProducts();
   }
 
-  selectLivingCategory(category: ArticleCategory | 'ALL'): void {
-    this.livingCategory = category;
-    this.updateLivingArticles();
-  }
-
-  private updateLivingArticles(): void {
-    this.livingArticles = this.newsService.getHighlightedArticles(this.livingCategory, this.livingLimit);
-  }
-
-  trackArticle(_: number, a: NewsArticle): string {
-    return a.id;
+  /** Khung phòng ở trang chủ chỉ để xem — bấm vào thì mở trang phòng 3D đầy đủ (tab mới, giống nút "Xem phòng 3D"). */
+  openRoom3d(): void {
+    if (this.activeRoom) window.open(`/xem-phong-3d/${this.activeRoom.id}`, '_blank');
   }
 
   private updateRoomProducts(): void {
@@ -187,9 +165,5 @@ export class HomeComponent implements OnInit {
     if (!this.cartService.ensureLoggedIn()) return;
     this.roomProducts.forEach(x => this.cartService.addToCart(x.product, 1));
     this.mascotService.react('happy');
-  }
-
-  openAiAssistant(): void {
-    this.aiService.openModal();
   }
 }

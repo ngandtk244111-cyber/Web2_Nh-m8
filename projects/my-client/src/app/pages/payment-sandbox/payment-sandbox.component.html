@@ -1,0 +1,64 @@
+<div class="ps">
+  <div class="ps__card">
+    <header class="ps__head" [ngClass]="'ps__head--' + method">
+      <div>
+        <p class="ps__brand">Luméa · Cổng thanh toán</p>
+        <h1 class="ps__method">{{ methodLabel }}</h1>
+      </div>
+      <span class="ps__badge">Môi trường thử nghiệm</span>
+    </header>
+
+    <div *ngIf="loading" class="ps__body ps__center">Đang tải đơn hàng...</div>
+
+    <div *ngIf="!loading && !order" class="ps__body ps__center">
+      <p class="ps__error">{{ error }}</p>
+    </div>
+
+    <div *ngIf="order as o" class="ps__body">
+      <div class="ps__amount">
+        <span>Số tiền thanh toán</span>
+        <strong>{{ o.total | vnd }}</strong>
+      </div>
+      <dl class="ps__rows">
+        <div><dt>Mã đơn hàng</dt><dd class="ps__mono">{{ o.orderNumber }}</dd></div>
+        <div><dt>Người nhận</dt><dd>{{ o.shippingAddress.fullName }}</dd></div>
+        <div><dt>Số sản phẩm</dt><dd>{{ o.items.length }}</dd></div>
+        <div *ngIf="o.discount > 0"><dt>Đã giảm (voucher)</dt><dd>-{{ o.discount | vnd }}</dd></div>
+      </dl>
+
+      <!-- Ví: mô phỏng xác nhận trên ứng dụng -->
+      <div *ngIf="method !== 'atm'" class="ps__wallet">
+        <div class="ps__qr" aria-hidden="true">
+          <span *ngFor="let on of qrCells" [class.on]="on"></span>
+        </div>
+        <p>Mô phỏng quét mã bằng ứng dụng {{ methodLabel }}. Bấm <strong>Xác nhận thanh toán</strong> để hoàn tất.</p>
+      </div>
+
+      <!-- Thẻ ATM: mô phỏng nhập thẻ + OTP -->
+      <div *ngIf="method === 'atm'" class="ps__form">
+        <label>Số thẻ<input type="text" [(ngModel)]="card.number" name="cardNumber"></label>
+        <div class="ps__grid">
+          <label>Tên chủ thẻ<input type="text" [(ngModel)]="card.name" name="cardName"></label>
+          <label>Ngày phát hành<input type="text" [(ngModel)]="card.issued" name="cardIssued"></label>
+        </div>
+        <label>Mã OTP (6 số bất kỳ)<input type="text" inputmode="numeric" maxlength="6" [(ngModel)]="card.otp" name="cardOtp" placeholder="VD: 123456"></label>
+      </div>
+
+      <p *ngIf="error" class="ps__error">{{ error }}</p>
+
+      <div class="ps__actions">
+        <button type="button" class="ps__btn ps__btn--ghost" (click)="cancel()" [disabled]="busy">Huỷ giao dịch</button>
+        <button type="button" class="ps__btn ps__btn--primary" (click)="pay()" [disabled]="busy || !canPay">
+          {{ busy ? 'Đang xử lý...' : 'Xác nhận thanh toán' }}
+        </button>
+      </div>
+
+      <button type="button" class="ps__switch" (click)="switchMethod()" [disabled]="busy">← Chọn phương thức thanh toán khác</button>
+
+      <p class="ps__note">
+        <app-icon name="shield" [size]="13"></app-icon>
+        Trang mô phỏng dùng khi cổng {{ methodLabel }} sandbox không khả dụng — không trừ tiền thật.
+      </p>
+    </div>
+  </div>
+</div>

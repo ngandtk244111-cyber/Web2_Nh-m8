@@ -8,6 +8,7 @@ import { RoomService } from '../../core/services/room.service';
 import { Product, ProductStyle } from '../../core/models/product.model';
 import { BRAND_HASHTAGS, BRAND_TAGLINES, styleFromSlug } from '../../core/data/brand-styles';
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
+import { ProductPhotoComponent } from '../../components/product-photo/product-photo.component';
 
 interface BannerSlide {
   image: string;
@@ -20,7 +21,7 @@ interface BannerSlide {
 const BANNERS: BannerSlide[] = [
   { image: 'assets/hero-banner/hero-deal-today.png', title: 'Flash Sale Giá Tốt', sub: 'Deal decor nhỏ, giảm đến 40% mỗi ngày', link: '/flash-sale' },
   { image: 'assets/hero-banner/hero-room-3d.png', title: 'Phòng Mẫu 3D', sub: 'Xoay không gian và mua món đồ bạn thích', link: '/shop-the-room' },
-  { image: 'assets/hero-banner/hero-print-3d.png', title: 'In 3D Theo Yêu Cầu', sub: 'Tùy biến màu sắc, chất liệu, kích thước', link: '/customizer-3d' },
+  { image: 'assets/hero-banner/hero-print-3d.png', title: 'In 3D Theo Yêu Cầu', sub: 'Tùy biến màu sắc, chất liệu, kích thước', link: '/custom-request/new' },
   { image: 'assets/hero-banner/hero-ai-assistant.png', title: 'AI Gợi Ý Decor', sub: 'Mô tả ý tưởng, nhận concept ngay', link: '/custom-request/new' },
   { image: 'assets/hero-banner/hero-freeship.png', title: 'Miễn Phí Vận Chuyển', sub: 'Cho đơn hàng từ 500.000₫', link: '/catalog' },
 ];
@@ -28,12 +29,20 @@ const BANNERS: BannerSlide[] = [
 @Component({
   selector: 'app-brand',
   standalone: true,
-  imports: [CommonModule, RouterLink, VndPipe],
+  imports: [ProductPhotoComponent, CommonModule, RouterLink, VndPipe],
   templateUrl: './brand.component.html',
   styleUrl: './brand.component.css'
 })
 export class BrandComponent {
   readonly banners = BANNERS;
+  /** Avatar "Đội ngũ Luméa" xoay vòng các biểu cảm Goh cho sinh động. */
+  readonly staffAvatars = [
+    'assets/mascot/goh-happy.png',
+    'assets/mascot/goh-confident.png',
+    'assets/mascot/goh-thinking.png',
+    'assets/mascot/goh-surprised.png',
+    'assets/mascot/goh-mascot.png',
+  ];
   readonly bannerIndex = signal(0);
 
   private readonly styleSignal = signal<ProductStyle | undefined>(undefined);

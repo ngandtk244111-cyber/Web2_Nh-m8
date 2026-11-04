@@ -104,6 +104,9 @@ async function reserveDiscountCode({ code, userId, phone, subtotal }) {
 
   const coupon = await Coupon.findOne({ code: clean, active: true }).lean();
   if (coupon) {
+    if (coupon.expiresAt && new Date(coupon.expiresAt) <= new Date()) {
+      throw new VoucherError(`Mã ${clean} đã hết hạn.`);
+    }
     if (subtotal < (coupon.minSpend || 0)) {
       throw new VoucherError(`Mã ${clean} chỉ áp dụng cho đơn từ ${coupon.minSpend.toLocaleString('vi-VN')}đ.`);
     }

@@ -6,7 +6,7 @@
   align-items: center;
   justify-content: center;
   padding: 16px;
-  background: rgba(30, 22, 10, 0.42);
+  background: rgba(28, 32, 29, 0.38);
   backdrop-filter: blur(7px);
   -webkit-backdrop-filter: blur(7px);
   animation: tp-overlay-in 0.25s ease both;
@@ -27,13 +27,19 @@
 }
 
 .tp_popup {
+  /* Tông trung tính, mềm như ảnh cover: kem ngà + xanh xám bạch đàn, đỏ thương hiệu chỉ để nhấn nhẹ */
+  --tp-bg: #F7F5F0;
+  --tp-ink: #2E3430;
+  --tp-muted: #6E746F;
+  --tp-sage: #6F8577;
+  --tp-sage-soft: #E4EAE4;
   position: relative;
   width: 400px;
   max-width: calc(100vw - 32px);
-  border-radius: 22px;
+  border-radius: 20px;
   overflow: hidden;
-  background: var(--bg-card, #ffffff);
-  box-shadow: 0 30px 70px rgba(40, 28, 10, 0.32), 0 0 0 1px rgba(163, 21, 45, 0.1);
+  background: var(--tp-bg);
+  box-shadow: 0 30px 70px rgba(30, 34, 30, 0.28), 0 0 0 1px rgba(46, 52, 48, 0.06);
   animation: tp-popup-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
   transition: box-shadow 0.35s ease;
 }
@@ -41,7 +47,7 @@
 /* Đụng vào (hover/touch) -> phát sáng nhẹ quanh popup */
 .tp_popup:hover,
 .tp_popup:active {
-  box-shadow: 0 30px 70px rgba(40, 28, 10, 0.32), 0 0 0 1px rgba(163, 21, 45, 0.25), 0 0 40px rgba(163, 21, 45, 0.22);
+  box-shadow: 0 34px 80px rgba(30, 34, 30, 0.32), 0 0 0 1px rgba(46, 52, 48, 0.1);
 }
 
 .tp_popup--closing {
@@ -148,30 +154,30 @@
   height: 34px;
   border-radius: 999px;
   border: none;
-  background: rgba(255, 255, 255, 0.92);
-  color: var(--text-primary, #111111);
+  background: rgba(247, 245, 240, 0.85);
+  backdrop-filter: blur(6px);
+  color: var(--tp-ink);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+  box-shadow: 0 2px 10px rgba(30, 34, 30, 0.14);
   transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.2s ease;
 }
 
 .tp_close:hover {
-  background: var(--accent-primary, #A3152D);
+  background: var(--tp-ink);
   color: #ffffff;
-  transform: scale(1.08);
-  box-shadow: 0 0 16px rgba(163, 21, 45, 0.45);
+  transform: scale(1.06);
 }
 
 /* ---------- Image ---------- */
 .tp_image-wrap {
   position: relative;
   width: 100%;
-  height: 170px;
+  height: 200px;
   overflow: hidden;
-  background: var(--bg-section, #EFE6D3);
+  background: var(--tp-sage-soft);
 }
 
 .tp_image {
@@ -179,11 +185,11 @@
   height: 100%;
   object-fit: cover;
   display: block;
-  transition: transform 0.4s ease;
+  transition: transform 0.6s ease;
 }
 
 .tp_popup:hover .tp_image {
-  transform: scale(1.04);
+  transform: scale(1.03);
 }
 
 .tp_image-fade {
@@ -191,8 +197,8 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: 60%;
-  background: linear-gradient(to top, var(--bg-card, #ffffff) 0%, rgba(255, 255, 255, 0.85) 40%, transparent 100%);
+  height: 45%;
+  background: linear-gradient(to top, var(--tp-bg) 0%, rgba(247, 245, 240, 0.6) 45%, transparent 100%);
   pointer-events: none;
 }
 
@@ -200,43 +206,50 @@
 .tp_body {
   position: relative;
   z-index: 1;
-  margin-top: -26px;
-  padding: 0 18px 20px;
+  margin-top: -14px;
+  padding: 0 26px 26px;
   text-align: left;
 }
 
+/* Nhãn dạng chữ nhỏ có gạch dẫn, không đóng khung — nhẹ như chú thích tạp chí */
 .tp_label {
-  display: inline-block;
-  padding: 5px 12px;
-  border-radius: 999px;
-  background: var(--accent-terracotta-light, #F3E3D9);
-  color: var(--accent-primary, #A3152D);
-  border: 1px solid rgba(163, 21, 45, 0.25);
-  font-size: 10px;
-  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--tp-sage);
+  font-family: var(--font-family-content, 'Inter', sans-serif);
+  font-size: 10.5px;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  box-shadow: 0 4px 12px rgba(163, 21, 45, 0.12);
-  margin-bottom: 8px;
+  letter-spacing: 0.16em;
+  margin-bottom: 10px;
+}
+
+.tp_label::before {
+  content: '';
+  width: 22px;
+  height: 1px;
+  background: currentColor;
 }
 
 .tp_title {
-  font-family: var(--font-family-heading, 'Inter', sans-serif);
-  font-size: 19px;
-  font-weight: 700;
-  color: var(--text-primary, #111111);
-  letter-spacing: -0.01em;
-  line-height: 1.3;
-  margin: 0 0 6px;
+  font-family: 'Lora', Georgia, serif;
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--tp-ink);
+  letter-spacing: -0.005em;
+  line-height: 1.32;
+  text-wrap: balance;
+  margin: 0 0 10px;
 }
 
 .tp_desc {
   font-family: var(--font-family-content, 'Inter', sans-serif);
   font-size: 13px;
-  color: var(--text-secondary, #333333);
-  opacity: 0.8;
-  line-height: 1.55;
-  margin: 0 0 14px;
+  font-weight: 400;
+  color: var(--tp-muted);
+  line-height: 1.65;
+  margin: 0 0 20px;
 }
 
 .tp_cta {
@@ -244,24 +257,33 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  width: 140px;
   height: 42px;
-  border-radius: 24px;
+  padding: 0 20px 0 22px;
+  border-radius: 999px;
   border: none;
-  background: var(--accent-primary, #A3152D);
-  color: #ffffff;
+  background: var(--tp-ink);
+  color: #F7F5F0;
   font-family: var(--font-family-content, 'Inter', sans-serif);
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
+  letter-spacing: 0.02em;
   cursor: pointer;
-  box-shadow: 0 10px 22px rgba(163, 21, 45, 0.28);
-  transition: transform 0.15s ease, box-shadow 0.2s ease;
+  box-shadow: 0 8px 18px rgba(30, 34, 30, 0.18);
+  transition: transform 0.15s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.tp_cta app-icon {
+  transition: transform 0.2s ease;
 }
 
 .tp_cta:hover {
-  transform: translateY(-2px);
-  background: var(--accent-dark, #891226);
-  box-shadow: 0 0 20px rgba(163, 21, 45, 0.4), 0 12px 26px rgba(163, 21, 45, 0.32);
+  transform: translateY(-1px);
+  background: var(--accent-primary, #A3152D);
+  box-shadow: 0 10px 22px rgba(163, 21, 45, 0.25);
+}
+
+.tp_cta:hover app-icon {
+  transform: translateX(3px);
 }
 
 /* ---------- Responsive ---------- */
@@ -271,15 +293,15 @@
   }
 
   .tp_image-wrap {
-    height: 150px;
+    height: 170px;
   }
 
   .tp_body {
-    padding: 0 16px 18px;
+    padding: 0 20px 20px;
   }
 
   .tp_title {
-    font-size: 17px;
+    font-size: 19px;
   }
 
   .tp_desc {

@@ -75,7 +75,50 @@ export class CommunityComponent implements OnInit {
   showCreateModal = false;
   newPostTitle = '';
   newPostCaption = '';
-  newPostImageUrl = 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80';
+  newPostImageUrl = '';
+  isUploadingPostImage = false;
+
+  onPostImageSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (file) this.uploadPostImage(file);
+  }
+
+  onPostImageDrop(event: DragEvent): void {
+    event.preventDefault();
+    const file = event.dataTransfer?.files?.[0];
+    if (file) this.uploadPostImage(file);
+  }
+
+  removePostImage(): void {
+    this.newPostImageUrl = '';
+  }
+
+  /** Kiểm tra loại/dung lượng rồi tải ảnh lên server; xong thì dùng đường dẫn đầy đủ làm ảnh bài đăng. */
+  private uploadPostImage(file: File): void {
+    const user = this.authService.currentUser();
+    if (!user) return;
+    if (!/^image\/(png|jpe?g|webp|gif)$/.test(file.type)) {
+      this.toastService.error('Chỉ nhận ảnh JPG, PNG, WEBP hoặc GIF');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      this.toastService.error('Ảnh quá lớn, vui lòng chọn ảnh dưới 5MB');
+      return;
+    }
+    this.isUploadingPostImage = true;
+    this.communityService.uploadImage(user._id, file).subscribe({
+      next: (res) => {
+        this.isUploadingPostImage = false;
+        this.newPostImageUrl = this.authService.getAvatarUrl(res.url) || '';
+      },
+      error: (err) => {
+        this.isUploadingPostImage = false;
+        this.toastService.error(err?.error?.error || 'Không tải được ảnh, vui lòng thử lại');
+      },
+    });
+  }
   selectedTagProductId = '';
 
   /** id bài đang mở Post Detail — không lưu cả object để tránh lệch dữ liệu khi like/comment cập nhật posts. */
@@ -312,6 +355,7 @@ export class CommunityComponent implements OnInit {
         this.showCreateModal = false;
         this.newPostTitle = '';
         this.newPostCaption = '';
+        this.newPostImageUrl = '';
         this.selectedTagProductId = '';
       },
       // Bị bộ lọc chặn (vi phạm tiêu chuẩn cộng đồng) hoặc lỗi mạng: giữ nguyên modal để sửa lại.

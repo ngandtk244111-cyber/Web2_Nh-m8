@@ -54,4 +54,14 @@ function verifyZaloPayCallbackMac(dataStr, reqMac) {
   return expected === reqMac;
 }
 
-module.exports = { createZaloPayOrder, verifyZaloPayCallbackMac };
+/**
+ * Verify checksum ZaloPay gắn vào redirect URL khi khách quay về shop:
+ * checksum = HMAC_SHA256(key2, appid|apptransid|pmcid|bankcode|amount|discountamount|status).
+ */
+function verifyZaloPayRedirectChecksum(q) {
+  const key2 = process.env.ZALOPAY_KEY2;
+  const raw = `${q.appid}|${q.apptransid}|${q.pmcid}|${q.bankcode}|${q.amount}|${q.discountamount}|${q.status}`;
+  return !!q.checksum && hmacSha256(raw, key2) === q.checksum;
+}
+
+module.exports = { createZaloPayOrder, verifyZaloPayCallbackMac, verifyZaloPayRedirectChecksum };

@@ -1,152 +1,108 @@
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      
-      <!-- Top Header & Room Switcher -->
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-neutral-200 pb-6">
-        <div>
-          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/15 text-amber-700 text-xs font-bold uppercase tracking-wider mb-2 border border-amber-500/30">
-            <app-icon name="room" [size]="14"></app-icon>
-            <span>Không Gian 3D Trực Quan (Shop The Room)</span>
-          </div>
-          <h1 class="font-serif text-2xl sm:text-3xl font-extrabold text-amber-800">
-            {{ currentRoom.name }}
-          </h1>
-          <p class="text-xs sm:text-sm text-neutral-600 mt-1">
-            {{ currentRoom.description }}
-          </p>
-          <!-- Chưa ưng mẫu phòng nào thì gửi yêu cầu thiết kế riêng -->
-          <a routerLink="/custom-request/new" class="inline-flex items-center gap-1.5 mt-3 px-4 py-2 rounded-full border border-amber-500/40 bg-white text-amber-700 text-xs font-bold hover:bg-amber-500/10 transition">
+<div class="sr">
+  <!-- Mảng hồng trang trí hai bên -->
+  <span class="sr__blob sr__blob--l" aria-hidden="true"></span>
+  <span class="sr__blob sr__blob--r" aria-hidden="true"></span>
+
+  <div class="sr__wrap" *ngIf="currentRoom">
+
+    <!-- ===== HERO: phòng đang chọn ===== -->
+    <section #hero class="sr-hero">
+      <div class="sr-hero__text">
+        <span class="sr-hero__chip">
+          <app-icon name="cube" [size]="16"></app-icon>
+          Không gian 3D trực quan
+        </span>
+        <span class="sr-hero__spark sr-hero__spark--a" aria-hidden="true">✦</span>
+        <span class="sr-hero__spark sr-hero__spark--b" aria-hidden="true">✦</span>
+
+        <h1 class="sr-hero__title">{{ currentRoom.name }}</h1>
+        <p class="sr-hero__desc">{{ currentRoom.description }}</p>
+
+        <div class="sr-hero__stats">
+          <span><app-icon name="box" [size]="16"></app-icon>{{ currentRoom.hotspots.length }} sản phẩm</span>
+          <span><app-icon name="cube" [size]="16"></app-icon>Xem 3D 360°</span>
+          <span *ngIf="roomTotal(currentRoom) > 0"><app-icon name="tag" [size]="16"></app-icon>Trọn bộ {{ roomTotal(currentRoom) | vnd }}</span>
+        </div>
+
+        <div class="sr-hero__cta">
+          <a [routerLink]="['/xem-phong-3d', currentRoom.id]" target="_blank" class="sr-btn">
+            Khám phá phòng 3D
+            <span aria-hidden="true">→</span>
+          </a>
+          <a routerLink="/custom-request/new" class="sr-hero__custom">
             <app-icon name="pencil" [size]="13"></app-icon>
-            <span>Chưa ưng mẫu nào? Gửi yêu cầu thiết kế riêng</span>
+            Chưa ưng mẫu nào? Gửi yêu cầu thiết kế riêng
           </a>
         </div>
-
-        <!-- Room selector pills -->
-        <div class="flex items-center gap-2 overflow-x-auto pb-1">
-          <span class="text-xs text-neutral-600 whitespace-nowrap font-medium">Chọn căn phòng:</span>
-          <button 
-            *ngFor="let r of rooms"
-            (click)="selectRoom(r)"
-            [class]="currentRoom.id === r.id 
-              ? 'bg-gradient-to-r from-amber-400 to-amber-600 text-white font-extrabold shadow-[0_0_12px_rgba(205, 129, 142,0.3)]' 
-              : 'bg-neutral-100 border border-neutral-300 text-neutral-700 hover:text-amber-700 hover:border-amber-500/40 font-medium'"
-            class="px-4 py-2 rounded-2xl text-xs whitespace-nowrap transition flex items-center gap-2">
-            <app-icon name="room" [size]="14"></app-icon>
-            <span>{{ r.name.split('(')[0] }}</span>
-          </button>
-        </div>
       </div>
 
-      <!-- Main Layout: 3D Room Viewer + Buy This Look Drawer -->
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        
-        <!-- Left: 3D Interactive Room Stage (8 cols) -->
-        <div class="lg:col-span-8 space-y-4">
-          <app-room-viewer 
-            [room]="currentRoom"
-            (hotspotClicked)="onHotspotSelected($event)">
-          </app-room-viewer>
+      <a [routerLink]="['/xem-phong-3d', currentRoom.id]" target="_blank" class="sr-hero__media" [attr.aria-label]="'Xem phòng 3D ' + currentRoom.name">
+        <img [src]="currentRoom.coverImage" [alt]="currentRoom.name">
+        <span class="sr-hero__pill"><app-icon name="cube" [size]="16"></app-icon>Xem 3D</span>
+        <span class="sr-hero__play" aria-hidden="true"><app-icon name="play" [size]="30"></app-icon></span>
+      </a>
 
-          <div class="p-4 bg-[#FFFFFF] rounded-2xl border border-neutral-200 text-xs text-neutral-700 flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <app-icon name="sparkles" [size]="16" class="text-amber-400"></app-icon>
-              <span>Mẹo: Kéo chuột để đổi góc nhìn xung quanh bàn, click vào các chấm tròn để khám phá món đồ.</span>
-            </div>
-            <span class="hidden sm:inline text-neutral-500">Thiết kế bởi Luméa Studio</span>
-          </div>
-        </div>
+      <img src="assets/mascot/goh-search.png" alt="" class="sr-hero__mascot" aria-hidden="true">
+    </section>
 
-        <!-- Right: "Shop This Room / Buy This Look" Panel (4 cols) -->
-        <div class="lg:col-span-4 bg-[#FFFFFF] rounded-3xl p-6 border border-neutral-200 shadow-soft space-y-6">
-          
-          <div class="border-b border-neutral-200 pb-4">
-            <div class="flex items-center justify-between">
-              <h3 class="font-serif text-lg font-bold text-amber-800">
-                Mua Trọn Bộ Phòng (Buy This Look)
-              </h3>
-              <span class="text-xs font-extrabold text-white bg-gradient-to-r from-amber-400 to-amber-500 px-2.5 py-0.5 rounded-full shadow-sm">
-                -15% Combo
-              </span>
-            </div>
-            <p class="text-xs text-neutral-600 mt-1">
-              Chọn các món đồ được bài trí trong phòng và thêm vào giỏ hàng chỉ với 1 thao tác.
-            </p>
-          </div>
-
-          <!-- Select All Checkbox -->
-          <div class="flex items-center justify-between text-xs pb-2 border-b border-neutral-200">
-            <label class="flex items-center gap-2 font-semibold text-neutral-800 cursor-pointer select-none">
-              <input 
-                type="checkbox" 
-                [checked]="isAllSelected()"
-                (change)="toggleSelectAll()"
-                class="w-4 h-4 text-amber-500 rounded border-neutral-300 bg-neutral-200 focus:ring-amber-400">
-              <span>Chọn tất cả ({{ roomProducts.length }} sản phẩm)</span>
-            </label>
-            <span class="text-neutral-600 font-medium">
-              Đã chọn: {{ selectedProductIds.size }}/{{ roomProducts.length }}
-            </span>
-          </div>
-
-          <!-- Products in Room List -->
-          <div class="space-y-3 max-h-[380px] overflow-y-auto pr-1">
-            <div 
-              *ngFor="let p of roomProducts"
-              class="p-3 rounded-2xl border transition flex items-center gap-3"
-              [class.border-amber-500]="selectedProductIds.has(p.id)"
-              [class.bg-amber-950]="selectedProductIds.has(p.id)"
-              [class.border-neutral-200]="!selectedProductIds.has(p.id)"
-              [class.bg-neutral-100]="!selectedProductIds.has(p.id)">
-              
-              <input 
-                type="checkbox" 
-                [checked]="selectedProductIds.has(p.id)"
-                (change)="toggleProductSelection(p.id)"
-                class="w-4 h-4 text-amber-500 rounded border-neutral-300 bg-neutral-200 focus:ring-amber-400 flex-shrink-0">
-
-              <img 
-                [src]="p.images[0]" 
-                [alt]="p.name"
-                class="w-14 h-14 rounded-xl object-cover border border-neutral-300 bg-neutral-200 flex-shrink-0">
-
-              <div class="min-w-0 flex-1">
-                <h4 class="text-xs font-bold text-neutral-900 truncate" [class.text-white]="selectedProductIds.has(p.id)">{{ p.name }}</h4>
-                <div class="text-[10px] text-neutral-600 mt-0.5" [class.text-amber-200]="selectedProductIds.has(p.id)">{{ p.categoryName }}</div>
-                <div class="mt-1 flex items-baseline gap-2">
-                  <span class="text-xs font-bold text-amber-400" [class.text-white]="selectedProductIds.has(p.id)">{{ p.basePrice | vnd }}</span>
-                  <a [routerLink]="['/product', p.slug]" class="text-[10px] text-neutral-500 hover:text-amber-400 underline" [class.text-amber-200]="selectedProductIds.has(p.id)">
-                    Xem
-                  </a>
-                </div>
-              </div>
-
-            </div>
-          </div>
-
-          <!-- Price & Buy The Look CTA -->
-          <div class="border-t border-neutral-200 pt-4 space-y-3">
-            <div class="flex justify-between items-baseline text-sm">
-              <span class="text-neutral-600">Tổng giá trị các món đã chọn:</span>
-              <span class="text-lg font-semibold text-amber-400">
-                {{ selectedTotal | vnd }}
-              </span>
-            </div>
-
-            <div class="bg-amber-500/10 p-3 rounded-xl border border-amber-500/25 text-[11px] text-amber-800">
-              🎁 Nhập mã <strong>ROOMCOMBO</strong> tại bước thanh toán để được giảm thêm 15% cho đơn hàng này.
-            </div>
-
-            <button 
-              type="button" 
-              (click)="addSelectedToCart()"
-              [disabled]="selectedProductIds.size === 0"
-              class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 disabled:opacity-50 text-white font-extrabold text-xs sm:text-sm shadow-[0_4px_25px_rgba(205, 129, 142,0.35)] transition flex items-center justify-center gap-2">
-              <app-icon name="cart" [size]="16"></app-icon>
-              <span>Thêm {{ selectedProductIds.size }} món vào giỏ hàng</span>
-            </button>
-          </div>
-
-        </div>
-
+    <!-- ===== Lọc theo loại phòng ===== -->
+    <div class="sr-filter">
+      <div #chips class="sr-filter__chips">
+        <button type="button" class="sr-chip" [class.sr-chip--on]="filter === 'all'" (click)="filter = 'all'">
+          <app-icon name="sliders" [size]="15"></app-icon>
+          Tất cả phòng ({{ rooms.length }})
+        </button>
+        <button
+          *ngFor="let t of roomTypes"
+          type="button"
+          class="sr-chip"
+          [class.sr-chip--on]="filter === t.key"
+          (click)="filter = t.key">
+          <app-icon [name]="t.icon" [size]="15"></app-icon>
+          {{ t.label }} ({{ t.count }})
+        </button>
       </div>
-
+      <div class="sr-filter__nav">
+        <button type="button" (click)="scrollChips(chips, -1)" aria-label="Cuộn trái"><app-icon name="chevron-left" [size]="16"></app-icon></button>
+        <button type="button" (click)="scrollChips(chips, 1)" aria-label="Cuộn phải"><app-icon name="chevron-right" [size]="16"></app-icon></button>
+      </div>
     </div>
+
+    <!-- ===== Lưới phòng ===== -->
+    <div class="sr-grid">
+      <article
+        *ngFor="let r of filteredRooms"
+        class="sr-card"
+        [class.sr-card--on]="r.id === currentRoom.id"
+        (click)="pickRoom(r, hero)">
+        <div class="sr-card__img">
+          <img [src]="r.coverImage" [alt]="r.name" loading="lazy">
+          <span class="sr-card__badge">{{ r.hotspots.length }} sản phẩm</span>
+        </div>
+        <div class="sr-card__body">
+          <div class="sr-card__text">
+            <h3>{{ shortName(r) }}</h3>
+            <span>{{ r.theme }}</span>
+          </div>
+          <a
+            [routerLink]="['/xem-phong-3d', r.id]"
+            target="_blank"
+            class="sr-card__go"
+            (click)="$event.stopPropagation()"
+            [attr.aria-label]="'Xem phòng 3D ' + shortName(r)">
+            <app-icon name="chevron-right" [size]="16"></app-icon>
+          </a>
+        </div>
+      </article>
+    </div>
+
+    <!-- ===== Dải cam kết ===== -->
+    <div class="sr-ribbon">
+      <span><app-icon name="home" [size]="20"></app-icon>Khám phá {{ rooms.length }} không gian sống cùng LUMÉA</span>
+      <span><app-icon name="sparkles" [size]="20"></app-icon>Thiết kế hiện đại – Trải nghiệm chân thực</span>
+      <span><app-icon name="heart" [size]="20"></app-icon>Kiến tạo tổ ấm theo cách của bạn</span>
+    </div>
+  </div>
+
+  <div *ngIf="!currentRoom" class="sr__loading">Đang tải các phòng mẫu…</div>
+</div>

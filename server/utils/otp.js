@@ -116,4 +116,4 @@ async function sendOtpSms(phoneNumber, code) {
   throw new Error('Chưa cấu hình nhà cung cấp SMS (ESMS_API_KEY/ESMS_SECRET_KEY). Đặt OTP_DEV_MODE=true để test.');
 }
 
-module.exports = { generateOtpCode, sendOtpSms, sendOtpEmail };
+module.exports = { generateOtpCode, sendOtpSms, sendOtpEmail, isEmailConfigured, getMailTransporter };

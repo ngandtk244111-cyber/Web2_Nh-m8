@@ -3,15 +3,13 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CartService } from '../../core/services/cart.service';
-import { VoucherService, couponToVoucher, isVoucherUsable, voucherDiscount } from '../../core/services/voucher.service';
-import { Coupon } from '../../core/models/cart.model';
-import { UserVoucher } from '../../core/models/voucher.model';
-import { VoucherCardComponent } from '../../components/voucher-card/voucher-card.component';
+import { VoucherService, voucherDiscount } from '../../core/services/voucher.service';
 import { AuthService } from '../../core/services/auth.service';
 import { CheckoutFlowService } from '../../core/services/checkout-flow.service';
 import { AppIconComponent } from '../../components/icon/icon.component';
 import { CheckoutStepsComponent } from '../../components/checkout-steps/checkout-steps.component';
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
+import { VoucherPickerComponent } from '../../components/voucher-picker/voucher-picker.component';
 
 const FREE_SHIPPING_THRESHOLD = 500_000;
 const DEFAULT_SHIPPING_FEE = 30_000;
@@ -23,15 +21,11 @@ const DEFAULT_SHIPPING_FEE = 30_000;
 @Component({
   selector: 'app-cart',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, AppIconComponent, CheckoutStepsComponent, VoucherCardComponent, VndPipe],
+  imports: [VoucherPickerComponent, CommonModule, FormsModule, RouterLink, AppIconComponent, CheckoutStepsComponent, VndPipe],
   templateUrl: './cart.component.html',
   styleUrl: './cart.component.css'
 })
 export class CartComponent implements OnInit {
-  couponCodeInput = '';
-  couponMessage = '';
-  couponSuccess = false;
-  showVoucherList = false;
 
   readonly selectedIds = signal<Set<string>>(new Set());
   private knownIds = new Set<string>();
@@ -92,44 +86,6 @@ export class CartComponent implements OnInit {
 
   readonly selectedCouponDiscount = computed(() => voucherDiscount(this.cartService.appliedCoupon(), this.selectedSubtotal()));
 
-  /**
-   * Danh sách voucher để chọn: voucher cá nhân còn hạn + mã khách từng nhập + mã công khai của shop
-   * (bỏ trùng mã). Mã công khai được quy về dạng UserVoucher để dùng chung thẻ VoucherCard.
-   */
-  readonly voucherOptions = computed<UserVoucher[]>(() => {
-    const own = this.voucherService.usable();
-    const seen = new Set(own.map(v => v.code));
-    const extra: UserVoucher[] = [];
-    for (const c of [...this.cartService.savedCoupons(), ...this.cartService.shopCoupons()]) {
-      if (seen.has(c.code)) continue;
-      seen.add(c.code);
-      extra.push(couponToVoucher(c));
-    }
-    return [...own, ...extra];
-  });
-
-  voucherDisabledReason(v: UserVoucher): string | null {
-    const sub = this.selectedSubtotal();
-    return sub < v.minSpend ? `Mua thêm ${(v.minSpend - sub).toLocaleString('vi-VN')}đ để dùng mã này` : null;
-  }
-
-  isVoucherSelected(v: UserVoucher): boolean {
-    return this.cartService.appliedCoupon()?.code === v.code;
-  }
-
-  /** Bấm vào voucher đang chọn thì bỏ chọn (khách không muốn dùng mã). */
-  toggleVoucher(v: UserVoucher): void {
-    if (!isVoucherUsable(v)) return;
-    const res = this.isVoucherSelected(v)
-      ? this.cartService.selectCoupon(null)
-      : this.cartService.selectCoupon(
-          { code: v.code, title: v.title, description: v.description, discountPercent: v.discountPercent, discountAmount: v.discountAmount, maxDiscount: v.maxDiscount, minSpend: v.minSpend },
-          this.selectedSubtotal()
-        );
-    this.couponSuccess = res.success;
-    this.couponMessage = res.message;
-  }
-
   readonly selectedShippingFee = computed(() => {
     if (this.selectedSubtotal() === 0) return 0;
     return this.selectedSubtotal() >= FREE_SHIPPING_THRESHOLD ? 0 : DEFAULT_SHIPPING_FEE;
@@ -161,17 +117,6 @@ export class CartComponent implements OnInit {
     const next = new Set(this.selectedIds());
     next.delete(itemId);
     this.selectedIds.set(next);
-  }
-
-  /** Nhập tay mã: hợp lệ thì lưu vào danh sách (lần sau khỏi nhập lại), khách tự bấm chọn để áp dụng. */
-  addCouponCode(): void {
-    if (!this.couponCodeInput.trim()) return;
-    const own = this.voucherService.usable().map(v => ({ ...v } as Coupon));
-    this.cartService.addCouponCode(this.couponCodeInput, own).subscribe(res => {
-      this.couponSuccess = res.success;
-      this.couponMessage = res.message;
-      if (res.success) this.couponCodeInput = '';
-    });
   }
 
   /**

@@ -1,42 +1,115 @@
 <div class="bg-[#FFFFFF] rounded-3xl p-6 sm:p-8 border border-neutral-200 shadow-xl space-y-6">
   <h3 class="font-serif text-lg font-bold text-amber-800 border-b border-neutral-200 pb-3">Thông Tin Cá Nhân</h3>
 
-  <!-- Avatar -->
-  <div class="flex items-center gap-4">
-    <div class="relative group">
-      <div class="w-20 h-20 rounded-full overflow-hidden border-2 border-amber-500/30 bg-neutral-100 flex items-center justify-center">
-        <img
-          *ngIf="authService.getAvatarUrl(authService.currentUser()?.avatar) as avatarUrl; else avatarFallback"
-          [src]="avatarUrl"
-          referrerpolicy="no-referrer"
-          alt="Ảnh đại diện"
-          class="w-full h-full object-cover">
-        <ng-template #avatarFallback>
-          <app-icon name="user" [size]="32" class="text-neutral-400"></app-icon>
-        </ng-template>
-      </div>
+  <!-- Avatar: bấm vào ảnh hoặc nút "Tải ảnh lên" để chọn ảnh mới -->
+  <div class="flex items-center gap-5">
+    <button
+      type="button"
+      (click)="openViewer()"
+      [disabled]="isUploadingAvatar"
+      class="relative group w-24 h-24 rounded-full overflow-hidden border-2 border-[#A3152D]/30 bg-neutral-100 flex items-center justify-center flex-shrink-0"
+      title="Xem ảnh đại diện">
+      <img
+        *ngIf="authService.getAvatarUrl(authService.currentUser()?.avatar) as avatarUrl; else avatarFallback"
+        [src]="avatarUrl"
+        referrerpolicy="no-referrer"
+        alt="Ảnh đại diện"
+        class="w-full h-full object-cover">
+      <ng-template #avatarFallback>
+        <app-icon name="user" [size]="36" class="text-neutral-400"></app-icon>
+      </ng-template>
+      <!-- Lớp phủ khi rê chuột / đang tải -->
+      <span
+        class="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-black/45 text-white text-[11px] font-bold transition"
+        [class.opacity-0]="!isUploadingAvatar"
+        [class.group-hover:opacity-100]="!isUploadingAvatar">
+        <span *ngIf="isUploadingAvatar" class="w-5 h-5 rounded-full border-2 border-white/40 border-t-white animate-spin"></span>
+        <ng-container *ngIf="!isUploadingAvatar">
+          <app-icon name="eye" [size]="16"></app-icon>
+          Xem ảnh
+        </ng-container>
+      </span>
+    </button>
+
+    <div class="min-w-0">
+      <div class="text-base font-bold text-neutral-900 truncate">{{ authService.currentUser()?.fullName || 'Chưa đặt tên' }}</div>
+      <div *ngIf="authService.currentUser()?.phoneNumber" class="text-xs text-neutral-500">{{ authService.currentUser()?.phoneNumber }}</div>
+      <div class="mt-2 flex flex-wrap gap-2">
+      <button
+        type="button"
+        (click)="openViewer()"
+        class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-neutral-300 bg-white text-neutral-700 hover:border-[#A3152D] hover:text-[#A3152D] text-xs font-bold transition">
+        <app-icon name="eye" [size]="14"></app-icon>
+        Xem ảnh
+      </button>
       <button
         type="button"
         (click)="triggerAvatarPicker()"
         [disabled]="isUploadingAvatar"
-        class="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-amber-500 hover:bg-amber-400 text-white flex items-center justify-center shadow-md border-2 border-white transition disabled:opacity-60"
-        title="Đổi ảnh đại diện">
-        <app-icon name="sliders" [size]="13"></app-icon>
+        class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-[#A3152D]/40 bg-white text-[#A3152D] hover:bg-[#A3152D] hover:text-white text-xs font-bold transition disabled:opacity-60">
+        <app-icon name="plus" [size]="14"></app-icon>
+        {{ isUploadingAvatar ? 'Đang tải ảnh lên...' : 'Tải ảnh lên' }}
       </button>
-      <input #avatarInput type="file" accept="image/*" class="hidden" (change)="onAvatarSelected($event)">
-    </div>
-    <div>
-      <div class="text-sm font-bold text-neutral-900">{{ authService.currentUser()?.fullName || 'Chưa đặt tên' }}</div>
-      <div class="text-xs text-neutral-500">{{ authService.currentUser()?.phoneNumber }}</div>
-      <div *ngIf="isUploadingAvatar" class="text-[11px] text-amber-600 mt-1">Đang tải ảnh lên...</div>
+      </div>
+      <div class="text-[11px] text-neutral-500 mt-1.5">Chụp bằng camera hoặc tải ảnh JPG, PNG, WEBP, GIF</div>
     </div>
   </div>
 
   <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <!-- Số điện thoại: chưa có thì liên kết, có rồi thì đổi được — đều phải xác nhận OTP -->
     <div>
       <label class="text-xs font-bold text-neutral-700 block mb-1">Số điện thoại</label>
-      <input type="text" [value]="authService.currentUser()?.phoneNumber" disabled
-        class="w-full p-2.5 rounded-xl border border-neutral-200 bg-neutral-100 text-neutral-500 text-sm">
+
+      <div *ngIf="phoneStep === 'idle'" class="flex gap-2">
+        <input type="text" [value]="authService.currentUser()?.phoneNumber || ''" placeholder="Chưa liên kết số điện thoại" disabled
+          class="flex-1 min-w-0 p-2.5 rounded-xl border border-neutral-200 bg-neutral-100 text-neutral-500 text-sm">
+        <button type="button" (click)="startPhoneLink()"
+          class="flex-shrink-0 px-4 rounded-xl bg-[#A3152D] hover:bg-[#891226] text-white text-xs font-bold transition">
+          {{ authService.currentUser()?.phoneNumber ? 'Đổi số' : 'Liên kết' }}
+        </button>
+      </div>
+
+      <!-- B1: nhập số -->
+      <div *ngIf="phoneStep === 'enter'" class="space-y-2">
+        <div class="flex gap-2">
+          <input type="tel" [(ngModel)]="newPhone" (input)="phoneError = ''" (keydown.enter)="sendPhoneOtp()" inputmode="numeric" maxlength="10"
+            placeholder="VD: 0912345678"
+            class="flex-1 min-w-0 p-2.5 rounded-xl border bg-white text-neutral-900 text-sm focus:outline-none focus:border-amber-400"
+            [class.border-rose-500]="phoneError" [class.border-neutral-300]="!phoneError">
+          <button type="button" (click)="sendPhoneOtp()" [disabled]="phoneBusy"
+            class="flex-shrink-0 px-4 rounded-xl bg-[#A3152D] hover:bg-[#891226] disabled:opacity-50 text-white text-xs font-bold transition">
+            {{ phoneBusy ? 'Đang gửi...' : 'Gửi mã OTP' }}
+          </button>
+        </div>
+        <div class="flex items-center justify-between text-[11px]">
+          <span *ngIf="phoneError" class="text-rose-500 font-medium">{{ phoneError }}</span>
+          <button type="button" (click)="cancelPhoneLink()" class="ml-auto text-neutral-500 hover:text-neutral-800">Huỷ</button>
+        </div>
+      </div>
+
+      <!-- B2: nhập mã OTP -->
+      <div *ngIf="phoneStep === 'otp'" class="space-y-2">
+        <div class="flex gap-2">
+          <input type="text" [(ngModel)]="phoneOtp" (input)="phoneError = ''" (keydown.enter)="confirmPhoneOtp()" inputmode="numeric" maxlength="6"
+            placeholder="Nhập mã OTP"
+            class="flex-1 min-w-0 p-2.5 rounded-xl border bg-white text-neutral-900 text-sm tracking-[0.3em] focus:outline-none focus:border-amber-400"
+            [class.border-rose-500]="phoneError" [class.border-neutral-300]="!phoneError">
+          <button type="button" (click)="confirmPhoneOtp()" [disabled]="phoneBusy"
+            class="flex-shrink-0 px-4 rounded-xl bg-[#A3152D] hover:bg-[#891226] disabled:opacity-50 text-white text-xs font-bold transition">
+            {{ phoneBusy ? 'Đang xác nhận...' : 'Xác nhận' }}
+          </button>
+        </div>
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-neutral-500">
+          <span>Đã gửi mã tới <strong class="text-neutral-800">{{ newPhone }}</strong></span>
+          <button type="button" (click)="sendPhoneOtp()" [disabled]="phoneBusy || resendIn > 0"
+            class="text-[#A3152D] font-bold disabled:text-neutral-400">
+            {{ resendIn > 0 ? 'Gửi lại sau ' + resendIn + 's' : 'Gửi lại mã' }}
+          </button>
+          <button type="button" (click)="backToPhoneInput()" class="hover:text-neutral-800">Đổi số khác</button>
+          <button type="button" (click)="cancelPhoneLink()" class="ml-auto hover:text-neutral-800">Huỷ</button>
+        </div>
+        <span *ngIf="phoneError" class="text-[11px] text-rose-500 font-medium block">{{ phoneError }}</span>
+      </div>
     </div>
     <div>
       <label class="text-xs font-bold text-neutral-700 block mb-1">Họ và tên</label>
@@ -84,3 +157,66 @@
     </button>
   </div>
 </div>
+
+<!-- Xem ảnh đại diện phóng to: từ đây đổi / tải ảnh mới -->
+<div
+  *ngIf="viewerOpen"
+  class="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm"
+  (click)="closeViewer()"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Ảnh đại diện">
+  <div class="relative w-full max-w-md flex flex-col items-center gap-5" (click)="$event.stopPropagation()">
+    <button
+      type="button"
+      (click)="closeViewer()"
+      class="absolute -top-2 -right-2 sm:-right-10 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-neutral-800 flex items-center justify-center shadow-lg transition"
+      aria-label="Đóng">
+      <app-icon name="x" [size]="18"></app-icon>
+    </button>
+
+    <div class="relative w-72 h-72 sm:w-96 sm:h-96 rounded-full overflow-hidden border-4 border-white shadow-2xl bg-neutral-100 flex items-center justify-center">
+      <img
+        *ngIf="authService.getAvatarUrl(authService.currentUser()?.avatar) as avatarUrl; else bigFallback"
+        [src]="avatarUrl"
+        referrerpolicy="no-referrer"
+        alt="Ảnh đại diện"
+        class="w-full h-full object-cover">
+      <ng-template #bigFallback>
+        <div class="flex flex-col items-center gap-2 text-neutral-400">
+          <app-icon name="user" [size]="72"></app-icon>
+          <span class="text-sm font-medium">Chưa có ảnh đại diện</span>
+        </div>
+      </ng-template>
+      <span *ngIf="isUploadingAvatar" class="absolute inset-0 flex items-center justify-center bg-black/45">
+        <span class="w-10 h-10 rounded-full border-4 border-white/40 border-t-white animate-spin"></span>
+      </span>
+    </div>
+
+    <div class="text-white text-base font-bold">{{ authService.currentUser()?.fullName || 'Chưa đặt tên' }}</div>
+
+    <div class="flex flex-wrap justify-center gap-3">
+      <button
+        type="button"
+        (click)="triggerAvatarPicker()"
+        [disabled]="isUploadingAvatar"
+        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#A3152D] hover:bg-[#891226] text-white text-sm font-bold shadow-lg transition disabled:opacity-60">
+        <app-icon [name]="authService.currentUser()?.avatar ? 'pencil' : 'plus'" [size]="15"></app-icon>
+        {{ isUploadingAvatar ? 'Đang tải ảnh lên...' : (authService.currentUser()?.avatar ? 'Đổi ảnh khác' : 'Tải ảnh lên') }}
+      </button>
+      <button
+        type="button"
+        (click)="closeViewer()"
+        class="px-5 py-2.5 rounded-xl bg-white/90 hover:bg-white text-neutral-800 text-sm font-bold transition">
+        Đóng
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Hộp đổi ảnh đại diện: chụp / tải lên rồi cắt khung tròn -->
+<app-avatar-cropper
+  *ngIf="cropperOpen"
+  (cropped)="onAvatarCropped($event)"
+  (closed)="cropperOpen = false">
+</app-avatar-cropper>

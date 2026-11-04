@@ -12,6 +12,7 @@ import { FloatingSideBannersComponent } from './components/floating-side-banners
 import { FloatingMascotComponent } from './components/floating-mascot/floating-mascot.component';
 import { FloatingCoinWidgetComponent } from './components/floating-coin-widget/floating-coin-widget.component';
 import { ScrollToTopComponent } from './components/scroll-to-top/scroll-to-top.component';
+import { PosterPopupComponent } from './components/poster-popup/poster-popup.component';
 
 @Component({
   selector: 'app-root',
@@ -29,7 +30,8 @@ import { ScrollToTopComponent } from './components/scroll-to-top/scroll-to-top.c
     FloatingSideBannersComponent,
     FloatingMascotComponent,
     FloatingCoinWidgetComponent,
-    ScrollToTopComponent
+    ScrollToTopComponent,
+    PosterPopupComponent
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'

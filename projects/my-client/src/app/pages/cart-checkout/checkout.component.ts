@@ -1,9 +1,10 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CartService } from '../../core/services/cart.service';
-import { OrderService } from '../../core/services/order.service';
+import { OrderService, invoiceUrl } from '../../core/services/order.service';
+import { AuthService } from '../../core/services/auth.service';
 import { CustomRequestService } from '../../core/services/custom-request.service';
 import { PaymentService } from '../../core/services/payment.service';
 import { Order } from '../../core/models/order.model';
@@ -14,6 +15,8 @@ import { AppIconComponent } from '../../components/icon/icon.component';
 import { CheckoutStepsComponent } from '../../components/checkout-steps/checkout-steps.component';
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
 import { MascotService } from '../../core/services/mascot.service';
+import QRCode from 'qrcode';
+import { VoucherPickerComponent } from '../../components/voucher-picker/voucher-picker.component';
 
 export type PaymentMethodId = 'COD' | 'BANK_TRANSFER' | 'MOMO' | 'ZALOPAY' | 'CARD' | 'VNPAY' | 'ATM';
 type SupportedPaymentMethodId = 'COD' | 'BANK_TRANSFER' | 'MOMO' | 'ZALOPAY' | 'ATM';
@@ -44,7 +47,7 @@ const PAYMENT_METHODS: PaymentMethodOption[] = [
 @Component({
   selector: 'app-checkout',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, AppIconComponent, CheckoutStepsComponent, VndPipe],
+  imports: [VoucherPickerComponent, CommonModule, FormsModule, RouterLink, AppIconComponent, CheckoutStepsComponent, VndPipe],
   templateUrl: './checkout.component.html',
   styleUrl: './checkout.component.css'
 })
@@ -60,12 +63,51 @@ export class CheckoutComponent implements OnInit {
   };
 
   errors: Record<string, string> = {};
+  private readonly authService = inject(AuthService);
+
+  /** Yêu cầu xuất hoá đơn điện tử — thông tin này được in lên hoá đơn PDF. */
+  invoice = {
+    requested: false,
+    type: 'personal' as 'personal' | 'company',
+    email: '',
+    companyName: '',
+    taxCode: '',
+    companyAddress: '',
+  };
+
+  /** Bật hoá đơn: điền sẵn email nhận hoá đơn bằng email giao hàng (nếu có). */
+  onInvoiceToggle(): void {
+    if (this.invoice.requested && !this.invoice.email) this.invoice.email = this.shipping.email || '';
+    if (!this.invoice.requested) {
+      for (const k of ['invoiceEmail', 'invoiceCompany', 'invoiceTax', 'invoiceAddress']) delete this.errors[k];
+    }
+  }
+
+  /** Kiểm tra thông tin hoá đơn; trả về false nếu còn lỗi (lỗi hiện ngay dưới từng ô). */
+  private validateInvoice(): boolean {
+    for (const k of ['invoiceEmail', 'invoiceCompany', 'invoiceTax', 'invoiceAddress']) delete this.errors[k];
+    if (!this.invoice.requested) return true;
+    const inv = this.invoice;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(inv.email.trim())) this.errors['invoiceEmail'] = 'Email nhận hóa đơn không hợp lệ';
+    if (inv.type === 'company') {
+      if (!inv.companyName.trim()) this.errors['invoiceCompany'] = 'Vui lòng nhập tên công ty';
+      if (!/^\d{10}(-\d{3})?$/.test(inv.taxCode.trim())) this.errors['invoiceTax'] = 'Mã số thuế gồm 10 chữ số';
+      if (!inv.companyAddress.trim()) this.errors['invoiceAddress'] = 'Vui lòng nhập địa chỉ công ty';
+    }
+    return !['invoiceEmail', 'invoiceCompany', 'invoiceTax', 'invoiceAddress'].some(k => this.errors[k]);
+  }
+
+  invoiceLink(orderNumber: string): string {
+    return invoiceUrl(orderNumber, this.authService.currentUser()?._id);
+  }
   readonly paymentMethods = PAYMENT_METHODS;
   paymentMethod: PaymentMethodId = 'COD';
 
   districts = signal<VNLocation[]>([]);
 
   showBankQrModal = false;
+  /** Ảnh QR minh hoạ (data URL) của hộp chuyển khoản. */
+  bankQrDataUrl = '';
   showOrderSuccess = false;
   createdOrder: Order | null = null;
 
@@ -77,8 +119,98 @@ export class CheckoutComponent implements OnInit {
     private customRequestService: CustomRequestService,
     private paymentService: PaymentService,
     private router: Router,
-    private mascotService: MascotService
+    private mascotService: MascotService,
+    private route: ActivatedRoute
   ) {}
+
+  /* ---------- Đổi phương thức thanh toán cho đơn vừa đặt ---------- */
+  switchOpen = false;
+  switchMethod: PaymentMethodId = 'COD';
+  switchBusy = false;
+  switchError = '';
+  /** Mở từ link "Chọn phương thức khác" (cổng thanh toán / trang kết quả) chứ không phải ngay sau khi đặt. */
+  private switchFromLink = false;
+
+  readonly switchableMethods = PAYMENT_METHODS.filter(m => m.supported);
+
+  /** Đơn chưa trả tiền và chưa giao/huỷ thì được đổi phương thức. */
+  get canSwitchMethod(): boolean {
+    const o = this.createdOrder;
+    return !!o && o.paymentStatus !== 'PAID' && ['PENDING', 'CONFIRMED', 'IN_PRODUCTION'].includes(o.status);
+  }
+
+  openSwitch(): void {
+    if (!this.createdOrder) return;
+    this.showBankQrModal = false;
+    this.showOrderSuccess = false;
+    this.switchMethod = this.createdOrder.paymentMethod as PaymentMethodId;
+    this.switchError = '';
+    this.switchOpen = true;
+  }
+
+  /** Đóng hộp đổi phương thức: quay lại màn hình của phương thức hiện tại. */
+  closeSwitch(): void {
+    if (this.switchBusy) return;
+    this.switchOpen = false;
+    if (this.switchFromLink) {
+      this.navigateToTracking();
+      return;
+    }
+    if (this.createdOrder?.paymentMethod === 'BANK_TRANSFER') this.showBankQrModal = true;
+    else this.showOrderSuccess = true;
+  }
+
+  confirmSwitch(): void {
+    const order = this.createdOrder;
+    if (!order || this.switchBusy) return;
+    this.switchBusy = true;
+    this.switchError = '';
+    this.orderService.changePaymentMethod(order.orderNumber, this.switchMethod).subscribe({
+      next: updated => {
+        this.switchBusy = false;
+        this.switchOpen = false;
+        this.switchFromLink = false;
+        this.createdOrder = updated;
+        this.paymentMethod = updated.paymentMethod as PaymentMethodId;
+        this.continuePayment(updated);
+      },
+      error: err => {
+        this.switchBusy = false;
+        this.switchError = err?.error?.error || 'Không đổi được phương thức thanh toán, vui lòng thử lại.';
+      },
+    });
+  }
+
+  /** Tiếp tục bước trả tiền theo phương thức hiện tại của đơn. */
+  private continuePayment(order: Order): void {
+    const method = order.paymentMethod;
+    if (method === 'BANK_TRANSFER') {
+      this.buildDemoQr(order);
+      this.showBankQrModal = true;
+    } else if (method === 'MOMO' || method === 'ATM') {
+      this.redirectToMomo(order.orderNumber, method === 'ATM' ? 'atm' : 'momo', () => {});
+    } else if (method === 'ZALOPAY') {
+      this.redirectToZaloPay(order.orderNumber, () => {});
+    } else {
+      this.showOrderSuccess = true;
+    }
+  }
+
+  /** Vào /checkout?doiPhuongThuc=<mã đơn>: mở lại đơn chưa thanh toán để chọn phương thức khác. */
+  private openSwitchFromLink(orderNumber: string): void {
+    this.orderService.getOrderByNumber(orderNumber).subscribe(order => {
+      if (!order) return;
+      this.createdOrder = order;
+      this.paymentMethod = order.paymentMethod as PaymentMethodId;
+      if (!this.canSwitchMethod) {
+        this.navigateToTracking();
+        return;
+      }
+      this.flow.enterFinished();
+      this.switchFromLink = true;
+      this.openSwitch();
+    });
+  }
 
   onProvinceChange(): void {
     const p = this.addressService.provinces().find(x => x.name === this.shipping.city);
@@ -91,6 +223,11 @@ export class CheckoutComponent implements OnInit {
 
   ngOnInit(): void {
     this.addressService.loadProvinces();
+    const switchOrder = this.route.snapshot.queryParamMap.get('doiPhuongThuc');
+    if (switchOrder) {
+      this.openSwitchFromLink(switchOrder);
+      return;
+    }
     // Phòng trường hợp còn kẹt ở Bước 4 (khoá) từ một đơn đã đặt trước đó trong cùng phiên SPA
     // nhưng lại vào /checkout theo cách khác "Tiếp tục mua sắm" (component instance mới, createdOrder rỗng) —
     // tránh màn hình trắng vì cả 2 khối bước 2/3 lẫn modal bước 4 đều không có điều kiện để hiển thị.
@@ -174,6 +311,7 @@ export class CheckoutComponent implements OnInit {
       this.errors['street'] = 'Vui lòng nhập địa chỉ cụ thể';
     }
 
+    this.validateInvoice();
     return Object.keys(this.errors).length === 0;
   }
 
@@ -210,6 +348,14 @@ export class CheckoutComponent implements OnInit {
       total: this.cartService.checkoutTotal(),
       couponCode: this.cartService.appliedCoupon()?.code,
       notes: this.shipping.notes,
+      invoice: this.invoice.requested ? {
+        requested: true,
+        type: this.invoice.type,
+        email: this.invoice.email.trim(),
+        companyName: this.invoice.companyName.trim(),
+        taxCode: this.invoice.taxCode.trim(),
+        companyAddress: this.invoice.companyAddress.trim(),
+      } : null,
     }).subscribe({
       next: (newOrder) => {
         this.placingOrder = false;
@@ -224,20 +370,30 @@ export class CheckoutComponent implements OnInit {
         });
 
         this.createdOrder = newOrder;
-        // Đặt hàng thành công -> tiến sang Bước 4 (Hoàn tất), khoá Stepper lại.
-        this.flow.goToStep(4, { validate: () => true });
-        // Chỉ xoá đúng các sản phẩm vừa đặt hàng — sản phẩm chưa chọn vẫn còn trong giỏ.
-        this.cartService.removeItems(items.map(i => i.id));
-        this.cartService.clearCheckoutSelection();
-        // Mỗi mã chỉ dùng 1 lần: dùng xong thì xoá khỏi danh sách mã của khách.
-        this.cartService.consumeAppliedCoupon();
+        const finish = () => {
+          // Đặt hàng thành công -> tiến sang Bước 4 (Hoàn tất), khoá Stepper lại.
+          this.flow.goToStep(4, { validate: () => true });
+          // Chỉ xoá đúng các sản phẩm vừa đặt hàng — sản phẩm chưa chọn vẫn còn trong giỏ.
+          this.cartService.removeItems(items.map(i => i.id));
+          this.cartService.clearCheckoutSelection();
+          // Mỗi mã chỉ dùng 1 lần: dùng xong thì xoá khỏi danh sách mã của khách.
+          this.cartService.consumeAppliedCoupon();
+        };
 
+        // Ví / cổng online: chỉ dọn giỏ khi đã tạo được giao dịch. Cổng lỗi thì server huỷ đơn + trả mã,
+        // khách ở lại bước thanh toán với giỏ hàng và mã giảm giá như cũ để chọn phương thức khác.
+        if (this.paymentMethod === 'MOMO' || this.paymentMethod === 'ATM') {
+          this.redirectToMomo(newOrder.orderNumber, this.paymentMethod === 'ATM' ? 'atm' : 'momo', finish);
+          return;
+        }
+        if (this.paymentMethod === 'ZALOPAY') {
+          this.redirectToZaloPay(newOrder.orderNumber, finish);
+          return;
+        }
+        finish();
         if (this.paymentMethod === 'BANK_TRANSFER') {
+          this.buildDemoQr(newOrder);
           this.showBankQrModal = true;
-        } else if (this.paymentMethod === 'MOMO' || this.paymentMethod === 'ATM') {
-          this.redirectToMomo(newOrder.orderNumber, this.paymentMethod === 'ATM' ? 'atm' : 'momo');
-        } else if (this.paymentMethod === 'ZALOPAY') {
-          this.redirectToZaloPay(newOrder.orderNumber);
         } else {
           this.showOrderSuccess = true;
         }
@@ -251,39 +407,59 @@ export class CheckoutComponent implements OnInit {
     });
   }
 
-  private redirectToMomo(orderNumber: string, method: 'momo' | 'atm' = 'momo'): void {
+  private redirectToMomo(orderNumber: string, method: 'momo' | 'atm', onReady: () => void): void {
     this.paymentService.createMomoPayment(orderNumber, method).subscribe({
       next: (res) => {
         if (res.success && res.payUrl) {
+          onReady();
           window.location.href = res.payUrl;
         } else {
-          this.placeOrderError = res.error || 'Không tạo được yêu cầu thanh toán MoMo';
+          this.onGatewayFailed(res.error || 'Không tạo được yêu cầu thanh toán MoMo');
         }
       },
-      error: () => {
-        this.placeOrderError = 'Không kết nối được tới cổng thanh toán MoMo';
-      },
+      error: (err) => this.onGatewayFailed(err?.error?.error || 'Không kết nối được tới cổng thanh toán MoMo'),
     });
   }
 
-  private redirectToZaloPay(orderNumber: string): void {
+  private redirectToZaloPay(orderNumber: string, onReady: () => void): void {
     this.paymentService.createZaloPayPayment(orderNumber).subscribe({
       next: (res) => {
         if (res.success && res.orderUrl) {
+          onReady();
           window.location.href = res.orderUrl;
         } else {
-          this.placeOrderError = res.error || 'Không tạo được yêu cầu thanh toán ZaloPay';
+          this.onGatewayFailed(res.error || 'Không tạo được yêu cầu thanh toán ZaloPay');
         }
       },
-      error: () => {
-        this.placeOrderError = 'Không kết nối được tới cổng thanh toán ZaloPay';
-      },
+      error: (err) => this.onGatewayFailed(err?.error?.error || 'Không kết nối được tới cổng thanh toán ZaloPay'),
     });
   }
 
-  getVietQrUrl(order: Order): string {
-    const desc = encodeURIComponent(order.orderNumber);
-    return `https://img.vietqr.io/image/MB-0988123456-compact2.png?amount=${order.total}&addInfo=${desc}&accountName=LUMÉA%20STUDIO`;
+  /** Cổng thanh toán lỗi: đơn đã bị huỷ ở server, mã giảm giá được trả lại -> cho khách chọn phương thức khác. */
+  private onGatewayFailed(message: string): void {
+    this.createdOrder = null;
+    this.placeOrderError = message;
+    this.cartService.loadShopCoupons();
+  }
+
+  /**
+   * Mã QR chuyển khoản chỉ là minh hoạ trong phạm vi đồ án môn học: quét bằng camera điện thoại sẽ hiện
+   * thông tin đồ án và phạm vi thanh toán, không phải VietQR thật (tránh khách quét rồi chuyển tiền thật).
+   */
+  private buildDemoQr(order: Order): void {
+    this.bankQrDataUrl = '';
+    const amount = order.total.toLocaleString('vi-VN') + 'đ';
+    // Giữ nội dung ngắn để mã QR thưa, camera điện thoại quét dễ.
+    const text = [
+      'ĐỒ ÁN MÔN HỌC WEB 2 - NHÓM 8',
+      'Website Luméa: nội thất & decor 3D',
+      'QR minh hoạ trong phạm vi đồ án - KHÔNG chuyển tiền thật.',
+      `Đơn ${order.orderNumber} | ${amount}`,
+      'Thanh toán trong đồ án: COD, chuyển khoản (giả lập), MoMo/ZaloPay (sandbox).',
+    ].join('\n');
+    QRCode.toDataURL(text, { errorCorrectionLevel: 'M', margin: 1, width: 360, color: { dark: '#3a2326', light: '#ffffff' } })
+      .then(url => (this.bankQrDataUrl = url))
+      .catch(() => (this.bankQrDataUrl = ''));
   }
 
   confirmBankTransferPaid(): void {

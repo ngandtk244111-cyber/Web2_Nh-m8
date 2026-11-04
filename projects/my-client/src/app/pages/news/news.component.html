@@ -61,7 +61,7 @@
 
             <div class="na-thumbs">
               <a *ngFor="let p of taggedProducts" [routerLink]="['/product', p.slug]" class="na-thumb">
-                <img [src]="p.images[0]" [alt]="p.name" loading="lazy">
+                <app-product-photo [images]="p.images" [alt]="p.name" ratio="1 / 1"></app-product-photo>
                 <span class="na-thumb__cap">{{ p.name }}</span>
                 <strong class="na-thumb__price">{{ p.basePrice | vnd }}</strong>
               </a>

@@ -78,6 +78,19 @@ export class AuthService {
     );
   }
 
+  requestPhoneOtp(phoneNumber: string): Observable<AuthApiResponse> {
+    return this.authApi.requestPhoneOtp(this.currentUser()?._id || '', phoneNumber);
+  }
+
+  /** Xác nhận OTP xong thì server trả user đã gắn SĐT -> cập nhật luôn phiên đăng nhập. */
+  verifyPhone(phoneNumber: string, otp: string): Observable<AuthApiResponse> {
+    return this.authApi.verifyPhone(this.currentUser()?._id || '', phoneNumber, otp).pipe(
+      tap((res: AuthApiResponse) => {
+        if (res.success && res.user) this.setUser(res.user);
+      })
+    );
+  }
+
   uploadAvatar(file: File): Observable<AuthApiResponse> {
     const userId = this.currentUser()?._id || '';
     return this.authApi.uploadAvatar(userId, file).pipe(

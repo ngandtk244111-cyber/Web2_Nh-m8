@@ -865,6 +865,7 @@
 }
 
 .pd_pick__badge {
+  z-index: 1;
   position: absolute;
   top: 10px;
   left: 10px;

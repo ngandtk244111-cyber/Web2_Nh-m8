@@ -1,14 +1,34 @@
-<section class="pc_section">
-  <div class="pc_grid" [style.--cols]="posters.length">
-    <a
+<section class="pc_section" appScrollReveal="rise" aria-roledescription="carousel" aria-label="Ưu đãi nổi bật"
+  (mouseenter)="pause(true)" (mouseleave)="pause(false)" (focusin)="pause(true)" (focusout)="pause(false)">
+  <div class="pc_stage" (touchstart)="onTouchStart($event)" (touchend)="onTouchEnd($event)">
+    <button
       *ngFor="let p of posters; let i = index"
-      appScrollReveal="rise"
-      [revealDelay]="i * 180"
-      [routerLink]="p.link"
-      [queryParams]="p.queryParams"
+      type="button"
       class="pc_poster"
-      [attr.aria-label]="p.alt">
-      <img [src]="p.image" [alt]="p.alt" loading="lazy" draggable="false">
-    </a>
+      [attr.data-pos]="offset(i)"
+      [attr.aria-label]="i === active() ? p.alt : 'Xem ưu đãi: ' + p.alt"
+      [attr.aria-hidden]="isHidden(i) ? 'true' : null"
+      [attr.tabindex]="isHidden(i) ? -1 : 0"
+      (click)="open(i)">
+      <img [src]="p.image" [alt]="p.alt" draggable="false">
+    </button>
+
+    <button type="button" class="pc_arrow pc_arrow--prev" (click)="step(-1)" aria-label="Ưu đãi trước">
+      <app-icon name="chevron-left" [size]="20"></app-icon>
+    </button>
+    <button type="button" class="pc_arrow pc_arrow--next" (click)="step(1)" aria-label="Ưu đãi tiếp theo">
+      <app-icon name="chevron-right" [size]="20"></app-icon>
+    </button>
+  </div>
+
+  <div class="pc_dots">
+    <button
+      *ngFor="let p of posters; let i = index"
+      type="button"
+      class="pc_dot"
+      [class.pc_dot--active]="i === active()"
+      [attr.aria-label]="'Ưu đãi ' + (i + 1)"
+      (click)="go(i)">
+    </button>
   </div>
 </section>

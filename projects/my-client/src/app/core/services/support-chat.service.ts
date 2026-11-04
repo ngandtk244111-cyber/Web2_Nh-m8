@@ -1,4 +1,4 @@
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, computed, inject, signal, effect, untracked } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { io, Socket } from 'socket.io-client';
 import { AuthService } from './auth.service';
@@ -42,6 +42,10 @@ export class SupportChatService {
 
   constructor() {
     this.sessionId = this.loadOrCreateSessionId();
+    // Khung chat có thể được mở tự động sau khi đăng nhập (ChatPanelService) -> kết nối khi khung mở.
+    effect(() => {
+      if (this.isOpen()) untracked(() => this.ensureConnected());
+    });
   }
 
   private loadOrCreateSessionId(): string {
@@ -122,8 +126,8 @@ export class SupportChatService {
     this.messages.update(list => (message._id && list.some(m => m._id === message._id) ? list : [...list, message]));
   }
 
+  /** Chưa đăng nhập thì ChatPanelService mở popup đăng nhập thay vì mở khung chat. */
   open(): void {
-    this.ensureConnected();
     this.chatPanel.open('support');
   }
 

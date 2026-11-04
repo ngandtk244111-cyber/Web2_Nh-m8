@@ -13,7 +13,7 @@ import { VideoService } from '../../core/services/video.service';
 import { ChatService, ChatSession } from '../../core/services/chat.service';
 import { ReviewService, AdminReview } from '../../core/services/review.service';
 import { Product, ProductionType, ProductCategory } from '../../core/models/product.model';
-import { Order, ProductionStep, OrderStatus, ShippingOptions } from '../../core/models/order.model';
+import { Order, ProductionStep, OrderStatus, ShippingOptions, ReturnStatus } from '../../core/models/order.model';
 import { CustomRequest, CustomRequestStatus } from '../../core/models/custom-request.model';
 import { Room } from '../../core/models/room.model';
 import { CommunityPost } from '../../core/models/community.model';
@@ -59,6 +59,7 @@ export type AdminTab =
   | 'inventory'
   | 'suppliers'
   | 'orders'
+  | 'returns'
   | 'custom-requests'
   | 'customers'
   | 'messages'
@@ -122,6 +123,7 @@ export class AdminComponent implements OnInit, OnDestroy {
     'inventory': { group: 'Thương mại & kho', title: 'Kho hàng & tồn kho', subtitle: 'Theo dõi số lượng, ngưỡng an toàn và điều chỉnh kho' },
     'suppliers': { group: 'Thương mại & kho', title: 'Nhà cung cấp & xưởng chế tác', subtitle: 'Đối tác vật tư, filament và gia công' },
     'orders': { group: 'Vận hành & sản xuất', title: 'Đơn hàng', subtitle: 'Tiến độ xử lý, sản xuất và giao hàng' },
+    'returns': { group: 'Vận hành & sản xuất', title: 'Đổi trả & hoàn tiền', subtitle: 'Yêu cầu trả hàng khách gửi trong 7 ngày sau khi nhận — duyệt, từ chối và xác nhận đã hoàn tiền' },
     'custom-requests': { group: 'Vận hành & sản xuất', title: 'Yêu cầu in 3D riêng', subtitle: 'Brief thiết kế từ khách hàng chờ duyệt & báo giá' },
     'customers': { group: 'Khách hàng & CSKH', title: 'Khách hàng', subtitle: 'Khách mua hàng tổng hợp từ đơn, lịch sử mua và tỉ lệ nhận hàng COD' },
     'messages': { group: 'Khách hàng & CSKH', title: 'Tin nhắn hỗ trợ', subtitle: 'Trả lời khách nhắn qua khung chat trên cửa hàng — tin mới hiện ngay, không cần tải lại' },
@@ -831,6 +833,80 @@ export class AdminComponent implements OnInit, OnDestroy {
         this.shippingOptions = opts;
         this.shipForm.carrier = opts.carriers.find(c => c.suitable)?.id || '';
       },
+    });
+  }
+
+  /* ---------- Đổi trả ---------- */
+  returnFilter: ReturnStatus | 'ALL' = 'PENDING';
+  returnSearch = '';
+  /** Đơn đang mở ô nhập lý do từ chối. */
+  rejectingReturn: string | null = null;
+  rejectReturnNote = '';
+
+  readonly returnStatusLabels: Record<ReturnStatus, string> = {
+    PENDING: 'Chờ duyệt',
+    APPROVED: 'Đang hoàn',
+    COMPLETED: 'Đã hoàn/trả',
+    REJECTED: 'Từ chối',
+  };
+
+  get returnOrders(): Order[] {
+    return this.orders
+      .filter(o => !!o.returnRequest)
+      .sort((a, b) => +new Date(b.returnRequest!.requestedAt) - +new Date(a.returnRequest!.requestedAt));
+  }
+
+  returnCount(status: ReturnStatus | 'ALL'): number {
+    return status === 'ALL' ? this.returnOrders.length : this.returnOrders.filter(o => o.returnRequest!.status === status).length;
+  }
+
+  get filteredReturns(): Order[] {
+    const q = this.returnSearch.trim().toLowerCase();
+    return this.returnOrders.filter(o => {
+      if (this.returnFilter !== 'ALL' && o.returnRequest!.status !== this.returnFilter) return false;
+      if (!q) return true;
+      return o.orderNumber.toLowerCase().includes(q)
+        || o.shippingAddress.fullName.toLowerCase().includes(q)
+        || o.shippingAddress.phone.includes(q);
+    });
+  }
+
+  returnStatusClass(status: ReturnStatus): string {
+    const classes: Record<ReturnStatus, string> = {
+      PENDING: 'bg-[#FEF3C7] text-[#92400E]',
+      APPROVED: 'bg-[#EEF4F8] text-[#355C7D]',
+      COMPLETED: 'bg-[#EDF7F1] text-[#2D6A4F]',
+      REJECTED: 'bg-[#FDECEC] text-[#9E2A2B]',
+    };
+    return classes[status];
+  }
+
+  returnDateLabel(value?: string | null): string {
+    if (!value) return '';
+    const d = new Date(value);
+    return `${d.toLocaleDateString('vi-VN')} ${d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}`;
+  }
+
+  reviewReturn(o: Order, action: 'approve' | 'reject' | 'complete'): void {
+    const note = action === 'reject' ? this.rejectReturnNote.trim() : '';
+    if (action === 'reject' && !note) {
+      this.showToast('Vui lòng nhập lý do từ chối', 'warning');
+      return;
+    }
+    const messages = {
+      approve: `Đã duyệt trả hàng đơn ${o.orderNumber} — tiến hành nhận hàng & hoàn tiền`,
+      reject: `Đã từ chối yêu cầu trả hàng đơn ${o.orderNumber}`,
+      complete: `Đã xác nhận hoàn tiền đơn ${o.orderNumber}`,
+    };
+    this.orderService.reviewReturn(o.orderNumber, action, note).subscribe({
+      next: () => {
+        this.rejectingReturn = null;
+        this.rejectReturnNote = '';
+        this.refreshData();
+        this.showToast(messages[action], 'success');
+        this.recordAudit('Đổi Trả', messages[action], `Đơn ${o.orderNumber}`, 'SUCCESS');
+      },
+      error: (err) => this.showToast(err?.error?.error || 'Không cập nhật được yêu cầu trả hàng', 'error'),
     });
   }
 

@@ -12,6 +12,7 @@ import { Product } from '../../core/models/product.model';
 import { AppIconComponent } from '../../components/icon/icon.component';
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
 import { CatalogLink, legacyCategoryLink } from '../../core/data/catalog-taxonomy';
+import { ProductPhotoComponent } from '../../components/product-photo/product-photo.component';
 
 /** Giữ kết quả trắc nghiệm trong phiên — bấm xem sản phẩm rồi quay lại vẫn thấy kết quả, không phải làm lại. */
 const RESULT_STORAGE_KEY = 'lumea_style_quiz_result';
@@ -34,7 +35,7 @@ type Screen = 'intro' | 'quiz' | 'locked' | 'result';
 @Component({
   selector: 'app-style-quiz',
   standalone: true,
-  imports: [CommonModule, RouterLink, AppIconComponent, VndPipe],
+  imports: [ProductPhotoComponent, CommonModule, RouterLink, AppIconComponent, VndPipe],
   templateUrl: './style-quiz.component.html',
   styleUrl: './style-quiz.component.css'
 })

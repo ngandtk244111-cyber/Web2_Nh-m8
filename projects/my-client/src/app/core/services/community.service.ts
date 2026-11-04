@@ -97,6 +97,14 @@ export class CommunityService {
    * Trả Observable để trang gọi tự báo kết quả: server chặn bài vi phạm tiêu chuẩn cộng đồng
    * bằng HTTP 422 kèm lý do (err.error.error) — bài đó không được thêm vào feed.
    */
+  /** Tải ảnh bài đăng từ máy lên server -> trả về đường dẫn /uploads/community/... */
+  uploadImage(userId: string, file: File): Observable<{ success: boolean; url: string }> {
+    const form = new FormData();
+    form.append('userId', userId);
+    form.append('image', file);
+    return this.http.post<{ success: boolean; url: string }>(`${BASE}/upload-image`, form);
+  }
+
   createPost(data: Omit<CommunityPost, 'id' | 'likesCount' | 'commentsCount' | 'comments' | 'createdAt'> & { userId?: string }): Observable<CommunityPost> {
     return this.http.post<{ success: boolean; post: CommunityPost }>(BASE, data).pipe(
       map(res => res.post),

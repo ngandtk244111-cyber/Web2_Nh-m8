@@ -95,7 +95,7 @@
       <div class="quiz-preview" *ngIf="activeCategory as cat">
         <div class="quiz-preview__grid" *ngIf="previewProducts.length; else noPreview">
           <a *ngFor="let p of previewProducts" class="quiz-preview__item" [routerLink]="['/product', p.slug]">
-            <span class="quiz-preview__img"><img [src]="p.images[0]" [alt]="p.name" loading="lazy"></span>
+            <span class="quiz-preview__img"><app-product-photo [images]="p.images" [alt]="p.name"></app-product-photo></span>
             <span class="quiz-preview__name">{{ p.name }}</span>
             <span class="quiz-preview__price">{{ p.basePrice | vnd }}</span>
           </a>

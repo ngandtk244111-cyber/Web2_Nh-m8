@@ -1,0 +1,90 @@
+<div class="ac_overlay" (click)="close()">
+  <div class="ac" role="dialog" aria-modal="true" aria-label="Đổi ảnh đại diện" (click)="$event.stopPropagation()">
+
+    <header class="ac_head">
+      <h3 class="ac_title">
+        {{ step === 'choose' ? 'Đổi ảnh đại diện' : step === 'camera' ? 'Chụp ảnh' : 'Căn chỉnh ảnh' }}
+      </h3>
+      <button type="button" class="ac_close" (click)="close()" aria-label="Đóng">
+        <app-icon name="x" [size]="16"></app-icon>
+      </button>
+    </header>
+
+    <!-- B1: chọn nguồn ảnh -->
+    <div *ngIf="step === 'choose'" class="ac_choose">
+      <img src="assets/mascot/goh-happy.png" alt="" class="ac_goh" aria-hidden="true">
+      <p class="ac_hint">Chọn một tấm thật xinh nhé! Bạn có thể chụp ngay hoặc chọn ảnh có sẵn.</p>
+
+      <button type="button" class="ac_source" (click)="openCamera()" [disabled]="cameraStarting">
+        <span class="ac_source__icon"><app-icon name="camera" [size]="20"></app-icon></span>
+        <span class="ac_source__text">
+          <strong>{{ cameraStarting ? 'Đang mở camera...' : 'Chụp ảnh' }}</strong>
+          <span>Dùng camera của máy</span>
+        </span>
+        <app-icon name="chevron-right" [size]="16"></app-icon>
+      </button>
+
+      <button type="button" class="ac_source" (click)="pickFile()">
+        <span class="ac_source__icon"><app-icon name="image" [size]="20"></app-icon></span>
+        <span class="ac_source__text">
+          <strong>Tải ảnh lên</strong>
+          <span>JPG, PNG, WEBP hoặc GIF</span>
+        </span>
+        <app-icon name="chevron-right" [size]="16"></app-icon>
+      </button>
+      <input #fileInput type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden (change)="onFileSelected($event)">
+    </div>
+
+    <!-- B2: camera -->
+    <div *ngIf="step === 'camera'" class="ac_body">
+      <div class="ac_stage ac_stage--camera">
+        <video #video class="ac_video" autoplay playsinline muted></video>
+        <span class="ac_mask" aria-hidden="true"></span>
+      </div>
+      <p class="ac_tip">Đưa khuôn mặt vào giữa vòng tròn</p>
+      <button type="button" class="ac_btn ac_btn--primary" (click)="capture()">
+        <app-icon name="camera" [size]="16"></app-icon> Chụp
+      </button>
+      <button type="button" class="ac_btn ac_btn--ghost" (click)="back()">
+        <app-icon name="chevron-left" [size]="14"></app-icon> Quay lại
+      </button>
+    </div>
+
+    <!-- B3: cắt ảnh -->
+    <div *ngIf="step === 'crop'" class="ac_body">
+      <div
+        class="ac_stage ac_stage--crop"
+        (pointerdown)="onPointerDown($event)"
+        (pointermove)="onPointerMove($event)"
+        (pointerup)="onPointerUp($event)"
+        (pointercancel)="onPointerUp($event)"
+        (wheel)="onWheel($event)">
+        <img
+          [src]="imageSrc"
+          alt="Ảnh đang cắt"
+          class="ac_img"
+          draggable="false"
+          [style.width.px]="displayW"
+          [style.height.px]="displayH"
+          [style.transform]="'translate(-50%, -50%) translate(' + offsetX + 'px, ' + offsetY + 'px)'">
+        <span class="ac_mask" aria-hidden="true"></span>
+      </div>
+      <p class="ac_tip">Kéo ảnh để căn chỉnh · lăn chuột để phóng to</p>
+
+      <div class="ac_zoom">
+        <button type="button" (click)="stepZoom(-0.2)" aria-label="Thu nhỏ"><app-icon name="minus" [size]="14"></app-icon></button>
+        <input type="range" min="1" [max]="maxZoom" step="0.01" [value]="zoom" (input)="onZoomInput($event)" aria-label="Phóng to / Thu nhỏ">
+        <button type="button" (click)="stepZoom(0.2)" aria-label="Phóng to"><app-icon name="plus" [size]="14"></app-icon></button>
+      </div>
+
+      <button type="button" class="ac_btn ac_btn--primary" (click)="save()" [disabled]="saving">
+        <app-icon name="check" [size]="16"></app-icon> {{ saving ? 'Đang lưu...' : 'Lưu ảnh' }}
+      </button>
+      <button type="button" class="ac_btn ac_btn--ghost" (click)="back()">
+        <app-icon name="chevron-left" [size]="14"></app-icon> Chọn ảnh khác
+      </button>
+    </div>
+
+    <p *ngIf="error" class="ac_error" role="alert">{{ error }}</p>
+  </div>
+</div>

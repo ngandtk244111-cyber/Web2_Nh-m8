@@ -9,13 +9,15 @@ import { ProfileTabComponent } from './profile-tab/profile-tab.component';
 import { OrdersTabComponent } from './orders-tab/orders-tab.component';
 import { AddressesTabComponent } from './addresses-tab/addresses-tab.component';
 import { VouchersTabComponent } from './vouchers-tab/vouchers-tab.component';
+import { ReviewsTabComponent } from './reviews-tab/reviews-tab.component';
+import { ReturnsTabComponent } from './returns-tab/returns-tab.component';
 
-export type AccountTab = 'profile' | 'orders' | 'addresses' | 'vouchers';
+export type AccountTab = 'profile' | 'orders' | 'returns' | 'addresses' | 'vouchers' | 'reviews';
 
 @Component({
   selector: 'app-account',
   standalone: true,
-  imports: [CommonModule, AppIconComponent, ProfileTabComponent, OrdersTabComponent, AddressesTabComponent, VouchersTabComponent],
+  imports: [CommonModule, AppIconComponent, ProfileTabComponent, OrdersTabComponent, AddressesTabComponent, VouchersTabComponent, ReviewsTabComponent, ReturnsTabComponent],
   templateUrl: './account.component.html',
   styleUrl: './account.component.css'
 })
@@ -25,8 +27,10 @@ export class AccountComponent {
   readonly tabs: { id: AccountTab; label: string; icon: string }[] = [
     { id: 'profile', label: 'Hồ Sơ Cá Nhân', icon: 'user' },
     { id: 'orders', label: 'Đơn Hàng Của Tôi', icon: 'truck' },
+    { id: 'returns', label: 'Đổi Trả', icon: 'rotate' },
     { id: 'addresses', label: 'Sổ Địa Chỉ', icon: 'home' },
     { id: 'vouchers', label: 'Voucher', icon: 'tag' },
+    { id: 'reviews', label: 'Đánh Giá', icon: 'star' },
   ];
 
   constructor(

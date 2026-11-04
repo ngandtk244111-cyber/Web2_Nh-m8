@@ -53,6 +53,10 @@ export class RoomSceneManager {
     // Clear and dispose previous room objects and lights
     ResourceManager.deepDispose(this.roomGroup);
     ResourceManager.deepDispose(this.lightsGroup);
+    // deepDispose chỉ giải phóng GPU + gỡ group khỏi scene, KHÔNG gỡ con bên trong: không clear() thì
+    // group được add lại ngay bên dưới vẫn còn bàn ghế/đèn của phòng trước -> đổi phòng bị chồng đồ.
+    this.roomGroup.clear();
+    this.lightsGroup.clear();
     this.occluders = [];
     this.glbObject = null;
 

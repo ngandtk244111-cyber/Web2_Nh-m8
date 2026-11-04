@@ -39,9 +39,11 @@
 
     <!-- Tab content -->
     <app-account-profile-tab *ngIf="activeTab === 'profile'"></app-account-profile-tab>
-    <app-account-orders-tab *ngIf="activeTab === 'orders'"></app-account-orders-tab>
+    <app-account-orders-tab *ngIf="activeTab === 'orders'" (openReturns)="switchTab('returns')"></app-account-orders-tab>
+    <app-account-returns-tab *ngIf="activeTab === 'returns'"></app-account-returns-tab>
     <app-account-addresses-tab *ngIf="activeTab === 'addresses'"></app-account-addresses-tab>
     <app-account-vouchers-tab *ngIf="activeTab === 'vouchers'"></app-account-vouchers-tab>
+    <app-account-reviews-tab *ngIf="activeTab === 'reviews'"></app-account-reviews-tab>
   </div>
 
 </div>

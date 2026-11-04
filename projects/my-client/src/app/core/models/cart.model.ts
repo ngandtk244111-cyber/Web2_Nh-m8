@@ -20,4 +20,6 @@ export interface Coupon {
   minSpend: number;
   /** Tên ngắn hiển thị, vd "Giảm 20.000đ". */
   title?: string;
+  /** Hạn dùng (ISO) — mã công khai của shop. */
+  expiresAt?: string;
 }

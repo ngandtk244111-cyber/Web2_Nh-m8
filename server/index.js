@@ -1,4 +1,5 @@
-require('dotenv').config();
+// Đọc server/.env theo vị trí file, không theo thư mục đang đứng — chạy `node server/index.js` từ gốc repo vẫn nạp đủ biến.
+require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 const http = require('http');
 const path = require('path');
 const express = require('express');
@@ -50,12 +51,18 @@ const PORT = process.env.PORT || 4300;
 
 connectDB()
   .then(() => require('./models/User').unsetNullLoginIds())
+  // Database cũ có thể còn index phoneNumber_1 KHÔNG sparse (tạo trước khi schema thêm sparse) -> tài khoản
+  // Google/Facebook thứ 2 không có SĐT bị E11000. syncIndexes dựng lại index cho khớp schema User.
+  .then(() => require('./models/User').syncIndexes())
+  .catch(err => {
+    // Không có MongoDB vẫn mở server: chatbox AI (Gemini) vẫn trả lời được, chỉ thiếu gợi ý sản phẩm từ DB.
+    // Các chức năng cần dữ liệu (sản phẩm, đơn hàng, đăng nhập...) sẽ lỗi cho tới khi MongoDB chạy.
+    console.error('Failed to connect to MongoDB:', err.message);
+    console.warn('⚠ Server vẫn chạy KHÔNG có database — chỉ chatbox AI hoạt động. Cài/bật MongoDB rồi khởi động lại để dùng đầy đủ.');
+  })
   .then(() => {
     httpServer.listen(PORT, () => {
       console.log(`Luméa server listening on http://localhost:${PORT}`);
+      if (!process.env.GEMINI_API_KEY) console.warn('⚠ GEMINI_API_KEY trống trong server/.env — chatbox AI sẽ không trả lời.');
     });
-  })
-  .catch(err => {
-    console.error('Failed to connect to MongoDB:', err.message);
-    process.exit(1);
   });

@@ -35,6 +35,20 @@ export interface ShippingAddress {
   notes?: string;
 }
 
+/** Yêu cầu trả hàng / hoàn tiền khách gửi sau khi nhận hàng. */
+export type ReturnStatus = 'PENDING' | 'APPROVED' | 'COMPLETED' | 'REJECTED';
+export interface ReturnRequest {
+  status: ReturnStatus;
+  reason: string;
+  description?: string;
+  refundAmount: number;
+  adminNote?: string;
+  requestedAt: string;
+  approvedAt?: string | null;
+  completedAt?: string | null;
+  rejectedAt?: string | null;
+}
+
 export interface Order {
   id: string;
   orderNumber: string;
@@ -66,6 +80,7 @@ export interface Order {
   returnReason?: string;
   returnedAt?: string | null;
   shipment?: Shipment | null;
+  returnRequest?: ReturnRequest | null;
 }
 
 export interface Shipment {

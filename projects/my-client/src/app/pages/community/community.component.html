@@ -272,13 +272,6 @@
                       <div class="text-[12px] font-semibold text-amber-600">{{ getProduct(tag.productId)?.basePrice | vnd }}</div>
                     </div>
                     <a
-                      *ngIf="getProduct(tag.productId)?.customizable"
-                      [routerLink]="['/customizer-3d']"
-                      [queryParams]="{ productId: tag.productId }"
-                      class="cm-btn-outline !px-3 !py-1.5 !text-[12px] flex-shrink-0">
-                      Xem 3D
-                    </a>
-                    <a
                       [routerLink]="['/product', getProduct(tag.productId)?.slug]"
                       class="px-3 py-1.5 rounded-xl bg-neutral-900 hover:bg-amber-600 text-white text-[12px] font-semibold transition flex-shrink-0">
                       Xem
@@ -410,15 +403,39 @@
                 placeholder="Có gì mới? Chia sẻ cách phối màu, mẫu đèn bạn đã in 3D..."
                 class="w-full text-[15px] bg-transparent text-neutral-800 placeholder:text-neutral-400 focus:outline-none resize-none"></textarea>
 
+              <!-- Ảnh góc phòng: tải từ máy lên (bấm hoặc kéo thả), có xem trước + đổi/xoá ảnh -->
               <div>
-                <label class="block text-[12px] font-semibold text-neutral-500 mb-1">URL ảnh góc phòng *</label>
-                <input
-                  type="text"
-                  [(ngModel)]="newPostImageUrl"
-                  placeholder="https://images.unsplash.com/photo-..."
-                  class="w-full text-[13px] rounded-xl border border-neutral-200 px-3 py-2.5 bg-neutral-50 text-neutral-900 focus:outline-none focus:border-amber-500">
+                <label class="block text-[12px] font-semibold text-neutral-500 mb-1">Ảnh góc phòng *</label>
+                <input #postImageInput type="file" accept="image/png,image/jpeg,image/webp,image/gif" class="hidden" (change)="onPostImageSelected($event)">
+
+                <div *ngIf="!newPostImageUrl"
+                  (click)="postImageInput.click()"
+                  (dragover)="$event.preventDefault()"
+                  (drop)="onPostImageDrop($event)"
+                  class="flex flex-col items-center justify-center gap-1.5 py-8 rounded-2xl border-2 border-dashed border-neutral-300 bg-neutral-50 text-neutral-500 cursor-pointer hover:border-[#A3152D] hover:text-[#A3152D] transition">
+                  <span *ngIf="isUploadingPostImage" class="w-6 h-6 rounded-full border-2 border-neutral-300 border-t-[#A3152D] animate-spin"></span>
+                  <ng-container *ngIf="!isUploadingPostImage">
+                    <app-icon name="plus" [size]="22"></app-icon>
+                    <span class="text-[13px] font-bold">Tải ảnh lên</span>
+                    <span class="text-[11px] text-neutral-400 text-center px-4">Bấm để chọn hoặc kéo thả ảnh vào đây · JPG, PNG, WEBP, GIF · tối đa 5MB</span>
+                  </ng-container>
+                  <span *ngIf="isUploadingPostImage" class="text-[12px] font-semibold">Đang tải ảnh lên...</span>
+                </div>
+
+                <div *ngIf="newPostImageUrl" class="relative">
+                  <img [src]="newPostImageUrl" alt="Ảnh bài đăng" class="w-full max-h-64 object-cover rounded-2xl border border-neutral-200">
+                  <div class="absolute top-2 right-2 flex gap-2">
+                    <button type="button" (click)="postImageInput.click()" [disabled]="isUploadingPostImage"
+                      class="px-3 py-1.5 rounded-full bg-white/95 text-neutral-800 text-[12px] font-bold shadow hover:bg-white">
+                      {{ isUploadingPostImage ? 'Đang tải...' : 'Đổi ảnh' }}
+                    </button>
+                    <button type="button" (click)="removePostImage()" aria-label="Xoá ảnh"
+                      class="w-8 h-8 rounded-full bg-white/95 text-neutral-800 shadow hover:bg-[#A3152D] hover:text-white flex items-center justify-center">
+                      <app-icon name="x" [size]="14"></app-icon>
+                    </button>
+                  </div>
+                </div>
               </div>
-              <img *ngIf="newPostImageUrl" [src]="newPostImageUrl" alt="" class="w-full max-h-56 object-cover rounded-2xl border border-neutral-200">
 
               <div>
                 <label class="block text-[12px] font-semibold text-neutral-500 mb-1">Gắn tag sản phẩm Luméa có trong ảnh</label>

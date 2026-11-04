@@ -8,6 +8,16 @@ const { requireAdminId, validId } = require('../middleware/auth');
 
 const router = express.Router();
 
+// Ảnh bài đăng tải lên từ máy (thay cho dán URL) — lưu ở server/uploads/community, phục vụ qua /uploads/...
+const path = require('path');
+const fs = require('fs');
+const multer = require('multer');
+const { requireUserId } = require('../middleware/auth');
+const uploadDir = path.join(__dirname, '../uploads/community');
+fs.mkdirSync(uploadDir, { recursive: true });
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
+const IMAGE_EXT = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp', 'image/gif': '.gif' };
+
 const MODERATION_STATUSES = ['PUBLISHED', 'HIDDEN', 'REJECTED'];
 
 
@@ -80,6 +90,21 @@ router.delete('/:id', requireAdminId, async (req, res) => {
     await CommunityPost.deleteOne({ id: req.params.id });
     res.json({ success: true });
   } catch (err) {
+    sendError(res, err);
+  }
+});
+
+// multer chạy trước requireUserId: userId nằm trong form multipart.
+router.post('/upload-image', upload.single('image'), requireUserId, async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ success: false, error: 'Thiếu file ảnh' });
+    const ext = IMAGE_EXT[req.file.mimetype || ''];
+    if (!ext) return res.status(400).json({ success: false, error: 'Chỉ nhận ảnh JPG, PNG, WEBP hoặc GIF' });
+    const filename = `post-${req.userId}-${Date.now()}${ext}`;
+    fs.writeFileSync(path.join(uploadDir, filename), req.file.buffer);
+    res.json({ success: true, url: `/uploads/community/${filename}` });
+  } catch (err) {
+    console.error('community upload error', err);
     sendError(res, err);
   }
 });

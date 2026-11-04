@@ -17,10 +17,7 @@ export const routes: Routes = [
     path: 'product/:slug',
     loadComponent: () => import('./pages/product-detail/product-detail.component').then(m => m.ProductDetailComponent),
   },
-  {
-    path: 'customizer-3d',
-    loadComponent: () => import('./pages/customizer-3d/customizer-3d.component').then(m => m.Customizer3dComponent),
-  },
+  { path: 'customizer-3d', redirectTo: 'custom-request' },
   {
     path: 'shop-the-room',
     loadComponent: () => import('./pages/shop-the-room/shop-the-room.component').then(m => m.ShopTheRoomComponent),
@@ -106,6 +103,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/checkout-momo-return/checkout-momo-return.component').then(m => m.CheckoutMomoReturnComponent),
   },
   {
+    path: 'thanh-toan-thu',
+    data: { bare: true },
+    loadComponent: () => import('./pages/payment-sandbox/payment-sandbox.component').then(m => m.PaymentSandboxComponent),
+  },
+  {
     path: 'checkout-zalopay-return',
     loadComponent: () => import('./pages/checkout-zalopay-return/checkout-zalopay-return.component').then(m => m.CheckoutZalopayReturnComponent),
   },
@@ -141,6 +143,11 @@ export const routes: Routes = [
     path: 'phong-3d/:id',
     data: { bare: true },
     loadComponent: () => import('./pages/viewer-3d/showroom-3d/showroom-3d.component').then(m => m.Showroom3dComponent),
+  },
+  {
+    path: 'xem-phong-3d/:id',
+    data: { bare: true },
+    loadComponent: () => import('./pages/viewer-3d/room-3d/room-3d.component').then(m => m.Room3dComponent),
   },
   {
     path: '**',

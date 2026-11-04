@@ -68,6 +68,12 @@ export class CheckoutFlowService {
     }
   }
 
+  /** Mở lại một đơn đã đặt (vd quay về từ cổng thanh toán để đổi phương thức) -> đứng ở Bước 4. */
+  enterFinished(): void {
+    this.currentStepSignal.set(4);
+    this.maxReachedStepSignal.set(4);
+  }
+
   /** Dùng khi "Tiếp tục mua sắm" sau khi đặt hàng xong — trả luồng về trạng thái sạch cho lần mua kế tiếp. */
   reset(): void {
     this.currentStepSignal.set(1);

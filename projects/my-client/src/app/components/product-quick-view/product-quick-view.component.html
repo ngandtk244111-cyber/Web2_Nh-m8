@@ -53,16 +53,6 @@
           </button>
 
           <a
-            *ngIf="product.customizable"
-            [routerLink]="['/customizer-3d']"
-            [queryParams]="{ productId: product.id }"
-            (click)="quickViewService.close()"
-            class="qv-btn qv-btn--primary">
-            <app-icon name="sliders" [size]="16"></app-icon>
-            <span>Tùy biến 3D sản phẩm này</span>
-          </a>
-
-          <a
             *ngIf="product.threeModelType"
             [routerLink]="['/phong-3d', product.id]"
             target="_blank"

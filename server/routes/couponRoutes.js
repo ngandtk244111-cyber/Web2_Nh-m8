@@ -6,14 +6,17 @@ const { usedCouponCodes } = require('../utils/vouchers');
 
 const router = express.Router();
 
-const COUPON_FIELDS = { _id: 0, code: 1, description: 1, discountPercent: 1, maxDiscount: 1, minSpend: 1 };
+const COUPON_FIELDS = { _id: 0, code: 1, description: 1, discountPercent: 1, maxDiscount: 1, minSpend: 1, expiresAt: 1 };
+
+// Mã còn hạn: chưa đặt hạn (mã cũ) hoặc hạn còn ở tương lai.
+const notExpired = () => ({ $or: [{ expiresAt: null }, { expiresAt: { $gt: new Date() } }] });
 
 // Danh sách mã đang hoạt động (hiển thị gợi ý mã cho khách). Có userId thì bỏ các mã khách đã dùng
 // (mỗi mã chỉ dùng 1 lần) và trả kèm usedCodes để client xoá khỏi danh sách mã đã lưu.
 router.get('/', async (req, res) => {
   try {
     const usedCodes = await usedCouponCodes(validId(req.query.userId));
-    const coupons = (await Coupon.find({ active: true }, COUPON_FIELDS).lean()).filter(c => !usedCodes.includes(c.code));
+    const coupons = (await Coupon.find({ active: true, ...notExpired() }, COUPON_FIELDS).lean()).filter(c => !usedCodes.includes(c.code));
     res.json({ success: true, coupons, usedCodes });
   } catch (err) {
     sendError(res, err);
@@ -24,7 +27,7 @@ router.get('/', async (req, res) => {
 router.get('/:code', async (req, res) => {
   try {
     const code = String(req.params.code || '').trim().toUpperCase();
-    const coupon = await Coupon.findOne({ code, active: true }, COUPON_FIELDS).lean();
+    const coupon = await Coupon.findOne({ code, active: true, ...notExpired() }, COUPON_FIELDS).lean();
     if (!coupon) {
       return res.status(404).json({ success: false, error: 'Mã giảm giá không hợp lệ hoặc đã hết hạn.' });
     }

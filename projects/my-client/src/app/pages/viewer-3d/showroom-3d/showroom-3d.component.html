@@ -16,23 +16,33 @@
     <ng-container *ngSwitchCase="'ready'">
       <ng-container *ngIf="route.product() as p">
 
-        <!-- Thanh trên -->
+        <!-- Thanh trên (kiểu cửa sổ xem ảnh của Thế Giới Di Động): tên sản phẩm + nút Đóng -->
         <header class="sr__bar">
-          <a [routerLink]="['/product', p.slug]" class="sr__back">
+          <a [routerLink]="['/product', p.slug]" class="sr__back" aria-label="Quay lại sản phẩm">
             <app-icon name="chevron-left" [size]="18"></app-icon>
-            <span>Quay lại sản phẩm</span>
           </a>
-          <div class="sr__title">
-            <span class="sr__mode">Phòng 3D</span>
-            <span class="sr__name">{{ p.name }}</span>
-          </div>
-          <button type="button" class="sr__close" (click)="closeTab()" aria-label="Đóng" title="Đóng">
-            <app-icon name="x" [size]="18"></app-icon>
+          <h1 class="sr__name" [title]="p.name">{{ p.name }}</h1>
+          <button type="button" class="sr__close" (click)="closeTab()" aria-label="Đóng">
+            <span>Đóng</span>
+            <app-icon name="x" [size]="16"></app-icon>
           </button>
         </header>
 
+        <!-- Tab: 3D / Hình ảnh / Thông số -->
+        <nav class="sr__tabs" role="tablist" aria-label="Nội dung xem">
+          <button type="button" role="tab" class="sr__tab" [class.sr__tab--on]="tab === '3d'" [attr.aria-selected]="tab === '3d'" (click)="setTab('3d')">
+            <app-icon name="cube" [size]="16"></app-icon><span>Xem 3D 360°</span>
+          </button>
+          <button type="button" role="tab" class="sr__tab" [class.sr__tab--on]="tab === 'images'" [attr.aria-selected]="tab === 'images'" (click)="setTab('images')">
+            <app-icon name="eye" [size]="16"></app-icon><span>Hình ảnh ({{ p.images.length }})</span>
+          </button>
+          <button type="button" role="tab" class="sr__tab" [class.sr__tab--on]="tab === 'specs'" [attr.aria-selected]="tab === 'specs'" (click)="setTab('specs')">
+            <app-icon name="sliders" [size]="16"></app-icon><span>Thông số</span>
+          </button>
+        </nav>
+
         <!-- Mô hình -->
-        <main class="sr__stage">
+        <main class="sr__stage" [hidden]="tab !== '3d'">
           <app-product-model-stage
             [product]="p"
             [look]="look"
@@ -56,7 +66,7 @@
         </main>
 
         <!-- Phiên bản màu / chất liệu -->
-        <footer class="sr__variants" *ngIf="options.length || (p.customization?.materials?.length ?? 0) > 1">
+        <footer class="sr__variants" [hidden]="tab !== '3d'" *ngIf="options.length || (p.customization?.materials?.length ?? 0) > 1">
           <div class="sr__variants-head" *ngIf="options.length">
             <span class="sr__variants-label">Màu sắc / Chất liệu</span>
             <span class="sr__variants-value">{{ selected?.label }}</span>
@@ -91,6 +101,63 @@
               (click)="selectMaterial(i, p)">{{ m.name }}</button>
           </div>
         </footer>
+
+
+        <!-- Tab Hình ảnh: ảnh lớn + dải ảnh nhỏ -->
+        <section *ngIf="tab === 'images'" class="sr__gallery">
+          <div class="sr__photo">
+            <img [src]="p.images[imageIndex]" [alt]="p.name + ' - ảnh ' + (imageIndex + 1)">
+            <ng-container *ngIf="p.images.length > 1">
+              <button type="button" class="sr__nav sr__nav--prev" (click)="prevImage(p)" aria-label="Ảnh trước"><app-icon name="chevron-left" [size]="22"></app-icon></button>
+              <button type="button" class="sr__nav sr__nav--next" (click)="nextImage(p)" aria-label="Ảnh sau"><app-icon name="chevron-right" [size]="22"></app-icon></button>
+            </ng-container>
+            <span class="sr__count">{{ imageIndex + 1 }}/{{ p.images.length }}</span>
+          </div>
+          <div class="sr__strip">
+            <button
+              *ngFor="let img of p.images; let i = index"
+              type="button"
+              class="sr__strip-item"
+              [class.sr__strip-item--on]="i === imageIndex"
+              (click)="imageIndex = i"
+              [attr.aria-label]="'Ảnh ' + (i + 1)">
+              <img [src]="img" alt="" loading="lazy">
+            </button>
+          </div>
+        </section>
+
+        <!-- Tab Thông số -->
+        <section *ngIf="tab === 'specs'" class="sr__specs">
+          <h2>Thông số kỹ thuật</h2>
+          <dl>
+            <div *ngFor="let r of specs(p)" class="sr__spec-row">
+              <dt>{{ r.label }}</dt>
+              <dd>{{ r.value }}</dd>
+            </div>
+          </dl>
+          <ul *ngIf="p.features?.length" class="sr__features">
+            <li *ngFor="let f of p.features"><app-icon name="check" [size]="14"></app-icon>{{ f }}</li>
+          </ul>
+        </section>
+
+        <!-- Thanh mua hàng cố định đáy -->
+        <div class="sr__buy">
+          <img class="sr__buy-img" [src]="p.images[0]" [alt]="p.name">
+          <div class="sr__buy-info">
+            <span class="sr__buy-name">{{ p.name }}</span>
+            <span class="sr__buy-price">
+              <strong>{{ productService.currentPrice(p) | vnd }}</strong>
+              <del *ngIf="p.originalPrice && p.originalPrice > productService.currentPrice(p)">{{ p.originalPrice | vnd }}</del>
+            </span>
+          </div>
+          <button type="button" class="sr__btn sr__btn--ghost" (click)="addToCart(p)">
+            <app-icon name="cart" [size]="17"></app-icon><span>Thêm vào giỏ</span>
+          </button>
+          <button type="button" class="sr__btn sr__btn--buy" (click)="buyNow(p)">
+            <strong>MUA NGAY</strong>
+            <small>Giao tận nơi hoặc nhận tại cửa hàng</small>
+          </button>
+        </div>
 
         <p *ngIf="credit(p)" class="sr__credit">{{ credit(p) }}</p>
       </ng-container>

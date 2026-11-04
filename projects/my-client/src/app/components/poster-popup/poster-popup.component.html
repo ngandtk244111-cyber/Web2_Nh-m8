@@ -4,13 +4,45 @@
   [class.pp_overlay--closing]="closing()"
   (click)="close()">
 
-  <div class="pp_popup" [class.pp_popup--closing]="closing()" (click)="$event.stopPropagation()">
-    <button type="button" class="pp_close" (click)="close()" aria-label="Đóng">
-      <app-icon name="x" [size]="18"></app-icon>
-    </button>
+  <div class="pp_box" (click)="$event.stopPropagation()"
+    (mouseenter)="pause(true)" (mouseleave)="pause(false)">
+    <div class="pp_popup" [class.pp_popup--closing]="closing()"
+      role="dialog" aria-modal="true" aria-label="Ưu đãi nổi bật"
+      (touchstart)="onTouchStart($event)" (touchend)="onTouchEnd($event)">
+      <button type="button" class="pp_close" (click)="close()" aria-label="Đóng">
+        <app-icon name="x" [size]="18"></app-icon>
+      </button>
 
-    <a [routerLink]="link" class="pp_link" (click)="close()" aria-label="Minimalist Furniture — Shop now">
-      <img [src]="image" alt="Minimalist Furniture — Luméa" class="pp_image" draggable="false">
-    </a>
+      <div class="pp_track" [style.transform]="'translateX(-' + active() * 100 + '%)'">
+        <button
+          *ngFor="let p of posters; let i = index"
+          type="button"
+          class="pp_slide"
+          [attr.aria-label]="p.alt"
+          [attr.aria-hidden]="i !== active() ? 'true' : null"
+          [attr.tabindex]="i === active() ? 0 : -1"
+          (click)="open(p)">
+          <img [src]="p.image" [alt]="p.alt" class="pp_image" draggable="false">
+        </button>
+      </div>
+
+      <button type="button" class="pp_arrow pp_arrow--prev" (click)="step(-1)" aria-label="Ưu đãi trước">
+        <app-icon name="chevron-left" [size]="18"></app-icon>
+      </button>
+      <button type="button" class="pp_arrow pp_arrow--next" (click)="step(1)" aria-label="Ưu đãi tiếp theo">
+        <app-icon name="chevron-right" [size]="18"></app-icon>
+      </button>
+    </div>
+
+    <div class="pp_dots" [class.pp_dots--closing]="closing()">
+      <button
+        *ngFor="let p of posters; let i = index"
+        type="button"
+        class="pp_dot"
+        [class.pp_dot--active]="i === active()"
+        [attr.aria-label]="'Ưu đãi ' + (i + 1)"
+        (click)="go(i)">
+      </button>
+    </div>
   </div>
 </div>

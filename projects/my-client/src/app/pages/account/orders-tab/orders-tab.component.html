@@ -46,8 +46,97 @@
           <span class="inline-block mt-1 px-2 py-0.5 rounded-full border text-[10px] font-bold" [class]="statusClass(order.status)">
             {{ statusLabel(order.status) }}
           </span>
+          <button
+            *ngIf="order.status !== 'CANCELLED'"
+            type="button"
+            (click)="openInvoice(order.orderNumber, $event)"
+            class="block ml-auto mt-1.5 text-[11px] font-bold text-[#A3152D] hover:underline">
+            Hóa đơn PDF
+          </button>
         </div>
       </div>
+
+      <!-- Đổi trả: đơn đã giao trong 7 ngày được yêu cầu trả hàng; đã gửi thì xem ở tab Đổi trả -->
+      <div *ngIf="order.returnRequest || canRequestReturn(order)" class="flex items-center justify-end gap-2 mt-3 pt-3 border-t border-dashed border-neutral-200">
+        <span *ngIf="order.returnRequest" class="mr-auto text-[11px] font-bold text-[#A3152D]">
+          Đổi trả: {{ returnStatusLabel(order) }}
+        </span>
+        <span *ngIf="!order.returnRequest" class="mr-auto text-[11px] text-neutral-500">
+          Còn {{ returnDaysLeft(order) }} ngày để yêu cầu trả hàng
+        </span>
+        <button *ngIf="order.returnRequest" type="button" (click)="goReturns($event)"
+          class="px-3.5 py-1.5 rounded-full border border-neutral-300 bg-white text-[11px] font-bold text-neutral-700 hover:border-[#A3152D] hover:text-[#A3152D] transition">
+          Xem đổi trả
+        </button>
+        <button *ngIf="!order.returnRequest" type="button" (click)="openReturn(order, $event)"
+          class="px-3.5 py-1.5 rounded-full border border-[#A3152D] bg-white text-[11px] font-bold text-[#A3152D] hover:bg-[#FDECEF] transition">
+          Trả hàng
+        </button>
+      </div>
     </a>
+  </div>
+</div>
+
+<!-- Yêu cầu trả hàng/hoàn tiền (tham khảo VitaCare) -->
+<div *ngIf="returnOrder as ro" class="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/50" (click)="closeReturn()">
+  <div class="w-full max-w-lg max-h-[calc(100vh-32px)] flex flex-col rounded-3xl bg-white shadow-2xl overflow-hidden" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-neutral-100">
+      <h3 class="text-base font-extrabold text-neutral-900">Yêu cầu trả hàng/hoàn tiền</h3>
+      <button type="button" (click)="closeReturn()" class="p-1.5 rounded-full bg-neutral-100 text-neutral-600" aria-label="Đóng">
+        <app-icon name="x" [size]="15"></app-icon>
+      </button>
+    </div>
+
+    <div class="px-5 py-4 space-y-4 overflow-y-auto">
+      <div>
+        <h4 class="text-xs font-extrabold text-neutral-800 mb-2">Sản phẩm · <span class="font-mono text-[#A3152D]">{{ ro.orderNumber }}</span></h4>
+        <div class="rounded-2xl border border-neutral-200 divide-y divide-dashed divide-neutral-200 px-3">
+          <div *ngFor="let it of (returnExpanded ? ro.items : ro.items.slice(0, 2))" class="flex items-center gap-3 py-2.5">
+            <img [src]="(it.product.images && it.product.images[0]) || 'assets/mascot/goh-search.png'" [alt]="it.product.name" class="w-12 h-12 rounded-xl object-cover border border-neutral-100 shrink-0">
+            <div class="flex-1 min-w-0">
+              <div class="text-xs font-bold text-neutral-800 line-clamp-2">{{ it.product.name }}</div>
+              <div class="text-[11px] text-neutral-500">{{ it.unitPrice | vnd }}</div>
+            </div>
+            <div class="text-right text-[11px] text-neutral-500">
+              <div>Số lượng: {{ it.quantity }}</div>
+              <div class="text-xs font-extrabold text-[#A3152D]">{{ it.totalPrice | vnd }}</div>
+            </div>
+          </div>
+          <button *ngIf="ro.items.length > 2" type="button" (click)="returnExpanded = !returnExpanded" class="w-full py-2 text-[11px] font-bold text-[#A3152D]">
+            {{ returnExpanded ? 'Thu gọn' : 'Xem thêm ' + (ro.items.length - 2) + ' sản phẩm' }}
+          </button>
+        </div>
+        <p class="mt-2 text-[11px] text-neutral-500">Số tiền hoàn dự kiến: <strong class="text-[#A3152D]">{{ ro.total | vnd }}</strong> (hoàn theo phương thức thanh toán của đơn).</p>
+      </div>
+
+      <div>
+        <h4 class="text-xs font-extrabold text-neutral-800 mb-2">Lý do yêu cầu *</h4>
+        <div class="grid gap-2">
+          <label *ngFor="let r of returnReasons" class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-xs cursor-pointer transition"
+            [ngClass]="returnReason === r ? 'border-[#A3152D] bg-[#FDECEF]' : 'border-neutral-200'">
+            <input type="radio" name="returnReason" [value]="r" [(ngModel)]="returnReason" class="accent-[#A3152D]">
+            <span class="font-semibold text-neutral-800">{{ r }}</span>
+          </label>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-extrabold text-neutral-800 mb-2">
+          Mô tả chi tiết {{ returnReason === 'Khác' ? '*' : '(không bắt buộc)' }}
+        </label>
+        <textarea [(ngModel)]="returnDescription" rows="3" maxlength="500"
+          placeholder="Vui lòng mô tả chi tiết lý do yêu cầu trả hàng/hoàn tiền..."
+          class="w-full text-xs rounded-xl border border-neutral-300 p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-[#A3152D]"></textarea>
+        <div class="text-right text-[10px] text-neutral-400">{{ returnDescription.length }}/500</div>
+      </div>
+    </div>
+
+    <div class="flex justify-end gap-2 px-5 py-3 border-t border-neutral-100">
+      <button type="button" (click)="closeReturn()" class="px-5 py-2 rounded-full border border-neutral-300 text-xs font-bold text-neutral-700">Hủy</button>
+      <button type="button" (click)="submitReturn()" [disabled]="!canSubmitReturn || returnSubmitting"
+        class="px-5 py-2 rounded-full bg-[#A3152D] hover:bg-[#891226] text-white text-xs font-extrabold disabled:opacity-50">
+        {{ returnSubmitting ? 'Đang gửi...' : 'Gửi yêu cầu' }}
+      </button>
+    </div>
   </div>
 </div>

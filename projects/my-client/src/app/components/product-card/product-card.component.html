@@ -1,5 +1,5 @@
     <div
-      class="pc group relative flex h-full min-w-0"
+      class="pc pp-hover group relative flex h-full min-w-0"
       [class.flex-col]="layout === 'grid'"
       [class.flex-row]="layout === 'list'"
       [class.gap-4]="layout === 'list'">
@@ -12,38 +12,21 @@
         [class.w-36]="layout === 'list'"
         [class.aspect-square]="layout === 'list'"
         [class.flex-shrink-0]="layout === 'list'">
-        <!-- Ảnh 1 (images[0]): ảnh chính. Ảnh 2 (images[1]): ảnh khác của CHÍNH món đó, crossfade khi hover;
-             không có ảnh 2 thì hover phóng to vào ảnh chính (không hiện món khác). -->
+        <!-- Ảnh 1 -> ảnh 2 khi rê chuột vào thẻ: hiệu ứng chung app-product-photo (giống mọi thẻ sản phẩm khác). -->
         <a
           [routerLink]="['/product', product.slug]"
           [attr.aria-label]="product.name"
           class="absolute inset-0 block">
-        <img
-          #cardImg
-          [src]="product.images[0]"
-          [alt]="product.name"
-          class="pc__photo absolute inset-0 w-full h-full object-cover"
-          [class.pc__photo--solo]="!product.images[1]">
-        <img
-          *ngIf="product.images[1]"
-          [src]="product.images[1]"
-          [alt]="product.name + ' — góc chụp khác'"
-          loading="lazy"
-          aria-hidden="true"
-          class="pc__photo pc__photo--alt absolute inset-0 w-full h-full object-cover">
+        <app-product-photo #cardImg [images]="product.images" [alt]="product.name" [eager]="true"></app-product-photo>
 
         </a>
 
-        <!-- Badges: tối đa 3 nhãn gọn — Sale / 3D / Custom -->
+        <!-- Badges: Sale / 3D -->
         <div class="absolute top-2.5 left-2.5 flex flex-col gap-1 items-start">
           <span *ngIf="discountPercent > 0" class="pc__tag pc__tag--sale">-{{ discountPercent }}%</span>
           <span *ngIf="has3D" class="pc__tag pc__tag--dark" title="Có mô hình 3D xem trực tiếp">
             <app-icon name="cube" [size]="11"></app-icon>
             <span>3D</span>
-          </span>
-          <span *ngIf="product.customizable" class="pc__tag" title="Có thể tùy biến màu, chất liệu, kích thước">
-            <app-icon name="sliders" [size]="11"></app-icon>
-            <span>Custom</span>
           </span>
         </div>
 
@@ -113,16 +96,6 @@
             aria-label="Thêm vào giỏ hàng">
             <app-icon name="cart" [size]="16"></app-icon>
           </button>
-
-          <a
-            *ngIf="product.customizable"
-            [routerLink]="['/customizer-3d']"
-            [queryParams]="{ productId: product.id }"
-            class="pc__custom"
-            title="Tùy biến 3D rồi thêm vào giỏ">
-            <app-icon name="sliders" [size]="14"></app-icon>
-            <span>Tùy biến</span>
-          </a>
         </div>
       </div>
 

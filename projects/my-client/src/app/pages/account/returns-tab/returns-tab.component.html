@@ -1,0 +1,162 @@
+<div class="rt">
+  <div class="rt__head">
+    <div>
+      <h3 class="rt__title">Quản lý đổi trả</h3>
+      <p class="rt__sub">Theo dõi và quản lý các yêu cầu đổi trả</p>
+    </div>
+    <label class="rt__search">
+      <app-icon name="search" [size]="15"></app-icon>
+      <input type="text" [ngModel]="search()" (ngModelChange)="search.set($event)" placeholder="Tìm kiếm theo mã đơn hàng hoặc tên sản phẩm">
+      <button *ngIf="search()" type="button" class="rt__clear" (click)="search.set('')" aria-label="Xoá tìm kiếm">
+        <app-icon name="x" [size]="13"></app-icon>
+      </button>
+    </label>
+  </div>
+
+  <div class="rt__tabs" role="tablist">
+    <button *ngFor="let s of statusOrder" type="button" role="tab" class="rt__tab" [class.rt__tab--on]="tab() === s" (click)="setTab(s)">
+      <span>{{ statusLabels[s] }}</span>
+      <span *ngIf="counts()[s] > 0" class="rt__badge">{{ counts()[s] }}</span>
+    </button>
+  </div>
+
+  <div *ngIf="loading" class="rt__empty"><p>Đang tải...</p></div>
+
+  <div *ngIf="!loading && list().length === 0" class="rt__empty">
+    <img src="assets/mascot/goh-search.png" alt="">
+    <p>Bạn không có yêu cầu trả hàng nào</p>
+    <span>Đơn đã giao có thể yêu cầu trả hàng trong 7 ngày ở tab <strong>Đơn hàng</strong>.</span>
+  </div>
+
+  <div *ngIf="!loading" class="rt__list">
+    <article *ngFor="let o of list()" class="rt__order">
+      <!-- Thanh trạng thái -->
+      <div class="rt__bar" [ngClass]="'rt__bar--' + o.returnRequest!.status">
+        <span class="rt__bar-status">{{ statusLabels[o.returnRequest!.status] }}</span>
+        <span class="rt__bar-meta">{{ formatDate(o.returnRequest!.requestedAt) }} <i>|</i> {{ o.orderNumber }}</span>
+      </div>
+
+      <!-- Sản phẩm -->
+      <div class="rt__items" (click)="openDetail(o)">
+        <div *ngFor="let it of visibleItems(o)" class="rt__item">
+          <img [src]="image(it)" [alt]="it.product.name" class="rt__img">
+          <div class="rt__info">
+            <h4>{{ it.product.name }}</h4>
+            <p>{{ it.unitPrice | vnd }}</p>
+          </div>
+          <div class="rt__qty">
+            <span>Số lượng: {{ it.quantity }}</span>
+            <strong>{{ it.totalPrice | vnd }}</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Xem thêm + tổng tiền -->
+      <div class="rt__summary">
+        <button *ngIf="hasMore(o)" type="button" class="rt__more" (click)="toggleExpand(o)">
+          {{ isExpanded(o) ? 'Thu gọn' : 'Xem thêm' }}
+          <app-icon [name]="isExpanded(o) ? 'chevron-up' : 'chevron-down'" [size]="13"></app-icon>
+        </button>
+        <span class="rt__total">Tổng tiền ({{ totalQuantity(o) }} sản phẩm): <strong>{{ o.total | vnd }}</strong></span>
+      </div>
+
+      <!-- Nút theo trạng thái -->
+      <div class="rt__actions">
+        <span class="rt__reason">Lý do: {{ o.returnRequest!.reason }}</span>
+        <button type="button" class="rt__btn rt__btn--ghost" (click)="openDetail(o)">Xem chi tiết</button>
+        <button *ngIf="o.returnRequest!.status === 'PENDING'" type="button" class="rt__btn rt__btn--outline" (click)="askCancel(o)">Hủy yêu cầu</button>
+        <button *ngIf="o.returnRequest!.status === 'APPROVED'" type="button" class="rt__btn rt__btn--primary" (click)="askReceived(o)">Đã nhận tiền hoàn</button>
+        <button *ngIf="o.returnRequest!.status === 'COMPLETED' || o.returnRequest!.status === 'REJECTED'" type="button" class="rt__btn rt__btn--primary" (click)="buyAgain(o)">Mua lại</button>
+      </div>
+    </article>
+  </div>
+</div>
+
+<!-- Chi tiết yêu cầu đổi trả -->
+<div *ngIf="detail as d" class="rt-modal" (click)="detail = null">
+  <div class="rt-modal__box" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-label="Chi tiết đổi trả">
+    <header class="rt-modal__head">
+      <h3>Chi tiết đổi trả</h3>
+      <button type="button" class="rt-modal__x" (click)="detail = null" aria-label="Đóng"><app-icon name="x" [size]="16"></app-icon></button>
+    </header>
+
+    <div class="rt-modal__body">
+      <div class="rt-detail__rows">
+        <div><span>Mã đơn hàng:</span><strong class="rt-detail__code">{{ d.orderNumber }}</strong></div>
+        <div><span>Trạng thái:</span><span class="rt-detail__badge" [ngClass]="'rt__bar--' + d.returnRequest!.status">{{ statusLabels[d.returnRequest!.status] }}</span></div>
+        <div><span>Thời gian đặt hàng:</span><strong>{{ formatDateTime(d.createdAt) }}</strong></div>
+        <div><span>Gửi yêu cầu lúc:</span><strong>{{ formatDateTime(d.returnRequest!.requestedAt) }}</strong></div>
+        <div><span>Phương thức thanh toán:</span><strong>{{ paymentLabel(d.paymentMethod) }}</strong></div>
+        <div><span>Số tiền hoàn dự kiến:</span><strong class="rt-detail__money">{{ d.returnRequest!.refundAmount | vnd }}</strong></div>
+      </div>
+
+      <!-- Tiến trình -->
+      <ol class="rt-steps">
+        <li class="rt-steps__item rt-steps__item--done">
+          <b>Gửi yêu cầu</b><small>{{ formatDateTime(d.returnRequest!.requestedAt) }}</small>
+        </li>
+        <ng-container *ngIf="d.returnRequest!.status !== 'REJECTED'; else rejectedStep">
+          <li class="rt-steps__item" [class.rt-steps__item--done]="!!d.returnRequest!.approvedAt">
+            <b>Shop duyệt, đang hoàn</b><small>{{ formatDateTime(d.returnRequest!.approvedAt) || 'Đang chờ' }}</small>
+          </li>
+          <li class="rt-steps__item" [class.rt-steps__item--done]="!!d.returnRequest!.completedAt">
+            <b>Đã hoàn/trả</b><small>{{ formatDateTime(d.returnRequest!.completedAt) || '—' }}</small>
+          </li>
+        </ng-container>
+        <ng-template #rejectedStep>
+          <li class="rt-steps__item rt-steps__item--rejected">
+            <b>Shop từ chối</b><small>{{ formatDateTime(d.returnRequest!.rejectedAt) }}</small>
+          </li>
+        </ng-template>
+      </ol>
+
+      <section class="rt-detail__section">
+        <h4>Lý do đổi trả</h4>
+        <p>{{ d.returnRequest!.reason }}<ng-container *ngIf="d.returnRequest!.description"> — {{ d.returnRequest!.description }}</ng-container></p>
+      </section>
+
+      <section *ngIf="d.returnRequest!.adminNote" class="rt-detail__section rt-detail__section--note">
+        <h4>Phản hồi từ Luméa</h4>
+        <p>{{ d.returnRequest!.adminNote }}</p>
+      </section>
+
+      <section class="rt-detail__section">
+        <h4>Sản phẩm</h4>
+        <div *ngFor="let it of d.items" class="rt__item rt__item--compact">
+          <img [src]="image(it)" [alt]="it.product.name" class="rt__img">
+          <div class="rt__info">
+            <h4>{{ it.product.name }}</h4>
+            <p>Số lượng: {{ it.quantity }} · Đơn giá: {{ it.unitPrice | vnd }}</p>
+          </div>
+          <strong class="rt__price">{{ it.totalPrice | vnd }}</strong>
+        </div>
+      </section>
+
+      <div class="rt-detail__total">
+        <span>Tổng cộng</span>
+        <strong>{{ d.total | vnd }}</strong>
+      </div>
+    </div>
+
+    <footer class="rt-modal__foot">
+      <button *ngIf="d.returnRequest!.status === 'PENDING'" type="button" class="rt__btn rt__btn--outline" (click)="askCancel(d)">Hủy yêu cầu</button>
+      <button *ngIf="d.returnRequest!.status === 'APPROVED'" type="button" class="rt__btn rt__btn--primary" (click)="askReceived(d)">Đã nhận tiền hoàn</button>
+      <button *ngIf="d.returnRequest!.status === 'COMPLETED' || d.returnRequest!.status === 'REJECTED'" type="button" class="rt__btn rt__btn--primary" (click)="buyAgain(d)">Mua lại</button>
+    </footer>
+  </div>
+</div>
+
+<!-- Xác nhận huỷ yêu cầu / đã nhận tiền -->
+<div *ngIf="confirm as c" class="rt-modal rt-modal--top" (click)="closeConfirm()">
+  <div class="rt-confirm" (click)="$event.stopPropagation()" role="alertdialog" aria-modal="true">
+    <div class="rt-confirm__icon" [class.rt-confirm__icon--ok]="c.kind === 'received'">
+      <app-icon [name]="c.kind === 'received' ? 'check' : 'bell'" [size]="24"></app-icon>
+    </div>
+    <h3>{{ c.kind === 'cancel' ? 'Hủy yêu cầu trả hàng/hoàn tiền?' : 'Xác nhận đã nhận tiền hoàn' }}</h3>
+    <p>{{ c.kind === 'cancel' ? 'Bạn có chắc chắn muốn hủy yêu cầu này không?' : 'Bạn đã nhận lại tiền hoàn cho đơn ' + c.order.orderNumber + '?' }}</p>
+    <div class="rt-confirm__btns">
+      <button type="button" class="rt__btn rt__btn--outline" (click)="closeConfirm()" [disabled]="busy">Không</button>
+      <button type="button" class="rt__btn rt__btn--primary" (click)="runConfirm()" [disabled]="busy">{{ busy ? 'Đang xử lý...' : 'Xác nhận' }}</button>
+    </div>
+  </div>
+</div>

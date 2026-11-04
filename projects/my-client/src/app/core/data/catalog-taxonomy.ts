@@ -147,8 +147,7 @@ export const MATERIAL_GROUPS: { key: string; label: string; keywords: string[] }
 /** Nhánh 3D & Custom trong mega menu — chỉ trỏ tới route/filter có thật. */
 export const THREE_D_CUSTOM_LINKS: CatalogLink[] = [
   { label: 'Sản phẩm in 3D', link: '/catalog', queryParams: { print: '1' }, image: art('3d-custom') },
-  { label: 'Sản phẩm có thể tùy biến', link: '/catalog', queryParams: { custom: '1' }, image: img('1581783342308-f792dbdd27c5') },
-  { label: 'Chọn màu & chất liệu', link: '/customizer-3d', image: img('1584589167171-541ce45f1eea') },
+  { label: 'Đặt làm theo yêu cầu', link: '/custom-request/new', image: img('1584589167171-541ce45f1eea') },
   { label: 'Xem sản phẩm 3D', link: '/catalog', queryParams: { has3d: '1' }, image: 'assets/floating-banners/ai-room-3d.png' },
   { label: 'Space Builder', link: '/shop-the-room', image: 'assets/promo-banner/room-3d-collection.png' },
   { label: 'Thiết kế riêng', link: '/custom-request', image: 'assets/hero-banner/hero-ai-assistant.png' },
@@ -251,6 +250,35 @@ export function searchableText(p: Product): string {
     p.productionType === 'PRINT_ON_DEMAND' ? 'in 3d theo yêu cầu' : '',
   ];
   return normalizeText(parts.filter(Boolean).join(' '));
+}
+
+/**
+ * Độ liên quan của 1 sản phẩm với từ khoá (đã bỏ dấu, tách từ):
+ *  3 = khớp ngay trong TÊN sản phẩm;
+ *  2 = khớp loại hàng (danh mục, nhóm, không gian, phong cách, màu, chất liệu);
+ *  1 = chỉ khớp trong phần mô tả (vd "đặt cạnh giường") -> chỉ là kết quả phụ;
+ *  0 = không khớp.
+ */
+export function searchRelevance(p: Product, terms: string[]): number {
+  if (!terms.length) return 0;
+  const has = (text: string) => terms.every(t => text.includes(t));
+  if (has(normalizeText(p.name))) return 3;
+  const dept = departmentOf(p);
+  const typeText = normalizeText([
+    p.name,
+    p.categoryName,
+    dept?.label,
+    ...subcategoriesOf(p).map(s => s.label),
+    ...spacesOf(p).map(k => findSpace(k)?.label),
+    p.style,
+    p.color,
+    p.materialInfo,
+    p.customizable ? 'tùy biến custom' : '',
+    p.threeModelType ? '3d xem 3d mô hình 3d' : '',
+    p.productionType === 'PRINT_ON_DEMAND' ? 'in 3d theo yêu cầu' : '',
+  ].filter(Boolean).join(' '));
+  if (has(typeText)) return 2;
+  return has(searchableText(p)) ? 1 : 0;
 }
 
 /**

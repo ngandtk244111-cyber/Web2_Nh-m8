@@ -1,27 +1,33 @@
+/* Cùng bề rộng với hero banner phía trên (.hb: min(1280px, 100% - 32px)) để 2 mép thẳng hàng */
 .pc_section {
-  max-width: 80rem;
+  --pc-w: clamp(220px, 26vw, 330px);
+  width: min(1280px, calc(100% - 32px));
   margin: 0 auto;
-  padding: 0 16px;
 }
 
-/* Số cột = số poster (truyền qua --cols) */
-.pc_grid {
-  display: grid;
-  grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr));
-  gap: 16px;
+/* Sân khấu carousel: poster xếp chồng ở giữa, vị trí do data-pos quyết định */
+.pc_stage {
+  position: relative;
+  height: calc(var(--pc-w) * 1168 / 720 + 28px);
+  perspective: 1400px;
 }
 
 .pc_poster {
-  display: block;
-  border-radius: 18px;
+  position: absolute;
+  left: 50%;
+  top: 14px;
+  width: var(--pc-w);
+  padding: 0;
+  border: 0;
+  border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 10px 24px -14px rgba(78, 10, 22, 0.35);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.pc_poster:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 18px 32px -16px rgba(78, 10, 22, 0.45);
+  background: #F3E6DE;
+  cursor: pointer;
+  box-shadow: 0 14px 30px -18px rgba(78, 10, 22, 0.4);
+  transform: translateX(-50%) scale(0.7);
+  opacity: 0;
+  z-index: 1;
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.5s ease, box-shadow 0.4s ease, filter 0.5s ease;
 }
 
 .pc_poster img {
@@ -31,23 +37,116 @@
   object-fit: cover;
 }
 
-/* Màn hình nhỏ: vuốt ngang thay vì ép poster quá nhỏ */
+/* Poster giữa: nổi lên to nhất, đổ bóng sâu, viền trắng */
+.pc_poster[data-pos="0"] {
+  transform: translateX(-50%) scale(1);
+  opacity: 1;
+  z-index: 3;
+  box-shadow: 0 30px 50px -22px rgba(78, 10, 22, 0.55), 0 0 0 3px #ffffff;
+}
+
+.pc_poster[data-pos="0"]:hover {
+  transform: translateX(-50%) translateY(-6px) scale(1.02);
+}
+
+/* Hai bên: lùi ra sau, nghiêng nhẹ, tối hơn */
+.pc_poster[data-pos="-1"],
+.pc_poster[data-pos="1"] {
+  opacity: 1;
+  z-index: 2;
+  filter: saturate(0.8) brightness(0.9);
+}
+
+.pc_poster[data-pos="-1"] {
+  transform: translateX(calc(-50% - var(--pc-w) * 0.95)) scale(0.82) rotateY(14deg);
+}
+
+.pc_poster[data-pos="1"] {
+  transform: translateX(calc(-50% + var(--pc-w) * 0.95)) scale(0.82) rotateY(-14deg);
+}
+
+.pc_poster[data-pos="-1"]:hover,
+.pc_poster[data-pos="1"]:hover {
+  filter: none;
+}
+
+/* Poster còn lại nằm khuất phía sau, chờ trượt vào */
+.pc_poster[data-pos="2"],
+.pc_poster[data-pos="-2"] {
+  pointer-events: none;
+}
+
+.pc_arrow {
+  position: absolute;
+  z-index: 4;
+  top: 50%;
+  width: 46px;
+  height: 46px;
+  border: 0;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #7A0F20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 8px 20px -8px rgba(78, 10, 22, 0.45);
+  transform: translateY(-50%);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.pc_arrow:hover {
+  background: #A3152D;
+  color: #ffffff;
+}
+
+.pc_arrow--prev { left: max(0px, calc(50% - var(--pc-w) * 1.62)); }
+.pc_arrow--next { right: max(0px, calc(50% - var(--pc-w) * 1.62)); }
+
+.pc_dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.pc_dot {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(163, 21, 45, 0.25);
+  cursor: pointer;
+  transition: width 0.3s ease, background 0.3s ease;
+}
+
+.pc_dot--active {
+  width: 26px;
+  background: #A3152D;
+}
+
+/* Màn hình nhỏ: poster giữa chiếm phần lớn, hai bên ló ra một chút, vuốt để chuyển */
 @media (max-width: 767px) {
-  .pc_grid {
-    grid-template-columns: none;
-    grid-auto-flow: column;
-    grid-auto-columns: 62%;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    padding-bottom: 6px;
-    scrollbar-width: none;
+  .pc_section {
+    --pc-w: 58vw;
   }
 
-  .pc_grid::-webkit-scrollbar {
+  .pc_poster[data-pos="-1"] {
+    transform: translateX(calc(-50% - var(--pc-w) * 0.78)) scale(0.8);
+  }
+
+  .pc_poster[data-pos="1"] {
+    transform: translateX(calc(-50% + var(--pc-w) * 0.78)) scale(0.8);
+  }
+
+  .pc_arrow {
     display: none;
   }
+}
 
+@media (prefers-reduced-motion: reduce) {
   .pc_poster {
-    scroll-snap-align: start;
+    transition: none;
   }
 }

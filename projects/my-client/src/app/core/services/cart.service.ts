@@ -1,4 +1,4 @@
-import { Injectable, signal, computed, inject } from '@angular/core';
+import { Injectable, signal, computed, inject, effect, untracked } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, catchError, map, of } from 'rxjs';
 import { CartItem, Coupon } from '../models/cart.model';
@@ -23,8 +23,17 @@ export class CartService {
   // Gom các lần thêm giỏ trong cùng một lượt xử lý (vd. "thêm tất cả") thành một thông báo duy nhất.
   private pendingAddedNames: string[] = [];
 
-  private readonly storageKey = 'deco3d_cart';
+  /**
+   * Giỏ hàng lưu RIÊNG theo từng tài khoản (deco3d_cart:<userId>), khách chưa đăng nhập dùng khoá 'guest'.
+   * Đăng xuất -> giỏ trống (đọc khoá guest), xoá món lúc đăng xuất không đụng tới giỏ của tài khoản;
+   * đăng nhập lại -> nạp lại đúng giỏ của tài khoản đó.
+   */
+  private readonly legacyStorageKey = 'deco3d_cart';
   private readonly checkoutSelectionKey = 'deco3d_checkout_selection';
+  private owner = this.auth.currentUser()?._id || 'guest';
+  private get storageKey(): string {
+    return `deco3d_cart:${this.owner}`;
+  }
 
   // Signals
   private itemsSignal = signal<CartItem[]>(this.loadCart());
@@ -36,6 +45,21 @@ export class CartService {
   private checkoutSelectionSignal = signal<string[] | null>(this.loadCheckoutSelection());
 
   readonly items = this.itemsSignal.asReadonly();
+
+  constructor() {
+    // Đổi tài khoản (đăng nhập / đăng xuất / đăng nhập tài khoản khác) -> nạp giỏ + mã đã lưu của người đó.
+    effect(() => {
+      const owner = this.auth.currentUser()?._id || 'guest';
+      untracked(() => {
+        if (owner === this.owner) return;
+        this.owner = owner;
+        this.itemsSignal.set(this.loadCart());
+        this.savedCouponsSignal.set(this.loadSavedCoupons());
+        this.appliedCouponSignal.set(null);
+        this.clearCheckoutSelection();
+      });
+    });
+  }
   readonly isCartOpen = this.isCartOpenSignal.asReadonly();
   readonly appliedCoupon = this.appliedCouponSignal.asReadonly();
 
@@ -121,6 +145,12 @@ export class CartService {
 
   private loadCart(): CartItem[] {
     try {
+      // Giỏ cũ (trước khi tách theo tài khoản) -> chuyển cho tài khoản đăng nhập đầu tiên.
+      const legacy = localStorage.getItem(this.legacyStorageKey);
+      if (legacy && this.owner !== 'guest') {
+        if (!localStorage.getItem(this.storageKey)) localStorage.setItem(this.storageKey, legacy);
+        localStorage.removeItem(this.legacyStorageKey);
+      }
       const stored = localStorage.getItem(this.storageKey);
       if (stored) return JSON.parse(stored);
     } catch (e) {
@@ -298,7 +328,9 @@ export class CartService {
   }
 
   // ---------- Mã giảm giá ----------
-  private readonly savedCouponsKey = 'lumea_saved_coupons';
+  private get savedCouponsKey(): string {
+    return `lumea_saved_coupons:${this.owner}`;
+  }
   /** Mã công khai khách từng nhập thành công — lưu lại để lần sau chọn trong danh sách, khỏi gõ lại. */
   private savedCouponsSignal = signal<Coupon[]>(this.loadSavedCoupons());
   readonly savedCoupons = this.savedCouponsSignal.asReadonly();
@@ -379,6 +411,22 @@ export class CartService {
 
   private saveCoupon(coupon: Coupon): void {
     this.persistSavedCoupons([coupon, ...this.savedCouponsSignal().filter(c => c.code !== coupon.code)]);
+  }
+
+  isCouponSaved(code: string): boolean {
+    return this.savedCouponsSignal().some(c => c.code === code);
+  }
+
+  /** Nút "Lưu mã" trên thẻ voucher của shop: lưu vào ví của khách, lúc thanh toán chỉ cần bấm chọn. */
+  saveCouponToWallet(coupon: Coupon): boolean {
+    if (!this.auth.currentUser()) {
+      this.toast.info('Vui lòng đăng nhập để lưu mã.');
+      this.loginModal.open();
+      return false;
+    }
+    this.saveCoupon(coupon);
+    this.toast.success(`Đã lưu mã ${coupon.code} — chọn mã ở giỏ hàng hoặc lúc thanh toán.`);
+    return true;
   }
 
   private persistSavedCoupons(list: Coupon[]): void {

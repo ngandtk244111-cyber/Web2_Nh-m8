@@ -1,11 +1,13 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, EventEmitter, OnInit, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { OrderService } from '../../../core/services/order.service';
-import { Order, OrderStatus } from '../../../core/models/order.model';
+import { OrderService, invoiceUrl } from '../../../core/services/order.service';
+import { Order, OrderStatus, RETURN_REASONS, RETURN_WINDOW_DAYS } from '../../../core/models/order.model';
+import { ToastService } from '../../../core/services/toast.service';
 import { VndPipe } from '../../../shared/pipes/vnd.pipe';
 import { AppIconComponent } from '../../../components/icon/icon.component';
+import { AuthService } from '../../../core/services/auth.service';
 
 type StatusTab = 'ALL' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
 
@@ -30,7 +32,88 @@ export class OrdersTabComponent implements OnInit {
     { id: 'CANCELLED', label: 'Đã hủy' },
   ];
 
+  private readonly authService = inject(AuthService);
+  private readonly toast = inject(ToastService);
+
+  /** Báo trang Tài khoản chuyển sang tab "Đổi trả". */
+  @Output() openReturns = new EventEmitter<void>();
+
+  /* ---------- Yêu cầu trả hàng ---------- */
+  readonly returnReasons = RETURN_REASONS;
+  returnOrder: Order | null = null;
+  returnReason = '';
+  returnDescription = '';
+  returnExpanded = false;
+  returnSubmitting = false;
+
+  /** Hạn cuối trả hàng: 7 ngày kể từ khi giao thành công. */
+  private returnDeadline(order: Order): number {
+    const delivered = order.deliveredAt || order.updatedAt || order.createdAt;
+    return new Date(delivered).getTime() + RETURN_WINDOW_DAYS * 86400000;
+  }
+
+  canRequestReturn(order: Order): boolean {
+    return order.status === 'DELIVERED' && !order.returnRequest && this.returnDeadline(order) > Date.now();
+  }
+
+  returnDaysLeft(order: Order): number {
+    return Math.max(1, Math.ceil((this.returnDeadline(order) - Date.now()) / 86400000));
+  }
+
+  returnStatusLabel(order: Order): string {
+    const map = { PENDING: 'Đang xử lý', APPROVED: 'Đang hoàn', COMPLETED: 'Đã hoàn/trả', REJECTED: 'Bị từ chối' };
+    return order.returnRequest ? map[order.returnRequest.status] : '';
+  }
+
+  get canSubmitReturn(): boolean {
+    return !!this.returnReason && (this.returnReason !== 'Khác' || !!this.returnDescription.trim());
+  }
+
+  openReturn(order: Order, event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.returnOrder = order;
+    this.returnReason = '';
+    this.returnDescription = '';
+    this.returnExpanded = false;
+  }
+
+  closeReturn(): void {
+    if (!this.returnSubmitting) this.returnOrder = null;
+  }
+
+  submitReturn(): void {
+    const userId = this.authService.currentUser()?._id;
+    if (!this.returnOrder || !userId || !this.canSubmitReturn || this.returnSubmitting) return;
+    this.returnSubmitting = true;
+    this.orderService.requestReturn(this.returnOrder.orderNumber, userId, this.returnReason, this.returnDescription.trim()).subscribe({
+      next: updated => {
+        this.returnSubmitting = false;
+        this.returnOrder = null;
+        this.orders = this.orders.map(o => o.orderNumber === updated.orderNumber ? updated : o);
+        this.toast.success('Đã gửi yêu cầu trả hàng. Luméa sẽ phản hồi trong 1-2 ngày làm việc.');
+      },
+      error: err => {
+        this.returnSubmitting = false;
+        this.toast.error(err?.error?.error || 'Không gửi được yêu cầu, vui lòng thử lại');
+      },
+    });
+  }
+
+  goReturns(event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.openReturns.emit();
+  }
+
   constructor(private orderService: OrderService) {}
+
+  /** Thẻ đơn là 1 link tới trang theo dõi -> nút hoá đơn chặn link đó và mở PDF ở tab mới. */
+  openInvoice(orderNumber: string, event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    window.open(invoiceUrl(orderNumber, this.authService.currentUser()?._id), '_blank', 'noopener');
+  }
 
   ngOnInit(): void {
     this.loadOrders();

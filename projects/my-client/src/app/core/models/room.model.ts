@@ -18,6 +18,10 @@ export interface Room {
     y: number;
     z: number;
     fov: number;
+    /** Phòng xoay quanh (không walkthrough): chỉ cho xoay ngang ±N độ quanh góc ban đầu (vd phòng chỉ có 1 bức tường). */
+    orbitAzimuth?: number;
+    /** Phòng xoay quanh: khoảng góc dọc cho phép [min, max] độ tính từ trục thẳng đứng (90 = nhìn ngang). Mặc định khoá 90. */
+    orbitPolar?: [number, number];
   };
   /** Điểm camera nhìn vào lúc đầu + khi bấm "Góc nhìn chuẩn". Không set thì mặc định (0, 0.6, 0). */
   cameraLookAt?: [number, number, number];

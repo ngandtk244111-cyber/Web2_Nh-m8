@@ -120,6 +120,18 @@ export class OrderService {
   }
 
   /** Đã gọi điện xác nhận đơn với khách (bắt buộc trước khi giao đơn COD). */
+  /** Duyệt / từ chối / hoàn tất yêu cầu trả hàng của khách. */
+  reviewReturn(orderNumber: string, action: 'approve' | 'reject' | 'complete', adminNote = ''): Observable<Order> {
+    return this.http.patch<OrderApiResponse>(`${this.baseUrl}/${encodeURIComponent(orderNumber)}/return-request/review`, {
+      adminId: this.adminAuth.adminId,
+      action,
+      adminNote,
+    }).pipe(
+      map(res => this.normalize(res.order!)),
+      tap(order => this.replaceInSignal(order))
+    );
+  }
+
   confirmPhone(orderNumber: string): Observable<Order> {
     return this.http.patch<OrderApiResponse>(`${this.baseUrl}/${encodeURIComponent(orderNumber)}/confirm-phone`, {
       adminId: this.adminAuth.adminId,

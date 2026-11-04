@@ -243,3 +243,17 @@
 .fcw__close:hover {
   background: rgba(0, 0, 0, 0.8);
 }
+
+/* Tấm voucher bật ra khỏi hộp quà: nhấp nhô lên xuống */
+.fcw__ticket {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: fcwTicket 2.4s ease-in-out infinite;
+}
+@keyframes fcwTicket {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-6px) rotate(3deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fcw__ticket { animation: none; }
+}

@@ -16,7 +16,7 @@ import {
   materialGroupsOf,
   has3DModel,
   normalizeText,
-  searchableText,
+  searchRelevance,
 } from '../data/catalog-taxonomy';
 
 const BASE = `${environment.apiUrl}/products`;
@@ -132,7 +132,8 @@ export class ProductService {
     this.mascotService.beginLoading();
     this.http.get<{ success: boolean; products: Product[] }>(BASE).subscribe({
       next: (res) => {
-        if (res.success) this.productsSignal.set(res.products);
+        // Đã bỏ tính năng tuỳ biến (đổi màu/chất liệu/kích thước/khắc tên) -> bỏ cấu hình tuỳ biến khỏi dữ liệu.
+        if (res.success) this.productsSignal.set(res.products.map(p => ({ ...p, customizable: false, customization: undefined })));
         this.loadedSignal.set(true);
         this.mascotService.endLoading();
       },
@@ -198,13 +199,21 @@ export class ProductService {
   filterProducts(filters: ProductFilters): Product[] {
     let result = [...this.productsSignal()];
 
+    // Độ liên quan theo từ khoá (dùng để lọc + xếp kết quả liên quan nhất lên đầu).
+    let relevance: Map<Product, number> | null = null;
     if (filters.searchQuery?.trim()) {
       // Không dấu + hiểu danh mục mới/không gian/phong cách: "giuong", "phong khach", "sofa"...
       const terms = normalizeText(filters.searchQuery).split(/\s+/).filter(Boolean);
-      result = result.filter(p => {
-        const text = searchableText(p);
-        return terms.every(t => text.includes(t));
-      });
+      const scores = new Map<Product, number>();
+      for (const p of result) {
+        const score = searchRelevance(p, terms);
+        if (score > 0) scores.set(p, score);
+      }
+      // Có sản phẩm khớp tên/loại hàng thì bỏ các món chỉ nhắc tới từ khoá trong mô tả
+      // (vd gõ "giường" không ra bàn phụ / chậu cây chỉ vì mô tả có chữ "cạnh giường").
+      const strong = [...scores.values()].some(v => v >= 2);
+      result = result.filter(p => (scores.get(p) || 0) >= (strong ? 2 : 1));
+      relevance = scores;
     }
 
     if (filters.categories?.length) {
@@ -299,6 +308,12 @@ export class ProductService {
         break;
       default:
         break;
+    }
+
+    // Đang tìm kiếm: món khớp TÊN lên trước, rồi tới khớp loại hàng (sort ổn định -> giữ thứ tự sắp xếp ở trên).
+    if (relevance) {
+      const scores = relevance;
+      result.sort((a, b) => (scores.get(b) || 0) - (scores.get(a) || 0));
     }
 
     return result;

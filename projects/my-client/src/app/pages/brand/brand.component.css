@@ -7,14 +7,71 @@
 
 .br { overflow-x: clip; padding-bottom: 56px; }
 
+/* Tiêu đề bộ sưu tập: nền kem tách hẳn khỏi thanh menu đỏ phía trên */
 .br-strip {
-  padding: 8px 16px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 30px 16px 26px;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(163, 21, 45, 0.1), transparent 65%),
+    linear-gradient(180deg, #FBF1EA 0%, #F6E7DE 100%);
+  border-bottom: 1px solid #EBD6CB;
+  text-align: center;
+}
+
+.br-strip::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -1px;
+  width: 120px;
+  height: 3px;
+  border-radius: 3px;
+  background: #A3152D;
+  transform: translateX(-50%);
+}
+
+.br-strip__eyebrow {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: #A3152D;
+}
+
+.br-strip__name {
+  margin: 0;
+  font-family: var(--font-family-heading, 'Inter', sans-serif);
+  font-size: clamp(30px, 4vw, 46px);
+  font-weight: 800;
+  line-height: 1.1;
+  color: #4E0A16;
+}
+
+.br-strip__name em {
+  font-style: normal;
+  color: #A3152D;
+}
+
+.br-strip__tagline {
+  margin: 2px 0 0;
+  font-size: clamp(14px, 1.4vw, 17px);
+  font-style: italic;
+  color: #6B4A3E;
+}
+
+.br-strip__tag {
+  margin-top: 6px;
+  padding: 4px 14px;
+  border-radius: 999px;
   background: #A3152D;
   color: #ffffff;
-  text-align: center;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.04em;
 }
 
 .br-container {

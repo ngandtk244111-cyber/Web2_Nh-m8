@@ -1,6 +1,6 @@
 import { Component, ElementRef, HostListener, ViewChild, effect, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { AppIconComponent } from '../../../components/icon/icon.component';
 import {
@@ -11,6 +11,12 @@ import {
 import { Product } from '../../../core/models/product.model';
 import { modelCreditFor } from '../../../core/data/model-credits';
 import { productFromRoute } from '../product-from-route';
+import { ProductService } from '../../../core/services/product.service';
+import { CartService } from '../../../core/services/cart.service';
+import { VndPipe } from '../../../shared/pipes/vnd.pipe';
+
+/** Tab của khung xem (kiểu cửa sổ xem ảnh / 360° của Thế Giới Di Động). */
+type ViewTab = '3d' | 'images' | 'specs';
 
 interface LookOption {
   key: string;
@@ -40,7 +46,7 @@ const VARIANT_LABELS: Record<string, string> = {
 @Component({
   selector: 'app-showroom-3d',
   standalone: true,
-  imports: [CommonModule, RouterLink, AppIconComponent, ProductModelStageComponent],
+  imports: [CommonModule, RouterLink, AppIconComponent, ProductModelStageComponent, VndPipe],
   templateUrl: './showroom-3d.component.html',
   styleUrl: './showroom-3d.component.css',
 })
@@ -49,7 +55,14 @@ export class Showroom3dComponent {
   @ViewChild('room') room?: ElementRef<HTMLElement>;
 
   private readonly title = inject(Title);
+  private readonly router = inject(Router);
+  private readonly cartService = inject(CartService);
+  readonly productService = inject(ProductService);
   readonly route = productFromRoute();
+
+  /** Tab đang xem: mô hình 3D, ảnh sản phẩm, thông số. Mô hình chỉ bị ẩn khi đổi tab (không tải lại). */
+  tab: ViewTab = '3d';
+  imageIndex = 0;
 
   stageState: StageState = 'loading';
   autoRotate = false;
@@ -150,5 +163,55 @@ export class Showroom3dComponent {
 
   closeTab(): void {
     window.close();
+  }
+
+  setTab(tab: ViewTab): void {
+    this.tab = tab;
+    if (tab === '3d') {
+      // Khung 3D vừa hiện lại -> báo đổi kích thước để canvas vẽ đúng khung.
+      setTimeout(() => window.dispatchEvent(new Event('resize')));
+    }
+  }
+
+  prevImage(p: Product): void {
+    const n = p.images.length;
+    if (n) this.imageIndex = (this.imageIndex - 1 + n) % n;
+  }
+
+  nextImage(p: Product): void {
+    const n = p.images.length;
+    if (n) this.imageIndex = (this.imageIndex + 1) % n;
+  }
+
+  /** Bảng thông số: chỉ hiện dòng có dữ liệu. */
+  specs(p: Product): { label: string; value: string }[] {
+    return [
+      { label: 'Danh mục', value: p.categoryName },
+      { label: 'Kích thước', value: p.dimensions },
+      { label: 'Chất liệu', value: p.materialInfo },
+      { label: 'Khối lượng', value: p.weight },
+      { label: 'Thời gian sản xuất', value: p.productionTime || '' },
+      { label: 'Tình trạng', value: p.inStock > 0 ? `Còn hàng (${p.inStock})` : 'Đặt trước' },
+    ].filter(r => !!r.value);
+  }
+
+  /** Sản phẩm tuỳ biến cần chọn màu/kích thước ở trang chi tiết trước khi thêm giỏ. */
+  addToCart(p: Product): void {
+    if (p.customizable) {
+      this.router.navigate(['/product', p.slug]);
+      return;
+    }
+    this.cartService.addToCart(p, 1);
+  }
+
+  buyNow(p: Product): void {
+    if (p.customizable) {
+      this.router.navigate(['/product', p.slug]);
+      return;
+    }
+    if (!this.cartService.addToCart(p, 1)) return;
+    const item = this.cartService.items().find(i => i.product.id === p.id && !i.selectedCustomization);
+    if (item) this.cartService.setCheckoutSelection([item.id]);
+    this.router.navigate(['/checkout']);
   }
 }

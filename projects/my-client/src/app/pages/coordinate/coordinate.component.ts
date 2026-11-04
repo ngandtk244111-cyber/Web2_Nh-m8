@@ -6,6 +6,7 @@ import { ProductService } from '../../core/services/product.service';
 import { NewsService } from '../../core/services/news.service';
 import { Product } from '../../core/models/product.model';
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
+import { ProductPhotoComponent } from '../../components/product-photo/product-photo.component';
 
 const ACCESSORY_ROW_SIZE = 12;
 const ACCESSORY_GROUP_COUNT = 5;
@@ -29,14 +30,14 @@ const TIPS = [
 const FAQS = [
   { q: 'Tôi có thể mua lẻ từng món trong bộ phối đồ không?', a: 'Có. Mọi sản phẩm trong bộ đều bán riêng, bạn bấm vào từng món để xem chi tiết và thêm vào giỏ.' },
   { q: 'Món đồ có đúng màu và kích thước như trong ảnh không?', a: 'Ảnh phối đồ mang tính minh họa không gian. Kích thước và chất liệu chính xác được ghi ở trang chi tiết từng sản phẩm.' },
-  { q: 'Có thể tùy chỉnh màu sắc để hợp với phòng của tôi không?', a: 'Các món in 3D hỗ trợ tùy chỉnh màu và kích thước, bạn có thể thử ngay trong trang Tùy biến 3D.' },
+  { q: 'Có thể tùy chỉnh màu sắc để hợp với phòng của tôi không?', a: 'Các món in 3D hỗ trợ tùy chỉnh màu và kích thước, bạn chỉ cần gửi yêu cầu đặt làm riêng để Luméa tư vấn.' },
   { q: 'Bao lâu thì tôi nhận được hàng?', a: 'Hàng có sẵn được giao trong vài ngày; món in theo yêu cầu cần thêm thời gian sản xuất ghi rõ ở từng sản phẩm.' },
 ];
 
 @Component({
   selector: 'app-coordinate',
   standalone: true,
-  imports: [CommonModule, RouterLink, VndPipe],
+  imports: [ProductPhotoComponent, CommonModule, RouterLink, VndPipe],
   templateUrl: './coordinate.component.html',
   styleUrl: './coordinate.component.css'
 })

@@ -5,7 +5,8 @@ async function connectDB() {
   if (!uri) {
     throw new Error('MONGODB_URI is not set');
   }
-  await mongoose.connect(uri);
+  // Báo lỗi sau 5s thay vì 30s mặc định khi máy chưa bật MongoDB, để server mở nhanh (chatbox AI vẫn chạy).
+  await mongoose.connect(uri, { serverSelectionTimeoutMS: 5000 });
   console.log('MongoDB connected:', uri);
 }
 

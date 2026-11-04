@@ -1,5 +1,6 @@
 const express = require('express');
 const axios = require('axios');
+const mongoose = require('mongoose');
 const Product = require('../models/Product');
 
 const router = express.Router();
@@ -20,6 +21,9 @@ const GEMINI_FALLBACK_MODEL = process.env.GEMINI_FALLBACK_MODEL || 'gemini-3.1-f
 
 const PRODUCT_FIELDS = 'id name slug images basePrice originalPrice';
 
+/** Server có thể chạy không có MongoDB (máy chưa cài) — khi đó bỏ qua truy vấn sản phẩm thay vì treo chờ ~10s. */
+const dbReady = () => mongoose.connection.readyState === 1;
+
 // ── Catalog cache cho system prompt ──
 let catalogCache = null;
 let catalogCacheTime = 0;
@@ -29,6 +33,7 @@ const CATALOG_MAX = 300;
 async function getCatalogText() {
   const now = Date.now();
   if (catalogCache && now - catalogCacheTime < CATALOG_TTL) return catalogCache;
+  if (!dbReady()) return 'DANH MỤC SẢN PHẨM: Không tải được. Hãy tư vấn chung, không nêu tên sản phẩm cụ thể.';
 
   try {
     const products = await Product.find({})
@@ -293,17 +298,18 @@ router.post('/assistant', async (req, res) => {
         contents: [{ role: 'user', parts: [{ text: conversationText }] }],
         generationConfig: { temperature: 0.2, maxOutputTokens: 1024, responseMimeType: 'application/json' },
       },
-      { timeout: 60000 }
+      { timeout: 25000 }
     );
 
-    // Model chính quá tải (503) / hết hạn mức (429) -> gọi lại bằng model dự phòng nhẹ hơn.
+    // Model chính quá tải (503) / hết hạn mức (429) / không phản hồi (timeout) -> gọi lại bằng model dự phòng nhẹ hơn.
     let geminiRes;
     try {
       geminiRes = await callGemini(GEMINI_MODEL);
     } catch (err) {
       const status = err.response?.status;
-      if ((status !== 503 && status !== 429) || GEMINI_FALLBACK_MODEL === GEMINI_MODEL) throw err;
-      console.warn(`[aiRoutes] ${GEMINI_MODEL} trả ${status}, chuyển sang ${GEMINI_FALLBACK_MODEL}`);
+      const timedOut = err.code === 'ECONNABORTED' || err.code === 'ETIMEDOUT';
+      if ((status !== 503 && status !== 429 && !timedOut) || GEMINI_FALLBACK_MODEL === GEMINI_MODEL) throw err;
+      console.warn(`[aiRoutes] ${GEMINI_MODEL} trả ${status || err.code}, chuyển sang ${GEMINI_FALLBACK_MODEL}`);
       geminiRes = await callGemini(GEMINI_FALLBACK_MODEL);
     }
 
@@ -335,7 +341,7 @@ router.post('/assistant', async (req, res) => {
 
     let products = [];
     try {
-      products = await resolveProducts(modelProducts, userText);
+      if (dbReady()) products = await resolveProducts(modelProducts, userText);
     } catch (e) {
       console.error('[aiRoutes] product suggestion error:', e.message || e);
     }

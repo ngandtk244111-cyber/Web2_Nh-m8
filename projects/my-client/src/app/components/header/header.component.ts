@@ -103,13 +103,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
     { label: 'Đèn ngủ', queryParams: { cat: 'den-ngu' } },
     { label: 'Decor phòng khách', queryParams: { space: 'phong-khach' } },
     { label: 'Sản phẩm 3D', queryParams: { has3d: '1' } },
-    { label: 'Có thể tùy biến', queryParams: { custom: '1' } },
   ];
 
   /** Tên trùng với tiêu đề trang đích (đồng bộ với footer). */
   readonly exploreMenu: { label: string; link: string }[] = [
     { label: 'Không gian 3D trực quan', link: '/shop-the-room' },
-    { label: 'Tự tay thiết kế & xem trước 3D', link: '/customizer-3d' },
     { label: 'Gửi yêu cầu thiết kế riêng', link: '/custom-request/new' },
     { label: 'Trắc nghiệm phong cách', link: '/style-quiz' },
     { label: 'Cộng đồng decor', link: '/community' },
@@ -140,7 +138,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     {
       key: '3d-custom',
       title: '3D & Custom',
-      description: 'Xem trước mô hình 3D, tùy biến màu/chất liệu hoặc đặt thiết kế riêng.',
+      description: 'Xem trước mô hình 3D, sản phẩm in 3D hoặc đặt thiết kế riêng.',
       items: THREE_D_CUSTOM_LINKS,
     },
     {
@@ -343,6 +341,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   readonly accountMenuItems: { label: string; icon: string; link: string; queryParams?: Record<string, string> }[] = [
     { label: 'Hồ sơ cá nhân', icon: 'user', link: '/account', queryParams: { tab: 'profile' } },
     { label: 'Đơn hàng của tôi', icon: 'truck', link: '/account', queryParams: { tab: 'orders' } },
+    { label: 'Đổi trả', icon: 'rotate', link: '/account', queryParams: { tab: 'returns' } },
     { label: 'Sổ địa chỉ', icon: 'map-pin', link: '/account', queryParams: { tab: 'addresses' } },
     { label: 'Voucher của tôi', icon: 'tag', link: '/account', queryParams: { tab: 'vouchers' } },
     { label: 'Sản phẩm yêu thích', icon: 'heart', link: '/favorites' },

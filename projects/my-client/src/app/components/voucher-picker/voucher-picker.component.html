@@ -1,0 +1,42 @@
+<!-- Voucher: khách tự chọn trong danh sách (hoặc không dùng) -->
+<button type="button" class="vp_btn" (click)="open = !open" [class.vp_btn--active]="cartService.appliedCoupon()" [attr.aria-expanded]="open">
+  <app-icon name="tag" [size]="15"></app-icon>
+  <span class="vp_btn__text">
+    <ng-container *ngIf="cartService.appliedCoupon() as coupon; else noCoupon">
+      Đã chọn mã <strong>{{ coupon.code }}</strong>
+    </ng-container>
+    <ng-template #noCoupon>Chọn hoặc nhập voucher ({{ options().length }} mã)</ng-template>
+  </span>
+  <app-icon [name]="open ? 'chevron-down' : 'chevron-right'" [size]="14"></app-icon>
+</button>
+
+<div *ngIf="open" class="vp_body">
+  <div class="vp_input">
+    <input
+      type="text"
+      [(ngModel)]="codeInput"
+      (keydown.enter)="$event.preventDefault(); addCode()"
+      placeholder="Nhập mã voucher, ví dụ: LUMEANEW">
+    <button type="button" (click)="addCode()">Lưu mã</button>
+  </div>
+
+  <p *ngIf="options().length === 0" class="vp_empty">
+    Chưa có voucher nào.
+    <a routerLink="/voucher">Chơi game nhận voucher →</a>
+  </p>
+
+  <div class="vp_list">
+    <app-voucher-card
+      *ngFor="let v of options()"
+      [voucher]="v"
+      [selectable]="true"
+      [selected]="isSelected(v)"
+      [disabledReason]="disabledReason(v)"
+      (pick)="toggle($event)"
+      (blocked)="showBlocked($event)">
+    </app-voucher-card>
+  </div>
+  <p *ngIf="cartService.appliedCoupon()" class="vp_hint">Bấm lại vào voucher đang chọn để bỏ chọn.</p>
+</div>
+
+<div *ngIf="message" class="vp_msg" [class.vp_msg--ok]="success">{{ message }}</div>

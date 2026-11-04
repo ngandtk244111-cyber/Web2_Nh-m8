@@ -8,6 +8,8 @@ const couponSchema = new mongoose.Schema({
   maxDiscount: { type: Number, required: true, min: 0 },
   minSpend: { type: Number, default: 0, min: 0 },
   active: { type: Boolean, default: true },
+  /** Hạn dùng — trống thì coi như hết hạn cuối tháng hiện tại (hiển thị), hết hạn thì không dùng được. */
+  expiresAt: { type: Date, default: null },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Coupon', couponSchema);

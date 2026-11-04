@@ -32,6 +32,32 @@ const shippingAddressSchema = new mongoose.Schema({
   notes: { type: String, default: '' },
 }, { _id: false });
 
+// Yêu cầu xuất hoá đơn điện tử lúc đặt hàng (cá nhân hoặc công ty) — dùng để in thông tin người mua lên PDF.
+const invoiceSchema = new mongoose.Schema({
+  requested: { type: Boolean, default: false },
+  type: { type: String, enum: ['personal', 'company'], default: 'personal' },
+  email: { type: String, default: '' },
+  companyName: { type: String, default: '' },
+  taxCode: { type: String, default: '' },
+  companyAddress: { type: String, default: '' },
+  sentAt: { type: Date, default: null },
+}, { _id: false });
+
+// Yêu cầu trả hàng / hoàn tiền của khách sau khi đã nhận hàng (khác returnReason = giao thất bại).
+// PENDING: chờ shop duyệt -> APPROVED: đang hoàn (shop nhận lại hàng, hoàn tiền) -> COMPLETED: đã hoàn/trả.
+// REJECTED: shop từ chối (kèm lý do). Khách huỷ yêu cầu khi còn PENDING thì xoá hẳn returnRequest.
+const returnRequestSchema = new mongoose.Schema({
+  status: { type: String, enum: ['PENDING', 'APPROVED', 'COMPLETED', 'REJECTED'], default: 'PENDING' },
+  reason: { type: String, required: true },
+  description: { type: String, default: '' },
+  refundAmount: { type: Number, default: 0 },
+  adminNote: { type: String, default: '' },
+  requestedAt: { type: Date, default: Date.now },
+  approvedAt: { type: Date, default: null },
+  completedAt: { type: Date, default: null },
+  rejectedAt: { type: Date, default: null },
+}, { _id: false });
+
 const orderSchema = new mongoose.Schema({
   orderNumber: { type: String, required: true, unique: true },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
@@ -46,6 +72,8 @@ const orderSchema = new mongoose.Schema({
   productionProgress: { type: productionProgressSchema, default: null },
   items: { type: [orderItemSchema], required: true },
   shippingAddress: { type: shippingAddressSchema, required: true },
+  invoice: { type: invoiceSchema, default: null },
+  returnRequest: { type: returnRequestSchema, default: null },
   paymentMethod: { type: String, enum: ['COD', 'BANK_TRANSFER', 'MOMO', 'ZALOPAY', 'ATM'], required: true },
   // FAILED: cổng MoMo/ZaloPay báo giao dịch thất bại (IPN).
   paymentStatus: { type: String, enum: ['UNPAID', 'PAID', 'FAILED'], default: 'UNPAID' },

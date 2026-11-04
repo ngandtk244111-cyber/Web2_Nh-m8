@@ -52,7 +52,13 @@ export class RoomViewerComponent implements OnInit, AfterViewInit, OnChanges, On
   @Input() qualityMode: QualityMode = 'auto';
   /** true: giãn theo chiều cao của phần tử cha (tối thiểu 440px) thay vì chiều cao cố định theo breakpoint. */
   @Input() fill = false;
+  /** false: ẩn thanh chọn chất lượng (Tự động / Tiết kiệm / Cân bằng / Cao). */
+  @Input() showQuality = true;
   @Output() hotspotClicked = new EventEmitter<Product>();
+  /** false = chỉ xem (ảnh tĩnh của phòng, không xoay/zoom) — bấm vào phòng hoặc số sẽ phát (openRoom)
+   *  để trang cha chuyển sang trang phòng 3D đầy đủ. Dùng ở khối Shop The Room trang chủ. */
+  @Input() interactive = true;
+  @Output() openRoom = new EventEmitter<void>();
 
   hotspotViewModels: HotspotViewModel[] = [];
   selectedHotspot: HotspotViewModel | null = null;
@@ -224,6 +230,11 @@ export class RoomViewerComponent implements OnInit, AfterViewInit, OnChanges, On
       const target = isWalkthrough ? this.walkthroughPivot() : new THREE.Vector3(lookAt[0], lookAt[1], lookAt[2]);
       const offset = new THREE.Vector3(initCam.x, initCam.y, initCam.z).sub(target);
       const spherical = new THREE.Spherical().setFromVector3(offset);
+      // Phòng xoay quanh có khai báo giới hạn (vd chỉ có tường phía sau): không cho xoay ra sau tường.
+      const orbitAzimuth = !isWalkthrough && !isFreeExplore && initCam.orbitAzimuth
+        ? THREE.MathUtils.degToRad(initCam.orbitAzimuth) : undefined;
+      const orbitPolar = !isWalkthrough && !isFreeExplore && initCam.orbitPolar
+        ? initCam.orbitPolar.map(d => THREE.MathUtils.degToRad(d)) as [number, number] : undefined;
       const WALK_MIN_POLAR = THREE.MathUtils.degToRad(50);
       const WALK_MAX_POLAR = THREE.MathUtils.degToRad(115);
 
@@ -241,8 +252,10 @@ export class RoomViewerComponent implements OnInit, AfterViewInit, OnChanges, On
         controlsMaxDistance: isWalkthrough ? WALK_PIVOT : (isFreeExplore ? 100 : 6.5),
         // Khoá góc nghiêng dọc: chỉ cho xoay ngang quanh phòng, không ngước lên trần / cúi xuống sàn.
         // Bỏ khoá tạm thời khi đang ở chế độ khám phá tự do để dễ định hướng bay vào trong.
-        controlsMinPolarAngle: isFreeExplore ? 0 : isWalkthrough ? Math.min(WALK_MIN_POLAR, spherical.phi) : Math.PI / 2,
-        controlsMaxPolarAngle: isFreeExplore ? Math.PI : isWalkthrough ? Math.max(WALK_MAX_POLAR, spherical.phi) : Math.PI / 2,
+        controlsMinPolarAngle: isFreeExplore ? 0 : isWalkthrough ? Math.min(WALK_MIN_POLAR, spherical.phi) : orbitPolar ? orbitPolar[0] : Math.PI / 2,
+        controlsMaxPolarAngle: isFreeExplore ? Math.PI : isWalkthrough ? Math.max(WALK_MAX_POLAR, spherical.phi) : orbitPolar ? orbitPolar[1] : Math.PI / 2,
+        controlsMinAzimuthAngle: orbitAzimuth !== undefined ? spherical.theta - orbitAzimuth : undefined,
+        controlsMaxAzimuthAngle: orbitAzimuth !== undefined ? spherical.theta + orbitAzimuth : undefined,
         controlsEnablePan: isWalkthrough ? false : undefined,
         controlsEnableZoom: isWalkthrough ? false : undefined,
         controlsRotateSpeed: isWalkthrough ? -0.6 : undefined,
@@ -264,6 +277,8 @@ export class RoomViewerComponent implements OnInit, AfterViewInit, OnChanges, On
           this.buildScene();
         },
       });
+
+      if (!this.interactive) this.runtime.controls.enabled = false;
 
       this.runtime.scene.background = new THREE.Color('#F3F1EC');
       this.runtime.scene.fog = new THREE.FogExp2('#F3F1EC', 0.04);
@@ -289,6 +304,10 @@ export class RoomViewerComponent implements OnInit, AfterViewInit, OnChanges, On
   }
 
   selectHotspot(item: HotspotViewModel): void {
+    if (!this.interactive) {
+      this.openRoom.emit();
+      return;
+    }
     this.selectedHotspot = item;
     if (item.product) {
       this.hotspotClicked.emit(item.product);

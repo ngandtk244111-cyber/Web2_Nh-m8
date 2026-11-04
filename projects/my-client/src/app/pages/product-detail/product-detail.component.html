@@ -202,52 +202,6 @@
             <app-icon name="chevron-right" [size]="14"></app-icon>
           </a>
 
-          <!-- Options -->
-          <ng-container *ngIf="product.customization as c">
-            <div class="pd_option" *ngIf="c.colors?.length">
-              <span class="pd_option__label">Màu sắc: <em>{{ selectedColorName }}</em></span>
-              <div class="pd_chips">
-                <button
-                  type="button"
-                  *ngFor="let color of c.colors"
-                  class="pd_chip"
-                  [class.pd_chip--active]="selectedColorName === color.name"
-                  (click)="selectColor(color.name, color.hex)">
-                  <span class="pd_chip__swatch" [style.background]="color.hex"></span>
-                  {{ color.name }}
-                </button>
-              </div>
-            </div>
-
-            <div class="pd_option" *ngIf="c.sizes?.length">
-              <span class="pd_option__label">Kích thước: <em>{{ selectedSizeLabel }}</em></span>
-              <div class="pd_chips">
-                <button
-                  type="button"
-                  *ngFor="let size of c.sizes"
-                  class="pd_chip"
-                  [class.pd_chip--active]="selectedSizeId === size.id"
-                  (click)="selectedSizeId = size.id">
-                  {{ size.label }}
-                </button>
-              </div>
-            </div>
-
-            <div class="pd_option" *ngIf="c.finishes?.length">
-              <span class="pd_option__label">Hoàn thiện: <em>{{ selectedFinishLabel }}</em></span>
-              <div class="pd_chips">
-                <button
-                  type="button"
-                  *ngFor="let finish of c.finishes"
-                  class="pd_chip"
-                  [class.pd_chip--active]="selectedFinishId === finish.id"
-                  (click)="selectedFinishId = finish.id">
-                  {{ finish.label }}
-                </button>
-              </div>
-            </div>
-          </ng-container>
-
           <!-- 3D / Space Builder: chỉ hiện khi sản phẩm thực sự có dữ liệu tương ứng -->
           <div *ngIf="has3D || isInShowroom" class="pd_feature-btns">
             <button *ngIf="has3D" type="button" class="pd_feature-btn" (click)="view3D()">
@@ -258,16 +212,6 @@
               <app-icon name="room" [size]="15"></app-icon>
               Xem trong Space Builder
             </a>
-          </div>
-
-          <!-- Tùy biến 3D -->
-          <div *ngIf="product.customizable" class="pd_notice">
-            <app-icon name="sliders" [size]="15"></app-icon>
-            <p>
-              <strong>Có thể tùy biến:</strong>
-              đổi màu, chất liệu, kích thước hoặc khắc tên theo ý bạn.
-              <a [routerLink]="['/customizer-3d']" [queryParams]="{ productId: product.id }">Mở trình tùy biến 3D →</a>
-            </p>
           </div>
 
           <!-- CTA -->
@@ -481,7 +425,7 @@
           <div *ngFor="let p of row.products" class="pd_pick">
             <a [routerLink]="['/product', p.slug]" class="pd_pick__img">
               <span *ngIf="p.badge" class="pd_label pd_pick__badge">{{ p.badge }}</span>
-              <img [src]="p.images[0]" [alt]="p.name" loading="lazy">
+              <app-product-photo [images]="p.images" [alt]="p.name"></app-product-photo>
             </a>
             <a [routerLink]="['/product', p.slug]" class="pd_pick__name">{{ p.name }}</a>
             <div class="pd_pick__price">

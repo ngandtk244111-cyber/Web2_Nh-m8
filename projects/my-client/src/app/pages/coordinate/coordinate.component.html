@@ -26,7 +26,7 @@
     <h2 class="cd-bar">Sản phẩm đề xuất</h2>
     <div class="cd-grid">
       <a *ngFor="let p of roomProducts()" [routerLink]="['/product', p.slug]" class="cd-prod">
-        <span class="cd-prod__img"><img [src]="p.images[0]" [alt]="p.name" loading="lazy"></span>
+        <span class="cd-prod__img"><app-product-photo [images]="p.images" [alt]="p.name"></app-product-photo></span>
         <span class="cd-prod__name">{{ p.name }}</span>
         <span class="cd-prod__price"><strong>{{ p.basePrice | vnd }}</strong></span>
       </a>
@@ -60,7 +60,7 @@
       <h3 class="cd-group">{{ g.label }}</h3>
       <div class="cd-row" #track>
         <a *ngFor="let p of g.products" [routerLink]="['/product', p.slug]" class="cd-prod cd-prod--row">
-          <span class="cd-prod__img"><img [src]="p.images[0]" [alt]="p.name" loading="lazy"></span>
+          <span class="cd-prod__img"><app-product-photo [images]="p.images" [alt]="p.name"></app-product-photo></span>
           <span class="cd-prod__name">{{ p.name }}</span>
           <span class="cd-prod__price">
             <strong [class.cd-sale]="p.originalPrice && p.originalPrice > p.basePrice">{{ p.basePrice | vnd }}</strong>

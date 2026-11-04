@@ -67,6 +67,15 @@ export class AuthApiService {
     return this.http.put<AuthApiResponse>(`${BASE}/profile`, { userId, ...payload });
   }
 
+  /** Liên kết / đổi SĐT cho tài khoản đang đăng nhập: B1 gửi OTP tới số mới, B2 xác nhận OTP. */
+  requestPhoneOtp(userId: string, phoneNumber: string): Observable<AuthApiResponse> {
+    return this.http.post<AuthApiResponse>(`${BASE}/phone/request-otp`, { userId, phoneNumber });
+  }
+
+  verifyPhone(userId: string, phoneNumber: string, otp: string): Observable<AuthApiResponse> {
+    return this.http.post<AuthApiResponse>(`${BASE}/phone/verify`, { userId, phoneNumber, otp });
+  }
+
   uploadAvatar(userId: string, file: File): Observable<AuthApiResponse> {
     const formData = new FormData();
     formData.append('userId', userId);

@@ -24,11 +24,8 @@ export interface PromoWideBanner {
   description: string;
   ctaLabel: string;
   link: string;
-  /** Video minh hoạ bên phải, tự phát/loop/tắt tiếng. */
+  /** Video phủ kín banner, tự phát/loop/tắt tiếng. */
   video: { mp4: string; webm?: string };
-  /** Màu mẫu hiển thị trên khung minh hoạ trình tuỳ biến. */
-  swatches: string[];
-  engraving: string;
 }
 
 @Component({
@@ -58,21 +55,19 @@ export class PromoBannerGridComponent {
       description: 'Áp dụng cho đơn hàng từ 200.000đ',
       ctaLabel: 'Nhận ưu đãi',
       link: '/voucher',
-      image: 'assets/mascot/lumea-mascot.png',
+      image: 'assets/mascot/goh-happy.png',
       code: 'LUMÉANEW',
     },
   ];
 
   readonly wideBanner: PromoWideBanner = {
-    eyebrow: 'Cá Nhân Hóa Trực Quan',
-    title: 'Tùy Biến Sản Phẩm In 3D Theo Ý Bạn',
-    description: 'Đổi màu sắc, chất liệu, kích thước và khắc tên riêng ngay trên trình xem 3D',
-    ctaLabel: 'Bắt đầu tùy biến',
-    link: '/customizer-3d',
+    eyebrow: 'Đặt Làm Theo Yêu Cầu',
+    title: 'Món Đồ Độc Bản, Làm Riêng Cho Bạn',
+    description: 'Gửi ý tưởng hoặc ảnh tham khảo — đội ngũ Luméa tư vấn, báo giá và chế tác tỉ mỉ từng chi tiết',
+    ctaLabel: 'Gửi yêu cầu',
+    link: '/custom-request/new',
     video: {
       mp4: 'assets/promo-banner/sofa-intro.mp4',
     },
-    swatches: ['#F3E3D9', '#CD818E', '#A3152D', '#2B2B2B'],
-    engraving: 'LUMÉA',
   };
 }

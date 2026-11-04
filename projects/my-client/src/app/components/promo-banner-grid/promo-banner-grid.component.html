@@ -41,35 +41,25 @@
   </div>
 
   <a appScrollReveal="rise" [routerLink]="wideBanner.link" class="pg_card pg_wide">
+    <!-- Video phủ kín toàn banner, chữ đè lên trên -->
+    <video
+      class="pg_wide__video"
+      aria-hidden="true"
+      [autoplay]="true"
+      loop
+      muted
+      playsinline
+      preload="metadata">
+      <source *ngIf="wideBanner.video.webm" [src]="wideBanner.video.webm" type="video/webm">
+      <source [src]="wideBanner.video.mp4" type="video/mp4">
+    </video>
+    <span class="pg_wide__shade" aria-hidden="true"></span>
+
     <div class="pg_wide__text">
-      <span class="pg_new"><app-icon name="sparkles" [size]="11"></app-icon> Tính năng mới</span>
-      <span class="pg_eyebrow pg_eyebrow--soft">{{ wideBanner.eyebrow }}</span>
+      <span class="pg_eyebrow">{{ wideBanner.eyebrow }}</span>
       <h3 class="pg_title pg_title--wide">{{ wideBanner.title }}</h3>
       <p class="pg_desc">{{ wideBanner.description }}</p>
-      <span class="pg_btn pg_btn--red">{{ wideBanner.ctaLabel }} <app-icon name="chevron-right" [size]="14"></app-icon></span>
-    </div>
-
-    <div class="pg_wide__stage" aria-hidden="true">
-      <video
-        class="pg_wide__video"
-        [autoplay]="true"
-        loop
-        muted
-        playsinline
-        preload="metadata">
-        <source *ngIf="wideBanner.video.webm" [src]="wideBanner.video.webm" type="video/webm">
-        <source [src]="wideBanner.video.mp4" type="video/mp4">
-      </video>
-      <div class="pg_wide__panel">
-        <span class="pg_wide__panel-label">Màu sắc</span>
-        <span class="pg_wide__swatches">
-          <i *ngFor="let c of wideBanner.swatches; let i = index" [style.background]="c" [class.is-active]="i === 2"></i>
-        </span>
-      </div>
-      <div class="pg_wide__engrave">
-        <app-icon name="sliders" [size]="13"></app-icon>
-        Khắc tên · <strong>{{ wideBanner.engraving }}</strong>
-      </div>
+      <span class="pg_btn pg_btn--glass">{{ wideBanner.ctaLabel }} <app-icon name="chevron-right" [size]="14"></app-icon></span>
     </div>
   </a>
 </section>

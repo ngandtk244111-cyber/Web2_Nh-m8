@@ -18,6 +18,24 @@ interface OrdersApiResponse {
   orders?: (Order & { _id?: string })[];
 }
 
+export interface InvoiceRequest {
+  requested: boolean;
+  type: 'personal' | 'company';
+  email: string;
+  companyName?: string;
+  taxCode?: string;
+  companyAddress?: string;
+}
+
+/** Link hoá đơn PDF của đơn (mở trong trình duyệt; download=true để tải file). */
+export function invoiceUrl(orderNumber: string, userId?: string | null, download = false): string {
+  const params = new URLSearchParams();
+  if (userId) params.set('userId', userId);
+  if (download) params.set('download', '1');
+  const q = params.toString();
+  return `${environment.apiUrl}/orders/${encodeURIComponent(orderNumber)}/invoice${q ? '?' + q : ''}`;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -90,6 +108,8 @@ export class OrderService {
     total: number;
     couponCode?: string;
     notes?: string;
+    /** Yêu cầu xuất hoá đơn điện tử (cá nhân / công ty). */
+    invoice?: InvoiceRequest | null;
   }): Observable<Order> {
     const userId = this.authService.currentUser()?._id;
     const body = userId ? { ...orderData, userId } : orderData;
@@ -112,6 +132,39 @@ export class OrderService {
   /** Khách tự huỷ đơn của mình (chỉ khi đơn chưa sản xuất/giao). Lỗi trả về thông điệp tiếng Việt từ server. */
   cancelOrder(orderNumber: string, userId: string, reason: string, detail = ''): Observable<Order> {
     return this.http.patch<OrderApiResponse>(`${this.baseUrl}/${encodeURIComponent(orderNumber)}/cancel`, { userId, reason, detail }).pipe(
+      map(res => this.normalize(res.order!)),
+      tap(order => this.replaceInSignal(order))
+    );
+  }
+
+  /** Đổi phương thức thanh toán của đơn chưa trả tiền (giữ nguyên đơn, giá và mã giảm giá). */
+  changePaymentMethod(orderNumber: string, paymentMethod: string): Observable<Order> {
+    const userId = this.authService.currentUser()?._id;
+    return this.http.patch<OrderApiResponse>(`${this.baseUrl}/${encodeURIComponent(orderNumber)}/payment-method`, { paymentMethod, userId }).pipe(
+      map(res => this.normalize(res.order!)),
+      tap(order => this.replaceInSignal(order))
+    );
+  }
+
+  /** Gửi yêu cầu trả hàng / hoàn tiền cho đơn đã giao. */
+  requestReturn(orderNumber: string, userId: string, reason: string, description = ''): Observable<Order> {
+    return this.http.post<OrderApiResponse>(`${this.baseUrl}/${encodeURIComponent(orderNumber)}/return-request`, { userId, reason, description }).pipe(
+      map(res => this.normalize(res.order!)),
+      tap(order => this.replaceInSignal(order))
+    );
+  }
+
+  /** Huỷ yêu cầu trả hàng (chỉ khi shop chưa duyệt). */
+  cancelReturn(orderNumber: string, userId: string): Observable<Order> {
+    return this.http.patch<OrderApiResponse>(`${this.baseUrl}/${encodeURIComponent(orderNumber)}/return-request/cancel`, { userId }).pipe(
+      map(res => this.normalize(res.order!)),
+      tap(order => this.replaceInSignal(order))
+    );
+  }
+
+  /** Khách xác nhận đã nhận lại tiền hoàn -> hoàn tất đổi trả. */
+  confirmReturnReceived(orderNumber: string, userId: string): Observable<Order> {
+    return this.http.patch<OrderApiResponse>(`${this.baseUrl}/${encodeURIComponent(orderNumber)}/return-request/received`, { userId }).pipe(
       map(res => this.normalize(res.order!)),
       tap(order => this.replaceInSignal(order))
     );

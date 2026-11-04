@@ -44,3 +44,6 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# Ảnh người dùng tải lên (avatar, ảnh bài cộng đồng) — dữ liệu chạy thật, không đưa lên git
+server/uploads/

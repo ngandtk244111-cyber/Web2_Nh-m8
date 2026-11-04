@@ -82,7 +82,7 @@
   z-index: 3;
   left: 14px;
   bottom: 0;
-  height: 200px;
+  height: 130px;
   width: auto;
   filter: drop-shadow(0 8px 10px rgba(60, 8, 18, 0.35));
   transform-origin: bottom center;
@@ -381,7 +381,7 @@
   }
 
   .fs_mascot {
-    height: 180px;
+    height: 118px;
   }
 
   .fs_timer {
@@ -411,7 +411,7 @@
     left: 4px;
     bottom: auto;
     top: -18px;
-    height: 132px;
+    height: 92px;
   }
 
   .fs_bolt--1 { left: 92px; }

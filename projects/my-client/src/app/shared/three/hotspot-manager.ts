@@ -18,11 +18,14 @@ export class HotspotManager {
   }
 
   setHotspots(items: RoomHotspot[]): void {
-    this.hotspots.clear();
+    // Giữ lại phần tử DOM đã bind: hàm này được gọi lại sau khi model .glb tải xong để cập nhật
+    // toạ độ world, lúc đó QueryList không đổi nên bindElement() sẽ không được gọi lại.
+    const prev = this.hotspots;
+    this.hotspots = new Map();
     for (const h of items) {
       this.hotspots.set(h.id, {
         hotspot: h,
-        domElement: null,
+        domElement: prev.get(h.id)?.domElement ?? null,
       });
     }
   }

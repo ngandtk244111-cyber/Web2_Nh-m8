@@ -156,12 +156,12 @@
         </div>
       </div>
 
-      <!-- Nhánh 3D & Custom: lối vào trình tùy biến, không chiếm vị trí đầu trang -->
-      <a routerLink="/customizer-3d" class="cg_custom-cta">
+      <!-- Nhánh 3D & Custom: lối vào đặt làm theo yêu cầu, không chiếm vị trí đầu trang -->
+      <a routerLink="/custom-request/new" class="cg_custom-cta">
         <span class="cg_custom-cta__icon"><app-icon name="sliders" [size]="18"></app-icon></span>
         <span class="cg_custom-cta__text">
           <strong>Muốn một món đồ độc bản?</strong>
-          <span>Tùy biến màu sắc, chất liệu, kích thước hoặc khắc tên — xem trước trực quan trên mô hình 3D.</span>
+          <span>Gửi ý tưởng về màu sắc, chất liệu, kích thước hoặc khắc tên — Luméa tư vấn và báo giá cho bạn.</span>
         </span>
         <app-icon name="chevron-right" [size]="18"></app-icon>
       </a>
@@ -263,17 +263,13 @@
     </div>
   </div>
 
-  <!-- TÍNH NĂNG: tùy biến / 3D / giảm giá / in 3D -->
+  <!-- TÍNH NĂNG: 3D / giảm giá / in 3D -->
   <div class="cg_group">
     <button type="button" class="cg_group__head" (click)="toggleGroup('feature')">
       <span>Tính Năng & Ưu Đãi</span>
       <app-icon name="chevron-down" [size]="14" [class.cg_group__arrow--open]="isGroupExpanded('feature')"></app-icon>
     </button>
     <div class="cg_group__body" *ngIf="isGroupExpanded('feature')">
-      <label class="cg_checkbox">
-        <input type="checkbox" [checked]="customizableOnly" (change)="toggleFlag('customizableOnly')">
-        <span>Có thể tùy biến</span>
-      </label>
       <label class="cg_checkbox">
         <input type="checkbox" [checked]="has3DOnly" (change)="toggleFlag('has3DOnly')">
         <span>Có mô hình 3D</span>
@@ -357,20 +353,6 @@
       <label class="cg_checkbox" *ngFor="let size of sizeOptions">
         <input type="checkbox" [checked]="selectedSizes.has(size)" (change)="toggleSize(size)">
         <span>{{ size }}</span>
-      </label>
-    </div>
-  </div>
-
-  <!-- KIỂU TÙY BIẾN (chi tiết) -->
-  <div class="cg_group">
-    <button type="button" class="cg_group__head" (click)="toggleGroup('customization')">
-      <span>Kiểu Tùy Biến</span>
-      <app-icon name="chevron-down" [size]="14" [class.cg_group__arrow--open]="isGroupExpanded('customization')"></app-icon>
-    </button>
-    <div class="cg_group__body" *ngIf="isGroupExpanded('customization')">
-      <label class="cg_checkbox" *ngFor="let opt of customizationOptions">
-        <input type="checkbox" [checked]="selectedCustomizations.has(opt.key)" (change)="toggleCustomization(opt.key)">
-        <span>{{ opt.label }}</span>
       </label>
     </div>
   </div>

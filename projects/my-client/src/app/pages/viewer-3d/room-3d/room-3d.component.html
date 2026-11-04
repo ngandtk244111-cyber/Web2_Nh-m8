@@ -1,0 +1,247 @@
+<div class="r3">
+  <!-- Khung vẽ 3D luôn có sẵn (ViewChild static) — các lớp giao diện phủ lên trên -->
+  <div #stage class="r3__stage" (pointerdown)="onStageDown($event)" (pointerup)="onStageUp($event)"></div>
+  <div class="r3__vignette" aria-hidden="true"></div>
+
+  <!-- Màn chờ: logo + thanh chạy, mờ dần khi phòng tải xong -->
+  <div class="r3__intro" [class.r3__intro--exit]="modelLoaded()" aria-hidden="true">
+    <img src="assets/logo/lumea-mark.png" alt="" class="r3__intro-logo">
+    <div class="r3__intro-bar"><span></span></div>
+    <p class="r3__intro-text">Đang dựng phòng 3D…</p>
+  </div>
+
+  <div *ngIf="status() === 'not-found'" class="r3__msg">
+    <app-icon name="room" [size]="30"></app-icon>
+    <h1>Không tìm thấy phòng</h1>
+    <p>Phòng mẫu này không tồn tại hoặc đã được gỡ.</p>
+    <a routerLink="/shop-the-room" class="r3__msg-btn">Xem các phòng mẫu khác</a>
+  </div>
+
+  <ng-container *ngIf="room() as r">
+    <!-- Thanh trên: quay lại · tên phòng · Đóng -->
+    <header class="r3__bar">
+      <a [routerLink]="['/shop-the-room']" [queryParams]="{ roomId: r.id }" class="r3__back" aria-label="Quay lại Shop The Room">
+        <app-icon name="chevron-left" [size]="18"></app-icon>
+      </a>
+      <h1 class="r3__name" [title]="r.name">{{ r.name }}</h1>
+      <button type="button" class="r3__close" (click)="closeTab()" [attr.aria-label]="active() ? 'Quay lại tổng quan' : 'Đóng'">
+        <span>{{ active() ? 'Thoát xem món' : 'Đóng' }}</span>
+        <app-icon name="x" [size]="16"></app-icon>
+      </button>
+    </header>
+
+    <!-- Thẻ thông tin phòng (góc dưới trái): trồi lên khi phòng tải xong, lùi xuống khi đang xem một món -->
+    <section class="r3__card" [class.r3__card--visible]="textVisible()" [class.r3__card--hidden]="!!active() || cardCollapsed()">
+      <button type="button" class="r3__card-close" (click)="cardCollapsed.set(true)" aria-label="Thu nhỏ" title="Thu nhỏ">
+        <app-icon name="x" [size]="15"></app-icon>
+      </button>
+      <p class="r3__kicker">{{ r.theme }}</p>
+      <h2 class="r3__title">{{ shortName(r) }}</h2>
+      <p class="r3__tagline">{{ r.tagline }}</p>
+      <div class="r3__stats">
+        <span><strong>{{ spots.length }}</strong> món đồ</span>
+        <span *ngIf="roomTotal() > 0">Trọn bộ <strong>{{ roomTotal() | vnd }}</strong></span>
+      </div>
+
+      <!-- Danh sách món trong phòng: bấm một dòng = bay tới món đó (như bấm chấm) -->
+      <ul class="r3__list">
+        <li *ngFor="let s of spots; trackBy: trackSpot">
+          <button type="button" class="r3__item" (click)="focusSpot(s)">
+            <span class="r3__item-no">{{ s.index }}</span>
+            <ng-container *ngIf="productOf(s) as p; else plain">
+              <img [src]="p.images[0]" [alt]="p.name" class="r3__item-img" loading="lazy">
+              <span class="r3__item-text">
+                <span class="r3__item-name">{{ p.name }}</span>
+                <span class="r3__item-price">{{ p.basePrice | vnd }}</span>
+              </span>
+            </ng-container>
+            <ng-template #plain>
+              <span class="r3__item-text"><span class="r3__item-name">{{ s.label }}</span></span>
+            </ng-template>
+            <app-icon name="chevron-right" [size]="14" class="r3__item-go"></app-icon>
+          </button>
+        </li>
+      </ul>
+    </section>
+
+    <!-- Thẻ đã thu nhỏ: bấm để mở lại -->
+    <button
+      type="button"
+      class="r3__mini"
+      [class.r3__mini--visible]="textVisible() && cardCollapsed() && !active()"
+      (click)="cardCollapsed.set(false)"
+      aria-label="Mở danh sách món trong phòng">
+      <app-icon name="room" [size]="16"></app-icon>
+      <span class="r3__mini-name">{{ shortName(r) }}</span>
+      <span class="r3__mini-count">{{ spots.length }} món</span>
+      <app-icon name="chevron-up" [size]="15"></app-icon>
+    </button>
+
+    <!-- Chấm sáng trên từng món đồ -->
+    <button
+      *ngFor="let s of spots; trackBy: trackSpot"
+      type="button"
+      class="r3__spot"
+      [class.r3__spot--hidden]="!s.visible"
+      [style.left.px]="s.x"
+      [style.top.px]="s.y"
+      [attr.aria-label]="s.label"
+      (click)="focusSpot(s)">
+      <span class="r3__spot-ping"></span>
+      <span class="r3__spot-dot">{{ s.index }}</span>
+      <span class="r3__spot-label">{{ s.label }}</span>
+    </button>
+
+    <!-- Bảng thông tin món đang xem -->
+    <aside *ngIf="active() as s" class="r3__panel">
+      <button type="button" class="r3__panel-close" (click)="zoomOut()" aria-label="Quay lại tổng quan" title="Quay lại tổng quan (Esc)">
+        <app-icon name="x" [size]="16"></app-icon>
+      </button>
+
+      <ng-container *ngIf="productOf(s) as p; else noProduct">
+        <img [src]="p.images[0]" [alt]="p.name" class="r3__panel-img">
+        <p class="r3__panel-cat">{{ s.index }} / {{ spots.length }} · {{ p.categoryName }}</p>
+        <p class="r3__panel-name">{{ p.name }}</p>
+        <p class="r3__panel-price">
+          <span>{{ p.basePrice | vnd }}</span>
+          <s *ngIf="p.originalPrice && p.originalPrice > p.basePrice">{{ p.originalPrice | vnd }}</s>
+        </p>
+        <ul class="r3__panel-specs">
+          <li *ngIf="s.note">{{ s.note }}</li>
+          <li *ngIf="p.dimensions">Kích thước: {{ p.dimensions }}</li>
+          <li *ngIf="p.materialInfo">Chất liệu: {{ p.materialInfo }}</li>
+        </ul>
+        <div class="r3__panel-actions">
+          <button type="button" class="r3__btn" (click)="addToCart(p)">
+            <app-icon name="cart" [size]="15"></app-icon>
+            <span>Thêm vào giỏ</span>
+          </button>
+          <a [routerLink]="['/product', p.slug]" target="_blank" class="r3__btn r3__btn--ghost">Xem sản phẩm</a>
+        </div>
+      </ng-container>
+      <ng-template #noProduct>
+        <p class="r3__panel-cat">{{ s.index }} / {{ spots.length }}</p>
+        <p class="r3__panel-name">{{ s.label }}</p>
+        <ul class="r3__panel-specs"><li>{{ s.note }}</li></ul>
+      </ng-template>
+
+      <div class="r3__panel-nav">
+        <button type="button" class="r3__panel-back" (click)="zoomOut()">← Quay lại tổng quan</button>
+        <span class="r3__panel-steps">
+          <button type="button" (click)="stepSpot(-1)" aria-label="Món trước"><app-icon name="chevron-left" [size]="16"></app-icon></button>
+          <button type="button" (click)="stepSpot(1)" aria-label="Món tiếp theo"><app-icon name="chevron-right" [size]="16"></app-icon></button>
+        </span>
+      </div>
+    </aside>
+
+    <!-- Mua trọn bộ phòng (chuyển từ trang Shop The Room sang): ngăn trượt bên phải -->
+    <aside *ngIf="buyOpen()" class="r3__drawer bg-[#FFFFFF] rounded-3xl p-6 border border-neutral-200 shadow-soft space-y-6">
+      <button type="button" class="r3__drawer-close" (click)="buyOpen.set(false)" aria-label="Đóng">
+        <app-icon name="x" [size]="16"></app-icon>
+      </button>
+      
+      <div class="border-b border-neutral-200 pb-4">
+        <div class="flex items-center justify-between">
+          <h3 class="font-serif text-lg font-bold text-amber-800">
+            Mua Trọn Bộ Phòng (Buy This Look)
+          </h3>
+          <span class="text-xs font-extrabold text-white bg-gradient-to-r from-amber-400 to-amber-500 px-2.5 py-0.5 rounded-full shadow-sm">
+            -15% Combo
+          </span>
+        </div>
+        <p class="text-xs text-neutral-600 mt-1">
+          Chọn các món đồ được bài trí trong phòng và thêm vào giỏ hàng chỉ với 1 thao tác.
+        </p>
+      </div>
+
+      <!-- Select All Checkbox -->
+      <div class="flex items-center justify-between text-xs pb-2 border-b border-neutral-200">
+        <label class="flex items-center gap-2 font-semibold text-neutral-800 cursor-pointer select-none">
+          <input 
+            type="checkbox" 
+            [checked]="isAllSelected()"
+            (change)="toggleSelectAll()"
+            class="w-4 h-4 text-amber-500 rounded border-neutral-300 bg-neutral-200 focus:ring-amber-400">
+          <span>Chọn tất cả ({{ roomProducts.length }} sản phẩm)</span>
+        </label>
+        <span class="text-neutral-600 font-medium">
+          Đã chọn: {{ selectedProductIds.size }}/{{ roomProducts.length }}
+        </span>
+      </div>
+
+      <!-- Products in Room List -->
+      <div class="space-y-3 max-h-[380px] overflow-y-auto pr-1">
+        <div 
+          *ngFor="let p of roomProducts; let i = index"
+          class="p-3 rounded-2xl border transition flex items-center gap-3"
+          [class.border-amber-500]="selectedProductIds.has(p.id)"
+          [class.bg-amber-950]="selectedProductIds.has(p.id)"
+          [class.border-neutral-200]="!selectedProductIds.has(p.id)"
+          [class.bg-neutral-100]="!selectedProductIds.has(p.id)">
+          
+          <input 
+            type="checkbox" 
+            [checked]="selectedProductIds.has(p.id)"
+            (change)="toggleProductSelection(p.id)"
+            class="w-4 h-4 text-amber-500 rounded border-neutral-300 bg-neutral-200 focus:ring-amber-400 flex-shrink-0">
+
+          <!-- Số thứ tự khớp với điểm đánh dấu trong phòng 3D -->
+          <span class="w-6 h-6 rounded-full bg-white text-neutral-900 border border-neutral-300 text-[11px] font-bold flex items-center justify-center flex-shrink-0">{{ i + 1 }}</span>
+
+          <img 
+            [src]="p.images[0]" 
+            [alt]="p.name"
+            class="w-14 h-14 rounded-xl object-cover border border-neutral-300 bg-neutral-200 flex-shrink-0">
+
+          <div class="min-w-0 flex-1">
+            <h4 class="text-xs font-bold text-neutral-900 truncate" [class.text-white]="selectedProductIds.has(p.id)">{{ p.name }}</h4>
+            <div class="text-[10px] text-neutral-600 mt-0.5" [class.text-amber-200]="selectedProductIds.has(p.id)">{{ p.categoryName }}</div>
+            <div class="mt-1 flex items-baseline gap-2">
+              <span class="text-xs font-bold text-amber-400" [class.text-white]="selectedProductIds.has(p.id)">{{ p.basePrice | vnd }}</span>
+              <a [routerLink]="['/product', p.slug]" target="_blank" class="text-[10px] text-neutral-500 hover:text-amber-400 underline" [class.text-amber-200]="selectedProductIds.has(p.id)">
+                Xem
+              </a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Price & Buy The Look CTA -->
+      <div class="border-t border-neutral-200 pt-4 space-y-3">
+        <div class="flex justify-between items-baseline text-sm">
+          <span class="text-neutral-600">Tổng giá trị các món đã chọn:</span>
+          <span class="text-lg font-semibold text-amber-400">
+            {{ selectedTotal | vnd }}
+          </span>
+        </div>
+
+        <div class="bg-amber-500/10 p-3 rounded-xl border border-amber-500/25 text-[11px] text-amber-800">
+          🎁 Nhập mã <strong>ROOMCOMBO</strong> tại bước thanh toán để được giảm thêm 15% cho đơn hàng này.
+        </div>
+
+        <button 
+          type="button" 
+          (click)="addSelectedToCart()"
+          [disabled]="selectedProductIds.size === 0"
+          class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 disabled:opacity-50 text-white font-extrabold text-xs sm:text-sm shadow-[0_4px_25px_rgba(205, 129, 142,0.35)] transition flex items-center justify-center gap-2">
+          <app-icon name="cart" [size]="16"></app-icon>
+          <span>Thêm {{ selectedProductIds.size }} món vào giỏ hàng</span>
+        </button>
+      </div>
+
+    </aside>
+
+    <!-- Dưới cùng: gợi ý thao tác + mua trọn bộ -->
+    <footer class="r3__foot" [class.r3__foot--hidden]="!modelLoaded()">
+      <p class="r3__hint">
+        <app-icon name="rotate" [size]="14"></app-icon>
+        Kéo chuột để xoay · bấm chấm sáng để xem từng món
+      </p>
+      <button type="button" class="r3__buy" [class.r3__buy--on]="buyOpen()" (click)="toggleBuy()">
+        <app-icon name="cart" [size]="15"></app-icon>
+        Mua trọn bộ phòng
+      </button>
+    </footer>
+  </ng-container>
+</div>

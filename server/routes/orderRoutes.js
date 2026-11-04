@@ -6,6 +6,65 @@ const { attachUserId, requireUserId, requireAdminId } = require('../middleware/a
 const { awardVoucher, reserveDiscountCode, releaseCodesForOrder, VoucherError } = require('../utils/vouchers');
 const { verifyAndPriceOrderItems, resolveShippingFee } = require('../utils/pricing');
 const { shippingOptions, findCarrier, trackingUrlFor, isDevMode, devTrackingCode } = require('../utils/shipping');
+const { buildInvoicePdf } = require('../utils/invoicePdf');
+const { isEmailConfigured, getMailTransporter } = require('../utils/otp');
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+// Đổi trả: khách gửi yêu cầu trong 7 ngày kể từ khi nhận hàng (theo Chính sách đổi trả).
+const RETURN_WINDOW_DAYS = 7;
+const RETURN_REASONS = [
+  'Sản phẩm bị lỗi, hư hỏng',
+  'Giao sai mẫu / sai màu / sai kích thước',
+  'Thiếu sản phẩm hoặc phụ kiện',
+  'Sản phẩm khác với mô tả',
+  'Khác',
+];
+
+/** Hạn cuối được gửi yêu cầu trả hàng của 1 đơn đã giao (null nếu đơn chưa giao). */
+function returnDeadline(order) {
+  if (order.status !== 'DELIVERED') return null;
+  const delivered = order.deliveredAt || order.updatedAt;
+  return delivered ? new Date(new Date(delivered).getTime() + RETURN_WINDOW_DAYS * 86400000) : null;
+}
+
+/** Chuẩn hoá yêu cầu xuất hoá đơn từ client; trả về { invoice } hoặc { error }. */
+function readInvoiceRequest(body) {
+  const raw = body?.invoice;
+  if (!raw || !raw.requested) return { invoice: null };
+  const type = raw.type === 'company' ? 'company' : 'personal';
+  const email = String(raw.email || '').trim();
+  if (!EMAIL_REGEX.test(email)) return { error: 'Email nhận hoá đơn không hợp lệ' };
+  const invoice = { requested: true, type, email, companyName: '', taxCode: '', companyAddress: '' };
+  if (type === 'company') {
+    invoice.companyName = String(raw.companyName || '').trim();
+    invoice.taxCode = String(raw.taxCode || '').trim();
+    invoice.companyAddress = String(raw.companyAddress || '').trim();
+    if (!invoice.companyName || !invoice.companyAddress) return { error: 'Vui lòng nhập tên và địa chỉ công ty để xuất hoá đơn' };
+    if (!/^\d{10}(-\d{3})?$/.test(invoice.taxCode)) return { error: 'Mã số thuế gồm 10 số (hoặc 10 số-3 số cho chi nhánh)' };
+  }
+  return { invoice };
+}
+
+/** Gửi PDF hoá đơn tới email khách đã nhập (chỉ khi đã cấu hình SMTP; lỗi gửi mail không làm hỏng đơn). */
+async function emailInvoice(order) {
+  if (!order.invoice?.requested || !isEmailConfigured()) return;
+  try {
+    const pdf = await buildInvoicePdf(order.toObject ? order.toObject() : order);
+    await getMailTransporter().sendMail({
+      from: process.env.MAIL_FROM || `"Luméa" <${process.env.SMTP_USER}>`,
+      to: order.invoice.email,
+      subject: `Hoá đơn điện tử đơn hàng ${order.orderNumber} — Luméa`,
+      html: `<p>Xin chào ${order.shippingAddress?.fullName || 'quý khách'},</p>
+        <p>Luméa gửi kèm hoá đơn điện tử cho đơn hàng <strong>${order.orderNumber}</strong>.</p>
+        <p>Cảm ơn quý khách đã mua sắm tại Luméa!</p>`,
+      attachments: [{ filename: `HoaDon_${order.orderNumber}.pdf`, content: pdf }],
+    });
+    await Order.updateOne({ orderNumber: order.orderNumber }, { $set: { 'invoice.sentAt': new Date() } });
+  } catch (err) {
+    console.error('send invoice email error', err.message);
+  }
+}
 
 /** Lý do khách được tự chọn khi huỷ đơn (trang đơn hàng phía khách). */
 // Giữ khớp với CANCEL_REASONS ở projects/my-client/src/app/core/data/cancel-reasons.ts
@@ -63,6 +122,8 @@ router.post('/', attachUserId, async (req, res) => {
     if (!Array.isArray(items) || items.length === 0 || !shippingAddress || !paymentMethod) {
       return res.status(400).json({ success: false, error: 'Thiếu thông tin đơn hàng' });
     }
+    const { invoice, error: invoiceError } = readInvoiceRequest(req.body);
+    if (invoiceError) return res.status(400).json({ success: false, error: invoiceError });
 
     // Bảo mật giá: tính lại toàn bộ đơn từ sản phẩm THẬT trong DB, không tin subtotal/discount/
     // shippingFee/total mà client gửi lên (trước đây tin thẳng, có thể sửa qua DevTools).
@@ -109,6 +170,7 @@ router.post('/', attachUserId, async (req, res) => {
       productionProgress,
       items: pricedItems,
       shippingAddress,
+      invoice,
       paymentMethod,
       paymentStatus: 'UNPAID',
       subtotal,
@@ -124,8 +186,29 @@ router.post('/', attachUserId, async (req, res) => {
     await reserved.attach(order.orderNumber);
 
     res.json({ success: true, order });
+    emailInvoice(order); // gửi sau khi đã trả kết quả, không bắt khách chờ
   } catch (err) {
     console.error('create order error', err);
+    sendError(res, err);
+  }
+});
+
+// Hoá đơn PDF của 1 đơn — mở thẳng trong trình duyệt (inline), ?download=1 để tải về.
+// Đơn của tài khoản thì phải gửi kèm đúng userId của chủ đơn.
+router.get('/:orderNumber/invoice', async (req, res) => {
+  try {
+    const order = await Order.findOne({ orderNumber: req.params.orderNumber }).lean();
+    if (!order) return res.status(404).json({ success: false, error: 'Không tìm thấy đơn hàng' });
+    if (order.userId && String(order.userId) !== String(req.query.userId || '')) {
+      return res.status(403).json({ success: false, error: 'Bạn không có quyền xem hoá đơn này' });
+    }
+    const pdf = await buildInvoicePdf(order);
+    const filename = `HoaDon_${order.orderNumber}.pdf`;
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `${req.query.download ? 'attachment' : 'inline'}; filename="${filename}"`);
+    res.send(pdf);
+  } catch (err) {
+    console.error('invoice pdf error', err);
     sendError(res, err);
   }
 });
@@ -145,6 +228,127 @@ router.get('/mine', requireUserId, async (req, res) => {
   try {
     const orders = await Order.find({ userId: req.userId }).sort({ createdAt: -1 });
     res.json({ success: true, orders });
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
+router.get('/return-reasons', (_req, res) => {
+  res.json({ success: true, reasons: RETURN_REASONS, windowDays: RETURN_WINDOW_DAYS });
+});
+
+// Khách gửi yêu cầu trả hàng / hoàn tiền cho đơn đã giao của chính mình.
+router.post('/:orderNumber/return-request', requireUserId, async (req, res) => {
+  try {
+    const reason = String(req.body.reason || '').trim();
+    const description = String(req.body.description || '').trim().slice(0, 500);
+    if (!RETURN_REASONS.includes(reason)) return res.status(400).json({ success: false, error: 'Vui lòng chọn lý do trả hàng' });
+    if (reason === 'Khác' && !description) return res.status(400).json({ success: false, error: 'Vui lòng mô tả chi tiết lý do trả hàng' });
+    const order = await Order.findOne({ orderNumber: req.params.orderNumber, userId: req.userId });
+    if (!order) return res.status(404).json({ success: false, error: 'Không tìm thấy đơn hàng' });
+    if (order.status !== 'DELIVERED') return res.status(400).json({ success: false, error: 'Chỉ yêu cầu trả hàng cho đơn đã giao thành công' });
+    if (order.returnRequest) return res.status(409).json({ success: false, error: 'Đơn này đã có yêu cầu trả hàng' });
+    const deadline = returnDeadline(order);
+    if (deadline && deadline < new Date()) {
+      return res.status(400).json({ success: false, error: `Đã quá ${RETURN_WINDOW_DAYS} ngày kể từ khi nhận hàng — vui lòng liên hệ hỗ trợ` });
+    }
+    order.returnRequest = { status: 'PENDING', reason, description, refundAmount: order.total, requestedAt: new Date() };
+    await order.save();
+    res.json({ success: true, order });
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
+// Khách huỷ yêu cầu trả hàng khi shop chưa duyệt.
+router.patch('/:orderNumber/return-request/cancel', requireUserId, async (req, res) => {
+  try {
+    const order = await Order.findOne({ orderNumber: req.params.orderNumber, userId: req.userId });
+    if (!order?.returnRequest) return res.status(404).json({ success: false, error: 'Không tìm thấy yêu cầu trả hàng' });
+    if (order.returnRequest.status !== 'PENDING') {
+      return res.status(400).json({ success: false, error: 'Yêu cầu đã được shop xử lý, không thể huỷ' });
+    }
+    order.returnRequest = null;
+    await order.save();
+    res.json({ success: true, order });
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
+// Khách xác nhận đã nhận lại tiền hoàn -> hoàn tất đổi trả.
+router.patch('/:orderNumber/return-request/received', requireUserId, async (req, res) => {
+  try {
+    const order = await Order.findOne({ orderNumber: req.params.orderNumber, userId: req.userId });
+    if (!order?.returnRequest) return res.status(404).json({ success: false, error: 'Không tìm thấy yêu cầu trả hàng' });
+    if (order.returnRequest.status !== 'APPROVED') {
+      return res.status(400).json({ success: false, error: 'Yêu cầu chưa ở bước hoàn tiền' });
+    }
+    order.returnRequest.status = 'COMPLETED';
+    order.returnRequest.completedAt = new Date();
+    await order.save();
+    res.json({ success: true, order });
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
+// Admin duyệt / từ chối / hoàn tất yêu cầu trả hàng.
+router.patch('/:orderNumber/return-request/review', requireAdminId, async (req, res) => {
+  try {
+    const action = String(req.body.action || '');
+    const adminNote = String(req.body.adminNote || '').trim().slice(0, 500);
+    const order = await Order.findOne({ orderNumber: req.params.orderNumber });
+    if (!order?.returnRequest) return res.status(404).json({ success: false, error: 'Không tìm thấy yêu cầu trả hàng' });
+    const rr = order.returnRequest;
+    const now = new Date();
+    if (action === 'approve' && rr.status === 'PENDING') {
+      Object.assign(rr, { status: 'APPROVED', approvedAt: now, adminNote: adminNote || rr.adminNote });
+    } else if (action === 'reject' && rr.status === 'PENDING') {
+      if (!adminNote) return res.status(400).json({ success: false, error: 'Vui lòng nhập lý do từ chối' });
+      Object.assign(rr, { status: 'REJECTED', rejectedAt: now, adminNote });
+    } else if (action === 'complete' && rr.status === 'APPROVED') {
+      Object.assign(rr, { status: 'COMPLETED', completedAt: now, adminNote: adminNote || rr.adminNote });
+    } else {
+      return res.status(400).json({ success: false, error: 'Thao tác không hợp lệ với trạng thái hiện tại' });
+    }
+    await order.save();
+    res.json({ success: true, order });
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
+// Khách đổi phương thức thanh toán của đơn CHƯA trả tiền (vd: chọn MoMo rồi muốn quay lại chuyển khoản / COD).
+// Giữ nguyên đơn, giá và mã giảm giá đã dùng — chỉ đổi cách trả tiền.
+const SWITCHABLE_METHODS = ['COD', 'BANK_TRANSFER', 'MOMO', 'ZALOPAY', 'ATM'];
+router.patch('/:orderNumber/payment-method', attachUserId, async (req, res) => {
+  try {
+    const paymentMethod = String(req.body.paymentMethod || '');
+    if (!SWITCHABLE_METHODS.includes(paymentMethod)) {
+      return res.status(400).json({ success: false, error: 'Phương thức thanh toán không hợp lệ' });
+    }
+    const order = await Order.findOne({ orderNumber: req.params.orderNumber });
+    if (!order) return res.status(404).json({ success: false, error: 'Không tìm thấy đơn hàng' });
+    if (order.userId && String(order.userId) !== String(req.userId || '')) {
+      return res.status(403).json({ success: false, error: 'Bạn không có quyền đổi đơn hàng này' });
+    }
+    if (order.paymentStatus === 'PAID') return res.status(400).json({ success: false, error: 'Đơn đã thanh toán, không thể đổi phương thức' });
+    if (!['PENDING', 'CONFIRMED', 'IN_PRODUCTION'].includes(order.status)) {
+      return res.status(400).json({ success: false, error: 'Đơn đã giao hoặc đã huỷ, không thể đổi phương thức' });
+    }
+    if (order.paymentMethod !== paymentMethod) {
+      order.paymentMethod = paymentMethod;
+      order.paymentStatus = 'UNPAID';
+      order.transferReportedAt = null;
+      order.paymentTransactionId = '';
+      // Cùng quy tắc lúc tạo đơn: COD chờ gọi xác nhận; trả trước thì vào xử lý ngay (chưa sản xuất thì mới đổi).
+      if (order.status === 'PENDING' || order.status === 'CONFIRMED') {
+        order.status = paymentMethod === 'COD' ? 'PENDING' : order.hasPrintOnDemandItems ? 'IN_PRODUCTION' : 'CONFIRMED';
+      }
+      await order.save();
+    }
+    res.json({ success: true, order });
   } catch (err) {
     sendError(res, err);
   }

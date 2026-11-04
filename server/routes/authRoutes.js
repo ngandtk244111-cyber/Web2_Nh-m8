@@ -437,6 +437,52 @@ router.put('/profile', requireUserId, async (req, res) => {
   }
 });
 
+// Liên kết / đổi số điện thoại cho tài khoản đang đăng nhập (vd tài khoản Google/Facebook chưa có SĐT):
+// B1 gửi OTP tới số mới, B2 nhập đúng OTP thì mới gắn số vào tài khoản (sau đó đăng nhập bằng SĐT được).
+async function checkPhoneForLink(userId, phoneNumber) {
+  if (!PHONE_REGEX.test(phoneNumber)) return 'Số điện thoại không hợp lệ (VD: 0912345678).';
+  const owner = await User.findOne({ phoneNumber }).select('_id').lean();
+  if (owner && String(owner._id) === String(userId)) return 'Số này đã được liên kết với tài khoản của bạn.';
+  if (owner) return 'Số điện thoại này đã được dùng cho tài khoản khác.';
+  return null;
+}
+
+router.post('/phone/request-otp', requireUserId, async (req, res) => {
+  try {
+    const phoneNumber = String(req.body.phoneNumber || '').trim();
+    const problem = await checkPhoneForLink(req.userId, phoneNumber);
+    if (problem) return res.status(400).json({ success: false, error: problem });
+    const otp = await issueOtp({ field: 'phoneNumber', value: phoneNumber });
+    res.json({ success: true, message: 'Đã gửi mã OTP', ...devOtpField(otp) });
+  } catch (err) {
+    console.error('phone request-otp error', err);
+    sendError(res, err);
+  }
+});
+
+router.post('/phone/verify', requireUserId, async (req, res) => {
+  try {
+    const phoneNumber = String(req.body.phoneNumber || '').trim();
+    const otp = String(req.body.otp || '').trim();
+    const problem = await checkPhoneForLink(req.userId, phoneNumber);
+    if (problem) return res.status(400).json({ success: false, error: problem });
+    if (!otp || !(await checkOtp({ field: 'phoneNumber', value: phoneNumber }, otp))) {
+      return res.status(400).json({ success: false, error: 'Mã OTP không đúng hoặc đã hết hạn' });
+    }
+    await OtpCode.deleteMany({ phoneNumber });
+
+    const user = await User.findByIdAndUpdate(req.userId, { phoneNumber }, { new: true });
+    if (!user) return res.status(404).json({ success: false, error: 'Không tìm thấy tài khoản' });
+    res.json({ success: true, user });
+  } catch (err) {
+    if (err?.code === 11000) {
+      return res.status(400).json({ success: false, error: 'Số điện thoại này đã được dùng cho tài khoản khác.' });
+    }
+    console.error('phone verify error', err);
+    sendError(res, err);
+  }
+});
+
 // multer phải chạy trước requireUserId: userId nằm trong form multipart, chưa parse thì req.body rỗng (-> 401).
 router.post('/avatar', upload.single('avatar'), requireUserId, async (req, res) => {
   try {

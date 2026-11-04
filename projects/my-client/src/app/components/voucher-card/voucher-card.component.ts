@@ -1,4 +1,6 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
+import { Router } from '@angular/router';
+import { CartService } from '../../core/services/cart.service';
 import { CommonModule } from '@angular/common';
 import { AppIconComponent } from '../icon/icon.component';
 import { ToastService } from '../../core/services/toast.service';
@@ -23,8 +25,36 @@ export class VoucherCardComponent {
   /** Lý do chưa áp dụng được (vd chưa đủ giá trị đơn tối thiểu) — có thì làm mờ thẻ. */
   @Input() disabledReason: string | null = null;
   @Output() pick = new EventEmitter<UserVoucher>();
+  /** Bấm vào thẻ chưa đủ điều kiện — gửi kèm lý do. */
+  @Output() blocked = new EventEmitter<string>();
+
+  private readonly cartService = inject(CartService);
+  private readonly router = inject(Router);
 
   constructor(private toast: ToastService) {}
+
+  /** Mã công khai của shop (chưa nằm trong ví của khách). */
+  get isShopCode(): boolean {
+    return this.voucher.source === 'SHOP';
+  }
+
+  get saved(): boolean {
+    return this.cartService.isCouponSaved(this.voucher.code);
+  }
+
+  save(event: Event): void {
+    event.stopPropagation();
+    const v = this.voucher;
+    this.cartService.saveCouponToWallet({
+      code: v.code, title: v.title, description: v.description, discountPercent: v.discountPercent,
+      discountAmount: v.discountAmount, maxDiscount: v.maxDiscount, minSpend: v.minSpend, expiresAt: v.expiresAt,
+    });
+  }
+
+  useNow(event: Event): void {
+    event.stopPropagation();
+    this.router.navigate(['/cart']);
+  }
 
   get usable(): boolean {
     return isVoucherUsable(this.voucher);
@@ -37,7 +67,9 @@ export class VoucherCardComponent {
   }
 
   onClick(): void {
-    if (this.selectable && this.usable && !this.disabledReason) this.pick.emit(this.voucher);
+    if (!this.selectable || !this.usable) return;
+    if (this.disabledReason) this.blocked.emit(this.disabledReason);
+    else this.pick.emit(this.voucher);
   }
 
   copy(event: Event): void {

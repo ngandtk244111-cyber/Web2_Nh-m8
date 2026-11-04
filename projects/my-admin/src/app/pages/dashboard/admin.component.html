@@ -61,6 +61,11 @@
           <span class="nav-text">Đơn hàng</span>
           <span class="nav-count">{{ orders.length }}</span>
         </button>
+        <button (click)="activeTab = 'returns'" [class.is-active]="activeTab === 'returns'" class="nav-item" title="Đổi trả">
+          <app-icon name="rotate" [size]="18"></app-icon>
+          <span class="nav-text">Đổi trả</span>
+          <span *ngIf="returnCount('PENDING') > 0" class="nav-count nav-count--alert">{{ returnCount('PENDING') }}</span>
+        </button>
         <button (click)="activeTab = 'custom-requests'" [class.is-active]="activeTab === 'custom-requests'" class="nav-item" title="Yêu cầu in 3D">
           <app-icon name="printer" [size]="18"></app-icon>
           <span class="nav-text">Yêu cầu in 3D</span>
@@ -938,6 +943,107 @@
           </div>
         </div>
 
+      </div>
+
+      <!-- =================================================================== -->
+      <!-- ĐỔI TRẢ & HOÀN TIỀN                                                 -->
+      <!-- =================================================================== -->
+      <div *ngIf="activeTab === 'returns'" class="space-y-5 animate-fade-in">
+
+        <div class="filter-stats grid-cols-2 sm:grid-cols-5">
+          <button (click)="returnFilter = 'ALL'" [class.is-active]="returnFilter === 'ALL'" class="filter-stat tone-muted">
+            <span class="filter-stat__label">Tất cả</span>
+            <span class="filter-stat__value">{{ returnCount('ALL') }}</span>
+          </button>
+          <button (click)="returnFilter = 'PENDING'" [class.is-active]="returnFilter === 'PENDING'" class="filter-stat tone-amber">
+            <span class="filter-stat__label">Chờ duyệt</span>
+            <span class="filter-stat__value">{{ returnCount('PENDING') }}</span>
+          </button>
+          <button (click)="returnFilter = 'APPROVED'" [class.is-active]="returnFilter === 'APPROVED'" class="filter-stat tone-blue">
+            <span class="filter-stat__label">Đang hoàn</span>
+            <span class="filter-stat__value">{{ returnCount('APPROVED') }}</span>
+          </button>
+          <button (click)="returnFilter = 'COMPLETED'" [class.is-active]="returnFilter === 'COMPLETED'" class="filter-stat tone-green">
+            <span class="filter-stat__label">Đã hoàn/trả</span>
+            <span class="filter-stat__value">{{ returnCount('COMPLETED') }}</span>
+          </button>
+          <button (click)="returnFilter = 'REJECTED'" [class.is-active]="returnFilter === 'REJECTED'" class="filter-stat tone-red">
+            <span class="filter-stat__label">Từ chối</span>
+            <span class="filter-stat__value">{{ returnCount('REJECTED') }}</span>
+          </button>
+        </div>
+
+        <div class="toolbar">
+          <label class="search-field">
+            <app-icon name="search" [size]="15"></app-icon>
+            <input type="text" [(ngModel)]="returnSearch" placeholder="Tìm mã đơn, tên hoặc SĐT khách...">
+          </label>
+          <span class="toolbar__meta">Hiển thị <strong class="text-[#1F1712]">{{ filteredReturns.length }}</strong> yêu cầu</span>
+        </div>
+
+        <div class="card overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="castlery-table">
+              <thead>
+                <tr>
+                  <th>Mã đơn</th>
+                  <th>Khách hàng</th>
+                  <th>Lý do</th>
+                  <th class="text-right">Hoàn tiền</th>
+                  <th>Trạng thái</th>
+                  <th class="text-right">Xử lý</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let o of filteredReturns">
+                  <td class="whitespace-nowrap">
+                    <button type="button" class="font-mono text-[12.5px] font-semibold text-[#1F1712] hover:text-[#A3152D]" (click)="viewOrderDetail(o)">{{ o.orderNumber }}</button>
+                    <div class="text-[11px] text-[#93877E]">Gửi {{ returnDateLabel(o.returnRequest!.requestedAt) }}</div>
+                  </td>
+                  <td class="whitespace-nowrap">
+                    <div class="font-medium text-[#1F1712]">{{ o.shippingAddress.fullName }}</div>
+                    <div class="text-[11px] text-[#7A6F67]">{{ o.shippingAddress.phone }}</div>
+                  </td>
+                  <td class="min-w-[240px]">
+                    <div class="text-[12.5px] font-medium text-[#1F1712]">{{ o.returnRequest!.reason }}</div>
+                    <div *ngIf="o.returnRequest!.description" class="text-[11px] text-[#7A6F67] line-clamp-2">{{ o.returnRequest!.description }}</div>
+                    <div class="text-[11px] text-[#93877E]">{{ getOrderItemName(o) }}<ng-container *ngIf="o.items.length > 1"> · +{{ o.items.length - 1 }} sản phẩm</ng-container></div>
+                    <div *ngIf="o.returnRequest!.adminNote" class="mt-1 text-[11px] text-[#9E2A2B]">Phản hồi: {{ o.returnRequest!.adminNote }}</div>
+                  </td>
+                  <td class="text-right whitespace-nowrap">
+                    <div class="font-semibold text-[#1F1712]">{{ o.returnRequest!.refundAmount | vnd }}</div>
+                    <div class="text-[11px] text-[#7A6F67]">{{ paymentMethodLabel(o.paymentMethod) }}</div>
+                  </td>
+                  <td class="whitespace-nowrap">
+                    <span class="status-badge" [ngClass]="returnStatusClass(o.returnRequest!.status)">{{ returnStatusLabels[o.returnRequest!.status] }}</span>
+                  </td>
+                  <td class="text-right whitespace-nowrap">
+                    <ng-container *ngIf="o.returnRequest!.status === 'PENDING'">
+                      <div *ngIf="rejectingReturn === o.orderNumber; else pendingBtns" class="flex items-center justify-end gap-2">
+                        <input type="text" [(ngModel)]="rejectReturnNote" placeholder="Lý do từ chối..." class="w-44 px-2.5 py-1.5 rounded-lg border border-[#E5DCCB] text-xs">
+                        <button (click)="reviewReturn(o, 'reject')" class="px-3 py-1.5 bg-[#9E2A2B] text-white rounded-lg text-xs font-semibold">Gửi</button>
+                        <button (click)="rejectingReturn = null" class="px-2 py-1.5 text-xs text-[#7A6F67]">Huỷ</button>
+                      </div>
+                      <ng-template #pendingBtns>
+                        <button (click)="rejectingReturn = o.orderNumber; rejectReturnNote = ''"
+                          class="px-3 py-1.5 mr-1.5 border border-[#E5DCCB] text-[#9E2A2B] rounded-lg text-xs font-semibold hover:bg-[#FDECEF] transition">Từ chối</button>
+                        <button (click)="reviewReturn(o, 'approve')"
+                          class="px-3 py-1.5 bg-[#A3152D] hover:bg-[#891226] text-white rounded-lg text-xs font-semibold transition">Duyệt</button>
+                      </ng-template>
+                    </ng-container>
+                    <button *ngIf="o.returnRequest!.status === 'APPROVED'" (click)="reviewReturn(o, 'complete')"
+                      class="px-3 py-1.5 bg-[#2F6B3F] hover:bg-[#25562f] text-white rounded-lg text-xs font-semibold transition">Đã hoàn tiền</button>
+                    <span *ngIf="o.returnRequest!.status === 'COMPLETED'" class="text-[11px] text-[#7A6F67]">{{ returnDateLabel(o.returnRequest!.completedAt) }}</span>
+                    <span *ngIf="o.returnRequest!.status === 'REJECTED'" class="text-[11px] text-[#7A6F67]">{{ returnDateLabel(o.returnRequest!.rejectedAt) }}</span>
+                  </td>
+                </tr>
+                <tr *ngIf="filteredReturns.length === 0">
+                  <td colspan="6" class="empty-state">Không có yêu cầu đổi trả nào.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
       <!-- =================================================================== -->

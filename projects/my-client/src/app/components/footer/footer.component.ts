@@ -49,7 +49,6 @@ export class FooterComponent {
   /** Tên mỗi mục trùng với tiêu đề của trang nó mở ra. */
   readonly exploreLinks: FooterLink[] = [
     { label: 'Câu chuyện Luméa', link: '/ve-lumea' },
-    { label: 'Tự tay thiết kế & xem trước 3D', link: '/customizer-3d' },
     { label: 'Gửi yêu cầu thiết kế riêng', link: '/custom-request/new' },
     { label: 'Cộng đồng decor', link: '/community' },
     { label: 'Không gian 3D trực quan', link: '/shop-the-room' },

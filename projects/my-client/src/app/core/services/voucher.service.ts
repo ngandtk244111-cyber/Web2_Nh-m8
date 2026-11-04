@@ -25,6 +25,11 @@ export function voucherDiscount(
   return v.maxDiscount ? Math.min(calc, v.maxDiscount) : calc;
 }
 
+/** 23:59:59 ngày cuối của tháng hiện tại (ISO). */
+export function endOfMonthIso(now = new Date()): string {
+  return new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
+}
+
 /** Quy mã công khai của shop (Coupon) về dạng UserVoucher để hiển thị chung bằng VoucherCard. */
 export function couponToVoucher(c: Coupon): UserVoucher {
   const cap = c.maxDiscount ? ` · Tối đa ${c.maxDiscount.toLocaleString('vi-VN')}đ` : '';
@@ -38,8 +43,8 @@ export function couponToVoucher(c: Coupon): UserVoucher {
     maxDiscount: c.maxDiscount,
     minSpend: c.minSpend,
     source: 'SHOP',
-    // Mã công khai không có hạn riêng — đặt xa để thẻ hiển thị còn hiệu lực.
-    expiresAt: '2099-12-31T00:00:00.000Z',
+    // Hạn của mã do server trả về; mã cũ chưa có hạn thì hiển thị hết hạn cuối tháng này.
+    expiresAt: c.expiresAt || endOfMonthIso(),
     usedAt: null,
     usedOrderNumber: null,
     createdAt: '',

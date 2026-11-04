@@ -1,0 +1,72 @@
+:host { display: block; }
+
+.vp_btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+  color: #444444;
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+.vp_btn:hover { border-color: #A3152D; }
+.vp_btn--active {
+  border-color: rgba(163, 21, 45, 0.4);
+  background: rgba(163, 21, 45, 0.06);
+}
+.vp_btn__text {
+  flex: 1;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vp_body { display: grid; gap: 12px; margin-top: 12px; }
+
+.vp_input { display: flex; gap: 8px; }
+.vp_input input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 12px;
+  border: 1px solid #d4d4d4;
+  border-radius: 12px;
+  background: #f5f5f5;
+  color: #262626;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+.vp_input input::placeholder { text-transform: none; }
+.vp_input input:focus { outline: none; border-color: #A3152D; }
+.vp_input button {
+  padding: 8px 14px;
+  border: 1px solid #A3152D;
+  border-radius: 12px;
+  background: #A3152D;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.vp_input button:hover { background: #891226; }
+
+.vp_empty { margin: 0; font-size: 12px; color: #737373; }
+.vp_empty a { color: #A3152D; font-weight: 600; }
+
+.vp_list {
+  display: grid;
+  gap: 10px;
+  max-height: 360px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.vp_hint { margin: 0; font-size: 11px; color: #737373; }
+
+.vp_msg { margin-top: 8px; font-size: 12px; color: #ef4444; }
+.vp_msg--ok { color: #059669; }

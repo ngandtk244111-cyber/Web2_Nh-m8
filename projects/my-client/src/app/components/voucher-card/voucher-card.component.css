@@ -20,9 +20,23 @@
 }
 
 .vcard--off {
-  opacity: 0.55;
-  cursor: default;
+  cursor: not-allowed;
   box-shadow: none;
+  background: #FCFAF8;
+}
+
+.vcard--off.vcard--selectable:hover {
+  border-color: #EBDDD5;
+  box-shadow: none;
+}
+
+/* Chỉ làm mờ nội dung voucher, dòng lý do vẫn rõ để khách đọc được */
+.vcard--off .vcard__stub,
+.vcard--off .vcard__title,
+.vcard--off .vcard__desc,
+.vcard--off .vcard__meta,
+.vcard--off .vcard__status {
+  opacity: 0.5;
 }
 
 .vcard__stub {
@@ -88,8 +102,23 @@
 }
 
 .vcard__warn {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 5px;
+  align-self: flex-start;
+  margin-top: 2px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: #FEF3E2;
   font-size: 11px;
-  color: #B45309;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #9A4A07;
+}
+
+.vcard__warn app-icon {
+  flex: none;
+  margin-top: 1px;
 }
 
 .vcard__side {
@@ -136,4 +165,18 @@
 .vcard__radio--on {
   border-color: #A3152D;
   background: #A3152D;
+}
+
+/* Mã đã lưu vào ví */
+.vcard__saved {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(5, 150, 105, 0.1);
+  color: #059669;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
 }

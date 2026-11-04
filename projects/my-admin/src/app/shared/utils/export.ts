@@ -43,7 +43,7 @@ export function printHtml(title: string, bodyHtml: string): void {
   if (!win) return;
   win.document.write(`<!doctype html><html lang="vi"><head><meta charset="utf-8"><title>${title}</title>
 <style>
-  body{font-family:Inter,Arial,sans-serif;color:#1F1712;margin:32px;font-size:13px}
+  body{font-family:'Inter',system-ui,sans-serif;color:#1F1712;margin:32px;font-size:13px}
   h1{font-size:20px;margin:0 0 4px;color:#A3152D;text-transform:uppercase}
   h2{font-size:14px;margin:18px 0 6px;text-transform:uppercase}
   table{width:100%;border-collapse:collapse;margin-top:8px}

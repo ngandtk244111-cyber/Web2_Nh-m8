@@ -1,6 +1,7 @@
 .coupon-code {
   display: inline-block;
-  font-family: ui-monospace, 'SFMono-Regular', Consolas, monospace;
+  font-family: var(--font-family-base);
+  font-variant-numeric: tabular-nums;
   font-weight: 700;
   color: var(--color-primary);
   background: var(--color-primary-bg);

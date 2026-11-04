@@ -7,7 +7,8 @@ async function connectDB() {
   }
   // Báo lỗi sau 5s thay vì 30s mặc định khi máy chưa bật MongoDB, để server mở nhanh (chatbox AI vẫn chạy).
   await mongoose.connect(uri, { serverSelectionTimeoutMS: 5000 });
-  console.log('MongoDB connected:', uri);
+  console.log('MongoDB connected:', mongoose.connection.host);
+
 }
 
 module.exports = { connectDB };

@@ -1,0 +1,101 @@
+<div class="admin-page">
+  <div class="page-breadcrumb">
+    Đơn hàng <span class="sep">/</span> <span class="current">Danh sách đơn hàng</span>
+  </div>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Danh sách đơn hàng</h1>
+      <p class="page-subtitle">Gọi xác nhận đơn COD, theo dõi in 3D, tạo vận đơn và đối soát thanh toán</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn-header primary" (click)="exportExcel()"><i class="bi bi-file-earmark-excel"></i> Xuất Excel</button>
+    </div>
+  </div>
+
+  <!-- Thẻ thống kê = bộ lọc nhanh -->
+  <div class="stats-grid">
+    <button type="button" *ngFor="let f of filters" class="stat-card" [ngClass]="f.tone"
+      [class.active]="filter() === f.key" (click)="setFilter(f.key)">
+      <span class="stat-label">{{ f.label }}</span>
+      <span class="stat-value">{{ count(f.key) }}</span>
+    </button>
+  </div>
+
+  <!-- Thanh lọc -->
+  <div class="filter-bar">
+    <div class="filter-left">
+      <div class="search-wrapper">
+        <input type="text" class="search-input" placeholder="Mã đơn, tên hoặc SĐT khách..."
+          [ngModel]="search()" (ngModelChange)="onSearch($event)">
+        <i class="bi bi-search search-icon"></i>
+      </div>
+      <select class="form-select filter-select" [ngModel]="method()" (ngModelChange)="method.set($event); page.set(1)">
+        <option value="ALL">Mọi hình thức thanh toán</option>
+        <option value="COD">COD</option>
+        <option value="BANK_TRANSFER">Chuyển khoản</option>
+        <option value="MOMO">MoMo</option>
+        <option value="ZALOPAY">ZaloPay</option>
+      </select>
+      <div class="date-range">
+        <input type="text" class="form-control" placeholder="Từ ngày" appDatePicker
+          [ngModel]="fromDate()" (ngModelChange)="fromDate.set($event); page.set(1)">
+        <span>–</span>
+        <input type="text" class="form-control" placeholder="Đến ngày" appDatePicker
+          [ngModel]="toDate()" (ngModelChange)="toDate.set($event); page.set(1)">
+      </div>
+    </div>
+    <div class="actions-group">
+      <span class="selection-info">{{ filtered().length }} đơn</span>
+      <button type="button" class="action-btn" (click)="clearFilters()" [disabled]="!activeExtraFilters && !search()">
+        <i class="bi bi-x-circle"></i> Xoá lọc
+      </button>
+    </div>
+  </div>
+
+  <app-mascot-loading *ngIf="loading()" message="Đang tải danh sách đơn hàng…" [overlay]="false"></app-mascot-loading>
+
+  <div class="table-scrollable" *ngIf="!loading()">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Mã đơn</th>
+          <th>Ngày đặt</th>
+          <th>Khách hàng</th>
+          <th>Sản phẩm</th>
+          <th>Trạng thái</th>
+          <th>Thanh toán</th>
+          <th class="text-right">Tổng đơn</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let o of visible(); trackBy: trackByNumber" class="clickable" (click)="openOrder(o)">
+          <td>
+            <a class="cell-strong order-code" [routerLink]="['/orders', o.orderNumber]" (click)="$event.stopPropagation()">{{ o.orderNumber }}</a>
+            <span class="cell-sub" *ngIf="o.hasPrintOnDemandItems"><i class="bi bi-printer"></i> Có hàng in 3D</span>
+          </td>
+          <td>{{ dateLabel(o) }}</td>
+          <td>
+            {{ o.shippingAddress.fullName }}
+            <span class="cell-sub">{{ o.shippingAddress.phone }} · {{ o.shippingAddress.city }}</span>
+          </td>
+          <td class="cell-product">
+            {{ itemName(o) }}
+            <span class="cell-sub">{{ itemQty(o) }} món</span>
+          </td>
+          <td><span class="status-badge" [ngClass]="statusClass(o.status)">{{ statusLabel(o.status) }}</span></td>
+          <td>
+            <span class="status-badge" [ngClass]="payClass(o)">{{ payLabel(o) }}</span>
+            <span class="cell-sub">{{ methodLabel(o.paymentMethod) }}</span>
+          </td>
+          <td class="text-right money">{{ o.total | vnd }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="empty-state" *ngIf="filtered().length === 0">
+      <i class="bi bi-inbox"></i>
+      Không có đơn hàng nào khớp bộ lọc.
+    </div>
+    <app-pager [total]="filtered().length" [page]="page()" [pageSize]="pageSize" (pageChange)="page.set($event)"></app-pager>
+  </div>
+</div>

@@ -10,6 +10,10 @@ function sendError(res, err) {
   if (err instanceof mongoose.Error.CastError) {
     return res.status(400).json({ success: false, error: `Giá trị không hợp lệ ở trường "${err.path}"` });
   }
+  if (err.code === 11000) {
+    const field = Object.keys(err.keyPattern || {})[0] || 'khóa';
+    return res.status(409).json({ success: false, error: `Giá trị "${field}" đã tồn tại` });
+  }
   console.error(err);
   return res.status(500).json({ success: false, error: err.message || 'Internal server error' });
 }

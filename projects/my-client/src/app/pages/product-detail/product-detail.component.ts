@@ -193,8 +193,13 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
       const found = slug ? this.productService.products().find(p => p.slug === slug) : undefined;
       untracked(() => {
         if (!found) return;
-        if (found.id === this.product?.id) this.product = found;
-        else this.showProduct(found);
+        if (found.id === this.product?.id) {
+          // Danh sách không kèm nội dung đánh giá: giữ phần đã tải riêng cho trang này.
+          found.reviews = this.product.reviews;
+          this.product = found;
+        } else {
+          this.showProduct(found);
+        }
       });
     });
   }
@@ -259,6 +264,8 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     });
   }
 
+  reviewsLoaded = false;
+
   private showProduct(product: Product): void {
     this.product = product;
     this.slideIndex = 0;
@@ -273,6 +280,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     this.selectedSizeId = product.customization?.sizes?.[0]?.id;
     this.selectedFinishId = product.customization?.finishes?.[0]?.id;
     this.recentlyViewedService.recordView(product.id);
+    this.loadReviews(product);
     this.checkCanReview(product);
     this.buildPickRows(product);
     this.loadTaggedCommunityPosts();
@@ -479,8 +487,17 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
 
   /** Đánh giá hiển thị: đánh giá thật, hoặc vài đánh giá mẫu khi sản phẩm chưa có đánh giá nào. */
   get displayReviews(): ProductReview[] {
-    if (!this.product) return [];
+    if (!this.product || !this.reviewsLoaded) return [];
     return this.product.reviews.length ? this.product.reviews : SAMPLE_REVIEWS;
+  }
+
+  private loadReviews(product: Product): void {
+    this.reviewsLoaded = false;
+    this.productService.fetchReviews(product.slug).subscribe(reviews => {
+      if (this.product?.id !== product.id) return;
+      this.product.reviews = reviews;
+      this.reviewsLoaded = true;
+    });
   }
 
   private checkCanReview(product: Product): void {

@@ -1,0 +1,49 @@
+/* Nằm trên modal sửa banner đang mở. */
+.cropper-overlay {
+  z-index: 1080;
+}
+
+.cropper-box {
+  width: auto;
+  max-width: 100%;
+}
+
+.cropper-sub {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.crop-frame {
+  position: relative;
+  overflow: hidden;
+  margin: 0 auto;
+  border-radius: var(--radius-md);
+  background: var(--color-neutral-20);
+  cursor: move;
+  touch-action: none;
+  user-select: none;
+}
+
+.crop-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  max-width: none;
+  transform-origin: 0 0;
+  pointer-events: none;
+}
+
+.zoom-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 14px auto 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.zoom-row .form-range {
+  accent-color: var(--color-primary);
+}

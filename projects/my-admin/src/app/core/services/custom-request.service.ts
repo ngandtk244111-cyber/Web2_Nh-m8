@@ -24,12 +24,17 @@ export class CustomRequestService {
   }
 
   refresh(): void {
-    this.http.get<{ success: boolean; requests: CustomRequest[] }>(BASE).subscribe({
-      next: (res) => {
-        if (res.success) this.requestsSignal.set(res.requests);
-      },
+    this.load().subscribe({
       error: (err) => console.warn('Failed to load custom requests', err),
     });
+  }
+
+  /** Như refresh() nhưng trả Observable để trang biết lúc tải xong. */
+  load(): Observable<CustomRequest[]> {
+    return this.http.get<{ success: boolean; requests: CustomRequest[] }>(BASE).pipe(
+      map(res => res.requests || []),
+      tap(requests => this.requestsSignal.set(requests))
+    );
   }
 
   getRequestById(id: string): CustomRequest | undefined {
@@ -43,22 +48,21 @@ export class CustomRequestService {
     );
   }
 
-  sendMessage(requestId: string, text: string, sender: 'CUSTOMER' | 'SHOP_SPECIALIST' = 'CUSTOMER'): void {
-    this.http.post<{ success: boolean; request: CustomRequest }>(`${BASE}/${requestId}/messages`, { text, sender }).subscribe({
-      next: (res) => {
-        if (res.success) this.requestsSignal.update(list => list.map(r => r.id === requestId ? res.request : r));
-      },
-    });
+  // Trả Observable để màn admin chỉ báo thành công khi server đã lưu, lỗi thì báo lỗi.
+  sendMessage(requestId: string, text: string, sender: 'CUSTOMER' | 'SHOP_SPECIALIST' = 'CUSTOMER'): Observable<CustomRequest> {
+    return this.http.post<{ success: boolean; request: CustomRequest }>(`${BASE}/${requestId}/messages`, { text, sender }).pipe(
+      map(res => res.request),
+      tap(updated => this.requestsSignal.update(list => list.map(r => r.id === requestId ? updated : r)))
+    );
   }
 
-  updateStatus(requestId: string, status: CustomRequestStatus, quotationPrice?: number, estimatedDays?: number, preview3dModelType?: any): void {
-    this.http.patch<{ success: boolean; request: CustomRequest }>(`${BASE}/${requestId}/status`, {
+  updateStatus(requestId: string, status: CustomRequestStatus, quotationPrice?: number, estimatedDays?: number, preview3dModelType?: any): Observable<CustomRequest> {
+    return this.http.patch<{ success: boolean; request: CustomRequest }>(`${BASE}/${requestId}/status`, {
       status, quotationPrice, estimatedDays, preview3dModelType, adminId: this.adminAuth.adminId,
-    }).subscribe({
-      next: (res) => {
-        if (res.success) this.requestsSignal.update(list => list.map(r => r.id === requestId ? res.request : r));
-      },
-    });
+    }).pipe(
+      map(res => res.request),
+      tap(updated => this.requestsSignal.update(list => list.map(r => r.id === requestId ? updated : r)))
+    );
   }
 
   convertRequestToCart(request: CustomRequest): void {

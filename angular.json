@@ -172,15 +172,65 @@
               {
                 "glob": "**/*",
                 "input": "projects/my-admin/public"
+              },
+              {
+                "glob": "popup-poster.jpg",
+                "input": "projects/my-client/src/assets/campaign",
+                "output": "assets/campaign"
+              },
+              {
+                "glob": "*.png",
+                "input": "projects/my-client/src/assets/hero-banner",
+                "output": "assets/hero-banner"
+              },
+              {
+                "glob": "*.jpg",
+                "input": "projects/my-client/src/assets/promo-cards",
+                "output": "assets/promo-cards"
+              },
+              {
+                "glob": "side-*.jpg",
+                "input": "projects/my-client/src/assets/floating-banners",
+                "output": "assets/floating-banners"
+              },
+              {
+                "glob": "room-3d-collection.png",
+                "input": "projects/my-client/src/assets/promo-banner",
+                "output": "assets/promo-banner"
+              },
+              {
+                "glob": "lumea-mascot.png",
+                "input": "projects/my-client/src/assets/mascot",
+                "output": "assets/mascot"
+              },
+              {
+                "glob": "**/*",
+                "input": "projects/my-client/src/assets/products",
+                "output": "assets/products"
+              },
+              {
+                "glob": "*.jpg",
+                "input": "projects/my-client/src/assets/decor-deals",
+                "output": "assets/decor-deals"
               }
             ],
             "styles": [
+              "node_modules/bootstrap/dist/css/bootstrap.min.css",
+              "node_modules/bootstrap-icons/font/bootstrap-icons.min.css",
+              "node_modules/quill/dist/quill.snow.css",
+              "node_modules/flatpickr/dist/flatpickr.min.css",
               "node_modules/leaflet/dist/leaflet.css",
               "projects/my-admin/src/styles.css"
             ],
             "scripts": [],
             "allowedCommonJsDependencies": [
-              "leaflet"
+              "leaflet",
+              "xlsx",
+              "pdfmake",
+              "pdfmake/build/pdfmake",
+              "pdfmake/build/vfs_fonts",
+              "quill-delta",
+              "flatpickr"
             ]
           },
           "configurations": {
@@ -188,13 +238,13 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "500kB",
-                  "maximumError": "1MB"
+                  "maximumWarning": "1.5MB",
+                  "maximumError": "3MB"
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "10kB",
-                  "maximumError": "20kB"
+                  "maximumWarning": "24kB",
+                  "maximumError": "64kB"
                 }
               ],
               "outputHashing": "all",

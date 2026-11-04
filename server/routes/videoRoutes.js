@@ -2,7 +2,7 @@ const express = require('express');
 const { sendError } = require('../utils/http-error');
 const Video = require('../models/Video');
 const DEFAULT_VIDEOS = require('../seed/default-videos');
-const { requireAdminId } = require('../middleware/auth');
+const { requirePermission } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -45,7 +45,7 @@ router.get('/', async (_req, res) => {
 });
 
 // Admin — toàn bộ video, kể cả đang ẩn.
-router.get('/admin', requireAdminId, async (_req, res) => {
+router.get('/admin', requirePermission('content.view'), async (_req, res) => {
   try {
     await ensureSeeded();
     const videos = await Video.find().sort({ order: 1, createdAt: -1 });
@@ -55,7 +55,7 @@ router.get('/admin', requireAdminId, async (_req, res) => {
   }
 });
 
-router.post('/', requireAdminId, async (req, res) => {
+router.post('/', requirePermission('content.create'), async (req, res) => {
   try {
     const youtubeId = parseYoutubeId(req.body.youtubeId);
     if (!youtubeId) return res.status(400).json({ success: false, error: 'Link hoặc ID YouTube không hợp lệ' });
@@ -76,7 +76,7 @@ router.post('/', requireAdminId, async (req, res) => {
   }
 });
 
-router.put('/:id', requireAdminId, async (req, res) => {
+router.put('/:id', requirePermission('content.edit'), async (req, res) => {
   try {
     const update = pickVideoFields(req.body);
     if (req.body.youtubeId !== undefined) {
@@ -92,7 +92,7 @@ router.put('/:id', requireAdminId, async (req, res) => {
   }
 });
 
-router.delete('/:id', requireAdminId, async (req, res) => {
+router.delete('/:id', requirePermission('content.delete'), async (req, res) => {
   try {
     await Video.deleteOne({ id: req.params.id });
     res.json({ success: true });

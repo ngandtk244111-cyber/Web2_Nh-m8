@@ -1,51 +1,63 @@
 import { Injectable, effect, inject, signal, untracked } from '@angular/core';
 import { AuthService } from './auth.service';
+import { UserDataService } from './user-data.service';
 
-const LEGACY_KEY = 'deco3d_favorites';
+const STORAGE_KEY = 'deco3d_favorites';
 
 /**
- * Yêu thích sản phẩm — lưu cục bộ, RIÊNG theo từng tài khoản (deco3d_favorites:<userId>); khách chưa đăng
- * nhập dùng khoá 'guest'. Đăng xuất thì danh sách trống, đăng nhập lại thì có lại đúng danh sách cũ.
+ * Yêu thích sản phẩm — đăng nhập thì lưu trên MongoDB theo tài khoản. Chưa đăng nhập thì lưu tạm trên
+ * trình duyệt (site không bắt buộc đăng nhập để duyệt sản phẩm) và gộp vào tài khoản khi đăng nhập.
  */
 @Injectable({ providedIn: 'root' })
 export class FavoriteService {
   private readonly auth = inject(AuthService);
-  private owner = this.auth.currentUser()?._id || 'guest';
-  private readonly idsSignal = signal<Set<string>>(new Set(this.load()));
+  private readonly userData = inject(UserDataService);
+  private readonly idsSignal = signal<Set<string>>(new Set());
   readonly ids = this.idsSignal.asReadonly();
 
   constructor() {
     effect(() => {
-      const owner = this.auth.currentUser()?._id || 'guest';
-      untracked(() => {
-        if (owner === this.owner) return;
-        this.owner = owner;
-        this.idsSignal.set(new Set(this.load()));
-      });
+      const userId = this.auth.currentUser()?._id;
+      untracked(() => (userId ? this.syncFromAccount() : this.idsSignal.set(new Set(this.load()))));
     });
   }
 
-  private get storageKey(): string {
-    return `${LEGACY_KEY}:${this.owner}`;
+  private syncFromAccount(): void {
+    const guestIds = this.load();
+    this.idsSignal.set(new Set(guestIds));
+    this.userData.load().subscribe({
+      next: data => {
+        const merged = new Set([...data.favorites, ...this.idsSignal()]);
+        this.idsSignal.set(merged);
+        if (merged.size !== data.favorites.length) this.userData.save({ favorites: [...merged] });
+        this.clearLocal();
+      },
+      error: err => console.warn('Failed to load favorites', err),
+    });
   }
 
   private load(): string[] {
     try {
-      const legacy = localStorage.getItem(LEGACY_KEY);
-      if (legacy && this.owner !== 'guest') {
-        if (!localStorage.getItem(this.storageKey)) localStorage.setItem(this.storageKey, legacy);
-        localStorage.removeItem(LEGACY_KEY);
-      }
-      const raw = localStorage.getItem(this.storageKey);
+      const raw = localStorage.getItem(STORAGE_KEY);
       return raw ? JSON.parse(raw) : [];
     } catch {
       return [];
     }
   }
 
-  private persist(ids: Set<string>): void {
+  private clearLocal(): void {
     try {
-      localStorage.setItem(this.storageKey, JSON.stringify([...ids]));
+      localStorage.removeItem(STORAGE_KEY);
+    } catch { /* ignore */ }
+  }
+
+  private persist(ids: Set<string>): void {
+    if (this.auth.currentUser()) {
+      this.userData.save({ favorites: [...ids] });
+      return;
+    }
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify([...ids]));
     } catch { /* ignore */ }
   }
 

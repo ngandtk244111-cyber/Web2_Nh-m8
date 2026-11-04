@@ -3,7 +3,7 @@
     <ng-container *ngFor="let banner of squareBanners; let i = index">
 
       <!-- Thẻ ảnh phủ kín -->
-      <a *ngIf="banner.layout === 'photo'" appScrollReveal="rise" [revealDelay]="i * 180" [routerLink]="banner.link" class="pg_card pg_photo">
+      <a *ngIf="banner.layout === 'photo'" appScrollReveal="rise" [revealDelay]="i * 180" [routerLink]="banner.link" [queryParams]="banner.queryParams" class="pg_card pg_photo">
         <span class="pg_photo__frame" aria-hidden="true">
           <img [src]="banner.image" alt="" class="pg_photo__img" loading="lazy" draggable="false">
         </span>
@@ -20,7 +20,7 @@
       </a>
 
       <!-- Thẻ ưu đãi có mascot -->
-      <a *ngIf="banner.layout === 'mascot'" appScrollReveal="rise" [revealDelay]="i * 180" [routerLink]="banner.link" class="pg_card pg_promo">
+      <a *ngIf="banner.layout === 'mascot'" appScrollReveal="rise" [revealDelay]="i * 180" [routerLink]="banner.link" [queryParams]="banner.queryParams" class="pg_card pg_promo">
         <span class="pg_promo__glow" aria-hidden="true"></span>
         <div class="pg_promo__text">
           <span class="pg_eyebrow pg_eyebrow--soft">{{ banner.eyebrow }}</span>
@@ -40,9 +40,11 @@
     </ng-container>
   </div>
 
-  <a appScrollReveal="rise" [routerLink]="wideBanner.link" class="pg_card pg_wide">
+  <a appScrollReveal="rise" [routerLink]="wideBanner.link" [queryParams]="wideBanner.queryParams" class="pg_card pg_wide">
     <!-- Video phủ kín toàn banner, chữ đè lên trên -->
+    <!-- *ngFor tạo lại thẻ video khi admin đổi nguồn: đổi <source> trên thẻ đã tải không có tác dụng -->
     <video
+      *ngFor="let video of [wideBanner.video]"
       class="pg_wide__video"
       aria-hidden="true"
       [autoplay]="true"
@@ -50,8 +52,8 @@
       muted
       playsinline
       preload="metadata">
-      <source *ngIf="wideBanner.video.webm" [src]="wideBanner.video.webm" type="video/webm">
-      <source [src]="wideBanner.video.mp4" type="video/mp4">
+      <source *ngIf="video.webm" [src]="video.webm" type="video/webm">
+      <source [src]="video.mp4" type="video/mp4">
     </video>
     <span class="pg_wide__shade" aria-hidden="true"></span>
 

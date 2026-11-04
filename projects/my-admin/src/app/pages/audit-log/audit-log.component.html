@@ -1,0 +1,79 @@
+<div class="admin-page">
+  <div class="page-breadcrumb">
+    Hệ thống <span class="sep">/</span> <span class="current">Nhật ký hoạt động</span>
+  </div>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Nhật ký hoạt động</h1>
+      <p class="page-subtitle">Thao tác của nhân viên và sự kiện bảo mật — do server ghi lại, không sửa được</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn-header" (click)="reload()"><i class="bi bi-arrow-clockwise"></i> Tải lại</button>
+      <button type="button" class="btn-header primary" (click)="exportExcel()"><i class="bi bi-file-earmark-excel"></i> Xuất Excel</button>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <button type="button" *ngFor="let l of levels" class="stat-card" [ngClass]="l.tone"
+      [class.active]="level() === l.key" (click)="setLevel(l.key)">
+      <span class="stat-label">{{ l.label }}</span>
+      <span class="stat-value">{{ count(l.key) }}</span>
+    </button>
+  </div>
+
+  <div class="filter-bar">
+    <div class="filter-left">
+      <div class="search-wrapper">
+        <input type="text" class="search-input" placeholder="Hành động, chi tiết, nhân viên..."
+          [ngModel]="search()" (ngModelChange)="search.set($event); page.set(1)">
+        <i class="bi bi-search search-icon"></i>
+      </div>
+      <select class="form-select filter-select" [ngModel]="module()" (ngModelChange)="module.set($event); page.set(1)">
+        <option value="ALL">Mọi phân hệ</option>
+        <option *ngFor="let m of modules()" [value]="m">{{ m }}</option>
+      </select>
+    </div>
+    <div class="actions-group">
+      <span class="selection-info">{{ filtered().length }} sự kiện</span>
+      <button type="button" class="action-btn" (click)="clearFilters()"
+        [disabled]="level() === 'ALL' && module() === 'ALL' && !search()">
+        <i class="bi bi-x-circle"></i> Xoá lọc
+      </button>
+    </div>
+  </div>
+
+  <app-mascot-loading *ngIf="loading()" message="Đang tải nhật ký…" [overlay]="false"></app-mascot-loading>
+
+  <div class="table-scrollable" *ngIf="!loading()">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Thời gian</th>
+          <th>Nhân viên</th>
+          <th>Phân hệ</th>
+          <th>Hành động</th>
+          <th>Chi tiết</th>
+          <th>IP</th>
+          <th>Mức độ</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let l of visible(); trackBy: trackById">
+          <td class="nowrap">{{ l.timestamp }}</td>
+          <td class="cell-strong">{{ l.actor }}</td>
+          <td><span class="tag">{{ l.module }}</span></td>
+          <td>{{ l.action }}</td>
+          <td class="detail" [title]="l.detail">{{ l.detail }}</td>
+          <td class="mono">{{ l.ip || '—' }}</td>
+          <td><span class="status-badge" [ngClass]="levelClass(l.level)">{{ levelLabel(l.level) }}</span></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="empty-state" *ngIf="filtered().length === 0">
+      <i class="bi bi-journal-x"></i>
+      Không có sự kiện nào khớp bộ lọc.
+    </div>
+    <app-pager [total]="filtered().length" [page]="page()" [pageSize]="pageSize" (pageChange)="page.set($event)"></app-pager>
+  </div>
+</div>

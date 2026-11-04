@@ -1,0 +1,47 @@
+<div class="modal-overlay cropper-overlay">
+  <div class="modal-box cropper-box">
+    <div class="modal-header">
+      <div>
+        <h3 class="modal-title">Cắt ảnh</h3>
+        <p class="cropper-sub">Kéo ảnh để chọn vùng hiển thị, phần trong khung là phần khách sẽ thấy.</p>
+      </div>
+      <button type="button" class="close-btn" (click)="cancelled.emit()">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <div
+        class="crop-frame"
+        [style.width.px]="frameWidth"
+        [style.height.px]="frameHeight"
+        (pointerdown)="onPointerDown($event)"
+        (pointermove)="onPointerMove($event)"
+        (pointerup)="onPointerUp()"
+        (pointercancel)="onPointerUp()">
+        <img
+          #sourceImage
+          [src]="objectUrl"
+          alt="Ảnh đang cắt"
+          draggable="false"
+          class="crop-image"
+          [style.width.px]="naturalWidth || null"
+          [style.height.px]="naturalHeight || null"
+          [style.transform]="'translate(' + x + 'px, ' + y + 'px) scale(' + scale + ')'"
+          (load)="onImageLoad(sourceImage)"
+          (error)="failed.emit()">
+      </div>
+
+      <label class="zoom-row" [style.max-width.px]="frameWidth">
+        <span>Phóng to</span>
+        <input type="range" class="form-range" min="1" [max]="maxZoom" step="0.01" [value]="zoom"
+          (input)="onZoomChange($any($event.target).value)">
+      </label>
+
+      <p *ngIf="hint" class="form-hint mx-auto" [style.max-width.px]="frameWidth">{{ hint }}</p>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn-cancel" (click)="cancelled.emit()">Huỷ</button>
+      <button type="button" class="btn-save" (click)="confirm()"><i class="bi bi-crop"></i> Dùng ảnh này</button>
+    </div>
+  </div>
+</div>

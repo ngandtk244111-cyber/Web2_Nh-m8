@@ -1,4 +1,5 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
+import { BannerService } from './banner.service';
 
 export interface HeroTickerItem {
   id: string;
@@ -9,6 +10,7 @@ export interface HeroTickerItem {
   subtitle: string;
   ctaLabel: string;
   ctaLink: string;
+  ctaQueryParams?: Record<string, string>;
   icon: string;
   image: string;
   /** Phần chữ trang trí kiểu banner khuyến mãi (chữ 3D, chữ viết tay, mascot). title/subtitle vẫn giữ
@@ -47,7 +49,9 @@ export const AUTOPLAY_INTERVAL_MS = 4500;
  */
 @Injectable({ providedIn: 'root' })
 export class HeroTickerService {
-  readonly items: HeroTickerItem[] = [
+  private bannerService = inject(BannerService);
+
+  private readonly baseItems: HeroTickerItem[] = [
     {
       id: 'room-3d',
       tickerLabel: 'Khám phá Phòng 3D',
@@ -149,6 +153,38 @@ export class HeroTickerService {
       },
     },
   ];
+
+  /** Nội dung gốc ghép với phần admin đã sửa; vị trí admin là `hero-<id>`. Số slide luôn cố định. */
+  private readonly mergedItems = computed<HeroTickerItem[]>(() => {
+    const overrides = this.bannerService.overrides();
+    return this.baseItems.map(item => {
+      const o = overrides[`hero-${item.id}`];
+      if (!o) return item;
+      const [line1, line2] = item.art.lines;
+      const cta = o.ctaLink ? this.bannerService.splitLink(o.ctaLink) : null;
+      return {
+        ...item,
+        tickerLabel: o.tickerLabel || item.tickerLabel,
+        title: o.title || item.title,
+        subtitle: o.subtitle || item.subtitle,
+        ctaLabel: o.ctaText || item.ctaLabel,
+        ctaLink: cta?.link || item.ctaLink,
+        ctaQueryParams: cta?.queryParams,
+        image: o.imageUrl || item.image,
+        art: {
+          ...item.art,
+          lines: [
+            { ...line1, text: o.line1 || line1.text },
+            { ...line2, text: o.line2 || line2.text },
+          ],
+        },
+      };
+    });
+  });
+
+  get items(): HeroTickerItem[] {
+    return this.mergedItems();
+  }
 
   readonly activeIndex = signal(0);
   readonly isPaused = signal(false);

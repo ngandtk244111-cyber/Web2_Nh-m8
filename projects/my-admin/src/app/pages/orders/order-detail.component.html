@@ -1,0 +1,256 @@
+<div class="admin-page">
+  <app-mascot-loading *ngIf="loading() && !order()" message="Đang tải đơn hàng…" [overlay]="false"></app-mascot-loading>
+
+  <div class="empty-state" *ngIf="!loading() && !order()">
+    <i class="bi bi-search"></i>
+    <p>Không tìm thấy đơn hàng.</p>
+    <button type="button" class="btn-header" (click)="goBack()"><i class="bi bi-arrow-return-left"></i> Quay lại danh sách</button>
+  </div>
+
+  <ng-container *ngIf="order() as o">
+    <div class="page-breadcrumb">
+      <a routerLink="/orders">Đơn hàng</a> <span class="sep">/</span> <span class="current">Chi tiết đơn {{ o.orderNumber }}</span>
+    </div>
+
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Đơn {{ o.orderNumber }}</h1>
+        <p class="page-subtitle">
+          Đặt lúc {{ dateLabel(o) }} ·
+          <span class="status-badge" [ngClass]="statusClass(o.status)">{{ statusLabel(o.status) }}</span>
+        </p>
+      </div>
+      <div class="header-actions">
+        <button type="button" class="btn-header" (click)="goBack()"><i class="bi bi-arrow-return-left"></i> Quay lại</button>
+        <button type="button" class="btn-header primary" (click)="printSlip(o)"><i class="bi bi-printer"></i> In phiếu giao</button>
+      </div>
+    </div>
+
+    <div class="layout-grid">
+      <!-- CỘT TRÁI -->
+      <div>
+        <div class="info-card">
+          <div class="status-steps">
+            <div class="step-item" [ngClass]="stepState('confirm')">
+              <div class="step-badge"><i class="bi" [ngClass]="stepIcon(stepState('confirm'), 'bi-telephone')"></i></div>
+              <div class="step-label">Xác nhận đơn</div>
+              <div class="step-sub">{{ o.status === 'CANCELLED' && needsPhoneConfirm(o) ? 'Huỷ trước khi xác nhận' : stepState('confirm') === 'done' ? (o.paymentMethod !== 'COD' ? 'Đã trả trước' : o.phoneConfirmedAt ? 'Đã gọi khách' : 'COD nhỏ, không cần gọi') : 'Chờ gọi khách' }}</div>
+              <span class="step-chip">{{ stepChip[stepState('confirm')] }}</span>
+            </div>
+            <div class="step-item" [ngClass]="stepState('ship')">
+              <div class="step-badge"><i class="bi" [ngClass]="stepIcon(stepState('ship'), 'bi-truck')"></i></div>
+              <div class="step-label">Vận chuyển</div>
+              <div class="step-sub">{{ o.status === 'DELIVERED' ? 'Đã giao' : o.status === 'SHIPPED' ? 'Đang giao' : o.status === 'IN_PRODUCTION' ? 'Đang in 3D' : o.status === 'CONFIRMED' ? 'Chờ tạo vận đơn' : o.status === 'RETURNED' ? 'Giao thất bại' : o.status === 'CANCELLED' ? 'Đơn đã huỷ' : 'Chưa bắt đầu' }}</div>
+              <span class="step-chip">{{ stepChip[stepState('ship')] }}</span>
+            </div>
+            <div class="step-item" [ngClass]="stepState('pay')">
+              <div class="step-badge"><i class="bi" [ngClass]="stepIcon(stepState('pay'), 'bi-credit-card')"></i></div>
+              <div class="step-label">Thanh toán</div>
+              <div class="step-sub">{{ payLabel(o) }}</div>
+              <span class="step-chip">{{ stepChip[stepState('pay')] }}</span>
+            </div>
+          </div>
+
+          <div class="notice-box warning" *ngIf="o.status === 'CANCELLED'">
+            <b>Đơn đã huỷ.</b> Lý do: {{ o.cancelReason || 'Không ghi lý do' }}
+          </div>
+          <div class="notice-box danger" *ngIf="o.status === 'RETURNED'">
+            <b>Giao thất bại — hàng hoàn về kho.</b> Lý do: {{ o.returnReason || 'Không ghi lý do' }}
+          </div>
+
+          <h3 class="section-title">Sản phẩm ({{ o.items.length }})</h3>
+          <div class="item-row" *ngFor="let item of o.items">
+            <img class="thumb" [src]="item.product.images[0]" [alt]="item.product.name">
+            <div class="item-info">
+              <div class="item-name">{{ item.product.name }}</div>
+              <div class="item-meta" *ngIf="customizationText(item)">{{ customizationText(item) }}</div>
+              <div class="item-meta" *ngIf="item.selectedCustomization?.customText">
+                <i class="bi bi-pencil"></i> Khắc chữ: “{{ item.selectedCustomization?.customText }}”
+              </div>
+              <span class="tag primary" *ngIf="item.product.productionType === 'PRINT_ON_DEMAND'"><i class="bi bi-printer"></i> In 3D theo yêu cầu</span>
+            </div>
+            <div class="item-qty">x{{ item.quantity }}</div>
+            <div class="item-price money">{{ item.totalPrice | vnd }}</div>
+          </div>
+
+          <div class="divider"></div>
+          <div class="totals">
+            <div class="info-row"><span class="label">Tạm tính</span><span class="value">{{ o.subtotal | vnd }}</span></div>
+            <div class="info-row" *ngIf="o.discount"><span class="label">Giảm giá</span><span class="value">-{{ o.discount | vnd }}</span></div>
+            <div class="info-row"><span class="label">Phí vận chuyển</span><span class="value">{{ o.shippingFee | vnd }}</span></div>
+            <div class="info-row grand"><span class="label">Tổng cộng</span><span class="value">{{ o.total | vnd }}</span></div>
+          </div>
+        </div>
+
+        <!-- Tiến độ in 3D -->
+        <div class="info-card" *ngIf="o.hasPrintOnDemandItems && !isFinal(o)">
+          <h3 class="section-title">
+            Tiến độ xưởng in 3D
+            <span class="tag primary" *ngIf="o.productionProgress">{{ o.productionProgress.percentage }}%</span>
+          </h3>
+          <div class="progress mb-3" *ngIf="o.productionProgress" role="progressbar">
+            <div class="progress-bar" [style.width.%]="o.productionProgress.percentage"></div>
+          </div>
+          <p class="text-muted-2 small" *ngIf="o.productionProgress">
+            {{ o.productionProgress.stepTitle }} — cập nhật {{ o.productionProgress.updatedAt }}
+          </p>
+          <div class="notice-box info" *ngIf="needsPhoneConfirm(o)">
+            Cần gọi xác nhận đơn COD với khách trước khi đưa vào xưởng in.
+          </div>
+          <div class="step-buttons">
+            <button type="button" *ngFor="let s of productionSteps" class="action-btn"
+              [class.active]="stepDone(o, s.step)"
+              [disabled]="!canEdit || busy() || o.status === 'SHIPPED' || needsPhoneConfirm(o)"
+              (click)="setProductionStep(o, s)">
+              <i class="bi" [ngClass]="stepDone(o, s.step) ? 'bi-check-circle-fill' : 'bi-circle'"></i> {{ s.label }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Vận đơn -->
+        <div class="info-card" *ngIf="o.shipment">
+          <h3 class="section-title">Vận đơn</h3>
+          <div class="info-row"><span class="label">Hãng vận chuyển</span><span class="value">{{ o.shipment.carrierName }}</span></div>
+          <div class="info-row"><span class="label">Mã vận đơn</span>
+            <span class="value">
+              <a *ngIf="o.shipment.trackingUrl; else noTrack" [href]="o.shipment.trackingUrl" target="_blank" rel="noopener">{{ o.shipment.trackingCode }}</a>
+              <ng-template #noTrack>{{ o.shipment.trackingCode || '—' }}</ng-template>
+            </span>
+          </div>
+          <div class="info-row"><span class="label">Phí trả hãng</span><span class="value">{{ o.shipment.fee | vnd }}</span></div>
+          <div class="info-row" *ngIf="o.shipment.note"><span class="label">Ghi chú</span><span class="value">{{ o.shipment.note }}</span></div>
+        </div>
+
+        <div class="info-card" *ngIf="!o.shipment && canShip(o) && canEdit">
+          <h3 class="section-title">Tạo vận đơn</h3>
+          <div *ngIf="!shippingOptions" class="text-muted-2 small">Đang tải hãng vận chuyển phù hợp…</div>
+          <ng-container *ngIf="shippingOptions as opts">
+            <div class="notice-box info">
+              {{ opts.totalKg }} kg · {{ opts.local ? 'Giao nội thành' : 'Giao liên tỉnh' }}
+              <span *ngIf="opts.bulky"> · Hàng cồng kềnh: {{ opts.bulkyItems.join(', ') }}</span>
+              <span *ngIf="opts.devMode"> · Chế độ thử nghiệm: mã vận đơn tự sinh</span>
+            </div>
+            <div class="carrier-list">
+              <label *ngFor="let c of opts.carriers" class="carrier" [class.selected]="shipForm.carrier === c.id" [class.unsuitable]="!c.suitable">
+                <input type="radio" name="carrier" [value]="c.id" [(ngModel)]="shipForm.carrier" [disabled]="!c.suitable">
+                <span>
+                  <b>{{ c.name }}</b> <span class="tag" [class.success]="c.suitable">{{ c.scope === 'LOCAL' ? 'Nội thành' : 'Toàn quốc' }}</span>
+                  <span class="d-block small text-muted-2">{{ c.suitable ? c.description : c.reason }}</span>
+                </span>
+              </label>
+            </div>
+            <div class="row g-2 mt-1">
+              <div class="col-md-6">
+                <label class="form-label">Mã vận đơn</label>
+                <input class="form-control" [(ngModel)]="shipForm.trackingCode" placeholder="Bỏ trống nếu hãng tự cấp">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Phí trả hãng (đ)</label>
+                <input type="number" min="0" class="form-control" [(ngModel)]="shipForm.fee">
+              </div>
+              <div class="col-12">
+                <label class="form-label">Ghi chú cho shipper</label>
+                <input class="form-control" [(ngModel)]="shipForm.note" placeholder="VD: gọi trước khi giao">
+              </div>
+            </div>
+            <div class="text-end mt-3">
+              <button type="button" class="btn-save" [disabled]="busy() || !shipForm.carrier" (click)="submitShipment(o)">
+                <i class="bi bi-truck"></i> Tạo vận đơn & chuyển sang Đang giao
+              </button>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+
+      <!-- CỘT PHẢI -->
+      <div>
+        <div class="info-card">
+          <h3 class="section-title">
+            Khách hàng
+            <a *ngIf="customerLink as link" [routerLink]="link" class="action-btn sm">Xem khách</a>
+          </h3>
+          <div class="info-row"><span class="label">Họ tên</span><span class="value">{{ o.shippingAddress.fullName }}</span></div>
+          <div class="info-row"><span class="label">Điện thoại</span><span class="value"><a [href]="'tel:' + o.shippingAddress.phone">{{ o.shippingAddress.phone }}</a></span></div>
+          <div class="info-row" *ngIf="o.shippingAddress.email"><span class="label">Email</span><span class="value">{{ o.shippingAddress.email }}</span></div>
+          <div class="info-row"><span class="label">Địa chỉ</span><span class="value">{{ o.shippingAddress.street }}, {{ o.shippingAddress.district }}, {{ o.shippingAddress.city }}</span></div>
+          <div class="info-row" *ngIf="o.shippingAddress.notes || o.notes"><span class="label">Ghi chú</span><span class="value">{{ o.shippingAddress.notes || o.notes }}</span></div>
+          <div class="info-row"><span class="label">Tài khoản</span><span class="value">{{ o.userId ? 'Đã đăng ký' : 'Khách vãng lai' }}</span></div>
+          <div class="notice-box danger mt-2 mb-0" *ngIf="previousReturns() > 0">
+            <i class="bi bi-exclamation-triangle"></i> SĐT này đã có {{ previousReturns() }} đơn giao thất bại trước đây.
+          </div>
+        </div>
+
+        <div class="info-card">
+          <h3 class="section-title">Thanh toán</h3>
+          <div class="info-row"><span class="label">Hình thức</span><span class="value">{{ methodLabel(o.paymentMethod) }}</span></div>
+          <div class="info-row"><span class="label">Trạng thái</span><span class="value"><span class="status-badge" [ngClass]="payClass(o)">{{ payLabel(o) }}</span></span></div>
+          <div class="info-row" *ngIf="o.transferReportedAt && o.paymentStatus !== 'PAID'">
+            <span class="label">Khách báo CK lúc</span><span class="value">{{ o.transferReportedAt | date:'dd/MM/yyyy HH:mm' }}</span>
+          </div>
+          <div class="pay-actions" *ngIf="canEdit && o.status !== 'CANCELLED' && o.status !== 'RETURNED'">
+            <button type="button" class="action-btn success" *ngIf="o.paymentStatus !== 'PAID'" [disabled]="busy()" (click)="setPaid(o, true)">
+              <i class="bi bi-cash-coin"></i> {{ o.paymentMethod === 'COD' && o.status === 'DELIVERED' ? 'Đã đối soát COD' : 'Xác nhận đã nhận tiền' }}
+            </button>
+            <button type="button" class="action-btn danger" *ngIf="o.paymentStatus === 'PAID'" [disabled]="busy()" (click)="setPaid(o, false)">
+              <i class="bi bi-arrow-counterclockwise"></i> Chuyển về chưa thanh toán
+            </button>
+          </div>
+        </div>
+
+        <!-- Thao tác xử lý đơn -->
+        <div class="info-card" *ngIf="canEdit && !isFinal(o)">
+          <h3 class="section-title">Xử lý đơn</h3>
+
+          <ng-container *ngIf="o.status === 'PENDING' && needsPhoneConfirm(o)">
+            <p class="small text-muted-2 mb-2">Gọi {{ o.shippingAddress.phone }} để xác nhận đơn COD trước khi chuẩn bị hàng.</p>
+            <div class="stack">
+              <button type="button" class="btn-save w-100 justify-content-center" [disabled]="busy()" (click)="confirmPhone(o)">
+                <i class="bi bi-telephone-check"></i> Khách đã xác nhận đơn
+              </button>
+              <button type="button" class="btn-cancel w-100 justify-content-center" (click)="cannotReach()">
+                <i class="bi bi-telephone-x"></i> Không liên lạc được
+              </button>
+            </div>
+          </ng-container>
+
+          <div class="stack" *ngIf="o.status === 'SHIPPED'">
+            <button type="button" class="btn-save w-100 justify-content-center" [disabled]="busy()" (click)="markDelivered(o)">
+              <i class="bi bi-check2-circle"></i> Giao thành công
+            </button>
+            <button type="button" class="btn-cancel w-100 justify-content-center" (click)="returning = true; returnReason = returnReasons[0]">
+              <i class="bi bi-box-arrow-in-left"></i> Giao thất bại / hoàn hàng
+            </button>
+          </div>
+
+          <div class="reason-box" *ngIf="returning">
+            <label class="form-label">Lý do giao thất bại</label>
+            <select class="form-select mb-2" [(ngModel)]="returnReason">
+              <option *ngFor="let r of returnReasons" [value]="r">{{ r }}</option>
+            </select>
+            <div class="d-flex gap-2 justify-content-end">
+              <button type="button" class="btn-cancel" (click)="returning = false">Đóng</button>
+              <button type="button" class="btn-save danger" [disabled]="busy()" (click)="confirmReturn(o)">Xác nhận hoàn hàng</button>
+            </div>
+          </div>
+
+          <ng-container *ngIf="o.status !== 'SHIPPED'">
+            <div class="divider" *ngIf="o.status === 'PENDING' && needsPhoneConfirm(o)"></div>
+            <button type="button" class="action-btn danger w-100 justify-content-center" *ngIf="!cancelling" (click)="cancelling = true; cancelReason = cancelReason || cancelReasons[0]">
+              <i class="bi bi-x-octagon"></i> Huỷ đơn
+            </button>
+            <div class="reason-box" *ngIf="cancelling">
+              <label class="form-label">Lý do huỷ (khách sẽ thấy lý do này)</label>
+              <select class="form-select mb-2" [(ngModel)]="cancelReason">
+                <option *ngFor="let r of cancelReasons" [value]="r">{{ r }}</option>
+              </select>
+              <div class="d-flex gap-2 justify-content-end">
+                <button type="button" class="btn-cancel" (click)="cancelling = false">Đóng</button>
+                <button type="button" class="btn-save danger" [disabled]="busy()" (click)="confirmCancel(o)">Huỷ đơn</button>
+              </div>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</div>

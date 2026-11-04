@@ -1,13 +1,13 @@
 const express = require('express');
 const { sendError } = require('../utils/http-error');
 const ChatMessage = require('../models/ChatMessage');
-const { requireAdminId } = require('../middleware/auth');
+const { requirePermission } = require('../middleware/auth');
 
 const router = express.Router();
 
 // Admin — danh sách cuộc chat, mới nhất lên đầu, kèm tin cuối và số tin khách chưa đọc.
 // Tên/SĐT lấy bằng $max: null đứng trước chuỗi khi so sánh nên chỉ cần 1 tin có thông tin là đủ.
-router.get('/admin/sessions', requireAdminId, async (_req, res) => {
+router.get('/admin/sessions', requirePermission('customers.view'), async (_req, res) => {
   try {
     const sessions = await ChatMessage.aggregate([
       { $sort: { createdAt: 1 } },
@@ -37,7 +37,7 @@ router.get('/admin/sessions', requireAdminId, async (_req, res) => {
 });
 
 // Admin — đánh dấu đã đọc toàn bộ tin của khách trong 1 cuộc chat.
-router.post('/admin/sessions/:sessionId/read', requireAdminId, async (req, res) => {
+router.post('/admin/sessions/:sessionId/read', requirePermission('customers.view'), async (req, res) => {
   try {
     await ChatMessage.updateMany({ sessionId: req.params.sessionId, sender: 'customer', readByStaff: { $ne: true } }, { readByStaff: true });
     res.json({ success: true });

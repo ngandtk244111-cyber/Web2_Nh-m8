@@ -1,23 +1,25 @@
-import { Component, HostListener, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, HostListener, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { timeout } from 'rxjs';
 import { AppIconComponent } from '../icon/icon.component';
-
-export interface PopupPoster {
-  image: string;
-  alt: string;
-  link: string;
-  queryParams?: Record<string, string>;
-}
+import { BannerOverrides, BannerService } from '../../core/services/banner.service';
+import { PromoPoster, PROMO_POSTERS, mergePosters } from '../promo-cards/promo-cards.component';
 
 /** Chờ một nhịp sau khi vào trang để trang kịp hiện trước khi popup che lên. */
 const OPEN_DELAY_MS = 1200;
 const CLOSE_ANIMATION_MS = 250;
 const AUTO_SLIDE_MS = 4000;
+/** Server chậm thì không để popup bật lên muộn lúc khách đã đọc trang. */
+const LOAD_TIMEOUT_MS = 5000;
 /** Chỉ hiện 1 lần mỗi phiên trình duyệt. */
 const SEEN_KEY = 'lumea_poster_popup_seen';
 
-/** Popup thông báo ưu đãi khi vừa vào web: lật qua các poster (tự chuyển, có mũi tên + chấm), bấm poster để mở trang. */
+/**
+ * Popup thông báo ưu đãi khi vừa vào web: lật qua các poster (tự chuyển, có mũi tên + chấm), bấm poster để mở trang.
+ * Admin (vị trí "popup-home"): tắt hẳn popup, hoặc đặt ảnh riêng -> hiện thành poster đầu tiên.
+ */
 @Component({
   selector: 'app-poster-popup',
   standalone: true,
@@ -26,12 +28,11 @@ const SEEN_KEY = 'lumea_poster_popup_seen';
   styleUrl: './poster-popup.component.css'
 })
 export class PosterPopupComponent implements OnInit, OnDestroy {
-  readonly posters: PopupPoster[] = [
-    { image: 'assets/promo-cards/xa-kho.jpg', alt: 'Xả kho giá sốc — nhà xinh khỏi lo giá', link: '/catalog', queryParams: { sale: '1' } },
-    { image: 'assets/promo-cards/deal-thang-11.jpg', alt: 'Tháng 11 — Deal xịn mỗi ngày, nhà xinh quá', link: '/flash-sale' },
-    { image: 'assets/promo-cards/phong-3d.jpg', alt: 'Khám phá Phòng 3D — giảm ngay đến 40%', link: '/shop-the-room' },
-    { image: 'assets/promo-cards/tham-quan-phong-3d.jpg', alt: 'Tham quan phòng 3D — ngắm trước, mua sau, chạm vào món đồ để mua', link: '/shop-the-room' },
-  ];
+  private bannerService = inject(BannerService);
+  private router = inject(Router);
+  private destroyRef = inject(DestroyRef);
+
+  posters: PromoPoster[] = PROMO_POSTERS;
 
   readonly visible = signal(false);
   readonly closing = signal(false);
@@ -43,10 +44,29 @@ export class PosterPopupComponent implements OnInit, OnDestroy {
   private paused = false;
   private touchX: number | null = null;
 
-  constructor(private router: Router) {}
-
   ngOnInit(): void {
     if (this.hasSeen()) return;
+    this.bannerService.loaded$
+      .pipe(timeout(LOAD_TIMEOUT_MS), takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: banners => this.scheduleOpen(banners),
+        error: () => this.scheduleOpen({}),
+      });
+  }
+
+  private scheduleOpen(banners: BannerOverrides): void {
+    const o = banners['popup-home'];
+    if (o?.active === false) return;
+    const posters = mergePosters(banners, this.bannerService);
+    if (o?.imageUrl) {
+      posters.unshift({
+        id: 'popup-home',
+        image: o.imageUrl,
+        alt: o.title || 'Ưu đãi Luméa',
+        ...this.bannerService.splitLink(o.ctaLink || '/catalog'),
+      });
+    }
+    this.posters = posters;
     this.openTimer = setTimeout(() => {
       this.visible.set(true);
       document.body.style.overflow = 'hidden';
@@ -94,7 +114,7 @@ export class PosterPopupComponent implements OnInit, OnDestroy {
     this.paused = on;
   }
 
-  open(p: PopupPoster): void {
+  open(p: PromoPoster): void {
     this.close();
     this.router.navigate([p.link], { queryParams: p.queryParams });
   }

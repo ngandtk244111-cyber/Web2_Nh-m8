@@ -1,0 +1,107 @@
+<div class="admin-page">
+  <div class="page-breadcrumb">
+    Nội dung <span class="sep">/</span> <span class="current">Cộng đồng</span>
+  </div>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Kiểm duyệt cộng đồng</h1>
+      <p class="page-subtitle">Bài khách đăng ở trang Cộng đồng: bài mới hôm nay, bài bị bộ lọc chặn (có thể chặn nhầm), bài đã ẩn</p>
+    </div>
+    <div class="header-actions">
+      <a class="btn-header" [href]="clientAppUrl + '/community'" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i> Xem trang Cộng đồng</a>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <button type="button" *ngFor="let f of filters" class="stat-card" [ngClass]="f.tone"
+      [class.active]="filter() === f.key" (click)="setFilter(f.key)">
+      <span class="stat-label">{{ f.label }}</span>
+      <span class="stat-value">{{ count(f.key) }}</span>
+    </button>
+  </div>
+
+  <div class="filter-bar">
+    <div class="filter-left">
+      <div class="search-wrapper">
+        <input type="text" class="search-input" placeholder="Tiêu đề, nội dung hoặc người đăng..." [ngModel]="search()" (ngModelChange)="onSearch($event)">
+        <i class="bi bi-search search-icon"></i>
+      </div>
+    </div>
+    <span class="selection-info">{{ filtered().length }} bài</span>
+  </div>
+
+  <div class="post-grid">
+    <div class="post-card" *ngFor="let p of visible()" [class.is-off]="p.status === 'HIDDEN' || p.status === 'REJECTED'">
+      <div class="post-image">
+        <img [src]="p.imageUrl" [alt]="p.title" loading="lazy">
+        <span class="tag warning pick-tag" *ngIf="p.isStaffPick"><i class="bi bi-award-fill"></i> Staff Pick</span>
+      </div>
+      <div class="post-body">
+        <div class="post-author">
+          <img class="avatar" [src]="p.author.avatar" alt="" *ngIf="p.author.avatar">
+          <div>
+            <div class="cell-strong">{{ p.author.name || 'Khách hàng' }}</div>
+            <div class="cell-sub">{{ (p.postedAt || p.createdAt) | date:'dd/MM/yyyy HH:mm' }}</div>
+          </div>
+        </div>
+        <div class="post-title">{{ p.title }}</div>
+        <p class="post-caption" *ngIf="p.caption">{{ p.caption }}</p>
+        <div class="post-meta">
+          <span class="status-badge" [ngClass]="statusView(p).cls">{{ statusView(p).label }}</span>
+          <span class="cell-sub"><i class="bi bi-heart"></i> {{ p.likesCount }} · <i class="bi bi-chat"></i> {{ p.commentsCount }}</span>
+        </div>
+        <div class="notice-box danger reason" *ngIf="p.moderationReason && p.status !== 'PUBLISHED'">
+          {{ p.status === 'REJECTED' ? 'Bộ lọc chặn: ' : 'Lý do ẩn: ' }}{{ p.moderationReason }}
+        </div>
+
+        <div class="post-actions" *ngIf="canEdit || adminAuth.can('content.delete')">
+          <ng-container *ngIf="canEdit">
+            <button type="button" class="action-btn sm success" *ngIf="p.status === 'REJECTED' || p.status === 'HIDDEN'" [disabled]="busyId === p.id" (click)="publish(p)">
+              <i class="bi bi-check2-circle"></i> {{ p.status === 'REJECTED' ? 'Duyệt bài' : 'Hiện lại' }}
+            </button>
+            <button type="button" class="action-btn sm" *ngIf="(p.status || 'PUBLISHED') === 'PUBLISHED'" [disabled]="busyId === p.id" (click)="toggleStaffPick(p)">
+              <i class="bi" [ngClass]="p.isStaffPick ? 'bi-award-fill' : 'bi-award'"></i> {{ p.isStaffPick ? 'Bỏ Staff Pick' : 'Staff Pick' }}
+            </button>
+            <button type="button" class="action-btn sm danger" *ngIf="(p.status || 'PUBLISHED') === 'PUBLISHED'" [disabled]="busyId === p.id" (click)="openHide(p)">
+              <i class="bi bi-eye-slash"></i> Ẩn bài
+            </button>
+          </ng-container>
+          <button type="button" class="icon-btn danger ms-auto" title="Xoá vĩnh viễn" *ngIf="adminAuth.can('content.delete')" (click)="remove(p)">
+            <i class="bi bi-trash"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="empty-state table-scrollable" *ngIf="filtered().length === 0">
+    <i class="bi bi-camera"></i>
+    Không có bài đăng nào trong mục này.
+  </div>
+  <div class="table-scrollable mt-3" *ngIf="filtered().length > pageSize">
+    <app-pager [total]="filtered().length" [page]="page()" [pageSize]="pageSize" (pageChange)="page.set($event)"></app-pager>
+  </div>
+</div>
+
+<!-- Ẩn bài -->
+<div class="modal-overlay" *ngIf="hidingPost as post" (click)="hidingPost = null">
+  <div class="modal-box sm" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">Ẩn bài đăng</h3>
+      <button type="button" class="close-btn" (click)="hidingPost = null">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p class="small mb-2">Bài <b>“{{ post.title }}”</b> sẽ bị gỡ khỏi Cộng đồng và người đăng nhận thông báo kèm lý do.</p>
+      <div class="chip-tabs">
+        <button type="button" *ngFor="let r of hideReasonPresets" class="chip-tab" [class.active]="hideReason === r" (click)="hideReason = r">{{ r }}</button>
+      </div>
+      <label class="form-label">Lý do</label>
+      <textarea class="form-control" rows="2" [(ngModel)]="hideReason"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn-cancel" (click)="hidingPost = null">Huỷ</button>
+      <button type="button" class="btn-save danger" [disabled]="busyId === post.id" (click)="confirmHide()"><i class="bi bi-eye-slash"></i> Ẩn bài</button>
+    </div>
+  </div>
+</div>

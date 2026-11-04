@@ -1,0 +1,18 @@
+.nowrap {
+  white-space: nowrap;
+}
+
+.detail {
+  max-width: 380px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text-secondary);
+}
+
+.mono {
+  font-family: var(--font-family-base);
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+}

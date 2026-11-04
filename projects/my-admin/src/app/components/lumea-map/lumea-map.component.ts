@@ -14,7 +14,7 @@ import {
 import { CommonModule } from '@angular/common';
 import * as L from 'leaflet';
 import { Order } from '../../core/models/order.model';
-import { AppIconComponent } from '../icon/icon.component';
+
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
 import { VnProvince, findProvince } from './vn-provinces';
 
@@ -60,6 +60,7 @@ const COLOR = {
   orange: '#B7485B',
   espresso: '#1F1712',
   cream: '#FBF8F1',
+  green: '#2D6A4F',
 };
 
 /**
@@ -71,8 +72,9 @@ const COLOR = {
 @Component({
   selector: 'app-lumea-map',
   standalone: true,
-  imports: [CommonModule, AppIconComponent, VndPipe],
+  imports: [CommonModule, VndPipe],
   templateUrl: './lumea-map.component.html',
+  styleUrl: './lumea-map.component.css',
 })
 export class LumeaMapComponent implements AfterViewInit, OnChanges, OnDestroy {
   @Input() orders: Order[] = [];
@@ -106,6 +108,11 @@ export class LumeaMapComponent implements AfterViewInit, OnChanges, OnDestroy {
     if (this.selectedStat) {
       this.selectedStat = this.provinceStats.find(s => s.province === this.selectedStat!.province) || null;
     }
+    // Dữ liệu về lại (vd. lưu nhà cung cấp) tạo object mới → trỏ lại điểm đang chọn
+    if (this.selectedSite) {
+      const prev = this.selectedSite;
+      this.selectedSite = this.sites.find(s => s.kind === prev.kind && s.name === prev.name) || null;
+    }
     this.renderMarkers();
   }
 
@@ -113,7 +120,12 @@ export class LumeaMapComponent implements AfterViewInit, OnChanges, OnDestroy {
     this.zone.runOutsideAngular(() => {
       this.map = L.map(this.mapHost.nativeElement, {
         scrollWheelZoom: false,
-        zoomSnap: 0.25,
+        // Zoom nguyên: zoom lẻ (0.25) bắt Leaflet co giãn ảnh tile → chữ và đường biên bị mờ
+        zoomSnap: 1,
+        // Như my-admin-vita: không cho thu nhỏ ra cả thế giới hay kéo lạc khỏi VN
+        minZoom: 5,
+        maxBounds: [[4, 97], [27, 115]],
+        maxBoundsViscosity: 0.8,
         attributionControl: true,
       });
       this.map.fitBounds(VN_BOUNDS);
@@ -183,7 +195,8 @@ export class LumeaMapComponent implements AfterViewInit, OnChanges, OnDestroy {
     let unmatched = 0;
     for (const o of this.orders) {
       const a = o.shippingAddress;
-      const province = findProvince(`${a?.city || ''} ${a?.district || ''}`);
+      // Ưu tiên ô tỉnh/thành; chỉ dò thêm quận/huyện khi ô tỉnh nhập không nhận ra
+      const province = findProvince(a?.city || '') || findProvince(`${a?.city || ''} ${a?.district || ''}`);
       if (!province) { unmatched++; continue; }
       const stat = byProvince.get(province) || { province, orders: [], revenue: 0, printCount: 0 };
       stat.orders.push(o);
@@ -270,7 +283,7 @@ export class LumeaMapComponent implements AfterViewInit, OnChanges, OnDestroy {
             radius: isShowroom ? 11 : 8,
             color: selected ? COLOR.espresso : COLOR.cream,
             weight: selected ? 3 : 2,
-            fillColor: isShowroom ? COLOR.rust : COLOR.orange,
+            fillColor: isShowroom ? COLOR.rust : COLOR.green,
             fillOpacity: 1,
           })
             .bindTooltip(`<strong>${esc(site.name)}</strong><br>${esc(site.detail)}`, { className: 'lumea-map-tip', direction: 'top' })

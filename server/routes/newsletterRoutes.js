@@ -2,16 +2,16 @@ const express = require('express');
 const { sendError } = require('../utils/http-error');
 const NewsletterSubscriber = require('../models/NewsletterSubscriber');
 const { awardVoucher } = require('../utils/vouchers');
-const { validId } = require('../middleware/auth');
+const { attachUserId } = require('../middleware/auth');
 
 const router = express.Router();
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-router.post('/subscribe', async (req, res) => {
+router.post('/subscribe', attachUserId, async (req, res) => {
   try {
     const { email } = req.body;
-    const userId = validId(req.body.userId);
+    const { userId } = req;
     if (!email || !EMAIL_REGEX.test(email)) {
       return res.status(400).json({ success: false, error: 'Email không hợp lệ' });
     }

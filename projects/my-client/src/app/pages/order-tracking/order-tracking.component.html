@@ -16,9 +16,16 @@
         <input 
           type="text" 
           [(ngModel)]="searchCode" 
-          placeholder="Nhập mã đơn hàng (Ví dụ: ORD-982104)..." 
-          class="flex-1 text-xs sm:text-sm p-2 outline-none uppercase placeholder:normal-case font-mono bg-transparent text-neutral-900 placeholder:text-neutral-500">
-        <button 
+          placeholder="Mã đơn hàng (VD: ORD-982104)"
+          class="flex-1 min-w-0 text-xs sm:text-sm p-2 outline-none uppercase placeholder:normal-case font-mono bg-transparent text-neutral-900 placeholder:text-neutral-500">
+        <input
+          type="tel"
+          [(ngModel)]="searchPhone"
+          (keyup.enter)="searchOrder()"
+          placeholder="SĐT nhận hàng"
+          aria-label="Số điện thoại nhận hàng"
+          class="w-28 sm:w-36 text-xs sm:text-sm p-2 outline-none border-l border-neutral-200 bg-transparent text-neutral-900 placeholder:text-neutral-500">
+        <button
           (click)="searchOrder()"
           class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-white font-extrabold text-xs shadow-md transition">
           Tra cứu
@@ -27,7 +34,7 @@
 
       <!-- Not found message -->
       <div *ngIf="notFound" class="max-w-lg mx-auto text-center text-sm text-neutral-600 bg-[#F6F5F2] border border-neutral-200 rounded-2xl p-4">
-        Không tìm thấy đơn hàng với mã này. Vui lòng kiểm tra lại mã đơn hàng.
+        Không tìm thấy đơn hàng. Vui lòng kiểm tra lại mã đơn và số điện thoại nhận hàng.
       </div>
 
       <!-- Active Order Details -->

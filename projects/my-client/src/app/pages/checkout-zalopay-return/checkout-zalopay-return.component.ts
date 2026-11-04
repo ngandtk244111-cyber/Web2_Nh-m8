@@ -26,7 +26,7 @@ export class CheckoutZalopayReturnComponent implements OnInit {
 
   /** Hoá đơn PDF của đơn vừa thanh toán (mở ở tab mới). */
   invoiceLink(): string {
-    return invoiceUrl(this.orderNumber, this.authService.currentUser()?._id);
+    return invoiceUrl(this.orderNumber, this.authService.token);
   }
 
   constructor(private route: ActivatedRoute) {}

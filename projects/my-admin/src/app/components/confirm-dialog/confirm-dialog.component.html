@@ -1,0 +1,17 @@
+<div class="modal-overlay" *ngIf="dialog.state() as d" (click)="dialog.close(false)">
+  <div class="modal-box sm cd-box" role="alertdialog" aria-modal="true" [attr.aria-label]="d.title" (click)="$event.stopPropagation()">
+    <div class="cd-body">
+      <h5 class="cd-title" [class.danger]="d.danger">
+        <i class="bi" [ngClass]="d.icon || (d.danger ? 'bi-exclamation-triangle-fill' : 'bi-question-circle')"></i>
+        {{ d.title }}
+      </h5>
+      <p class="cd-message" *ngIf="d.message">{{ d.message }}</p>
+    </div>
+    <div class="cd-actions">
+      <button type="button" class="btn-cancel" (click)="dialog.close(false)">{{ d.cancelLabel || 'Huỷ' }}</button>
+      <button type="button" class="btn-save" [class.danger]="d.danger" (click)="dialog.close(true)">
+        {{ d.confirmLabel || 'Đồng ý' }}
+      </button>
+    </div>
+  </div>
+</div>

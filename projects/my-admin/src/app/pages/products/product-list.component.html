@@ -1,0 +1,328 @@
+<div class="admin-page">
+  <div class="page-breadcrumb">
+    Sản phẩm & kho <span class="sep">/</span> <span class="current">Sản phẩm</span>
+  </div>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Quản lý sản phẩm</h1>
+      <p class="page-subtitle">Sản phẩm có sẵn và sản phẩm in 3D tuỳ biến đang bán trên cửa hàng</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn-header" *ngIf="adminAuth.can('products.create')" (click)="openImport()">
+        <i class="bi bi-upload"></i> Nhập Excel
+      </button>
+      <button type="button" class="btn-header" (click)="exportExcel()"><i class="bi bi-file-earmark-excel"></i> Xuất Excel</button>
+      <a *ngIf="adminAuth.can('products.create')" routerLink="/products/create" class="btn-add-action text-decoration-none">
+        <i class="bi bi-plus-lg"></i> Thêm sản phẩm
+      </a>
+    </div>
+  </div>
+
+  <div class="chip-tabs">
+    <a routerLink="/products" class="chip-tab active">Sản phẩm</a>
+    <a routerLink="/categories" class="chip-tab">Danh mục</a>
+  </div>
+
+  <div class="stats-grid">
+    <button type="button" *ngFor="let f of filters" class="stat-card" [ngClass]="f.tone"
+      [class.active]="filter() === f.key" (click)="setFilter(f.key)">
+      <span class="stat-label">{{ f.label }}</span>
+      <span class="stat-value">{{ count(f.key) }}</span>
+    </button>
+  </div>
+
+  <div class="filter-bar">
+    <div class="filter-left">
+      <div class="search-wrapper">
+        <input type="text" class="search-input" placeholder="Tên, mã hoặc danh mục..."
+          [ngModel]="search()" (ngModelChange)="onSearch($event)">
+        <i class="bi bi-search search-icon"></i>
+      </div>
+      <select class="form-select filter-select" [ngModel]="category()" (ngModelChange)="category.set($event); page.set(1)">
+        <option value="ALL">Mọi danh mục</option>
+        <optgroup *ngFor="let s of sections" [label]="s.section">
+          <option *ngFor="let o of s.options" [value]="o.value">{{ o.label }}</option>
+        </optgroup>
+      </select>
+    </div>
+    <div class="actions-group">
+      <span class="selection-info">{{ filtered().length }} sản phẩm</span>
+      <button type="button" class="action-btn" (click)="clearFilters()" [disabled]="!search() && category() === 'ALL'">
+        <i class="bi bi-x-circle"></i> Xoá lọc
+      </button>
+    </div>
+  </div>
+
+  <app-mascot-loading *ngIf="products().length === 0" message="Đang tải danh sách sản phẩm…" [overlay]="false"></app-mascot-loading>
+
+  <div class="table-scrollable" *ngIf="products().length > 0">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Sản phẩm</th>
+          <th>Danh mục</th>
+          <th>Loại</th>
+          <th class="text-right">Giá bán</th>
+          <th class="text-right">Tồn kho</th>
+          <th class="text-center">Đánh giá</th>
+          <th class="text-right">Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let p of visible(); trackBy: trackById" class="clickable" (click)="openEdit(p)">
+          <td>
+            <div class="cell-media">
+              <img class="thumb" [src]="p.images[0]" [alt]="p.name" loading="lazy">
+              <div>
+                <span class="cell-strong">{{ p.name }}</span>
+                <span class="cell-sub">{{ p.id }}<ng-container *ngIf="p.badge"> · {{ p.badge }}</ng-container></span>
+              </div>
+            </div>
+          </td>
+          <td>{{ p.categoryName }}</td>
+          <td>
+            <span class="tag" [class.warning]="p.productionType === 'PRINT_ON_DEMAND'">{{ typeLabel(p.productionType) }}</span>
+            <span class="cell-sub" *ngIf="p.customizable"><i class="bi bi-palette"></i> Cho tuỳ biến</span>
+          </td>
+          <td class="text-right">
+            <span class="money">{{ p.basePrice | vnd }}</span>
+            <span class="cell-sub price-old" *ngIf="p.originalPrice && p.originalPrice > p.basePrice">{{ p.originalPrice | vnd }}</span>
+          </td>
+          <td class="text-right">
+            <span class="status-badge" [ngClass]="stockClass(p)">
+              {{ p.productionType === 'READY_STOCK' ? p.inStock : 'In theo đơn' }}
+            </span>
+          </td>
+          <td class="text-center">
+            <i class="bi bi-star-fill text-warning"></i> {{ p.rating | number:'1.1-1' }}
+            <span class="cell-sub">{{ p.reviewCount }} đánh giá</span>
+          </td>
+          <td (click)="$event.stopPropagation()">
+            <div class="row-actions">
+              <a class="icon-btn" [href]="clientAppUrl + '/product/' + p.slug" target="_blank" rel="noopener" title="Xem trên cửa hàng">
+                <i class="bi bi-box-arrow-up-right"></i>
+              </a>
+              <button type="button" class="icon-btn" (click)="openEdit(p)" [title]="adminAuth.can('products.edit') ? 'Sửa' : 'Xem'">
+                <i class="bi" [ngClass]="adminAuth.can('products.edit') ? 'bi-pencil' : 'bi-eye'"></i>
+              </button>
+              <button type="button" class="icon-btn danger" *ngIf="adminAuth.can('products.delete')" (click)="remove(p)" title="Xoá">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="empty-state" *ngIf="filtered().length === 0">
+      <i class="bi bi-box-seam"></i>
+      Không có sản phẩm nào khớp bộ lọc.
+    </div>
+    <app-pager [total]="filtered().length" [page]="page()" [pageSize]="pageSize" (pageChange)="page.set($event)"></app-pager>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showImport" (click)="closeImport()">
+  <div class="modal-box lg" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">
+        <ng-container *ngIf="!draft">Nhập sản phẩm từ Excel</ng-container>
+        <ng-container *ngIf="draft">Duyệt dòng {{ reviewLine }} <span class="title-sub">({{ reviewIndex + 1 }}/{{ importRows.length }})</span></ng-container>
+      </h3>
+      <button type="button" class="close-btn" [disabled]="importing" (click)="closeImport()">&times;</button>
+    </div>
+
+    <!-- ===== Danh sách ===== -->
+    <div class="modal-body" *ngIf="!draft">
+      <ol class="import-steps">
+        <li>
+          Tải <button type="button" class="link-btn" (click)="downloadTemplate()"><i class="bi bi-download"></i> file mẫu</button>
+          rồi điền mỗi sản phẩm một dòng. Sheet "Giá trị hợp lệ" liệt kê danh mục, loại sản xuất và nhãn được chấp nhận.
+        </li>
+        <li>Ảnh ghi bằng đường dẫn URL. Slug để trống sẽ tự sinh theo tên; tồn kho để trống là 0.</li>
+        <li>Bấm vào từng dòng để xem chi tiết, sửa hoặc xoá trước khi nhập.</li>
+      </ol>
+
+      <label class="import-drop">
+        <input type="file" accept=".xlsx,.xls,.csv" hidden (change)="onImportFile($event)">
+        <i class="bi bi-file-earmark-spreadsheet"></i>
+        <span *ngIf="!importFileName">Chọn file Excel (.xlsx, .xls, .csv)</span>
+        <span *ngIf="importFileName"><strong>{{ importFileName }}</strong> · bấm để chọn file khác</span>
+      </label>
+
+      <ng-container *ngIf="importRows.length">
+        <div class="import-summary">
+          <span class="tag success">{{ importValid.length }} dòng hợp lệ</span>
+          <span class="tag danger" *ngIf="importErrorCount">{{ importErrorCount }} dòng lỗi — sửa hoặc xoá, nếu không sẽ bị bỏ qua</span>
+        </div>
+        <div class="table-scrollable import-preview">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Dòng</th>
+                <th>Sản phẩm</th>
+                <th>Danh mục</th>
+                <th class="text-right">Giá bán</th>
+                <th class="text-right">Tồn kho</th>
+                <th>Kiểm tra</th>
+                <th class="text-right">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let r of importRows" class="clickable" [class.import-row-error]="r.errors.length" (click)="openReview(r)">
+                <td>{{ r.line }}</td>
+                <td>
+                  <div class="cell-media">
+                    <img class="thumb" *ngIf="r.payload.images[0]" [src]="r.payload.images[0]" [alt]="r.payload.name" loading="lazy">
+                    <span class="thumb thumb-empty" *ngIf="!r.payload.images[0]"><i class="bi bi-image"></i></span>
+                    <div>
+                      <span class="cell-strong">{{ r.payload.name || '—' }}</span>
+                      <span class="cell-sub">{{ r.payload.slug }}<ng-container *ngIf="r.payload.badge"> · {{ r.payload.badge }}</ng-container></span>
+                    </div>
+                  </div>
+                </td>
+                <td>{{ r.payload.categoryName || '—' }}</td>
+                <td class="text-right">{{ r.payload.basePrice | vnd }}</td>
+                <td class="text-right">{{ r.payload.inStock }}</td>
+                <td>
+                  <span class="tag success" *ngIf="!r.errors.length">Hợp lệ</span>
+                  <span class="cell-sub import-error" *ngFor="let e of r.errors"><i class="bi bi-exclamation-circle"></i> {{ e }}</span>
+                </td>
+                <td (click)="$event.stopPropagation()">
+                  <div class="row-actions">
+                    <button type="button" class="icon-btn" title="Xem / sửa" (click)="openReview(r)"><i class="bi bi-pencil"></i></button>
+                    <button type="button" class="icon-btn danger" title="Xoá dòng" (click)="removeImportRow(r)"><i class="bi bi-trash"></i></button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </ng-container>
+    </div>
+
+    <!-- ===== Chi tiết 1 dòng ===== -->
+    <div class="modal-body" *ngIf="draft" (input)="onDraftChange()" (change)="onDraftChange()">
+      <div class="import-check" *ngIf="draftRow">
+        <span class="tag success" *ngIf="!draftRow.errors.length"><i class="bi bi-check2"></i> Dòng này hợp lệ</span>
+        <span class="cell-sub import-error" *ngFor="let e of draftRow.errors"><i class="bi bi-exclamation-circle"></i> {{ e }}</span>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-md-8">
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label">Tên sản phẩm *</label>
+              <input class="form-control" name="name" [(ngModel)]="draft.name">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Slug</label>
+              <input class="form-control" name="slug" [(ngModel)]="draft.slug" placeholder="Tự sinh theo tên">
+              <div class="form-hint">/product/{{ draftRow?.payload?.slug || '…' }}</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Nhãn (badge)</label>
+              <select class="form-select" name="badge" [(ngModel)]="draft.badge">
+                <option value="">— Không gắn nhãn —</option>
+                <option *ngFor="let b of badgeOptions" [value]="b">{{ b }}</option>
+                <option *ngIf="draft.badge && !badgeOptions.includes(draft.badge)" [value]="draft.badge">{{ draft.badge }} (không hợp lệ)</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Danh mục *</label>
+              <select class="form-select" name="category" [(ngModel)]="draft.category">
+                <option *ngIf="!draftRow?.payload?.categoryName" [value]="draft.category">{{ draft.category ? draft.category + ' (không có)' : '— Chọn danh mục —' }}</option>
+                <optgroup *ngFor="let s of sections" [label]="s.section">
+                  <option *ngFor="let o of s.options" [value]="o.value">{{ o.label }}</option>
+                </optgroup>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Loại sản xuất</label>
+              <select class="form-select" name="productionType" [(ngModel)]="draft.productionType">
+                <option *ngIf="!productionTypeTexts.includes($any(draft.productionType))" [value]="draft.productionType">{{ draft.productionType }} (không hợp lệ)</option>
+                <option *ngFor="let t of productionTypeTexts" [value]="t">{{ t }}</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Giá bán *</label>
+              <input class="form-control" name="basePrice" inputmode="numeric" [(ngModel)]="draft.basePrice">
+              <div class="form-hint" *ngIf="draftRow?.payload?.basePrice">{{ draftRow!.payload.basePrice | vnd }}</div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Giá gốc</label>
+              <input class="form-control" name="originalPrice" inputmode="numeric" [(ngModel)]="draft.originalPrice" placeholder="Bằng giá bán">
+              <div class="form-hint" *ngIf="draftRow?.payload?.originalPrice">{{ draftRow!.payload.originalPrice | vnd }}</div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Tồn kho</label>
+              <input class="form-control" name="inStock" inputmode="numeric" [(ngModel)]="draft.inStock" placeholder="0">
+            </div>
+            <div class="col-12">
+              <label class="form-check">
+                <input type="checkbox" class="form-check-input" name="customizable"
+                  [ngModel]="draft.customizable === 'Có'" (ngModelChange)="setDraftCustomizable($event)">
+                <span class="form-check-label">Cho khách tuỳ biến</span>
+              </label>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Kích thước</label>
+              <input class="form-control" name="dimensions" [(ngModel)]="draft.dimensions">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Chất liệu</label>
+              <input class="form-control" name="materialInfo" [(ngModel)]="draft.materialInfo">
+            </div>
+            <div class="col-12">
+              <label class="form-label">Mô tả</label>
+              <textarea class="form-control" name="description" rows="3" [(ngModel)]="draft.description"></textarea>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Câu chuyện</label>
+              <textarea class="form-control" name="story" rows="2" [(ngModel)]="draft.story"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Ảnh chính (URL) *</label>
+          <div class="import-image">
+            <img *ngIf="draft.image1" [src]="draft.image1" alt="Ảnh chính">
+            <i *ngIf="!draft.image1" class="bi bi-image"></i>
+          </div>
+          <input class="form-control" name="image1" [(ngModel)]="draft.image1" placeholder="https://…">
+
+          <label class="form-label mt-3">Ảnh phụ (URL)</label>
+          <div class="import-image small">
+            <img *ngIf="draft.image2" [src]="draft.image2" alt="Ảnh phụ">
+            <i *ngIf="!draft.image2" class="bi bi-image"></i>
+          </div>
+          <input class="form-control" name="image2" [(ngModel)]="draft.image2" placeholder="Không bắt buộc">
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer review-footer" *ngIf="draft">
+      <button type="button" class="btn-cancel danger" (click)="removeImportRow(importRows[reviewIndex])">
+        <i class="bi bi-trash"></i> Xoá dòng
+      </button>
+      <div class="review-nav">
+        <button type="button" class="icon-btn" title="Dòng trước (bỏ thay đổi chưa lưu)" [disabled]="reviewIndex <= 0" (click)="stepReview(-1)">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        <button type="button" class="icon-btn" title="Dòng sau (bỏ thay đổi chưa lưu)" [disabled]="reviewIndex >= importRows.length - 1" (click)="stepReview(1)">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>
+      <button type="button" class="btn-cancel" (click)="closeReview()"><i class="bi bi-arrow-left"></i> Về danh sách</button>
+      <button type="button" class="btn-save" (click)="saveReview()"><i class="bi bi-check2"></i> Lưu dòng</button>
+    </div>
+    <div class="modal-footer" *ngIf="!draft">
+      <button type="button" class="btn-cancel" [disabled]="importing" (click)="closeImport()">Đóng</button>
+      <button type="button" class="btn-save" [disabled]="!importValid.length || importing" (click)="confirmImport()">
+        <i class="bi" [ngClass]="importing ? 'bi-hourglass-split' : 'bi-check2'"></i>
+        {{ importing ? 'Đang nhập…' : 'Nhập ' + importValid.length + ' sản phẩm' }}
+      </button>
+    </div>
+  </div>
+</div>

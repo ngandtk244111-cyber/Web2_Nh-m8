@@ -1,0 +1,117 @@
+<div class="admin-page">
+  <app-mascot-loading *ngIf="loading() && !customer()" message="Đang tải thông tin khách hàng…" [overlay]="false"></app-mascot-loading>
+
+  <div class="empty-state" *ngIf="!loading() && !customer()">
+    <i class="bi bi-person-x"></i>
+    <p>Không tìm thấy khách hàng có số điện thoại này.</p>
+    <button type="button" class="btn-header" (click)="goBack()"><i class="bi bi-arrow-return-left"></i> Quay lại danh sách</button>
+  </div>
+
+  <ng-container *ngIf="customer() as c">
+    <div class="page-breadcrumb">
+      <a routerLink="/customers">Khách hàng</a> <span class="sep">/</span> <span class="current">{{ c.name }}</span>
+    </div>
+
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">{{ c.name }}</h1>
+        <p class="page-subtitle">{{ c.phone }} · {{ c.hasAccount ? 'Có tài khoản trên cửa hàng' : 'Khách vãng lai' }}</p>
+      </div>
+      <div class="header-actions">
+        <button type="button" class="btn-header" (click)="goBack()"><i class="bi bi-arrow-return-left"></i> Quay lại</button>
+        <a class="btn-header primary" [href]="'tel:' + c.phone"><i class="bi bi-telephone"></i> Gọi khách</a>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card static">
+        <span class="stat-label">Tổng đơn</span>
+        <span class="stat-value">{{ c.orders.length }}</span>
+        <span class="stat-sub" *ngIf="c.openCount">{{ c.openCount }} đang xử lý</span>
+      </div>
+      <div class="stat-card static tone-success">
+        <span class="stat-label">Nhận thành công</span>
+        <span class="stat-value">{{ c.deliveredCount }}</span>
+      </div>
+      <div class="stat-card static tone-neutral">
+        <span class="stat-label">Đã huỷ</span>
+        <span class="stat-value">{{ c.cancelledCount }}</span>
+      </div>
+      <div class="stat-card static tone-danger">
+        <span class="stat-label">Giao thất bại</span>
+        <span class="stat-value">{{ c.returnedCount }}</span>
+      </div>
+      <div class="stat-card static tone-info">
+        <span class="stat-label">Đã chi (đơn đã nhận)</span>
+        <span class="stat-value">{{ c.totalSpend | vnd }}</span>
+      </div>
+    </div>
+
+    <div class="layout-grid">
+      <div class="info-card">
+        <h3 class="section-title">Lịch sử đơn hàng ({{ c.orders.length }})</h3>
+        <div class="table-scrollable flat">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Mã đơn</th>
+                <th>Ngày đặt</th>
+                <th>Sản phẩm</th>
+                <th>Trạng thái</th>
+                <th>Thanh toán</th>
+                <th class="text-right">Tổng</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let o of c.orders" [class.clickable]="canViewOrders" (click)="openOrder(o)">
+                <td>
+                  <a *ngIf="canViewOrders; else plainCode" class="cell-strong order-code" [routerLink]="['/orders', o.orderNumber]" (click)="$event.stopPropagation()">{{ o.orderNumber }}</a>
+                  <ng-template #plainCode><span class="cell-strong">{{ o.orderNumber }}</span></ng-template>
+                </td>
+                <td>{{ dateLabel(o) }}</td>
+                <td class="cell-product">{{ itemName(o) }}</td>
+                <td>
+                  <span class="status-badge" [ngClass]="statusClass(o.status)">{{ statusLabel(o.status) }}</span>
+                  <span class="cell-sub" *ngIf="o.status === 'RETURNED' && o.returnReason">{{ o.returnReason }}</span>
+                  <span class="cell-sub" *ngIf="o.status === 'CANCELLED' && o.cancelReason">{{ o.cancelReason }}</span>
+                </td>
+                <td>
+                  <span class="status-badge" [ngClass]="payClass(o)">{{ payLabel(o) }}</span>
+                  <span class="cell-sub">{{ methodLabel(o.paymentMethod) }}</span>
+                </td>
+                <td class="text-right money">{{ o.total | vnd }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div>
+        <div class="info-card">
+          <h3 class="section-title">Thông tin liên hệ</h3>
+          <div class="info-row"><span class="label">Họ tên</span><span class="value">{{ c.name }}</span></div>
+          <div class="info-row"><span class="label">Điện thoại</span><span class="value"><a [href]="'tel:' + c.phone">{{ c.phone }}</a></span></div>
+          <div class="info-row"><span class="label">Email</span><span class="value">{{ c.email || '—' }}</span></div>
+          <div class="info-row"><span class="label">Địa chỉ gần nhất</span><span class="value">{{ c.address }}</span></div>
+          <div class="info-row" *ngIf="otherNames().length"><span class="label">Tên khác đã dùng</span><span class="value">{{ otherNames().join(', ') }}</span></div>
+        </div>
+
+        <div class="info-card">
+          <h3 class="section-title">Đánh giá giao hàng</h3>
+          <div class="info-row">
+            <span class="label">Tỉ lệ nhận hàng</span>
+            <span class="value"><span class="status-badge" [ngClass]="rateClass(c)">{{ successRate(c) === null ? 'Chưa có đơn giao xong' : successRate(c) + '%' }}</span></span>
+          </div>
+          <div class="info-row"><span class="label">Đơn đầu tiên</span><span class="value">{{ c.firstOrderAt | date:'dd/MM/yyyy' }}</span></div>
+          <div class="info-row"><span class="label">Đơn gần nhất</span><span class="value">{{ c.lastOrderAt | date:'dd/MM/yyyy' }}</span></div>
+          <div class="notice-box danger mt-2 mb-0" *ngIf="c.returnedCount > 0">
+            <i class="bi bi-exclamation-triangle"></i> Khách đã {{ c.returnedCount }} lần không nhận hàng — nên gọi xác nhận kỹ trước khi giao đơn COD.
+          </div>
+          <div class="notice-box success mt-2 mb-0" *ngIf="c.returnedCount === 0 && c.deliveredCount >= 2">
+            <i class="bi bi-patch-check"></i> Khách quen, nhận hàng đầy đủ.
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</div>

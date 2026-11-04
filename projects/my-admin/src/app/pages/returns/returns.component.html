@@ -1,0 +1,92 @@
+<div class="admin-page">
+  <div class="page-breadcrumb">
+    Đơn hàng <span class="sep">/</span> <span class="current">Đổi trả & hoàn tiền</span>
+  </div>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Đổi trả & hoàn tiền</h1>
+      <p class="page-subtitle">Yêu cầu trả hàng khách gửi trong 7 ngày sau khi nhận — duyệt, từ chối và xác nhận đã hoàn tiền</p>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <button type="button" *ngFor="let f of filters" class="stat-card" [ngClass]="f.tone"
+      [class.active]="filter() === f.key" (click)="setFilter(f.key)">
+      <span class="stat-label">{{ f.label }}</span>
+      <span class="stat-value">{{ count(f.key) }}</span>
+    </button>
+  </div>
+
+  <div class="filter-bar">
+    <div class="filter-left">
+      <div class="search-wrapper">
+        <input type="text" class="search-input" placeholder="Mã đơn, tên hoặc SĐT khách..."
+          [ngModel]="search()" (ngModelChange)="onSearch($event)">
+        <i class="bi bi-search search-icon"></i>
+      </div>
+    </div>
+    <div class="actions-group">
+      <span class="selection-info">{{ filtered().length }} yêu cầu</span>
+    </div>
+  </div>
+
+  <div class="table-scrollable">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Đơn hàng</th>
+          <th>Khách hàng</th>
+          <th>Lý do</th>
+          <th class="text-right">Hoàn tiền</th>
+          <th>Gửi lúc</th>
+          <th>Trạng thái</th>
+          <th class="text-right">Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let o of visible(); trackBy: trackByNumber">
+          <td><a class="order-code" [routerLink]="['/orders', o.orderNumber]">{{ o.orderNumber }}</a></td>
+          <td>
+            {{ o.shippingAddress.fullName }}
+            <span class="cell-sub">{{ o.shippingAddress.phone }}</span>
+          </td>
+          <td class="cell-reason">
+            {{ o.returnRequest!.reason }}
+            <span class="cell-sub" *ngIf="o.returnRequest!.description">“{{ o.returnRequest!.description }}”</span>
+            <span class="cell-sub note-reject" *ngIf="o.returnRequest!.adminNote">Ghi chú: {{ o.returnRequest!.adminNote }}</span>
+          </td>
+          <td class="text-right cell-strong">{{ o.returnRequest!.refundAmount | number }}đ</td>
+          <td>{{ dateLabel(o.returnRequest!.requestedAt) }}</td>
+          <td><span class="status-badge" [ngClass]="statusClass(o.returnRequest!.status)">{{ statusLabels[o.returnRequest!.status] }}</span></td>
+          <td class="text-right">
+            <ng-container *ngIf="canApprove">
+              <div class="row-actions" *ngIf="o.returnRequest!.status === 'PENDING' && rejecting !== o.orderNumber">
+                <button type="button" class="action-btn sm success" [disabled]="busy === o.orderNumber" (click)="review(o, 'approve')">
+                  <i class="bi bi-check2"></i> Duyệt
+                </button>
+                <button type="button" class="action-btn sm danger" (click)="rejecting = o.orderNumber; rejectNote = ''">
+                  <i class="bi bi-x-lg"></i> Từ chối
+                </button>
+              </div>
+              <div class="reject-box" *ngIf="rejecting === o.orderNumber">
+                <input class="form-control form-control-sm" [(ngModel)]="rejectNote" placeholder="Lý do từ chối..." maxlength="300">
+                <button type="button" class="action-btn sm danger" [disabled]="busy === o.orderNumber" (click)="review(o, 'reject')">Gửi</button>
+                <button type="button" class="action-btn sm" (click)="rejecting = null">Huỷ</button>
+              </div>
+              <button type="button" class="action-btn sm success" *ngIf="o.returnRequest!.status === 'APPROVED'"
+                [disabled]="busy === o.orderNumber" (click)="review(o, 'complete')">
+                <i class="bi bi-cash-coin"></i> Đã hoàn tiền
+              </button>
+            </ng-container>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="empty-state" *ngIf="filtered().length === 0">
+      <i class="bi bi-arrow-counterclockwise"></i>
+      Không có yêu cầu trả hàng phù hợp.
+    </div>
+    <app-pager [total]="filtered().length" [page]="page()" [pageSize]="pageSize" (pageChange)="page.set($event)"></app-pager>
+  </div>
+</div>

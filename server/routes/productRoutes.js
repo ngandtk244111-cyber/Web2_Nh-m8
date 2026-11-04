@@ -1,10 +1,12 @@
 const express = require('express');
 const { sendError } = require('../utils/http-error');
 const Product = require('../models/Product');
+const ProductImage = require('../models/ProductImage');
 const Order = require('../models/Order');
 const { awardVoucher } = require('../utils/vouchers');
 const { checkContent } = require('../utils/moderation');
-const { requireAdminId, validId } = require('../middleware/auth');
+const { requirePermission, attachUserId } = require('../middleware/auth');
+const { IMAGE_TYPES, INVALID_TYPE_ERROR, uploadImage, sendStoredImage, removeUnusedProductImages } = require('../utils/images');
 
 const router = express.Router();
 
@@ -86,6 +88,15 @@ router.get('/my-reviews', requireUserId, async (req, res) => {
     sendError(res, err);
   }
 });
+// Field my-admin được phép ghi — không nhận id, _id, reviews, rating, reviewCount hay toán tử $... từ body.
+const EDITABLE_FIELDS = ['name', 'slug', 'category', 'categoryName', 'categoryGroup', 'productionType', 'customizable',
+  'basePrice', 'originalPrice', 'description', 'story', 'inStock', 'images', 'badge', 'dimensions', 'materialInfo', 'weight',
+  'features', 'customization', 'threeModelType', 'modelUrl', 'productionTime', 'printTechnology', 'flashSaleSlot',
+  'style', 'color', 'printMaterial', 'sizeCategory', 'spaces'];
+
+function pickEditable(body) {
+  return Object.fromEntries(EDITABLE_FIELDS.filter(f => body[f] !== undefined).map(f => [f, body[f]]));
+}
 
 
 // Đánh giá đăng ngay, không chờ duyệt. Nhân viên chỉ ẩn khi vi phạm (status HIDDEN), phản hồi
@@ -98,9 +109,10 @@ function toPublicProduct(product) {
   return { ...obj, reviews };
 }
 
+// Danh sách không kèm nội dung đánh giá để nhẹ (điểm và số lượng vẫn có); trang chi tiết lấy qua /slug/:slug.
 router.get('/', async (_req, res) => {
   try {
-    const products = await Product.find().sort({ createdAt: -1 });
+    const products = await Product.find().select('-reviews').sort({ createdAt: -1 });
     res.json({ success: true, products: products.map(toPublicProduct) });
   } catch (err) {
     sendError(res, err);
@@ -108,7 +120,7 @@ router.get('/', async (_req, res) => {
 });
 
 // Admin — gom đánh giá của mọi sản phẩm (kể cả đã ẩn), mới nhất trước.
-router.get('/reviews/admin', requireAdminId, async (_req, res) => {
+router.get('/reviews/admin', requirePermission('customers.view'), async (_req, res) => {
   try {
     const products = await Product.find({ 'reviews.0': { $exists: true } }, { id: 1, name: 1, slug: 1, images: 1, reviews: 1 }).lean();
     const reviews = products.flatMap(p => (p.reviews || []).map(r => ({
@@ -128,7 +140,7 @@ router.get('/reviews/admin', requireAdminId, async (_req, res) => {
 });
 
 // Admin — ẩn/hiện, phản hồi công khai, ghim 1 đánh giá.
-router.patch('/:id/reviews/:reviewId', requireAdminId, async (req, res) => {
+router.patch('/:id/reviews/:reviewId', requirePermission('customers.edit'), async (req, res) => {
   try {
     const product = await Product.findOne({ id: req.params.id });
     if (!product) return res.status(404).json({ success: false, error: 'Không tìm thấy sản phẩm' });
@@ -143,7 +155,7 @@ router.patch('/:id/reviews/:reviewId', requireAdminId, async (req, res) => {
     }
     if (reply !== undefined) {
       const text = String(reply || '').trim();
-      review.reply = text ? { text, date: new Date().toLocaleDateString('vi-VN'), adminId: req.adminId } : null;
+      review.reply = text ? { text, date: new Date().toLocaleDateString('vi-VN') } : null;
     }
     if (pinned !== undefined) review.pinned = !!pinned;
 
@@ -165,10 +177,9 @@ router.get('/slug/:slug', async (req, res) => {
   }
 });
 
-router.post('/', requireAdminId, async (req, res) => {
+router.post('/', requirePermission('products.create'), async (req, res) => {
   try {
-    const id = req.body.id || 'prod-' + Date.now();
-    const product = await Product.create({ ...req.body, id });
+    const product = await Product.create({ ...pickEditable(req.body), id: 'prod-' + Date.now() });
     res.json({ success: true, product });
   } catch (err) {
     console.error('create product error', err);
@@ -176,10 +187,64 @@ router.post('/', requireAdminId, async (req, res) => {
   }
 });
 
-router.put('/:id', requireAdminId, async (req, res) => {
+// Nhập hàng loạt từ file Excel của my-admin. Tạo từng dòng để 1 dòng lỗi (vd trùng slug) không chặn cả lô.
+const BULK_LIMIT = 500;
+router.post('/bulk', requirePermission('products.create'), async (req, res) => {
   try {
-    const product = await Product.findOneAndUpdate({ id: req.params.id }, req.body, { new: true, runValidators: true });
-    if (!product) return res.status(404).json({ success: false, error: 'Không tìm thấy sản phẩm' });
+    const rows = Array.isArray(req.body.products) ? req.body.products : [];
+    if (!rows.length) return res.status(400).json({ success: false, error: 'Không có sản phẩm nào để nhập' });
+    if (rows.length > BULK_LIMIT) {
+      return res.status(400).json({ success: false, error: `Mỗi lần nhập tối đa ${BULK_LIMIT} sản phẩm` });
+    }
+
+    const stamp = Date.now();
+    let created = 0;
+    const failed = [];
+    for (const [index, row] of rows.entries()) {
+      try {
+        await Product.create({ ...pickEditable(row || {}), id: `prod-${stamp}-${index}` });
+        created++;
+      } catch (err) {
+        failed.push({ index, error: err.code === 11000 ? 'Slug đã tồn tại' : err.message });
+      }
+    }
+    res.json({ success: true, created, failed });
+  } catch (err) {
+    console.error('bulk create products error', err);
+    sendError(res, err);
+  }
+});
+
+router.post('/images',requirePermission('products.create', 'products.edit', 'marketing.edit'), uploadImage('image'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ success: false, error: 'Thiếu file ảnh' });
+    if (!IMAGE_TYPES.includes(req.file.mimetype)) {
+      return res.status(400).json({ success: false, error: INVALID_TYPE_ERROR });
+    }
+
+    const image = await ProductImage.create({ data: req.file.buffer, contentType: req.file.mimetype, uploadedBy: req.adminId });
+    res.json({ success: true, path: `/api/products/images/${image._id}` });
+  } catch (err) {
+    console.error('product image upload error', err);
+    sendError(res, err);
+  }
+});
+
+// Công khai vì my-client dùng thẳng URL này làm src. Nội dung ảnh không đổi theo id nên cho cache dài.
+router.get('/images/:imageId', async (req, res) => {
+  try {
+    await sendStoredImage(ProductImage, req.params.imageId, res);
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
+router.put('/:id', requirePermission('products.edit'), async (req, res) => {
+  try {
+    const previous = await Product.findOneAndUpdate({ id: req.params.id }, { $set: pickEditable(req.body) }, { runValidators: true }).select('images').lean();
+    if (!previous) return res.status(404).json({ success: false, error: 'Không tìm thấy sản phẩm' });
+    await removeUnusedProductImages(previous.images);
+    const product = await Product.findOne({ id: req.params.id });
     res.json({ success: true, product });
   } catch (err) {
     sendError(res, err);
@@ -194,22 +259,21 @@ function hasPurchased(userId, productId) {
 }
 
 // Trang chi tiết sản phẩm hỏi trước để chỉ hiện form đánh giá cho khách đã mua.
-router.get('/:id/can-review', async (req, res) => {
+router.get('/:id/can-review', attachUserId, async (req, res) => {
   try {
-    const userId = validId(req.query.userId);
-    res.json({ success: true, canReview: await hasPurchased(userId, req.params.id) });
+    res.json({ success: true, canReview: await hasPurchased(req.userId, req.params.id) });
   } catch (err) {
     sendError(res, err);
   }
 });
 
 // Gửi đánh giá thật, lưu vào Product.reviews. Chỉ khách đã mua sản phẩm mới được đánh giá.
-router.post('/:id/reviews', async (req, res) => {
+router.post('/:id/reviews', attachUserId, async (req, res) => {
   try {
     const { author, comment, avatar } = req.body;
     const images = (Array.isArray(req.body.images) ? req.body.images : []).filter(x => typeof x === 'string').slice(0, MAX_REVIEW_IMAGES);
     const orderNumber = req.body.orderNumber ? String(req.body.orderNumber) : null;
-    const userId = validId(req.body.userId);
+    const userId = req.userId;
     if (String(comment || '').length > MAX_REVIEW_LENGTH) {
       return res.status(400).json({ success: false, error: `Nội dung đánh giá tối đa ${MAX_REVIEW_LENGTH} ký tự` });
     }
@@ -322,9 +386,11 @@ router.put('/:id/reviews/:reviewId', requireUserId, async (req, res) => {
   }
 });
 
-router.delete('/:id', requireAdminId, async (req, res) => {
+router.delete('/:id', requirePermission('products.delete'), async (req, res) => {
   try {
-    await Product.deleteOne({ id: req.params.id });
+    const deleted = await Product.findOneAndDelete({ id: req.params.id }).select('images').lean();
+    if (!deleted) return res.status(404).json({ success: false, error: 'Không tìm thấy sản phẩm' });
+    await removeUnusedProductImages(deleted.images);
     res.json({ success: true });
   } catch (err) {
     sendError(res, err);

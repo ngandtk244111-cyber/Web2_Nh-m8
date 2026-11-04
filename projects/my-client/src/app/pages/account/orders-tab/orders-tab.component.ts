@@ -112,7 +112,7 @@ export class OrdersTabComponent implements OnInit {
   openInvoice(orderNumber: string, event: Event): void {
     event.preventDefault();
     event.stopPropagation();
-    window.open(invoiceUrl(orderNumber, this.authService.currentUser()?._id), '_blank', 'noopener');
+    window.open(invoiceUrl(orderNumber, this.authService.token), '_blank', 'noopener');
   }
 
   ngOnInit(): void {

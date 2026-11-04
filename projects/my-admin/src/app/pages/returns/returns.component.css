@@ -1,0 +1,27 @@
+.order-code {
+  color: var(--color-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.order-code:hover {
+  text-decoration: underline;
+}
+
+.cell-reason {
+  max-width: 280px;
+}
+
+.note-reject {
+  color: #9E2A2B;
+}
+
+.reject-box {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.reject-box .form-control {
+  width: 200px;
+}

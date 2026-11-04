@@ -31,7 +31,8 @@ export class AnnouncementTickerComponent {
   onItemClick(renderIndex: number): void {
     const index = this.originalIndex(renderIndex);
     this.tickerService.setActive(index);
-    this.router.navigateByUrl(this.tickerService.items[index].ctaLink);
+    const item = this.tickerService.items[index];
+    this.router.navigate([item.ctaLink], { queryParams: item.ctaQueryParams });
   }
 
   onMouseEnter(): void {

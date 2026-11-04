@@ -11,13 +11,18 @@ const { attachSocket } = require('./socket');
 const app = express();
 const corsOrigins = (process.env.CORS_ORIGINS || 'http://localhost:4200').split(',').map(s => s.trim());
 
-app.use(cors({ origin: corsOrigins }));
+// Render đặt server sau proxy: cần dòng này để req.ip là IP thật của nhân viên trong Audit Log.
+app.set('trust proxy', 1);
+// maxAge: trình duyệt nhớ kết quả preflight 10 phút, không phải hỏi lại trước mỗi request có token.
+app.use(cors({ origin: corsOrigins, maxAge: 600 }));
 app.use(express.json());
-// Ảnh avatar upload — phục vụ tĩnh qua /uploads/... (xem authRoutes.js route POST /avatar).
+// Avatar cũ chưa chuyển sang MongoDB (seed/migrate-storage.js). Ảnh mới lưu trong DB, không qua thư mục này.
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/me/data', require('./routes/userDataRoutes'));
 app.use('/api/admin/auth', require('./routes/adminAuthRoutes'));
+app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/orders', require('./routes/orderRoutes'));
 app.use('/api/warranty', require('./routes/warrantyRoutes'));
 app.use('/api/payments', require('./routes/paymentRoutes'));
@@ -30,6 +35,7 @@ app.use('/api/custom-requests', require('./routes/customRequestRoutes'));
 app.use('/api/community', require('./routes/communityRoutes'));
 app.use('/api/news', require('./routes/newsRoutes'));
 app.use('/api/videos', require('./routes/videoRoutes'));
+app.use('/api/banners', require('./routes/bannerRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/newsletter', require('./routes/newsletterRoutes'));
 app.use('/api/coupons', require('./routes/couponRoutes'));
@@ -54,6 +60,7 @@ connectDB()
   // Database cũ có thể còn index phoneNumber_1 KHÔNG sparse (tạo trước khi schema thêm sparse) -> tài khoản
   // Google/Facebook thứ 2 không có SĐT bị E11000. syncIndexes dựng lại index cho khớp schema User.
   .then(() => require('./models/User').syncIndexes())
+  .then(() => require('./utils/permissions').ensureSuperAdmin())
   .catch(err => {
     // Không có MongoDB vẫn mở server: chatbox AI (Gemini) vẫn trả lời được, chỉ thiếu gợi ý sản phẩm từ DB.
     // Các chức năng cần dữ liệu (sản phẩm, đơn hàng, đăng nhập...) sẽ lỗi cho tới khi MongoDB chạy.

@@ -2,6 +2,7 @@
   <a
     *ngIf="!isDismissed(banner.side)"
     [routerLink]="banner.link"
+    [queryParams]="banner.queryParams"
     class="fsb fsb--{{ banner.side }}"
     [attr.aria-label]="banner.badge + ' - ' + banner.title">
 

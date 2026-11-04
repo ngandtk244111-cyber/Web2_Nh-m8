@@ -1,0 +1,147 @@
+.brief-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px 20px;
+}
+
+.brief-grid > div,
+.brief-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 14px;
+}
+
+.brief-grid .label,
+.brief-notes .label {
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+}
+
+.brief-grid .value {
+  font-weight: 600;
+}
+
+.brief-notes {
+  margin-top: 14px;
+}
+
+.brief-notes p {
+  margin: 0;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.image-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 12px;
+}
+
+.image-grid figure {
+  margin: 0;
+  cursor: zoom-in;
+}
+
+.image-grid img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-neutral-30);
+}
+
+.image-grid figcaption {
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+  margin-top: 4px;
+}
+
+.thread {
+  max-height: 420px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  background: var(--color-bg-light);
+  border-radius: var(--radius-md);
+  margin-bottom: 12px;
+}
+
+.msg-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  max-width: 78%;
+}
+
+.msg-row.mine {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.msg-author {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+  margin-bottom: 2px;
+}
+
+.bubble {
+  padding: 9px 13px;
+  border-radius: 14px 14px 14px 4px;
+  background: #fff;
+  border: 1px solid var(--color-neutral-30);
+  font-size: 14px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.msg-row.mine .bubble {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+  border-radius: 14px 14px 4px 14px;
+}
+
+.msg-row.bot .bubble {
+  background: var(--color-info-bg);
+  border-color: #B9D3E8;
+}
+
+.msg-attachments {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.msg-attachments img {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  cursor: zoom-in;
+}
+
+.composer {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.composer textarea {
+  resize: none;
+  font-size: 14px;
+}
+
+.composer .btn-save {
+  height: 42px;
+}
+
+.zoomed {
+  max-width: min(900px, 92vw);
+  max-height: 86vh;
+  border-radius: var(--radius-lg);
+  background: #fff;
+}

@@ -1,8 +1,9 @@
+const crypto = require('crypto');
 const express = require('express');
 const { sendError } = require('../utils/http-error');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
-const { attachUserId, requireUserId, requireAdminId } = require('../middleware/auth');
+const { attachUserId, requireUserId, requirePermission, userIdFromRequest, userIdFromToken } = require('../middleware/auth');
 const { awardVoucher, reserveDiscountCode, releaseCodesForOrder, VoucherError } = require('../utils/vouchers');
 const { verifyAndPriceOrderItems, resolveShippingFee } = require('../utils/pricing');
 const { shippingOptions, findCarrier, trackingUrlFor, isDevMode, devTrackingCode } = require('../utils/shipping');
@@ -65,6 +66,9 @@ async function emailInvoice(order) {
     console.error('send invoice email error', err.message);
   }
 }
+const { StockError, reserveStock, restoreStockForOrder } = require('../utils/stock');
+const { canViewOrder, isLocked, recordFailure } = require('../utils/order-access');
+const { codNeedsPhoneConfirm } = require('../utils/cod-policy');
 
 /** Lý do khách được tự chọn khi huỷ đơn (trang đơn hàng phía khách). */
 // Giữ khớp với CANCEL_REASONS ở projects/my-client/src/app/core/data/cancel-reasons.ts
@@ -84,11 +88,14 @@ const CUSTOMER_CANCELLABLE = ['PENDING', 'CONFIRMED'];
 
 const router = express.Router();
 
+// Bỏ các ký tự dễ nhầm (0/O, 1/I). 8 ký tự ngẫu nhiên từ crypto nên không dò được như mã 6 chữ số cũ.
+const ORDER_NUMBER_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
 function generateOrderNumber() {
-  return 'ORD-' + Math.floor(100000 + Math.random() * 900000);
+  return 'ORD-' + Array.from(crypto.randomBytes(8), byte => ORDER_NUMBER_CHARS[byte % ORDER_NUMBER_CHARS.length]).join('');
 }
 
-// Mã đơn 6 chữ số ngẫu nhiên có thể trùng đơn cũ (unique index) — sinh lại mã thay vì báo lỗi 500.
+// Mã đơn ngẫu nhiên có thể trùng đơn cũ (unique index) — sinh lại mã thay vì báo lỗi 500.
 async function createWithUniqueNumber(data, attempts = 5) {
   for (let i = 1; ; i++) {
     try {
@@ -106,7 +113,7 @@ function nowLabel() {
 
 // Admin: danh sách toàn bộ đơn hàng của mọi khách — chỉ my-admin (dashboard tab "Đơn Hàng") gọi,
 // không phải endpoint công khai (khách tự tra đơn dùng /mine hoặc /by-number/:orderNumber).
-router.get('/', requireAdminId, async (_req, res) => {
+router.get('/', requirePermission('orders.view', 'customers.view', 'inventory.view'), async (_req, res) => {
   try {
     const orders = await Order.find().sort({ createdAt: -1 });
     res.json({ success: true, orders });
@@ -134,11 +141,20 @@ router.post('/', attachUserId, async (req, res) => {
       return res.status(400).json({ success: false, error: priceErr.message });
     }
 
+    let stock;
+    try {
+      stock = await reserveStock(pricedItems);
+    } catch (stockErr) {
+      if (stockErr instanceof StockError) return res.status(400).json({ success: false, error: stockErr.message });
+      throw stockErr;
+    }
+
     // Giữ chỗ mã giảm giá trước khi tạo đơn: mỗi mã chỉ dùng 1 lần, dùng rồi là hết.
     let reserved;
     try {
       reserved = await reserveDiscountCode({ code: couponCode, userId: req.userId, phone: shippingAddress.phone, subtotal });
     } catch (codeErr) {
+      await stock.release();
       if (codeErr instanceof VoucherError) return res.status(400).json({ success: false, error: codeErr.message });
       throw codeErr;
     }
@@ -158,14 +174,17 @@ router.post('/', attachUserId, async (req, res) => {
       };
     }
 
+    // COD lớn hoặc có hàng in 3D: chờ nhân viên gọi xác nhận (PENDING) rồi mới sản xuất/giao — tránh
+    // in đồ khắc tên riêng cho đơn ảo. COD nhỏ và đơn trả trước (chuyển khoản, ví) vào thẳng xác nhận/sản xuất.
+    const phoneConfirmRequired = paymentMethod === 'COD' && await codNeedsPhoneConfirm(total, hasPOD);
+
     let order;
     try {
       order = await createWithUniqueNumber({
       userId: req.userId || null,
       createdAtLabel: nowLabel(),
-      // COD: chờ nhân viên gọi xác nhận (PENDING) rồi mới sản xuất/giao — tránh in đồ khắc tên
-      // riêng cho đơn ảo. Đơn trả trước (chuyển khoản, ví) vào thẳng sản xuất/xác nhận.
-      status: paymentMethod === 'COD' ? 'PENDING' : hasPOD ? 'IN_PRODUCTION' : 'CONFIRMED',
+      status: phoneConfirmRequired ? 'PENDING' : hasPOD ? 'IN_PRODUCTION' : 'CONFIRMED',
+      phoneConfirmRequired,
       hasPrintOnDemandItems: hasPOD,
       productionProgress,
       items: pricedItems,
@@ -178,9 +197,10 @@ router.post('/', attachUserId, async (req, res) => {
       shippingFee,
       total,
       notes: notes || '',
+      stockReserved: true,
       });
     } catch (createErr) {
-      await reserved.release(); // tạo đơn lỗi -> trả lại mã cho khách
+      await Promise.all([reserved.release(), stock.release()]); // tạo đơn lỗi -> trả lại mã và tồn kho
       throw createErr;
     }
     await reserved.attach(order.orderNumber);
@@ -194,12 +214,13 @@ router.post('/', attachUserId, async (req, res) => {
 });
 
 // Hoá đơn PDF của 1 đơn — mở thẳng trong trình duyệt (inline), ?download=1 để tải về.
-// Đơn của tài khoản thì phải gửi kèm đúng userId của chủ đơn.
+// Đơn của tài khoản chỉ chủ đơn xem được: token qua header, hoặc ?token= khi mở PDF bằng link (thẻ <a> không gửi header).
 router.get('/:orderNumber/invoice', async (req, res) => {
   try {
     const order = await Order.findOne({ orderNumber: req.params.orderNumber }).lean();
     if (!order) return res.status(404).json({ success: false, error: 'Không tìm thấy đơn hàng' });
-    if (order.userId && String(order.userId) !== String(req.query.userId || '')) {
+    const viewerId = (await userIdFromRequest(req)) || (await userIdFromToken(String(req.query.token || '')));
+    if (order.userId && String(order.userId) !== String(viewerId || '')) {
       return res.status(403).json({ success: false, error: 'Bạn không có quyền xem hoá đơn này' });
     }
     const pdf = await buildInvoicePdf(order);
@@ -213,10 +234,17 @@ router.get('/:orderNumber/invoice', async (req, res) => {
   }
 });
 
+// Không đủ quyền trả cùng lỗi với mã không tồn tại, để không dò được mã nào là đơn thật.
 router.get('/by-number/:orderNumber', async (req, res) => {
   try {
+    if (isLocked(req.ip)) {
+      return res.status(429).json({ success: false, error: 'Bạn đã thử quá nhiều lần, vui lòng thử lại sau 15 phút.' });
+    }
     const order = await Order.findOne({ orderNumber: req.params.orderNumber });
-    if (!order) return res.status(404).json({ success: false, error: 'Không tìm thấy đơn hàng' });
+    if (!order || !(await canViewOrder(req, order, req.query.phone))) {
+      recordFailure(req.ip);
+      return res.status(404).json({ success: false, error: 'Không tìm thấy đơn hàng hoặc số điện thoại không khớp' });
+    }
     res.json({ success: true, order });
   } catch (err) {
     sendError(res, err);
@@ -294,7 +322,7 @@ router.patch('/:orderNumber/return-request/received', requireUserId, async (req,
 });
 
 // Admin duyệt / từ chối / hoàn tất yêu cầu trả hàng.
-router.patch('/:orderNumber/return-request/review', requireAdminId, async (req, res) => {
+router.patch('/:orderNumber/return-request/review', requirePermission('orders.approve'), async (req, res) => {
   try {
     const action = String(req.body.action || '');
     const adminNote = String(req.body.adminNote || '').trim().slice(0, 500);
@@ -380,6 +408,7 @@ router.patch('/:orderNumber/cancel', requireUserId, async (req, res) => {
     await order.save();
     // Trả lại mã đã dùng cho đơn này (voucher còn hạn thì khách dùng lại được).
     await releaseCodesForOrder(order.orderNumber);
+    await restoreStockForOrder(order.orderNumber);
     res.json({ success: true, order });
   } catch (err) {
     sendError(res, err);
@@ -391,12 +420,15 @@ router.patch('/:orderNumber/cancel', requireUserId, async (req, res) => {
 // sao kê rồi xác nhận ở my-admin (PATCH /payment-status).
 router.patch('/:orderNumber/confirm-payment', async (req, res) => {
   try {
+    const existing = await Order.findOne({ orderNumber: req.params.orderNumber });
+    if (!existing || !(await canViewOrder(req, existing, req.body.phone))) {
+      return res.status(404).json({ success: false, error: 'Không tìm thấy đơn hàng' });
+    }
     const order = await Order.findOneAndUpdate(
       { orderNumber: req.params.orderNumber, paymentStatus: { $ne: 'PAID' } },
       { transferReportedAt: new Date() },
       { new: true }
-    ) || await Order.findOne({ orderNumber: req.params.orderNumber });
-    if (!order) return res.status(404).json({ success: false, error: 'Không tìm thấy đơn hàng' });
+    ) || existing;
     res.json({ success: true, order });
   } catch (err) {
     sendError(res, err);
@@ -405,7 +437,7 @@ router.patch('/:orderNumber/confirm-payment', async (req, res) => {
 
 // Admin: xác nhận đã nhận tiền (đối soát chuyển khoản / đã thu COD) hoặc hoàn tác.
 // MoMo/ZaloPay tự cập nhật qua IPN có chữ ký ở paymentRoutes.js, không đi qua route này.
-router.patch('/:orderNumber/payment-status', requireAdminId, async (req, res) => {
+router.patch('/:orderNumber/payment-status', requirePermission('orders.approve'), async (req, res) => {
   try {
     const { paymentStatus } = req.body;
     if (!['PAID', 'UNPAID'].includes(paymentStatus)) {
@@ -447,7 +479,7 @@ async function loadOpenOrder(req, res) {
 }
 
 // Admin: gọi điện xác nhận đơn với khách — bắt buộc trước khi giao đơn COD.
-router.patch('/:orderNumber/confirm-phone', requireAdminId, async (req, res) => {
+router.patch('/:orderNumber/confirm-phone', requirePermission('orders.edit'), async (req, res) => {
   try {
     const order = await loadOpenOrder(req, res);
     if (!order) return;
@@ -462,7 +494,7 @@ router.patch('/:orderNumber/confirm-phone', requireAdminId, async (req, res) => 
 });
 
 // Admin: hãng vận chuyển phù hợp cho đơn (hàng cồng kềnh? nội thành hay liên tỉnh?).
-router.get('/:orderNumber/shipping-options', requireAdminId, async (req, res) => {
+router.get('/:orderNumber/shipping-options', requirePermission('orders.view'), async (req, res) => {
   try {
     const order = await Order.findOne({ orderNumber: req.params.orderNumber }).lean();
     if (!order) return res.status(404).json({ success: false, error: 'Không tìm thấy đơn hàng' });
@@ -473,12 +505,12 @@ router.get('/:orderNumber/shipping-options', requireAdminId, async (req, res) =>
 });
 
 // Admin: tạo vận đơn với hãng vận chuyển và chuyển đơn sang "Đang giao".
-router.patch('/:orderNumber/ship', requireAdminId, async (req, res) => {
+router.patch('/:orderNumber/ship', requirePermission('orders.edit'), async (req, res) => {
   try {
     const order = await loadOpenOrder(req, res);
     if (!order) return;
     if (order.status === 'SHIPPED') return res.status(400).json({ success: false, error: 'Đơn đang được giao rồi' });
-    if (order.paymentMethod === 'COD' && !order.phoneConfirmedAt) {
+    if (order.paymentMethod === 'COD' && order.phoneConfirmRequired !== false && !order.phoneConfirmedAt) {
       return res.status(400).json({ success: false, error: 'Đơn COD phải gọi xác nhận với khách trước khi giao' });
     }
 
@@ -524,7 +556,7 @@ router.patch('/:orderNumber/ship', requireAdminId, async (req, res) => {
 });
 
 // Admin: cập nhật tiến độ sản xuất / kết quả giao (thành công, hoàn hàng) / huỷ.
-router.patch('/:orderNumber/production', requireAdminId, async (req, res) => {
+router.patch('/:orderNumber/production', requirePermission('orders.edit'), async (req, res) => {
   try {
     const { status, productionProgress, cancelReason, returnReason } = req.body;
     if (status && !ORDER_STATUSES.includes(status)) {
@@ -560,6 +592,7 @@ router.patch('/:orderNumber/production', requireAdminId, async (req, res) => {
     }
     await order.save();
     if (status === 'CANCELLED') await releaseCodesForOrder(order.orderNumber);
+    if (status === 'CANCELLED' || status === 'RETURNED') await restoreStockForOrder(order.orderNumber);
 
     // Đơn giao thành công -> tặng 1 voucher cho lần mua sau (chỉ áp dụng nếu đơn gắn với tài khoản thật).
     if (order.status === 'DELIVERED' && order.userId) {

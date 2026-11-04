@@ -1,0 +1,87 @@
+<div class="admin-page">
+  <div class="page-breadcrumb">
+    Đơn hàng <span class="sep">/</span> <span class="current">Yêu cầu in 3D</span>
+  </div>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Yêu cầu in 3D riêng</h1>
+      <p class="page-subtitle">Brief thiết kế khách gửi từ cửa hàng — xem xét, trao đổi, báo giá và cấp bản 3D preview</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn-header" (click)="reload()"><i class="bi bi-arrow-clockwise"></i> Tải lại</button>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <button type="button" *ngFor="let f of filters" class="stat-card" [ngClass]="f.tone"
+      [class.active]="filter() === f.key" (click)="setFilter(f.key)">
+      <span class="stat-label">{{ f.label }}</span>
+      <span class="stat-value">{{ count(f.key) }}</span>
+    </button>
+  </div>
+
+  <div class="filter-bar">
+    <div class="filter-left">
+      <div class="search-wrapper">
+        <input type="text" class="search-input" placeholder="Mã yêu cầu, tiêu đề, khách hàng..."
+          [ngModel]="search()" (ngModelChange)="onSearch($event)">
+        <i class="bi bi-search search-icon"></i>
+      </div>
+    </div>
+    <div class="actions-group">
+      <span class="selection-info">{{ filtered().length }} yêu cầu</span>
+    </div>
+  </div>
+
+  <div class="table-scrollable">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Mã yêu cầu</th>
+          <th>Ý tưởng</th>
+          <th>Khách hàng</th>
+          <th>Brief</th>
+          <th>Trạng thái</th>
+          <th class="text-right">Báo giá</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let r of visible(); trackBy: trackById" class="clickable" (click)="openRequest(r)">
+          <td>
+            <a class="cell-strong req-code" [routerLink]="['/custom-requests', r.id]" (click)="$event.stopPropagation()">{{ r.requestCode }}</a>
+            <span class="cell-sub">{{ r.createdAt }}</span>
+          </td>
+          <td>
+            <div class="cell-media">
+              <img class="thumb" *ngIf="r.aiConceptImage || r.customerImages?.[0] as img" [src]="img" [alt]="r.title">
+              <span>
+                <span class="cell-strong">{{ r.title }}</span>
+                <span class="cell-sub" *ngIf="awaitingReply(r)"><i class="bi bi-chat-left-dots"></i> Khách đang chờ trả lời</span>
+              </span>
+            </div>
+          </td>
+          <td>
+            {{ r.customerName }}
+            <span class="cell-sub">{{ r.customerPhone || r.customerEmail }}</span>
+          </td>
+          <td>
+            {{ r.brief.productType || 'Decor in 3D' }}
+            <span class="cell-sub">{{ r.brief.size || '—' }} · {{ r.brief.color || 'Màu tự do' }}</span>
+          </td>
+          <td><span class="status-badge" [ngClass]="statusClass(r.status)">{{ statusLabel(r.status) }}</span></td>
+          <td class="text-right">
+            <span class="money" *ngIf="r.quotationPrice; else noQuote">{{ r.quotationPrice | vnd }}</span>
+            <ng-template #noQuote><span class="text-muted-2">Chưa báo</span></ng-template>
+            <span class="cell-sub" *ngIf="r.estimatedDays">{{ r.estimatedDays }} ngày</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="empty-state" *ngIf="filtered().length === 0">
+      <i class="bi bi-printer"></i>
+      Không có yêu cầu nào phù hợp với bộ lọc hiện tại.
+    </div>
+    <app-pager [total]="filtered().length" [page]="page()" [pageSize]="pageSize" (pageChange)="page.set($event)"></app-pager>
+  </div>
+</div>

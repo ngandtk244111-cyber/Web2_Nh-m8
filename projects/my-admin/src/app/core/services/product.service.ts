@@ -1,6 +1,6 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap } from 'rxjs';
+import { Observable, map, tap } from 'rxjs';
 import { Product, ProductCategory, ProductionType } from '../models/product.model';
 import { AdminAuthService } from './admin-auth.service';
 import { environment } from '../../../environments/environment';
@@ -132,9 +132,25 @@ export class ProductService {
     );
   }
 
+  /** Nhập hàng loạt (từ file Excel). Server bỏ qua dòng lỗi và trả về chỉ số các dòng đó. */
+  bulkAddProducts(products: Omit<Product, 'id'>[]): Observable<{ success: boolean; created: number; failed: { index: number; error: string }[] }> {
+    return this.http.post<{ success: boolean; created: number; failed: { index: number; error: string }[] }>(
+      `${BASE}/bulk`, { products, adminId: this.adminAuth.adminId }
+    ).pipe(tap(() => this.refresh()));
+  }
+
   updateProduct(id: string, updates: Partial<Product>): Observable<{ success: boolean; product: Product }> {
     return this.http.put<{ success: boolean; product: Product }>(`${BASE}/${id}`, { ...updates, adminId: this.adminAuth.adminId }).pipe(
       tap(() => this.refresh())
+    );
+  }
+
+  /** Trả về URL đầy đủ của ảnh vì my-client dùng thẳng images[] làm src, khác origin với server. */
+  uploadImage(file: File): Observable<string> {
+    const form = new FormData();
+    form.append('image', file);
+    return this.http.post<{ success: boolean; path: string }>(`${BASE}/images`, form).pipe(
+      map(res => environment.apiUrl.replace(/\/api\/?$/, '') + res.path)
     );
   }
 

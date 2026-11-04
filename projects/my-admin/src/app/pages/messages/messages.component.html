@@ -1,0 +1,114 @@
+<div class="admin-page messages-page">
+  <div class="page-breadcrumb">
+    Khách hàng <span class="sep">/</span> <span class="current">Tin nhắn hỗ trợ</span>
+  </div>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Tin nhắn hỗ trợ</h1>
+      <p class="page-subtitle">Trả lời khách nhắn qua khung chat trên cửa hàng — tin mới hiện ngay, không cần tải lại</p>
+    </div>
+    <div class="header-actions">
+      <span class="tag" [class.danger]="chat.totalUnread() > 0">{{ chat.totalUnread() }} tin chưa đọc</span>
+      <button type="button" class="btn-header" (click)="chat.refreshSessions()"><i class="bi bi-arrow-clockwise"></i> Tải lại</button>
+    </div>
+  </div>
+
+  <div class="chat-shell">
+    <!-- Danh sách cuộc chat -->
+    <aside class="session-pane" [class.mobile-hidden]="chat.activeSessionId()">
+      <div class="session-search">
+        <div class="search-wrapper w-100">
+          <input type="text" class="search-input" placeholder="Tìm tên, SĐT, nội dung..."
+            [ngModel]="search()" (ngModelChange)="search.set($event)">
+          <i class="bi bi-search search-icon"></i>
+        </div>
+      </div>
+      <div class="session-list">
+        <div class="empty-state" *ngIf="filteredSessions().length === 0">
+          <i class="bi bi-chat-square"></i>
+          {{ chat.sessions().length === 0 ? 'Chưa có khách nào nhắn tin.' : 'Không tìm thấy cuộc chat phù hợp.' }}
+        </div>
+        <button type="button" *ngFor="let s of filteredSessions(); trackBy: trackBySession" class="session-item"
+          [class.active]="chat.activeSessionId() === s.sessionId" [class.unread]="s.unread > 0" (click)="open(s)">
+          <span class="avatar" [class.known]="!!s.customerName">
+            {{ initial(s) }}
+            <span class="online-dot" *ngIf="chat.isOnline(s.sessionId)" title="Đang online"></span>
+          </span>
+          <span class="session-body">
+            <span class="session-top">
+              <span class="session-name">{{ displayName(s) }}</span>
+              <span class="session-time">{{ timeLabel(s.lastAt) }}</span>
+            </span>
+            <span class="session-bottom">
+              <span class="session-last" *ngIf="!chat.isTyping(s.sessionId); else typingTpl">
+                <span *ngIf="s.lastSender === 'staff'">Bạn: </span>{{ s.lastText }}
+              </span>
+              <ng-template #typingTpl><span class="session-last typing-text">Đang soạn tin…</span></ng-template>
+              <span class="unread-badge" *ngIf="s.unread > 0">{{ s.unread }}</span>
+            </span>
+          </span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Hội thoại -->
+    <section class="thread-pane" [class.mobile-hidden]="!chat.activeSessionId()">
+      <ng-container *ngIf="chat.activeSession() as session; else noChat">
+        <div class="thread-head">
+          <button type="button" class="icon-btn back-btn" (click)="chat.closeSession()" title="Quay lại danh sách">
+            <i class="bi bi-chevron-left"></i>
+          </button>
+          <span class="avatar" [class.known]="!!session.customerName">
+            {{ initial(session) }}
+            <span class="online-dot" *ngIf="chat.isOnline(session.sessionId)"></span>
+          </span>
+          <div class="thread-title">
+            <div class="name">{{ displayName(session) }}</div>
+            <div class="meta">
+              <ng-container *ngIf="session.customerPhone">{{ session.customerPhone }} · </ng-container>
+              {{ session.userId ? 'Khách đã đăng nhập' : 'Khách chưa đăng nhập' }} ·
+              {{ chat.isOnline(session.sessionId) ? 'đang online' : 'offline' }} ·
+              bắt đầu {{ session.startedAt | date:'HH:mm dd/MM/yyyy' }}
+            </div>
+          </div>
+          <a *ngIf="session.customerPhone" class="action-btn sm" [routerLink]="['/customers', customerPhone(session)]">
+            <i class="bi bi-person"></i> Xem khách
+          </a>
+        </div>
+
+        <div class="thread-body" #chatScroll>
+          <div class="empty-state" *ngIf="chat.activeMessages().length === 0">Đang tải tin nhắn…</div>
+          <div *ngFor="let m of chat.activeMessages()" class="msg-row" [class.mine]="m.sender === 'staff'">
+            <div class="bubble">{{ m.text }}</div>
+            <div class="msg-time">{{ m.createdAt | date:'HH:mm dd/MM' }}</div>
+          </div>
+          <div class="msg-row" *ngIf="chat.activeTyping()">
+            <div class="bubble typing"><span></span><span></span><span></span></div>
+          </div>
+        </div>
+
+        <div class="thread-foot">
+          <div class="quick-replies">
+            <button type="button" *ngFor="let q of quickReplies" class="chip-tab" (click)="useQuickReply(q)">{{ q }}</button>
+          </div>
+          <div class="composer">
+            <textarea class="form-control" rows="2" [(ngModel)]="draft" (ngModelChange)="onDraftInput()" (keydown)="onKeydown($event)"
+              placeholder="Nhập câu trả lời cho khách… (Enter để gửi, Shift+Enter xuống dòng)"></textarea>
+            <button type="button" class="btn-save" [disabled]="!draft.trim()" (click)="send()">
+              <i class="bi bi-send"></i> Gửi
+            </button>
+          </div>
+        </div>
+      </ng-container>
+
+      <ng-template #noChat>
+        <div class="no-chat">
+          <i class="bi bi-chat-dots"></i>
+          <div class="title">Chọn một cuộc chat để trả lời</div>
+          <div>Khách nhắn qua nút chat ở góc trang cửa hàng. Tin mới hiện ở đây ngay lập tức.</div>
+        </div>
+      </ng-template>
+    </section>
+  </div>
+</div>

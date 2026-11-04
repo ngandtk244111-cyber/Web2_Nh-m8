@@ -19,13 +19,19 @@ export class NewsService {
 
   private articlesSignal = signal<NewsArticle[]>([]);
   readonly articles = this.articlesSignal.asReadonly();
+  /** true sau lần tải đầu tiên (kể cả lỗi) — trang sửa bài dùng để báo "không tìm thấy". */
+  readonly loaded = signal(false);
 
   refresh(): void {
     this.http.get<{ success: boolean; articles: NewsArticle[] }>(BASE).subscribe({
       next: (res) => {
         if (res.success) this.articlesSignal.set(res.articles);
+        this.loaded.set(true);
       },
-      error: (err) => console.warn('Failed to load news articles', err),
+      error: (err) => {
+        this.loaded.set(true);
+        console.warn('Failed to load news articles', err);
+      },
     });
   }
 

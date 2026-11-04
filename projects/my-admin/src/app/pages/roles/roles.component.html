@@ -1,0 +1,60 @@
+<div class="admin-page">
+  <div class="page-breadcrumb">
+    Hệ thống <span class="sep">/</span> <span class="current">Phân quyền</span>
+  </div>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Vai trò & phân quyền</h1>
+      <p class="page-subtitle">Quyền Xem / Tạo / Sửa / Xoá / Duyệt theo từng phân hệ — có hiệu lực ngay, không cần đăng nhập lại</p>
+    </div>
+  </div>
+
+  <app-mascot-loading *ngIf="loading()" message="Đang tải bảng phân quyền…" [overlay]="false"></app-mascot-loading>
+
+  <div class="roles-layout" *ngIf="!loading()">
+    <div class="info-card role-list">
+      <h3 class="section-title">Danh sách vai trò</h3>
+      <button type="button" *ngFor="let r of roles" class="role-item" [class.active]="selectedRoleId() === r.id" (click)="selectedRoleId.set(r.id)">
+        <span class="role-name">{{ r.name }}</span>
+        <span class="role-desc">{{ r.desc }}</span>
+        <span class="role-meta">
+          <i class="bi bi-people"></i> {{ staffCount(r.name) }} nhân viên · {{ grantedCount(r.id) }} quyền
+        </span>
+      </button>
+    </div>
+
+    <div>
+      <div class="notice-box info" *ngIf="isSuperRole">
+        <i class="bi bi-shield-lock"></i> Super Admin luôn có toàn quyền, không chỉnh được.
+      </div>
+      <div class="notice-box warning" *ngIf="!isSuperRole && !adminAuth.isSuperAdmin()">
+        <i class="bi bi-lock"></i> Chỉ Super Admin được sửa bảng phân quyền. Bạn đang xem ở chế độ chỉ đọc.
+      </div>
+
+      <div class="table-scrollable">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Phân hệ — {{ selectedRole().name }}</th>
+              <th *ngFor="let p of permKeys" class="text-center">{{ p.label }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let m of modules">
+              <td class="cell-strong">{{ m.name }}</td>
+              <td *ngFor="let p of permKeys" class="text-center">
+                <input #box type="checkbox" class="form-check-input perm-box"
+                  [checked]="has(m.key, p.key)"
+                  [disabled]="!canEdit || saving() === m.key + '.' + p.key"
+                  [attr.aria-label]="p.label + ' ' + m.name"
+                  (change)="toggle(m.key, p.key, box)">
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="form-hint mt-2" *ngIf="canEdit"><i class="bi bi-info-circle"></i> Mỗi lần bấm được lưu ngay lên server.</p>
+    </div>
+  </div>
+</div>

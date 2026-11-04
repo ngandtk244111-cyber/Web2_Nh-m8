@@ -1,10 +1,11 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ProductService } from '../../core/services/product.service';
 import { NewsService } from '../../core/services/news.service';
 import { CommunityService } from '../../core/services/community.service';
 import { RoomService } from '../../core/services/room.service';
+import { BannerService } from '../../core/services/banner.service';
 import { Product, ProductStyle } from '../../core/models/product.model';
 import { BRAND_HASHTAGS, BRAND_TAGLINES, styleFromSlug } from '../../core/data/brand-styles';
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
@@ -15,9 +16,11 @@ interface BannerSlide {
   title: string;
   sub: string;
   link: string;
+  queryParams?: Record<string, string>;
 }
 
-/** Banner chiến dịch dùng lại asset hero có sẵn; link chỉ tới route đang tồn tại. */
+/** Banner chiến dịch dùng lại asset hero có sẵn; link chỉ tới route đang tồn tại. Thứ tự khớp BANNER_SLOT_IDS. */
+const BANNER_SLOT_IDS = ['brand-flash-sale', 'brand-room-3d', 'brand-print-3d', 'brand-ai', 'brand-freeship'];
 const BANNERS: BannerSlide[] = [
   { image: 'assets/hero-banner/hero-deal-today.png', title: 'Flash Sale Giá Tốt', sub: 'Deal decor nhỏ, giảm đến 40% mỗi ngày', link: '/flash-sale' },
   { image: 'assets/hero-banner/hero-room-3d.png', title: 'Phòng Mẫu 3D', sub: 'Xoay không gian và mua món đồ bạn thích', link: '/shop-the-room' },
@@ -34,7 +37,27 @@ const BANNERS: BannerSlide[] = [
   styleUrl: './brand.component.css'
 })
 export class BrandComponent {
-  readonly banners = BANNERS;
+  private bannerService = inject(BannerService);
+
+  private readonly mergedBanners = computed<BannerSlide[]>(() => {
+    const overrides = this.bannerService.overrides();
+    return BANNERS.map((banner, i) => {
+      const o = overrides[BANNER_SLOT_IDS[i]];
+      if (!o) return banner;
+      return {
+        ...banner,
+        image: o.imageUrl || banner.image,
+        title: o.title || banner.title,
+        sub: o.subtitle || banner.sub,
+        ...(o.ctaLink ? this.bannerService.splitLink(o.ctaLink) : {}),
+      };
+    });
+  });
+
+  get banners(): BannerSlide[] {
+    return this.mergedBanners();
+  }
+
   /** Avatar "Đội ngũ Luméa" xoay vòng các biểu cảm Goh cho sinh động. */
   readonly staffAvatars = [
     'assets/mascot/goh-happy.png',

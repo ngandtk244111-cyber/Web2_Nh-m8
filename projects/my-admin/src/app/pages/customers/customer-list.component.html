@@ -1,0 +1,88 @@
+<div class="admin-page">
+  <div class="page-breadcrumb">
+    Khách hàng <span class="sep">/</span> <span class="current">Danh sách khách hàng</span>
+  </div>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Danh sách khách hàng</h1>
+      <p class="page-subtitle">Khách mua hàng gom theo số điện thoại nhận hàng — lịch sử mua và tỉ lệ nhận hàng COD</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn-header" (click)="reload()"><i class="bi bi-arrow-clockwise"></i> Tải lại</button>
+      <button type="button" class="btn-header primary" (click)="exportExcel()"><i class="bi bi-file-earmark-excel"></i> Xuất Excel</button>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <button type="button" *ngFor="let f of filters" class="stat-card" [ngClass]="f.tone"
+      [class.active]="filter() === f.key" (click)="setFilter(f.key)">
+      <span class="stat-label">{{ f.label }}</span>
+      <span class="stat-value">{{ count(f.key) }}</span>
+    </button>
+  </div>
+
+  <div class="filter-bar">
+    <div class="filter-left">
+      <div class="search-wrapper">
+        <input type="text" class="search-input" placeholder="Tên, SĐT hoặc email..."
+          [ngModel]="search()" (ngModelChange)="onSearch($event)">
+        <i class="bi bi-search search-icon"></i>
+      </div>
+    </div>
+    <div class="actions-group">
+      <span class="selection-info">{{ filtered().length }} khách hàng</span>
+    </div>
+  </div>
+
+  <app-mascot-loading *ngIf="loading()" message="Đang tải danh sách khách hàng…" [overlay]="false"></app-mascot-loading>
+
+  <div class="table-scrollable" *ngIf="!loading()">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Khách hàng</th>
+          <th>Liên hệ</th>
+          <th>Khu vực</th>
+          <th class="text-center">Số đơn</th>
+          <th class="text-center">Nhận thành công</th>
+          <th class="text-right">Đã chi</th>
+          <th>Đơn gần nhất</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let c of visible(); trackBy: trackByPhone" class="clickable" (click)="openCustomer(c)">
+          <td>
+            <div class="cell-media">
+              <span class="avatar" [class.has-account]="c.hasAccount">{{ c.name.charAt(0).toUpperCase() }}</span>
+              <span>
+                <a class="cell-strong customer-name" [routerLink]="['/customers', c.phone]" (click)="$event.stopPropagation()">{{ c.name }}</a>
+                <span class="cell-sub">{{ c.hasAccount ? 'Có tài khoản' : 'Khách vãng lai' }}</span>
+              </span>
+            </div>
+          </td>
+          <td>
+            {{ c.phone }}
+            <span class="cell-sub">{{ c.email || '—' }}</span>
+          </td>
+          <td>{{ c.city }}</td>
+          <td class="text-center">
+            {{ c.orders.length }}
+            <span class="cell-sub" *ngIf="c.openCount">{{ c.openCount }} đang xử lý</span>
+          </td>
+          <td class="text-center">
+            <span class="status-badge" [ngClass]="rateClass(c)">{{ successRate(c) === null ? 'Chưa có' : successRate(c) + '%' }}</span>
+            <span class="cell-sub" *ngIf="c.returnedCount">{{ c.returnedCount }} lần hoàn hàng</span>
+          </td>
+          <td class="text-right money">{{ c.totalSpend | vnd }}</td>
+          <td>{{ c.lastOrderAt | date:'dd/MM/yyyy' }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="empty-state" *ngIf="filtered().length === 0">
+      <i class="bi bi-people"></i>
+      {{ customers().length === 0 ? 'Chưa có khách hàng nào đặt đơn.' : 'Không có khách hàng nào khớp bộ lọc.' }}
+    </div>
+    <app-pager [total]="filtered().length" [page]="page()" [pageSize]="pageSize" (pageChange)="page.set($event)"></app-pager>
+  </div>
+</div>

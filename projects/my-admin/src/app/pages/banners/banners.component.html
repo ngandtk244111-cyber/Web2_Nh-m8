@@ -1,0 +1,97 @@
+<div class="admin-page">
+  <div class="page-breadcrumb">
+    Marketing <span class="sep">/</span> <span class="current">Banner trang chủ</span>
+  </div>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Poster & banner</h1>
+      <p class="page-subtitle">Các vị trí đang hiển thị trên cửa hàng — bấm Sửa để thay ảnh hoặc nội dung, khách thấy khi tải lại trang</p>
+    </div>
+  </div>
+
+  <app-mascot-loading *ngIf="loading()" message="Đang tải cấu hình banner…" [overlay]="false"></app-mascot-loading>
+
+  <ng-container *ngIf="!loading()">
+    <section class="banner-group" *ngFor="let group of groups">
+      <h3 class="section-title">{{ group.name }} <span class="tag">{{ group.slots.length }} vị trí</span></h3>
+      <div class="banner-grid">
+        <div class="banner-card" *ngFor="let slot of group.slots" [class.is-hidden]="!isActive(slot)">
+          <div class="banner-preview">
+            <img *ngIf="slot.imageRatio; else noImage" [src]="value(slot, 'imageUrl')" [alt]="slot.name">
+            <ng-template #noImage>
+              <span class="no-image"><i class="bi bi-camera-video"></i> Vị trí này dùng video</span>
+            </ng-template>
+            <span class="tag primary edited-tag" *ngIf="isCustomized(slot)">Đã sửa</span>
+          </div>
+          <div class="banner-info">
+            <div class="banner-name">{{ slot.name }}</div>
+            <div class="banner-link" *ngIf="value(slot, 'ctaLink') as link"><i class="bi bi-link-45deg"></i> {{ link }}</div>
+            <div class="banner-actions">
+              <span class="status-badge" [ngClass]="isActive(slot) ? 'status-green' : 'status-gray'">
+                {{ isActive(slot) ? 'Đang hiện' : 'Đang ẩn' }}
+              </span>
+              <span class="flex-spacer"></span>
+              <button type="button" class="action-btn sm" *ngIf="slot.canToggle && canEdit" [disabled]="saving" (click)="toggle(slot)">
+                <i class="bi" [ngClass]="isActive(slot) ? 'bi-eye-slash' : 'bi-eye'"></i> {{ isActive(slot) ? 'Ẩn' : 'Hiện' }}
+              </button>
+              <button type="button" class="action-btn sm" (click)="openEdit(slot)">
+                <i class="bi" [ngClass]="canEdit ? 'bi-pencil' : 'bi-eye'"></i> {{ canEdit ? 'Sửa' : 'Xem' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </ng-container>
+</div>
+
+<!-- Sửa banner -->
+<div class="modal-overlay" *ngIf="editingSlot as slot" (click)="closeEdit()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">{{ canEdit ? 'Sửa' : 'Xem' }}: {{ slot.name }}</h3>
+      <button type="button" class="close-btn" (click)="closeEdit()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="mb-3" *ngIf="slot.imageRatio">
+        <label class="form-label">Hình ảnh</label>
+        <div class="img-edit">
+          <img class="img-edit-preview" [src]="form['imageUrl']" alt="Ảnh banner" [style.aspect-ratio]="slot.imageRatio">
+          <div *ngIf="canEdit">
+            <input #imageInput type="file" hidden accept="image/jpeg,image/png,image/webp,image/gif" (change)="onImageSelected($event)">
+            <button type="button" class="action-btn" (click)="imageInput.click()" [disabled]="uploading">
+              <i class="bi" [ngClass]="uploading ? 'bi-hourglass-split' : 'bi-upload'"></i> {{ uploading ? 'Đang tải lên...' : 'Thay ảnh' }}
+            </button>
+            <p class="form-hint">Chọn ảnh rồi cắt theo khung. Ảnh GIF không qua bước cắt nên có thể bị lệch khung.</p>
+            <p class="form-hint" *ngIf="slot.imageHint">{{ slot.imageHint }}</p>
+          </div>
+        </div>
+      </div>
+      <div class="mb-3" *ngFor="let field of slot.fields">
+        <label class="form-label">{{ field.label }} <span class="req">*</span></label>
+        <app-link-picker *ngIf="field.key === 'ctaLink'; else textField" [(ngModel)]="form[field.key]" [disabled]="!canEdit"></app-link-picker>
+        <ng-template #textField>
+          <input type="text" class="form-control" [(ngModel)]="form[field.key]" [disabled]="!canEdit">
+        </ng-template>
+      </div>
+      <div class="empty-state py-2" *ngIf="!slot.imageRatio && slot.fields.length === 0">Vị trí này không có nội dung chỉnh được.</div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn-cancel me-auto" *ngIf="canEdit" (click)="resetToDefault()"><i class="bi bi-arrow-counterclockwise"></i> Về nội dung gốc</button>
+      <button type="button" class="btn-cancel" (click)="closeEdit()">{{ canEdit ? 'Huỷ' : 'Đóng' }}</button>
+      <button type="button" class="btn-save" *ngIf="canEdit" (click)="save()" [disabled]="uploading || saving"><i class="bi bi-save"></i> Lưu banner</button>
+    </div>
+  </div>
+
+  <app-image-cropper
+    *ngIf="cropFile"
+    (click)="$event.stopPropagation()"
+    [file]="cropFile"
+    [ratio]="slot.imageRatio!"
+    [hint]="slot.imageHint || ''"
+    (cropped)="onCropped($event)"
+    (cancelled)="cropFile = null"
+    (failed)="onCropFailed()">
+  </app-image-cropper>
+</div>

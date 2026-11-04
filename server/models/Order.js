@@ -86,6 +86,9 @@ const orderSchema = new mongoose.Schema({
   // --- Cơ chế COD ---
   // Nhân viên gọi xác nhận với khách trước khi giao (bắt buộc với COD) — giảm đơn ảo/bom hàng.
   phoneConfirmedAt: { type: Date, default: null },
+  // Chốt lúc đặt theo ngưỡng trong Cài đặt (utils/cod-policy.js): false = đơn COD nhỏ, giao không cần gọi.
+  // Đơn cũ không có trường này coi như phải gọi.
+  phoneConfirmRequired: { type: Boolean, default: true },
   phoneConfirmedBy: { type: String, default: null },
   // Shipper đã thu tiền COD khi giao thành công; tiền còn nằm ở hãng vận chuyển tới khi đối soát
   // (lúc đó nhân viên xác nhận → paymentStatus PAID).
@@ -113,7 +116,28 @@ const orderSchema = new mongoose.Schema({
   total: { type: Number, required: true },
   notes: { type: String, default: '' },
   paymentTransactionId: { type: String, default: '' },
-}, { timestamps: true });
+  // Đơn này đã trừ kho và chưa hoàn. Đơn tạo trước khi có trừ kho mặc định false, huỷ không cộng kho.
+  stockReserved: { type: Boolean, default: false },
+}, {
+  timestamps: true,
+  // Id nhân viên không gửi ra ngoài, frontend không đọc các field này. Đơn cũ từng sao chép cả
+  // đánh giá của sản phẩm (có tên khách khác) nên cũng bỏ khi trả về.
+  toJSON: {
+    transform(_doc, ret) {
+      delete ret.paidConfirmedBy;
+      delete ret.phoneConfirmedBy;
+      if (ret.shipment) delete ret.shipment.createdBy;
+      (ret.items || []).forEach(item => { if (item.product) delete item.product.reviews; });
+      return ret;
+    },
+  },
+});
+
+orderSchema.index({ userId: 1, createdAt: -1 });
+orderSchema.index({ createdAt: -1 });
+orderSchema.index({ 'items.product.id': 1 });
+orderSchema.index({ 'items.product.images': 1 });
+orderSchema.index({ paymentTransactionId: 1 });
 
 // Realtime: mọi thay đổi đơn hàng (route orders/payments, dù dùng save() hay findOneAndUpdate)
 // đều được đẩy tới trang Tra cứu đơn đang mở mã đơn đó — không phải thêm lệnh emit ở từng route.

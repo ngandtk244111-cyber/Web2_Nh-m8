@@ -329,7 +329,7 @@ export class LoginModalComponent implements AfterViewChecked {
 
   private loggedIn(res: AuthApiResponse, message: string): void {
     if (!res.user) return;
-    this.authService.setUser(res.user);
+    this.authService.setUser(res.user, res.token);
     this.toastService.success(message);
     this.mascotService.react('happy');
     this.close();

@@ -27,10 +27,11 @@ export interface InvoiceRequest {
   companyAddress?: string;
 }
 
-/** Link hoá đơn PDF của đơn (mở trong trình duyệt; download=true để tải file). */
-export function invoiceUrl(orderNumber: string, userId?: string | null, download = false): string {
+/** Link hoá đơn PDF của đơn (mở trong trình duyệt; download=true để tải file). Thẻ <a>/tab mới không gửi
+ *  header Authorization nên token đăng nhập đi kèm qua ?token=. */
+export function invoiceUrl(orderNumber: string, token?: string | null, download = false): string {
   const params = new URLSearchParams();
-  if (userId) params.set('userId', userId);
+  if (token) params.set('token', token);
   if (download) params.set('download', '1');
   const q = params.toString();
   return `${environment.apiUrl}/orders/${encodeURIComponent(orderNumber)}/invoice${q ? '?' + q : ''}`;
@@ -77,9 +78,10 @@ export class OrderService {
     );
   }
 
-  /** Tra cứu 1 đơn theo mã đơn hàng — dùng cho trang theo dõi đơn (không cần đăng nhập). */
-  getOrderByNumber(orderNumber: string): Observable<Order | null> {
-    return this.http.get<OrderApiResponse>(`${this.baseUrl}/by-number/${encodeURIComponent(orderNumber)}`).pipe(
+  /** Tra cứu 1 đơn theo mã đơn: chủ tài khoản xem được ngay, người khác cần đúng SĐT nhận hàng. */
+  getOrderByNumber(orderNumber: string, phone = ''): Observable<Order | null> {
+    const params: Record<string, string> = phone ? { phone } : {};
+    return this.http.get<OrderApiResponse>(`${this.baseUrl}/by-number/${encodeURIComponent(orderNumber)}`, { params }).pipe(
       map(res => res.order ? this.normalize(res.order) : null),
       catchError(() => of(null))
     );
@@ -122,8 +124,8 @@ export class OrderService {
     );
   }
 
-  confirmPayment(orderNumber: string): Observable<Order> {
-    return this.http.patch<OrderApiResponse>(`${this.baseUrl}/${encodeURIComponent(orderNumber)}/confirm-payment`, {}).pipe(
+  confirmPayment(orderNumber: string, phone: string): Observable<Order> {
+    return this.http.patch<OrderApiResponse>(`${this.baseUrl}/${encodeURIComponent(orderNumber)}/confirm-payment`, { phone }).pipe(
       map(res => this.normalize(res.order!)),
       tap(order => this.replaceInSignal(order))
     );
@@ -198,10 +200,10 @@ export class OrderService {
    * giao hàng, thanh toán...). Khi mất kết nối rồi nối lại sẽ tự tải lại đơn để không lỡ thay đổi.
    * Huỷ subscribe = rời phòng theo dõi; hết người theo dõi thì đóng socket.
    */
-  watchOrder(orderNumber: string): Observable<Order> {
+  watchOrder(orderNumber: string, phone = ''): Observable<Order> {
     return new Observable<Order>(subscriber => {
       const socket = this.acquireSocket();
-      const join = () => socket.emit('order:watch', orderNumber);
+      const join = () => socket.emit('order:watch', { orderNumber, phone, userToken: this.authService.token });
       const onUpdate = (order: Order & { _id?: string }) => {
         if (order?.orderNumber === orderNumber) subscriber.next(this.normalize(order));
       };
@@ -210,7 +212,7 @@ export class OrderService {
         join();
         // Lần kết nối lại: đồng bộ các thay đổi có thể đã lỡ trong lúc mất mạng.
         if (!firstConnect) {
-          this.getOrderByNumber(orderNumber).subscribe(order => order && subscriber.next(order));
+          this.getOrderByNumber(orderNumber, phone).subscribe(order => order && subscriber.next(order));
         }
         firstConnect = false;
       };

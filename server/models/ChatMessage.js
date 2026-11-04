@@ -15,6 +15,15 @@ const chatMessageSchema = new mongoose.Schema({
   // Tin do trợ lý tự động gửi (sender 'staff', không có staffId) kèm các nút dẫn tới trang liên quan.
   auto: { type: Boolean, default: false },
   links: { type: [{ label: String, url: String, _id: false }], default: undefined },
-}, { timestamps: true });
+}, {
+  timestamps: true,
+  // Lịch sử chat đọc được chỉ bằng sessionId — không gửi id nhân viên ra ngoài (xem middleware/auth.js).
+  toJSON: {
+    transform(_doc, ret) {
+      delete ret.staffId;
+      return ret;
+    },
+  },
+});
 
 module.exports = mongoose.model('ChatMessage', chatMessageSchema);

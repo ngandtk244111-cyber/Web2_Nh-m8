@@ -119,7 +119,6 @@ export class OrderService {
     this.updateOrderStatus(orderNumber, status, progress).subscribe();
   }
 
-  /** Đã gọi điện xác nhận đơn với khách (bắt buộc trước khi giao đơn COD). */
   /** Duyệt / từ chối / hoàn tất yêu cầu trả hàng của khách. */
   reviewReturn(orderNumber: string, action: 'approve' | 'reject' | 'complete', adminNote = ''): Observable<Order> {
     return this.http.patch<OrderApiResponse>(`${this.baseUrl}/${encodeURIComponent(orderNumber)}/return-request/review`, {
@@ -132,6 +131,7 @@ export class OrderService {
     );
   }
 
+  /** Đã gọi điện xác nhận đơn với khách (bắt buộc trước khi giao đơn COD). */
   confirmPhone(orderNumber: string): Observable<Order> {
     return this.http.patch<OrderApiResponse>(`${this.baseUrl}/${encodeURIComponent(orderNumber)}/confirm-phone`, {
       adminId: this.adminAuth.adminId,

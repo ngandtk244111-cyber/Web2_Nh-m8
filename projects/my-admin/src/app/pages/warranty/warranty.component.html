@@ -1,0 +1,196 @@
+<div class="admin-page">
+  <div class="page-breadcrumb">
+    Đơn hàng <span class="sep">/</span> <span class="current">Bảo hành</span>
+  </div>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Phiếu bảo hành</h1>
+      <p class="page-subtitle">Phiếu bảo hành theo đơn hàng và yêu cầu bảo hành khách gửi từ cửa hàng</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn-header" (click)="exportExcel()"><i class="bi bi-file-earmark-excel"></i> Xuất Excel</button>
+      <button type="button" class="btn-add-action" *ngIf="canEdit" (click)="openCreate()">
+        <i class="bi bi-plus-lg"></i> Tạo phiếu bảo hành
+      </button>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <button type="button" *ngFor="let f of filters" class="stat-card" [ngClass]="f.tone"
+      [class.active]="filter() === f.key" (click)="setFilter(f.key)">
+      <span class="stat-label">{{ f.label }}</span>
+      <span class="stat-value">{{ count(f.key) }}</span>
+    </button>
+  </div>
+
+  <div class="filter-bar">
+    <div class="filter-left">
+      <div class="search-wrapper">
+        <input type="text" class="search-input" placeholder="Mã phiếu, mã đơn, tên hoặc SĐT..."
+          [ngModel]="search()" (ngModelChange)="onSearch($event)">
+        <i class="bi bi-search search-icon"></i>
+      </div>
+    </div>
+    <div class="actions-group">
+      <span class="selection-info">{{ filtered().length }} phiếu</span>
+    </div>
+  </div>
+
+  <div class="table-scrollable">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Mã phiếu</th>
+          <th>Đơn hàng</th>
+          <th>Sản phẩm</th>
+          <th>Khách hàng</th>
+          <th>Hết hạn</th>
+          <th>Trạng thái</th>
+          <th class="text-right">Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let w of visible(); trackBy: trackByCode" class="clickable" (click)="detail = w">
+          <td class="cell-strong">{{ w.warrantyCode }}</td>
+          <td>
+            <a class="order-code" [routerLink]="['/orders', w.orderNumber]" (click)="$event.stopPropagation()">{{ w.orderNumber }}</a>
+          </td>
+          <td class="cell-product">{{ w.productName }}</td>
+          <td>
+            {{ w.customerName }}
+            <span class="cell-sub">{{ w.customerPhone }}</span>
+          </td>
+          <td>
+            {{ w.expiresAt | date:'dd/MM/yyyy' }}
+            <span class="cell-sub">{{ w.warrantyMonths }} tháng</span>
+          </td>
+          <td>
+            <span class="status-badge" [ngClass]="stateClass(w)">{{ stateLabel(w) }}</span>
+            <span class="cell-sub note" *ngIf="state(w) === 'CLAIMED' && lastNote(w)">“{{ lastNote(w) }}”</span>
+          </td>
+          <td class="text-right">
+            <div class="row-actions">
+              <button type="button" class="icon-btn" title="Xem chi tiết" (click)="$event.stopPropagation(); detail = w">
+                <i class="bi bi-eye"></i>
+              </button>
+              <button type="button" class="action-btn sm success" *ngIf="canEdit && w.status === 'CLAIMED'"
+                (click)="$event.stopPropagation(); openResolve(w)">
+                <i class="bi bi-check2-circle"></i> Đóng yêu cầu
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="empty-state" *ngIf="filtered().length === 0">
+      <i class="bi bi-shield-check"></i>
+      Không có phiếu bảo hành phù hợp.
+    </div>
+    <app-pager [total]="filtered().length" [page]="page()" [pageSize]="pageSize" (pageChange)="page.set($event)"></app-pager>
+  </div>
+</div>
+
+<!-- Tạo phiếu -->
+<div class="modal-overlay" *ngIf="showCreate" (click)="showCreate = false">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">Tạo phiếu bảo hành</h3>
+      <button type="button" class="close-btn" (click)="showCreate = false">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="mb-3">
+        <label class="form-label">Mã đơn hàng <span class="req">*</span></label>
+        <div class="input-group">
+          <input class="form-control" [(ngModel)]="form.orderNumber" (blur)="fillFromOrder()" (keydown.enter)="fillFromOrder()" placeholder="VD: LM-240925-001">
+          <button type="button" class="btn btn-outline-primary" (click)="fillFromOrder()"><i class="bi bi-magic"></i> Điền từ đơn</button>
+        </div>
+        <div class="form-hint" *ngIf="formOrderFound"><i class="bi bi-check2"></i> Đã điền thông tin từ đơn hàng.</div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Sản phẩm <span class="req">*</span></label>
+        <input class="form-control" [(ngModel)]="form.productName">
+      </div>
+      <div class="row g-3 mb-3">
+        <div class="col-md-6">
+          <label class="form-label">Tên khách <span class="req">*</span></label>
+          <input class="form-control" [(ngModel)]="form.customerName">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">SĐT khách <span class="req">*</span></label>
+          <input class="form-control" [(ngModel)]="form.customerPhone">
+          <div class="form-hint">Khách tra cứu bảo hành bằng mã phiếu + SĐT này.</div>
+        </div>
+      </div>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Ngày mua / nhận hàng</label>
+          <input type="text" class="form-control" appDatePicker placeholder="dd/mm/yyyy" [(ngModel)]="form.purchasedAt">
+          <div class="form-hint">Bỏ trống = hôm nay.</div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Thời hạn (tháng)</label>
+          <input type="number" min="1" class="form-control" [(ngModel)]="form.warrantyMonths">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn-cancel" (click)="showCreate = false">Huỷ</button>
+      <button type="button" class="btn-save" [disabled]="saving" (click)="saveWarranty()"><i class="bi bi-save"></i> Tạo phiếu</button>
+    </div>
+  </div>
+</div>
+
+<!-- Chi tiết phiếu -->
+<div class="modal-overlay" *ngIf="detail as w" (click)="detail = null">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">Phiếu {{ w.warrantyCode }}</h3>
+      <button type="button" class="close-btn" (click)="detail = null">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="info-row"><span class="label">Trạng thái</span><span class="value"><span class="status-badge" [ngClass]="stateClass(w)">{{ stateLabel(w) }}</span></span></div>
+      <div class="info-row"><span class="label">Đơn hàng</span><span class="value"><a [routerLink]="['/orders', w.orderNumber]" (click)="detail = null">{{ w.orderNumber }}</a></span></div>
+      <div class="info-row"><span class="label">Sản phẩm</span><span class="value">{{ w.productName }}</span></div>
+      <div class="info-row"><span class="label">Khách hàng</span><span class="value">{{ w.customerName }} · {{ w.customerPhone }}</span></div>
+      <div class="info-row"><span class="label">Ngày mua</span><span class="value">{{ w.purchasedAt | date:'dd/MM/yyyy' }}</span></div>
+      <div class="info-row"><span class="label">Hết hạn</span><span class="value">{{ w.expiresAt | date:'dd/MM/yyyy' }} ({{ w.warrantyMonths }} tháng)</span></div>
+
+      <div class="divider"></div>
+      <h4 class="section-title">Lịch sử yêu cầu bảo hành</h4>
+      <div class="empty-state py-3" *ngIf="!w.claimHistory?.length">Khách chưa gửi yêu cầu bảo hành nào.</div>
+      <ul class="history" *ngIf="w.claimHistory?.length">
+        <li *ngFor="let h of w.claimHistory">
+          <span class="time">{{ h.createdAt | date:'HH:mm dd/MM/yyyy' }}</span>
+          <span>{{ h.note }}</span>
+        </li>
+      </ul>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn-cancel" (click)="detail = null">Đóng</button>
+      <button type="button" class="btn-save" *ngIf="canEdit && w.status === 'CLAIMED'" (click)="openResolve(w)">
+        <i class="bi bi-check2-circle"></i> Đóng yêu cầu
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Đóng yêu cầu -->
+<div class="modal-overlay" *ngIf="resolving as w" (click)="resolving = null">
+  <div class="modal-box sm" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">Đóng yêu cầu {{ w.warrantyCode }}</h3>
+      <button type="button" class="close-btn" (click)="resolving = null">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="notice-box warning" *ngIf="lastNote(w)">Khách báo: “{{ lastNote(w) }}”</div>
+      <label class="form-label">Kết quả xử lý <span class="req">*</span></label>
+      <textarea class="form-control" rows="3" [(ngModel)]="resolveNote" placeholder="VD: Đã đổi mạch LED mới cho khách"></textarea>
+      <div class="form-hint">Phiếu quay về trạng thái còn hiệu lực sau khi đóng yêu cầu.</div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn-cancel" (click)="resolving = null">Huỷ</button>
+      <button type="button" class="btn-save" [disabled]="saving || !resolveNote.trim()" (click)="confirmResolve()">Xác nhận đã xử lý</button>
+    </div>
+  </div>
+</div>

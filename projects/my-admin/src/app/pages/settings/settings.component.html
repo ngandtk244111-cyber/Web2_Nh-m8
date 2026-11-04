@@ -1,0 +1,148 @@
+<div class="admin-page">
+  <div class="page-breadcrumb">
+    Hệ thống <span class="sep">/</span> <span class="current">Cài đặt</span>
+  </div>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Cài đặt hệ thống</h1>
+      <p class="page-subtitle">Thông tin showroom, đơn giá xưởng in 3D, Xu thưởng và cổng thanh toán</p>
+    </div>
+    <div class="header-actions" *ngIf="canEdit">
+      <button type="button" class="btn-header" [disabled]="!dirty || saving" (click)="reset()"><i class="bi bi-arrow-counterclockwise"></i> Huỷ thay đổi</button>
+      <button type="button" class="btn-add-action" [disabled]="saving" (click)="save()"><i class="bi bi-save"></i> Lưu cài đặt</button>
+    </div>
+  </div>
+
+  <div class="notice-box info" *ngIf="!canEdit">
+    <i class="bi bi-eye"></i> Bạn chỉ có quyền xem cài đặt.
+  </div>
+
+  <app-mascot-loading *ngIf="loading()" message="Đang tải cài đặt…" [overlay]="false"></app-mascot-loading>
+
+  <ng-container *ngIf="!loading()">
+    <div class="chip-tabs">
+      <button type="button" *ngFor="let t of tabs" class="chip-tab" [class.active]="tab() === t.key" (click)="tab.set(t.key)">
+        <i class="bi" [ngClass]="t.icon"></i> {{ t.label }}
+      </button>
+    </div>
+
+    <fieldset class="info-card" [disabled]="!canEdit" (input)="markDirty()" (change)="markDirty()">
+      <!-- Cửa hàng -->
+      <ng-container *ngIf="tab() === 'general'">
+        <h3 class="section-title">Thông tin thương hiệu & showroom</h3>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Tên thương hiệu <span class="req">*</span></label>
+            <input class="form-control" name="storeName" [(ngModel)]="form.storeName">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Slogan</label>
+            <input class="form-control" name="slogan" [(ngModel)]="form.slogan">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Hotline CSKH</label>
+            <input class="form-control" name="hotline" [(ngModel)]="form.hotline">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Email hỗ trợ</label>
+            <input type="email" class="form-control" name="supportEmail" [(ngModel)]="form.supportEmail">
+          </div>
+          <div class="col-md-8">
+            <label class="form-label">Địa chỉ showroom</label>
+            <input class="form-control" name="showroomAddress" [(ngModel)]="form.showroomAddress">
+            <div class="form-hint">Dùng để ghim showroom trên bản đồ ở trang Tổng quan.</div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Giờ mở cửa</label>
+            <input class="form-control" name="businessHours" [(ngModel)]="form.businessHours">
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- In 3D -->
+      <ng-container *ngIf="tab() === 'print3d'">
+        <h3 class="section-title">Bảng giá vật liệu in 3D (tính báo giá)</h3>
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">Nhựa PLA Matte (đ / gram)</label>
+            <input type="number" min="0" class="form-control" name="plaPerGram" [(ngModel)]="form.plaPerGram">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Resin sinh học (đ / gram)</label>
+            <input type="number" min="0" class="form-control" name="resinPerGram" [(ngModel)]="form.resinPerGram">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Gỗ composite (đ / gram)</label>
+            <input type="number" min="0" class="form-control" name="woodPerGram" [(ngModel)]="form.woodPerGram">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Phí xử lý bề mặt & hậu kỳ (đ / sản phẩm)</label>
+            <input type="number" min="0" class="form-control" name="finishLaborFee" [(ngModel)]="form.finishLaborFee">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Thời gian sản xuất mặc định (ngày)</label>
+            <input type="number" min="0" class="form-control" name="defaultLeadDays" [(ngModel)]="form.defaultLeadDays">
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- Xu thưởng -->
+      <ng-container *ngIf="tab() === 'loyalty'">
+        <h3 class="section-title">Xu thưởng thành viên</h3>
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">Chi tiêu để nhận 10 Xu (đ)</label>
+            <input type="number" min="0" class="form-control" name="earnCoinRate" [(ngModel)]="form.earnCoinRate">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Giá trị 1 Xu khi dùng (đ)</label>
+            <input type="number" min="0" class="form-control" name="coinRedeemValue" [(ngModel)]="form.coinRedeemValue">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Dùng Xu tối đa (% giá trị đơn)</label>
+            <input type="number" min="0" max="100" class="form-control" name="maxCoinPerOrder" [(ngModel)]="form.maxCoinPerOrder">
+          </div>
+        </div>
+        <div class="notice-box info mt-3 mb-0">
+          Ví dụ: đơn {{ (form.earnCoinRate * 5) | number:'1.0-0' }}đ được cộng 50 Xu, tương đương {{ (50 * form.coinRedeemValue) | number:'1.0-0' }}đ cho đơn sau.
+        </div>
+      </ng-container>
+
+      <!-- Thanh toán -->
+      <ng-container *ngIf="tab() === 'payment'">
+        <h3 class="section-title">Cổng thanh toán hỗ trợ</h3>
+        <div class="pay-grid">
+          <label class="pay-option" [class.on]="form.enableCod">
+            <input type="checkbox" class="form-check-input" name="enableCod" [(ngModel)]="form.enableCod">
+            <span><b>COD</b><span class="d-block small text-muted-2">Thu tiền khi giao hàng</span></span>
+          </label>
+          <label class="pay-option" [class.on]="form.enableBankQr">
+            <input type="checkbox" class="form-check-input" name="enableBankQr" [(ngModel)]="form.enableBankQr">
+            <span><b>Chuyển khoản QR</b><span class="d-block small text-muted-2">Khách báo đã chuyển, nhân viên đối soát</span></span>
+          </label>
+          <label class="pay-option" [class.on]="form.enableMomo">
+            <input type="checkbox" class="form-check-input" name="enableMomo" [(ngModel)]="form.enableMomo">
+            <span><b>Ví MoMo</b><span class="d-block small text-muted-2">Sandbox</span></span>
+          </label>
+          <label class="pay-option" [class.on]="form.enableZaloPay">
+            <input type="checkbox" class="form-check-input" name="enableZaloPay" [(ngModel)]="form.enableZaloPay">
+            <span><b>ZaloPay</b><span class="d-block small text-muted-2">Sandbox</span></span>
+          </label>
+        </div>
+
+        <h3 class="section-title mt-4">Gọi xác nhận đơn COD</h3>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label" for="codConfirmThreshold">Đơn COD từ mức này trở lên phải gọi xác nhận (đ)</label>
+            <input id="codConfirmThreshold" type="number" min="0" step="50000" class="form-control" name="codConfirmThreshold" [(ngModel)]="form.codConfirmThreshold">
+            <div class="form-hint">
+              Đơn COD nhỏ hơn mức này giao luôn, không cần gọi. Đơn có hàng in 3D theo yêu cầu thì luôn phải gọi.
+              Nhập 0 để đơn COD nào cũng phải gọi. Chỉ áp dụng cho đơn đặt sau khi lưu.
+            </div>
+          </div>
+        </div>
+      </ng-container>
+    </fieldset>
+  </ng-container>
+</div>

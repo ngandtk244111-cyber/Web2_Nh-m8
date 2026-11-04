@@ -1,0 +1,10 @@
+.product-link {
+  display: block;
+  color: var(--color-text-primary);
+  text-decoration: none;
+}
+
+.product-link:hover {
+  color: var(--color-primary);
+  text-decoration: underline;
+}

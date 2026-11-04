@@ -3,7 +3,8 @@ const { sendError } = require('../utils/http-error');
 const { validatePrintRequest } = require('../utils/print-request-rules');
 const CustomRequest = require('../models/CustomRequest');
 const User = require('../models/User');
-const { requireAdminId, attachUserId, isActiveAdmin, validId } = require('../middleware/auth');
+const { requirePermission, attachUserId, adminIdFromRequest } = require('../middleware/auth');
+const { adminHasPermission } = require('../utils/permissions');
 
 const router = express.Router();
 
@@ -18,7 +19,11 @@ function nowLabel() {
 router.get('/', attachUserId, async (req, res) => {
   try {
     let filter;
-    if (await isActiveAdmin(validId(req.query.adminId))) {
+    const adminId = await adminIdFromRequest(req);
+    if (adminId) {
+      if (!(await adminHasPermission(adminId, 'custom3d.view'))) {
+        return res.status(403).json({ success: false, error: 'Bạn không có quyền thực hiện thao tác này' });
+      }
       filter = {};
     } else if (req.userId) {
       const user = await User.findById(req.userId, { email: 1 }).lean();
@@ -83,8 +88,12 @@ router.post('/:id/messages', async (req, res) => {
     const text = String(req.body.text || '').trim();
     if (!text) return res.status(400).json({ success: false, error: 'Nội dung tin nhắn trống' });
     if (text.length > 2000) return res.status(400).json({ success: false, error: 'Tin nhắn tối đa 2000 ký tự' });
-    // Vai trò người gửi do server quyết định: chỉ adminId hợp lệ mới gửi được với tư cách kỹ thuật viên.
-    const sender = (await isActiveAdmin(validId(req.body.adminId))) ? 'SHOP_SPECIALIST' : 'CUSTOMER';
+    // Vai trò người gửi do server quyết định: chỉ token nhân viên hợp lệ mới gửi được với tư cách kỹ thuật viên.
+    const adminId = await adminIdFromRequest(req);
+    if (adminId && !(await adminHasPermission(adminId, 'custom3d.edit'))) {
+      return res.status(403).json({ success: false, error: 'Bạn không có quyền thực hiện thao tác này' });
+    }
+    const sender = adminId ? 'SHOP_SPECIALIST' : 'CUSTOMER';
     const timestamp = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
     const newMsg = {
       id: 'msg-' + Date.now(),
@@ -116,14 +125,14 @@ const CUSTOMER_TRANSITIONS = {
   CONVERTED_TO_ORDER: ['APPROVED'],
 };
 
-router.patch('/:id/status', async (req, res, next) => {
+router.patch('/:id/status', attachUserId, async (req, res, next) => {
   try {
-    if (await isActiveAdmin(validId(req.body.adminId))) return next();
+    if (await adminIdFromRequest(req)) return next();
     const { status } = req.body;
     const allowedFrom = CUSTOMER_TRANSITIONS[status];
     if (!allowedFrom) return res.status(401).json({ success: false, error: 'Chỉ nhân viên Luméa được cập nhật trạng thái này' });
 
-    const userId = validId(req.body.userId);
+    const { userId } = req;
     const request = await CustomRequest.findOneAndUpdate(
       {
         id: req.params.id,
@@ -141,7 +150,7 @@ router.patch('/:id/status', async (req, res, next) => {
   }
 });
 
-router.patch('/:id/status', requireAdminId, async (req, res) => {
+router.patch('/:id/status', requirePermission('custom3d.edit'), async (req, res) => {
   try {
     const { status, quotationPrice, estimatedDays, preview3dModelType } = req.body;
     const update = { updatedAt: new Date().toLocaleDateString('vi-VN') };

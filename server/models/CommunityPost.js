@@ -23,6 +23,14 @@ const communityPostSchema = new mongoose.Schema({
   moderatedBy: { type: String, default: null },
   moderatedAt: { type: Date, default: null },
   isStaffPick: { type: Boolean, default: false },
+}, {
+  // Route công khai trả document này — không gửi id nhân viên ra ngoài (xem middleware/auth.js).
+  toJSON: {
+    transform(_doc, ret) {
+      delete ret.moderatedBy;
+      return ret;
+    },
+  },
 });
 
 module.exports = mongoose.model('CommunityPost', communityPostSchema);

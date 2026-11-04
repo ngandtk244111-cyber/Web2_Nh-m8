@@ -1,0 +1,128 @@
+<div class="admin-page">
+  <div class="page-breadcrumb">
+    Sản phẩm & kho <span class="sep">/</span> <span class="current">Tồn kho</span>
+  </div>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Tồn kho</h1>
+      <p class="page-subtitle">Hàng có sẵn: số lượng tồn, đã bán và nhập / xuất điều chỉnh. Sắp hết = còn ≤ {{ threshold }} cái.</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn-header primary" (click)="exportExcel()"><i class="bi bi-file-earmark-excel"></i> Xuất Excel</button>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <button type="button" class="stat-card" [class.active]="filter() === 'ALL'" (click)="setFilter('ALL')">
+      <span class="stat-label">Tất cả mặt hàng</span>
+      <span class="stat-value">{{ count('ALL') }}</span>
+    </button>
+    <button type="button" class="stat-card tone-success" [class.active]="filter() === 'SAFE'" (click)="setFilter('SAFE')">
+      <span class="stat-label">Tồn an toàn</span>
+      <span class="stat-value">{{ count('SAFE') }}</span>
+    </button>
+    <button type="button" class="stat-card tone-warning" [class.active]="filter() === 'LOW'" (click)="setFilter('LOW')">
+      <span class="stat-label">Sắp hết</span>
+      <span class="stat-value">{{ count('LOW') }}</span>
+    </button>
+    <button type="button" class="stat-card tone-danger" [class.active]="filter() === 'OUT'" (click)="setFilter('OUT')">
+      <span class="stat-label">Hết hàng</span>
+      <span class="stat-value">{{ count('OUT') }}</span>
+    </button>
+  </div>
+
+  <div class="filter-bar">
+    <div class="filter-left">
+      <div class="search-wrapper">
+        <input type="text" class="search-input" placeholder="Tên, mã sản phẩm hoặc danh mục..."
+          [ngModel]="search()" (ngModelChange)="onSearch($event)">
+        <i class="bi bi-search search-icon"></i>
+      </div>
+    </div>
+    <span class="selection-info">{{ filtered().length }} mặt hàng</span>
+  </div>
+
+  <div class="table-scrollable">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Sản phẩm</th>
+          <th>Danh mục</th>
+          <th class="text-right">Tồn hiện tại</th>
+          <th class="text-right">Đã bán</th>
+          <th>Trạng thái</th>
+          <th class="text-right">Điều chỉnh</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of visible()">
+          <td>
+            <div class="cell-media">
+              <img class="thumb" [src]="item.image" [alt]="item.name">
+              <div>
+                <a class="cell-strong product-link" [routerLink]="['/products/edit', item.id]">{{ item.name }}</a>
+                <span class="cell-sub">{{ item.id }}</span>
+              </div>
+            </div>
+          </td>
+          <td>{{ item.category }}</td>
+          <td class="text-right cell-strong">{{ item.currentStock }}</td>
+          <td class="text-right">{{ item.soldCount }}</td>
+          <td><span class="status-badge" [ngClass]="statusClasses[item.status]">{{ statusLabels[item.status] }}</span></td>
+          <td>
+            <div class="row-actions" *ngIf="canEdit">
+              <button type="button" class="action-btn sm success" (click)="openAdjust(item, 'IN')"><i class="bi bi-box-arrow-in-down"></i> Nhập</button>
+              <button type="button" class="action-btn sm danger" [disabled]="item.currentStock <= 0" (click)="openAdjust(item, 'OUT')"><i class="bi bi-box-arrow-up"></i> Xuất</button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="empty-state" *ngIf="filtered().length === 0">
+      <i class="bi bi-archive"></i>
+      Không có mặt hàng phù hợp với bộ lọc hiện tại.
+    </div>
+    <app-pager [total]="filtered().length" [page]="page()" [pageSize]="pageSize" (pageChange)="page.set($event)"></app-pager>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="adjusting as item" (click)="adjusting = null">
+  <div class="modal-box sm" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">Điều chỉnh tồn kho</h3>
+      <button type="button" class="close-btn" (click)="adjusting = null">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="info-row"><span class="label">Sản phẩm</span><span class="value">{{ item.name }}</span></div>
+      <div class="info-row mb-2"><span class="label">Tồn hiện tại</span><span class="value">{{ item.currentStock }} cái</span></div>
+
+      <div class="chip-tabs">
+        <button type="button" class="chip-tab" [class.active]="adjustMode === 'IN'" (click)="setMode('IN')">Nhập kho</button>
+        <button type="button" class="chip-tab" [class.active]="adjustMode === 'OUT'" (click)="setMode('OUT')">Xuất kho</button>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Số lượng {{ adjustMode === 'IN' ? 'nhập' : 'xuất' }} <span class="req">*</span></label>
+        <input type="number" min="1" step="1" class="form-control" [(ngModel)]="adjustQty">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Lý do <span class="req">*</span></label>
+        <select class="form-select mb-2" [(ngModel)]="adjustReason">
+          <option *ngFor="let r of (adjustMode === 'IN' ? inReasons : outReasons)" [value]="r">{{ r }}</option>
+        </select>
+        <input class="form-control" [(ngModel)]="adjustReason" placeholder="Hoặc ghi lý do khác">
+      </div>
+      <div class="notice-box mb-0" [ngClass]="adjustResult !== null && adjustResult < 0 ? 'danger' : 'info'" *ngIf="adjustResult !== null">
+        Tồn sau điều chỉnh: <b>{{ adjustResult }}</b> cái
+        <span *ngIf="adjustResult < 0"> — vượt quá số đang có</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn-cancel" (click)="adjusting = null">Huỷ</button>
+      <button type="button" class="btn-save" [disabled]="saving() || adjustResult === null || adjustResult < 0" (click)="submitAdjust()">
+        <i class="bi bi-check2"></i> Lưu điều chỉnh
+      </button>
+    </div>
+  </div>
+</div>

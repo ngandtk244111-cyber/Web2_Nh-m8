@@ -1,7 +1,7 @@
 const express = require('express');
 const { sendError } = require('../utils/http-error');
 const Warranty = require('../models/Warranty');
-const { requireAdminId } = require('../middleware/auth');
+const { requirePermission } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -9,8 +9,35 @@ function generateWarrantyCode() {
   return 'WR-' + Math.floor(100000 + Math.random() * 900000);
 }
 
+// Admin: toàn bộ phiếu bảo hành, mới nhất trước.
+router.get('/admin', requirePermission('orders.view'), async (_req, res) => {
+  try {
+    const warranties = await Warranty.find().sort({ createdAt: -1 });
+    res.json({ success: true, warranties });
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
+// Admin: đóng yêu cầu bảo hành đang xử lý, phiếu quay lại còn hiệu lực.
+router.patch('/admin/:warrantyCode/resolve', requirePermission('orders.edit'), async (req, res) => {
+  try {
+    const warranty = await Warranty.findOne({ warrantyCode: req.params.warrantyCode });
+    if (!warranty) return res.status(404).json({ success: false, error: 'Không tìm thấy phiếu bảo hành' });
+    if (warranty.status !== 'CLAIMED') {
+      return res.status(400).json({ success: false, error: 'Phiếu này không có yêu cầu đang xử lý' });
+    }
+    warranty.claimHistory.push({ note: String(req.body.note || 'Đã xử lý yêu cầu bảo hành').trim().slice(0, 500) });
+    warranty.status = 'ACTIVE';
+    await warranty.save();
+    res.json({ success: true, warranty });
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
 // Admin: issue a warranty card for a shipped order.
-router.post('/', requireAdminId, async (req, res) => {
+router.post('/', requirePermission('orders.edit'), async (req, res) => {
   try {
     const { orderNumber, productName, customerName, customerPhone, purchasedAt, warrantyMonths } = req.body;
     if (!orderNumber || !productName || !customerName || !customerPhone) {

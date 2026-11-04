@@ -1,0 +1,8 @@
+.req-code {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.req-code:hover {
+  text-decoration: underline;
+}

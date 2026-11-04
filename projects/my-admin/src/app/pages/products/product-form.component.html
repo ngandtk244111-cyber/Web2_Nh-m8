@@ -13,7 +13,7 @@
   </div>
 
   <ng-container *ngIf="!loadingProduct">
-    <div class="page-header">
+    <div class="page-header sticky-header">
       <div>
         <h1 class="page-title">{{ isEdit() ? (readOnly ? 'Chi tiết sản phẩm' : 'Sửa sản phẩm') : 'Thêm sản phẩm mới' }}</h1>
         <p class="page-subtitle" *ngIf="editing() as p">{{ p.id }} · {{ p.reviewCount }} đánh giá · {{ p.rating | number:'1.1-1' }}★</p>

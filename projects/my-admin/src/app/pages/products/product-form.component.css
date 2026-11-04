@@ -31,3 +31,11 @@
   height: 80px;
   font-size: 24px;
 }
+
+/* Thanh tiêu đề + nút Lưu dính trên cùng khi cuộn form dài */
+.sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  box-shadow: var(--shadow-lg);
+}

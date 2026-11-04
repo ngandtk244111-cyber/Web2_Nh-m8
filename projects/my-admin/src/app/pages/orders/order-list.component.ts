@@ -1,5 +1,7 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { exhaustMap, filter, timer } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { OrderService } from '../../core/services/order.service';
@@ -14,6 +16,8 @@ import {
   orderDateLabel, orderItemName, orderItemQuantity, orderStatusClass, orderStatusLabel,
   paymentMethodLabel, paymentStatusClass, paymentStatusLabel,
 } from '../../shared/utils/order-labels';
+
+const REFRESH_MS = 30_000;
 
 /** Nhóm của thẻ thống kê; TRANSFER = khách báo đã chuyển khoản, CLOSED = huỷ + hoàn hàng. */
 export type OrderFilter = 'ALL' | 'PENDING' | 'TRANSFER' | 'CONFIRMED' | 'IN_PRODUCTION' | 'SHIPPED' | 'DELIVERED' | 'CLOSED';
@@ -51,6 +55,7 @@ export class OrderListComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private toast = inject(ToastService);
+  private destroyRef = inject(DestroyRef);
 
   readonly filters = FILTERS;
   readonly statusLabel = orderStatusLabel;
@@ -96,12 +101,14 @@ export class OrderListComponent implements OnInit {
     // Thẻ thông báo / dashboard mở trang kèm ?status=PENDING
     const status = this.route.snapshot.queryParamMap.get('status') as OrderFilter | null;
     if (status && FILTERS.some(f => f.key === status)) this.filter.set(status);
-    this.reload();
-  }
 
-  reload(): void {
+    // Tự làm mới định kỳ (đơn mới, khách báo CK, admin khác đổi trạng thái); bỏ qua khi tab đang ẩn
     this.loading.set(this.orders().length === 0);
-    this.orderService.fetchAll().subscribe(() => this.loading.set(false));
+    timer(0, REFRESH_MS).pipe(
+      filter((i) => i === 0 || !document.hidden),
+      exhaustMap(() => this.orderService.fetchAll()),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe(() => this.loading.set(false));
   }
 
   count(f: OrderFilter): number {

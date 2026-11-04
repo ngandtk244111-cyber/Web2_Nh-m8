@@ -1,7 +1,39 @@
+/* Thanh lọc: tìm kiếm | thanh toán | khoảng ngày trên 1 hàng, số đơn + xoá lọc bên phải */
+.filter-bar {
+  flex-wrap: nowrap;
+  align-items: center;
+}
+
+.filter-left {
+  flex: 1;
+  min-width: 0;
+}
+
+.filter-left .search-wrapper {
+  flex: 1 1 260px;
+  width: auto;
+  max-width: 360px;
+}
+
+.search-input,
+.filter-select,
+.date-range .form-control {
+  height: 40px;
+}
+
+/* Bootstrap .form-select mặc định width: 100% → đẩy các ô xuống dòng */
+.filter-select {
+  width: auto;
+  flex: 0 0 auto;
+  min-width: 210px;
+}
+
 .date-range {
   display: flex;
   align-items: center;
   gap: 6px;
+  flex: 0 0 auto;
+  color: var(--color-text-tertiary);
 }
 
 .date-range .form-control,
@@ -9,6 +41,25 @@
   width: 130px;
   font-size: 14px;
   padding: 8px 10px;
+}
+
+.filter-bar .actions-group {
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+}
+
+.filter-bar .action-btn {
+  height: 40px;
+}
+
+@media (max-width: 1100px) {
+  .filter-bar {
+    flex-wrap: wrap;
+  }
+
+  .filter-left {
+    flex-basis: 100%;
+  }
 }
 
 .order-code {

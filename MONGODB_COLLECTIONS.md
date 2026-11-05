@@ -60,7 +60,7 @@ Nguồn gốc: các schema trong [server/models/](server/models/) — nếu mode
 
 **Giá trị `category`:**
 - Nhóm `FURNITURE`: `sofa`, `bed`, `table`, `side_table`, `chair`, `stool`, `cabinet`, `bookshelf`, `lamp`, `desk_lamp`, `night_lamp`, `pendant_lamp`, `organizer`
-- Nhóm `DECOR`: `plant_pot`, `vase`, `sculpture`, `clock`, `frame`, `candle_holder`, `tray`, `bookend`
+- Nhóm `DECOR`: `plant_pot`, `vase`, `sculpture`, `clock`, `frame`, `candle_holder`, `tray`, `bookend`, `mirror`, `household`
 
 **Cấu trúc 1 review** (phần tử trong `reviews`):
 ```json
@@ -275,11 +275,20 @@ Các collection này được tạo khi người dùng thao tác trên web. Thê
 
 ## Cách thêm dữ liệu
 
-**Cách 1 — Thêm qua file seed (khuyên dùng, giữ được dữ liệu khi dựng DB mới):**
-1. Thêm object vào mảng tương ứng trong [projects/my-client/src/app/core/data/mock-data.ts](projects/my-client/src/app/core/data/mock-data.ts) (`MOCK_PRODUCTS`, `MOCK_ROOMS`, `MOCK_NEWS_ARTICLES`, `MOCK_COMMUNITY_POSTS`, `MOCK_CUSTOM_REQUESTS`, `MOCK_COUPONS`) hoặc [product-detail.mock.ts](projects/my-client/src/app/core/data/product-detail.mock.ts).
-2. Chạy trong thư mục `server/`:
+**Cách 1 — Qua trang quản trị (my-admin):** thêm / sửa sản phẩm, coupon, bài viết... ngay trên giao diện admin.
+
+**Nạp bộ sản phẩm từ file JSON ngoài:** dùng [server/seed/import-lumea-products.js](server/seed/import-lumea-products.js) (chuẩn hoá danh mục, tên tiếng Việt, giá... rồi nạp; giữ nguyên SP có 3D và SP gắn trong phòng 3D). Cách chạy ghi ở đầu file.
+
+**Sao lưu / khôi phục cả DB:** [server/seed/backup-db.js](server/seed/backup-db.js)
+```bash
+node seed/backup-db.js backup  "<thư mục>"               # lưu mọi collection ra file
+node seed/backup-db.js restore "<thư mục>" products      # khôi phục 1 collection (hoặc --all)
+```
+File backup chứa dữ liệu người dùng — không commit vào git.
+
+**Seed DB trống:** dữ liệu mẫu cũ trong code web (`mock-data.ts`, `product-detail.mock.ts`) đã xoá; các script `server/seed/seed*.js` vẫn chạy được nhờ bản đã chuyển sẵn `*.generated.js`:
    ```bash
-   node seed/convert-mock-data.js   # chuyển file .ts sang .js cho seed
+   node seed/seed-all.js            # thêm toàn bộ dữ liệu mẫu còn thiếu, không ghi đè
    node seed/seed-missing.js        # chỉ thêm bản ghi chưa có, không ghi đè
    ```
    `seed-missing.js` hiện nạp: `products`, `communityposts`, `newsarticles`, `coupons`. Với `rooms`, `customrequests` thì `seed.js` chỉ nạp khi collection đang rỗng.

@@ -27,7 +27,9 @@ export type DecorCategory =
   | 'frame'         // Khung ảnh
   | 'candle_holder' // Đế nến
   | 'tray'          // Đĩa hoặc khay decor
-  | 'bookend';      // Giá đỡ sách / Bookend
+  | 'bookend'       // Giá đỡ sách / Bookend
+  | 'mirror'        // Gương treo tường / gương đứng
+  | 'household';    // Đồ dùng gia đình: thảm, chăn ga gối nệm, đồ bàn ăn, áo trùm sofa...
 
 export type ProductCategory = FurnitureCategory | DecorCategory;
 

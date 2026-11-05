@@ -42,7 +42,7 @@ Lam-a-main/
 │   ├── models/          # Mongoose model, 1 file/1 collection
 │   ├── routes/          # Router Express, 1 file/1 domain
 │   ├── utils/           # OTP, MoMo, ZaloPay helper
-│   └── seed/            # Script chuyển mock-data.ts (Angular) → seed MongoDB
+│   └── seed/            # Script seed / import / sao lưu MongoDB
 ├── angular.json         # Định nghĩa 2 Angular project trong 1 workspace
 ├── REFERENCE_ARCHITECTURE.md  # Bản đồ kiến trúc AuraPC-main (tham khảo)
 ├── vita.md                    # Bản đồ kiến trúc VitaCare-main (tham khảo)
@@ -71,8 +71,6 @@ projects/my-client/src/app/
 │   ├── three-viewer/, room-viewer/                       # wrapper Three.js cho customizer & room
 │   └── recently-viewed-section/
 ├── core/
-│   ├── data/mock-data.ts          # CHỈ còn dùng làm nguồn seed ban đầu cho backend (xem mục 10) —
-│   │                                 KHÔNG còn được service nào import trực tiếp để hiển thị nữa
 │   ├── data/quiz-data.ts          # Câu hỏi/kết quả Trắc Nghiệm Phong Cách Decor (tĩnh, không cần backend)
 │   ├── models/                    # TypeScript interface thuần, đặt tách biệt (khác AuraPC/Vita —
 │   │                                 2 project tham khảo để interface cạnh service, Lam-a-main tách riêng)
@@ -210,8 +208,8 @@ server/
 ├── models/*.js             # 1 Mongoose model / file, KHÔNG dùng TypeScript
 ├── routes/*.js              # 1 router Express / domain
 ├── utils/{otp,momo,zalopay}.js
-└── seed/                    # convert-mock-data.js (chuyển mock-data.ts → CommonJS) + seed.js (nạp MongoDB,
-                                bỏ qua nếu collection đã có dữ liệu)
+└── seed/                    # seed.js / seed-all.js: nạp dữ liệu mẫu từ *.generated.js (bỏ qua bản ghi đã có);
+                                import-lumea-products.js: nạp SP từ JSON; backup-db.js: sao lưu / khôi phục DB
 ```
 
 - Pattern route: `async/await` + `try/catch`, log lỗi, trả JSON `{ success: boolean, ... }` hoặc `{ success: false, error }`.
@@ -231,8 +229,8 @@ Component → service (signal cục bộ) → HttpClient → server/routes/*.js 
 ```
 
 - **Tất cả 10 domain đã có backend thật**: User, Order, Warranty, OtpCode, ChatMessage, CoinTransaction (có từ trước) + Product, Room, CustomRequest, CommunityPost, NewsArticle (mới thêm).
-- **Còn thuần client-side (localStorage, chưa có backend)**: giỏ hàng (`cart.service.ts`), lịch sử xem gần đây (`recently-viewed.service.ts`), coupon (`MOCK_COUPONS` tĩnh trong `mock-data.ts`), trạng thái like/save cộng đồng theo trình duyệt.
-- `mock-data.ts` (trong `my-client`) giờ chỉ còn vai trò **nguồn seed ban đầu** cho MongoDB (qua `server/seed/`), không còn được service nào đọc trực tiếp lúc runtime nữa.
+- **Còn thuần client-side (localStorage, chưa có backend)**: giỏ hàng (`cart.service.ts`), lịch sử xem gần đây (`recently-viewed.service.ts`), coupon, trạng thái like/save cộng đồng theo trình duyệt.
+- Dữ liệu mẫu cũ trong code web (`mock-data.ts`) đã xoá; dữ liệu nằm trên MongoDB. Seed cho DB trống dùng `server/seed/*.generated.js`.
 - Không có cache/state trung gian phức tạp — mỗi service tự giữ 1 signal, gọi `refresh()` lại sau mỗi lần ghi thành công (`tap()` trong RxJS pipe hoặc gọi thủ công trong `.subscribe()`).
 
 ---
@@ -264,7 +262,7 @@ Component → service (signal cục bộ) → HttpClient → server/routes/*.js 
 5. **CSS "đóng băng"**: đổi theme = sửa giá trị trong `styles.css`, không sửa class trong HTML — nhưng phải cẩn thận class nào bị dùng đa vai trò.
 6. **Sản phẩm có sẵn ↔ tùy biến in 3D là 2 danh mục tách biệt hoàn toàn** (route, trang quản lý, computed signal riêng: `readyStockProducts` vs `customizableProducts`), không lọc chung 1 danh sách.
 7. **Bảo mật còn khoảng trống đã biết**: admin không có auth/role, giá đơn hàng không verify server-side — chấp nhận được ở giai đoạn hiện tại, cần xử lý trước khi lên production thật.
-8. **Seed từ chính source TypeScript**: `server/seed/convert-mock-data.js` biến `mock-data.ts` thành CommonJS để tái dùng dữ liệu mẫu thay vì viết lại tay.
+8. **Seed từ file đã chuyển sẵn**: `server/seed/*.generated.js` (bản CommonJS của dữ liệu mẫu cũ) dùng để dựng DB trống; dữ liệu thật quản lý trên MongoDB.
 
 ---
 

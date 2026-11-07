@@ -23,7 +23,7 @@ const TIER_SETTINGS: Record<QualityTier, QualitySettings> = {
   },
   balanced: {
     tier: 'balanced',
-    maxDpr: 1.5,
+    maxDpr: 1.25,
     shadowsEnabled: true,
     shadowMapSize: 1024,
     useFog: true,
@@ -32,7 +32,7 @@ const TIER_SETTINGS: Record<QualityTier, QualitySettings> = {
   },
   high: {
     tier: 'high',
-    maxDpr: 2.0,
+    maxDpr: 1.5,
     shadowsEnabled: true,
     shadowMapSize: 2048,
     useFog: true,
@@ -72,13 +72,7 @@ export class QualityManager {
   setMode(mode: QualityMode): void {
     this.currentMode = mode;
     if (mode === 'auto') {
-      const isMobile = typeof navigator !== 'undefined' && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-      const lowCores = typeof navigator !== 'undefined' && typeof navigator.hardwareConcurrency === 'number' && navigator.hardwareConcurrency <= 4;
-      if (isMobile || lowCores) {
-        this.setTier('balanced');
-      } else {
-        this.setTier('high');
-      }
+      this.setTier('balanced');
     } else {
       this.setTier(mode);
     }
@@ -122,6 +116,8 @@ export class QualityManager {
       if (avg < 18.0 && timeSinceChange > this.upgradeCooldownMs) {
         if (this.activeTier === 'power_saving') {
           this.setTier('balanced');
+        } else if (this.activeTier === 'balanced') {
+          this.setTier('high');
         }
       }
     }

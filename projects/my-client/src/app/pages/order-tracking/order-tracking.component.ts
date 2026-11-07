@@ -3,8 +3,9 @@ import { Subscription } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { OrderService } from '../../core/services/order.service';
-import { Order, OrderStatus, ProductionStep } from '../../core/models/order.model';
+import { OrderService, invoiceUrl } from '../../core/services/order.service';
+import { Order, OrderStatus, ProductionStep, RefundBank } from '../../core/models/order.model';
+import { REFUND_POLICY, orderNeedsRefund } from '../../core/data/refund-policy';
 import { ToastService } from '../../core/services/toast.service';
 import { AuthService } from '../../core/services/auth.service';
 import { CANCEL_REASONS, CANCEL_REASON_OTHER } from '../../core/data/cancel-reasons';
@@ -23,7 +24,7 @@ const STATUS_RANK: Partial<Record<OrderStatus, number>> = {
 @Component({
   selector: 'app-order-tracking',
   standalone: true,
-  imports: [CommonModule, FormsModule, AppIconComponent, VndPipe],
+  imports: [CommonModule, FormsModule, RouterLink, AppIconComponent, VndPipe],
   templateUrl: './order-tracking.component.html',
   styleUrl: './order-tracking.component.css'
 })
@@ -43,6 +44,8 @@ export class OrderTrackingComponent implements OnInit, OnDestroy {
   cancelReason = '';
   cancelDetail = '';
   cancelling = false;
+  /** Tài khoản nhận tiền hoàn — chỉ hỏi khi huỷ đơn đã chuyển khoản ngân hàng. */
+  refundBank: RefundBank = { bankName: '', bankAccount: '', accountHolder: '' };
 
   /** Thời điểm nhận bản cập nhật gần nhất (lúc tra cứu hoặc do server đẩy về). */
   lastUpdatedAt: Date | null = null;
@@ -130,18 +133,57 @@ export class OrderTrackingComponent implements OnInit, OnDestroy {
     this.flashTimer = setTimeout(() => (this.justUpdated = false), 2200);
   }
 
-  /** Chủ đơn tự huỷ được khi đơn chưa sản xuất/giao và chưa thanh toán (đã trả tiền thì liên hệ hỗ trợ). */
-  get canCancel(): boolean {
-    const order = this.currentOrder;
+  private get isOwner(): boolean {
     const user = this.authService.currentUser();
-    return !!order && !!user && order.userId === user._id
-      && (order.status === 'PENDING' || order.status === 'CONFIRMED')
-      && order.paymentStatus !== 'PAID';
+    return !!this.currentOrder && !!user && this.currentOrder.userId === user._id;
+  }
+
+  /** Chủ đơn tự huỷ được khi Luméa chưa xác nhận đơn; đơn đã trả trước thì được hoàn tiền. */
+  get canCancel(): boolean {
+    return this.isOwner && this.currentOrder!.status === 'PENDING';
+  }
+
+  /** Đơn đã xác nhận, đang chuẩn bị/đóng gói — không tự huỷ được nữa. */
+  get cancelLocked(): boolean {
+    return this.isOwner && (this.currentOrder!.status === 'CONFIRMED' || this.currentOrder!.status === 'IN_PRODUCTION');
+  }
+
+  /** Huỷ đơn này sẽ được hoàn tiền (đã trả trước) — kèm chính sách hoàn theo phương thức thanh toán. */
+  get refundInfo(): { days: number; channel: string } | null {
+    const order = this.currentOrder;
+    if (!order || !orderNeedsRefund(order)) return null;
+    return REFUND_POLICY[order.paymentMethod] || { days: 7, channel: 'Hoàn về phương thức đã thanh toán' };
+  }
+
+  get needsRefundBank(): boolean {
+    return !!this.refundInfo && this.currentOrder?.paymentMethod === 'BANK_TRANSFER';
+  }
+
+  get refundBankValid(): boolean {
+    const b = this.refundBank;
+    return !!b.bankName.trim() && !!b.accountHolder.trim() && /^\d{6,20}$/.test(b.bankAccount.replace(/\s/g, ''));
+  }
+
+  refundStatusLabel(status: string): string {
+    return status === 'COMPLETED' ? 'Đã hoàn tiền' : status === 'VOID' ? 'Không phát sinh hoàn tiền' : 'Đang xử lý hoàn tiền';
+  }
+
+  /** Hoá đơn PDF: server chỉ cho chủ đơn xem đơn của tài khoản (đơn khách vãng lai thì ai có mã cũng xem được). */
+  get canViewInvoice(): boolean {
+    const order = this.currentOrder;
+    if (!order || order.status === 'CANCELLED') return false;
+    return !order.userId || order.userId === this.authService.currentUser()?._id;
+  }
+
+  openInvoice(): void {
+    if (!this.currentOrder) return;
+    window.open(invoiceUrl(this.currentOrder.orderNumber, this.authService.token), '_blank', 'noopener');
   }
 
   openCancel(): void {
     this.cancelReason = '';
     this.cancelDetail = '';
+    this.refundBank = { bankName: '', bankAccount: '', accountHolder: '' };
     this.cancelOpen = true;
   }
 
@@ -153,13 +195,17 @@ export class OrderTrackingComponent implements OnInit, OnDestroy {
     const order = this.currentOrder;
     const userId = this.authService.currentUser()?._id;
     if (!order || !userId || !this.cancelReason || this.cancelling) return;
+    if (this.needsRefundBank && !this.refundBankValid) return;
     this.cancelling = true;
-    this.orderService.cancelOrder(order.orderNumber, userId, this.cancelReason, this.cancelDetail).subscribe({
+    const bank = this.needsRefundBank ? this.refundBank : undefined;
+    this.orderService.cancelOrder(order.orderNumber, userId, this.cancelReason, this.cancelDetail, bank).subscribe({
       next: updated => {
         this.currentOrder = updated;
         this.cancelling = false;
         this.cancelOpen = false;
-        this.toastService.success('Đã huỷ đơn ' + updated.orderNumber + '.');
+        this.toastService.success(updated.refund
+          ? `Đã huỷ đơn ${updated.orderNumber}. Luméa sẽ hoàn tiền cho bạn theo chính sách hoàn tiền.`
+          : `Đã huỷ đơn ${updated.orderNumber}.`, 5000);
       },
       error: err => {
         this.cancelling = false;
@@ -192,9 +238,9 @@ export class OrderTrackingComponent implements OnInit, OnDestroy {
 
   getStatusLabel(status: string): string {
     switch (status) {
-      case 'PENDING': return 'Chờ Luméa gọi xác nhận';
+      case 'PENDING': return 'Chờ Luméa xác nhận';
       case 'IN_PRODUCTION': return 'Đang in 3D & sản xuất';
-      case 'CONFIRMED': return 'Đã xác nhận, chờ giao';
+      case 'CONFIRMED': return 'Đã xác nhận, đang chuẩn bị hàng';
       case 'CANCELLED': return 'Đơn đã huỷ';
       case 'RETURNED': return 'Giao không thành công';
       case 'SHIPPED': return 'Đang giao hàng';

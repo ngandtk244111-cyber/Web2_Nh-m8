@@ -21,7 +21,6 @@ const MODELS = {
   Video: require('../models/Video'),
   Order: require('../models/Order'),
   Warranty: require('../models/Warranty'),
-  CoinTransaction: require('../models/CoinTransaction'),
   CustomRequest: require('../models/CustomRequest'),
   CommunityPost: require('../models/CommunityPost'),
   NewsComment: require('../models/NewsComment'),

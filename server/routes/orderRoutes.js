@@ -9,6 +9,8 @@ const { verifyAndPriceOrderItems, resolveShippingFee } = require('../utils/prici
 const { shippingOptions, findCarrier, trackingUrlFor, isDevMode, devTrackingCode } = require('../utils/shipping');
 const { buildInvoicePdf } = require('../utils/invoicePdf');
 const { isEmailConfigured, getMailTransporter } = require('../utils/otp');
+const { issueWarrantiesForOrder, ensureOrderWarranties } = require('../utils/warranty');
+const { needsRefund, buildRefund } = require('../utils/refund-policy');
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -83,8 +85,8 @@ const CUSTOMER_CANCEL_REASONS = [
   'Tôi không có nhu cầu mua nữa',
   'Tôi không tìm thấy lý do huỷ phù hợp',
 ];
-/** Khách chỉ tự huỷ được khi đơn chưa vào sản xuất/giao. */
-const CUSTOMER_CANCELLABLE = ['PENDING', 'CONFIRMED'];
+/** Khách chỉ tự huỷ được khi nhân viên chưa xác nhận đơn — đã xác nhận là bắt đầu chuẩn bị/đóng gói. */
+const CUSTOMER_CANCELLABLE = ['PENDING'];
 
 const router = express.Router();
 
@@ -174,8 +176,8 @@ router.post('/', attachUserId, async (req, res) => {
       };
     }
 
-    // COD lớn hoặc có hàng in 3D: chờ nhân viên gọi xác nhận (PENDING) rồi mới sản xuất/giao — tránh
-    // in đồ khắc tên riêng cho đơn ảo. COD nhỏ và đơn trả trước (chuyển khoản, ví) vào thẳng xác nhận/sản xuất.
+    // Mọi đơn mới đều chờ nhân viên xác nhận (PENDING) — trong lúc này khách còn tự huỷ được.
+    // COD lớn hoặc có hàng in 3D: nhân viên phải gọi khách khi xác nhận, tránh in đồ khắc tên riêng cho đơn ảo.
     const phoneConfirmRequired = paymentMethod === 'COD' && await codNeedsPhoneConfirm(total, hasPOD);
 
     let order;
@@ -183,7 +185,7 @@ router.post('/', attachUserId, async (req, res) => {
       order = await createWithUniqueNumber({
       userId: req.userId || null,
       createdAtLabel: nowLabel(),
-      status: phoneConfirmRequired ? 'PENDING' : hasPOD ? 'IN_PRODUCTION' : 'CONFIRMED',
+      status: 'PENDING',
       phoneConfirmRequired,
       hasPrintOnDemandItems: hasPOD,
       productionProgress,
@@ -245,6 +247,7 @@ router.get('/by-number/:orderNumber', async (req, res) => {
       recordFailure(req.ip);
       return res.status(404).json({ success: false, error: 'Không tìm thấy đơn hàng hoặc số điện thoại không khớp' });
     }
+    await ensureOrderWarranties([order]);
     res.json({ success: true, order });
   } catch (err) {
     sendError(res, err);
@@ -255,6 +258,7 @@ router.get('/by-number/:orderNumber', async (req, res) => {
 router.get('/mine', requireUserId, async (req, res) => {
   try {
     const orders = await Order.find({ userId: req.userId }).sort({ createdAt: -1 });
+    await ensureOrderWarranties(orders);
     res.json({ success: true, orders });
   } catch (err) {
     sendError(res, err);
@@ -370,10 +374,6 @@ router.patch('/:orderNumber/payment-method', attachUserId, async (req, res) => {
       order.paymentStatus = 'UNPAID';
       order.transferReportedAt = null;
       order.paymentTransactionId = '';
-      // Cùng quy tắc lúc tạo đơn: COD chờ gọi xác nhận; trả trước thì vào xử lý ngay (chưa sản xuất thì mới đổi).
-      if (order.status === 'PENDING' || order.status === 'CONFIRMED') {
-        order.status = paymentMethod === 'COD' ? 'PENDING' : order.hasPrintOnDemandItems ? 'IN_PRODUCTION' : 'CONFIRMED';
-      }
       await order.save();
     }
     res.json({ success: true, order });
@@ -386,7 +386,8 @@ router.get('/cancel-reasons', (_req, res) => {
   res.json({ success: true, reasons: CUSTOMER_CANCEL_REASONS });
 });
 
-// Khách tự huỷ đơn của chính mình (chỉ khi đơn chưa sản xuất/giao) — bắt buộc chọn lý do.
+// Khách tự huỷ đơn của chính mình (chỉ khi nhân viên chưa xác nhận) — bắt buộc chọn lý do.
+// Đơn đã trả trước thì tạo yêu cầu hoàn tiền; chuyển khoản ngân hàng cần tài khoản nhận tiền hoàn của khách.
 router.patch('/:orderNumber/cancel', requireUserId, async (req, res) => {
   try {
     const reason = String(req.body.reason || '').trim();
@@ -397,10 +398,20 @@ router.patch('/:orderNumber/cancel', requireUserId, async (req, res) => {
     const order = await Order.findOne({ orderNumber: req.params.orderNumber, userId: req.userId });
     if (!order) return res.status(404).json({ success: false, error: 'Không tìm thấy đơn hàng' });
     if (!CUSTOMER_CANCELLABLE.includes(order.status)) {
-      return res.status(400).json({ success: false, error: 'Đơn hàng đã được xử lý, không thể tự huỷ. Vui lòng liên hệ hỗ trợ.' });
+      return res.status(400).json({ success: false, error: 'Đơn đã được xác nhận và đang chuẩn bị hàng, không thể tự huỷ. Vui lòng liên hệ hỗ trợ.' });
     }
-    if (order.paymentStatus === 'PAID') {
-      return res.status(400).json({ success: false, error: 'Đơn đã thanh toán — vui lòng liên hệ hỗ trợ để được huỷ và hoàn tiền.' });
+    if (needsRefund(order)) {
+      const bank = req.body.refundBank || {};
+      if (order.paymentMethod === 'BANK_TRANSFER') {
+        bank.bankAccount = String(bank.bankAccount || '').replace(/\s/g, '');
+        if (!String(bank.bankName || '').trim() || !String(bank.accountHolder || '').trim()) {
+          return res.status(400).json({ success: false, error: 'Vui lòng nhập ngân hàng và tên chủ tài khoản để nhận tiền hoàn' });
+        }
+        if (!/^\d{6,20}$/.test(bank.bankAccount)) {
+          return res.status(400).json({ success: false, error: 'Số tài khoản nhận tiền hoàn gồm 6–20 chữ số' });
+        }
+      }
+      order.refund = buildRefund(order, order.paymentMethod === 'BANK_TRANSFER' ? bank : {});
     }
     order.status = 'CANCELLED';
     order.cancelReason = detail ? `${reason}: ${detail}` : reason;
@@ -470,13 +481,31 @@ async function loadOpenOrder(req, res) {
     res.status(404).json({ success: false, error: 'Không tìm thấy đơn hàng' });
     return null;
   }
-  // Đơn đã hoàn thành / huỷ / hoàn hàng thì khoá, tránh bấm nhầm làm sai lịch sử và thưởng Xu.
+  // Đơn đã hoàn thành / huỷ / hoàn hàng thì khoá, tránh bấm nhầm làm sai lịch sử và voucher thưởng.
   if (FINAL_STATUSES.includes(order.status)) {
     res.status(400).json({ success: false, error: 'Đơn đã kết thúc (hoàn thành / huỷ / hoàn hàng), không thể cập nhật thêm' });
     return null;
   }
   return order;
 }
+
+// Admin: xác nhận đơn -> bắt đầu chuẩn bị/đóng gói (đơn in 3D thì vào sản xuất). Sau bước này khách
+// không tự huỷ được nữa. Đơn COD phải gọi khách thì dùng "confirm-phone" bên dưới.
+router.patch('/:orderNumber/confirm', requirePermission('orders.edit'), async (req, res) => {
+  try {
+    const order = await loadOpenOrder(req, res);
+    if (!order) return;
+    if (order.status !== 'PENDING') return res.status(400).json({ success: false, error: 'Đơn đã được xác nhận rồi' });
+    if (order.paymentMethod === 'COD' && order.phoneConfirmRequired !== false && !order.phoneConfirmedAt) {
+      return res.status(400).json({ success: false, error: 'Đơn COD này cần gọi xác nhận với khách trước' });
+    }
+    order.status = order.hasPrintOnDemandItems ? 'IN_PRODUCTION' : 'CONFIRMED';
+    await order.save();
+    res.json({ success: true, order });
+  } catch (err) {
+    sendError(res, err);
+  }
+});
 
 // Admin: gọi điện xác nhận đơn với khách — bắt buộc trước khi giao đơn COD.
 router.patch('/:orderNumber/confirm-phone', requirePermission('orders.edit'), async (req, res) => {
@@ -510,6 +539,7 @@ router.patch('/:orderNumber/ship', requirePermission('orders.edit'), async (req,
     const order = await loadOpenOrder(req, res);
     if (!order) return;
     if (order.status === 'SHIPPED') return res.status(400).json({ success: false, error: 'Đơn đang được giao rồi' });
+    if (order.status === 'PENDING') return res.status(400).json({ success: false, error: 'Xác nhận đơn trước khi tạo vận đơn' });
     if (order.paymentMethod === 'COD' && order.phoneConfirmRequired !== false && !order.phoneConfirmedAt) {
       return res.status(400).json({ success: false, error: 'Đơn COD phải gọi xác nhận với khách trước khi giao' });
     }
@@ -583,12 +613,17 @@ router.patch('/:orderNumber/production', requirePermission('orders.edit'), async
 
     if (status) order.status = status;
     if (productionProgress) order.productionProgress = productionProgress;
-    if (status === 'CANCELLED') Object.assign(order, { cancelReason: String(cancelReason).trim(), cancelledAt: new Date() });
+    if (status === 'CANCELLED') {
+      Object.assign(order, { cancelReason: String(cancelReason).trim(), cancelledAt: new Date() });
+      // Nhân viên huỷ đơn đã trả trước: tạo yêu cầu hoàn tiền (chuyển khoản thì liên hệ khách lấy tài khoản nhận).
+      if (needsRefund(order) && !order.refund) order.refund = buildRefund(order);
+    }
     if (status === 'RETURNED') Object.assign(order, { returnReason: String(returnReason).trim(), returnedAt: new Date() });
     if (status === 'DELIVERED') {
       order.deliveredAt = new Date();
       // COD: shipper đã thu tiền, còn chờ đối soát với hãng mới tính là đã thanh toán.
       if (order.paymentMethod === 'COD') order.codCollectedAt = new Date();
+      await issueWarrantiesForOrder(order);
     }
     await order.save();
     if (status === 'CANCELLED') await releaseCodesForOrder(order.orderNumber);
@@ -605,6 +640,34 @@ router.patch('/:orderNumber/production', requirePermission('orders.edit'), async
       });
     }
 
+    res.json({ success: true, order });
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
+// Admin: hoàn tất hoàn tiền (kèm mã giao dịch) hoặc huỷ yêu cầu hoàn (vd. khách báo CK nhưng tiền chưa về).
+router.patch('/:orderNumber/refund', requirePermission('orders.approve'), async (req, res) => {
+  try {
+    const { action } = req.body;
+    const transactionRef = String(req.body.transactionRef || '').trim().slice(0, 100);
+    const adminNote = String(req.body.adminNote || '').trim().slice(0, 300);
+    const order = await Order.findOne({ orderNumber: req.params.orderNumber });
+    if (!order) return res.status(404).json({ success: false, error: 'Không tìm thấy đơn hàng' });
+    if (!order.refund || order.refund.status !== 'PENDING') {
+      return res.status(400).json({ success: false, error: 'Đơn không có yêu cầu hoàn tiền đang chờ' });
+    }
+    if (action === 'complete') {
+      if (!transactionRef) return res.status(400).json({ success: false, error: 'Vui lòng nhập mã giao dịch hoàn tiền' });
+      Object.assign(order.refund, { status: 'COMPLETED', completedAt: new Date(), transactionRef, adminNote });
+      order.paymentStatus = 'REFUNDED';
+    } else if (action === 'void') {
+      if (!adminNote) return res.status(400).json({ success: false, error: 'Vui lòng ghi lý do không hoàn tiền' });
+      Object.assign(order.refund, { status: 'VOID', completedAt: new Date(), adminNote });
+    } else {
+      return res.status(400).json({ success: false, error: 'Thao tác không hợp lệ' });
+    }
+    await order.save();
     res.json({ success: true, order });
   } catch (err) {
     sendError(res, err);

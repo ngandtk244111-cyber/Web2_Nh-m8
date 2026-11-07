@@ -43,7 +43,7 @@
   overflow: visible;
 }
 
-/* Xu tung lên từ miệng túi rồi rơi xuống, lặp lại lệch pha nhau */
+/* Voucher tung lên từ miệng túi rồi rơi xuống, lặp lại lệch pha nhau */
 .fcw__toss {
   transform-box: fill-box;
   transform-origin: center;

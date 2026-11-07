@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 /**
- * Voucher cá nhân của khách (thay cho Xu Luméa): nhận từ trò chơi, hoàn thiện hồ sơ, đánh giá...
+ * Voucher cá nhân của khách: nhận từ trò chơi, hoàn thiện hồ sơ, đánh giá...
  * Mỗi voucher là 1 mã riêng, dùng 1 lần, có hạn sử dụng. Khác Coupon (mã công khai ai cũng nhập được).
  */
 const userVoucherSchema = new mongoose.Schema({

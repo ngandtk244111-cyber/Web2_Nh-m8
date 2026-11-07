@@ -34,11 +34,7 @@ function viLabelPadded(date) {
   return `${pad(vn.getUTCDate())}/${pad(vn.getUTCMonth() + 1)}/${vn.getUTCFullYear()} ${pad(vn.getUTCHours())}:${pad(vn.getUTCMinutes())}`;
 }
 
-/** "2026-10-07" theo giờ Việt Nam — khớp vnDateKey() ở coinRoutes.js. */
-function vnDateKey(date) {
-  return new Date(date.getTime() + 7 * 3600 * 1000).toISOString().slice(0, 10);
-}
 
 const img = (id, w = 800) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${w}&q=80`;
 
-module.exports = { oid, SEED_NOW, daysAgo, viLabel, viLabelPadded, vnDateKey, img };
+module.exports = { oid, SEED_NOW, daysAgo, viLabel, viLabelPadded, img };

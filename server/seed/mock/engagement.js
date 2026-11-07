@@ -1,7 +1,4 @@
-// Khuyến mãi & hậu mãi: mã giảm giá, phiếu bảo hành, lịch sử Luméa Xu, thông báo, đăng ký bản tin.
-// Giao dịch Xu "ORDER_DELIVERED" (1% giá trị đơn) và "COMMUNITY_POST" do build.js sinh từ đơn hàng /
-// bài cộng đồng mẫu — ở đây chỉ khai báo các hoạt động độc lập (điểm danh, trò chơi, quiz...).
-const { daysAgo, vnDateKey } = require('./helpers');
+// Khuyến mãi & hậu mãi: mã giảm giá, phiếu bảo hành, thông báo, đăng ký bản tin.
 
 // Bổ sung cho 3 mã có sẵn (LUMÉANEW, FREESHIP, ROOMCOMBO) trong mock-data.generated.js.
 const COUPONS = [
@@ -33,46 +30,7 @@ const WARRANTIES = [
   { code: 'WR-467718', order: 'ORD-267714', item: 1, months: 12 },
 ];
 
-// Hoạt động nhận Xu (refId theo đúng quy ước của coinRoutes.js để chống nhận trùng).
-const checkin = (user, days, day) => ({ user, reason: 'DAILY_CHECKIN', refId: vnDateKey(daysAgo(days)), amount: day === 7 ? 300 : 100, note: `Điểm danh ngày ${day}/7`, at: daysAgo(days, 8, 2) });
-const game = (user, reason, note, days, n, amount) => ({ user, reason, refId: `${vnDateKey(daysAgo(days))}#${n}`, amount, note, at: daysAgo(days, 21, 10 + n) });
-
-const COIN_ACTIVITIES = [
-  { user: 'thaomy', reason: 'STYLE_QUIZ', refId: 'quiz-attempt-thaomy-1', amount: 30, note: 'Hoàn thành Trắc Nghiệm Phong Cách Decor', at: daysAgo(400, 21) },
-  ...[7, 6, 5, 4, 3, 2, 1].map((d, i) => checkin('thaomy', d, i + 1)),
-  game('thaomy', 'GAME_WHEEL', 'Vòng Quay May Mắn', 1, 1, 50),
-  game('thaomy', 'GAME_WHEEL', 'Vòng Quay May Mắn', 1, 2, 10),
-  game('thaomy', 'GAME_MEMORY', 'Lật Thẻ Decor', 2, 1, 80),
-  { user: 'thaomy', reason: 'BROWSE_FEED', refId: vnDateKey(daysAgo(1)), amount: 100, note: 'Lướt gợi ý sản phẩm', at: daysAgo(1, 22) },
-
-  { user: 'hoang', reason: 'STYLE_QUIZ', refId: 'quiz-attempt-hoang-1', amount: 30, note: 'Hoàn thành Trắc Nghiệm Phong Cách Decor', at: daysAgo(50, 20) },
-  ...[3, 2, 1].map((d, i) => checkin('hoang', d, i + 1)),
-  game('hoang', 'GAME_GIFT_BOX', 'Hộp Quà Bí Ẩn', 1, 1, 150),
-
-  { user: 'minhanh', reason: 'STYLE_QUIZ', refId: 'quiz-attempt-minhanh-1', amount: 30, note: 'Hoàn thành Trắc Nghiệm Phong Cách Decor', at: daysAgo(90, 19) },
-  ...[5, 4, 3].map((d, i) => checkin('minhanh', d, i + 1)),
-  game('minhanh', 'GAME_MEMORY', 'Lật Thẻ Decor', 3, 1, 50),
-  game('minhanh', 'GAME_MEMORY', 'Lật Thẻ Decor', 3, 2, 30),
-
-  ...[2, 1].map((d, i) => checkin('duchuy', d, i + 1)),
-  game('duchuy', 'GAME_WHEEL', 'Vòng Quay May Mắn', 2, 1, 200),
-
-  { user: 'ngoclan', reason: 'STYLE_QUIZ', refId: 'quiz-attempt-ngoclan-1', amount: 30, note: 'Hoàn thành Trắc Nghiệm Phong Cách Decor', at: daysAgo(30, 20) },
-  { user: 'ngoclan', reason: 'BROWSE_FEED', refId: vnDateKey(daysAgo(4)), amount: 100, note: 'Lướt gợi ý sản phẩm', at: daysAgo(4, 21) },
-
-  ...[6, 5, 4, 3, 2, 1].map((d, i) => checkin('maianh', d, i + 1)),
-  game('maianh', 'GAME_GIFT_BOX', 'Hộp Quà Bí Ẩn', 1, 1, 50),
-  { user: 'maianh', reason: 'BIRTHDAY', refId: 'birthday-2025', amount: 50, note: 'Chúc mừng sinh nhật từ Luméa! 🎂', at: daysAgo(364, 9) },
-
-  { user: 'tuankiet', reason: 'STYLE_QUIZ', refId: 'quiz-attempt-tuankiet-1', amount: 30, note: 'Hoàn thành Trắc Nghiệm Phong Cách Decor', at: daysAgo(70, 22) },
-  checkin('tuankiet', 1, 1),
-
-  game('thuha', 'GAME_WHEEL', 'Vòng Quay May Mắn', 1, 1, 20),
-  checkin('khang', 2, 1),
-  { user: 'quynhchi', reason: 'STYLE_QUIZ', refId: 'quiz-attempt-quynhchi-1', amount: 30, note: 'Hoàn thành Trắc Nghiệm Phong Cách Decor', at: daysAgo(19, 20) },
-];
-
-// Đăng ký bản tin — người có `user` còn được thưởng 10 Xu NEWSLETTER_SUBSCRIBE (build.js sinh).
+// Đăng ký bản tin.
 const NEWSLETTER = [
   { email: 'thaomy.nguyen@gmail.com', user: 'thaomy', days: 380 },
   { email: 'minhanh.le@outlook.com', user: 'minhanh', days: 120 },
@@ -97,7 +55,6 @@ const BROADCASTS = [
   { key: 'b2', title: 'Ra mắt bộ sưu tập Gỗ Óc Chó Vincent', message: 'Bàn phụ, kệ sách và ghế đôn gỗ óc chó hoàn thiện thủ công — miễn phí lắp đặt nội thành TP.HCM.', link: '/catalog', days: 6 },
   { key: 'b3', title: 'Mã SALE1010 đã sẵn sàng', message: 'Giảm 10% tối đa 100.000đ cho đơn từ 300.000đ, áp dụng đến hết 10/10.', link: '/catalog', days: 3 },
   { key: 'b4', title: 'Luméa Living: Japandi tối giản', message: 'Bài viết mới về cách phối nội thất Nhật Bản gặp Bắc Âu cho căn hộ nhỏ.', link: '/news', days: 9 },
-  { key: 'b5', title: 'Nhận Xu mỗi ngày', message: 'Điểm danh 7 ngày liên tiếp nhận tới 900 Xu, quy đổi giảm giá trực tiếp khi thanh toán.', link: '/xu', days: 14 },
 ];
 
 // Thông báo riêng của từng khách (ngoài các thông báo đơn hàng do build.js sinh theo trạng thái đơn).
@@ -111,4 +68,4 @@ const PERSONAL_NOTIFICATIONS = [
   { key: 'p5', user: 'khang', title: 'Bài đăng Cộng đồng đã bị ẩn', message: 'Bài "Pass lại đồ decor giá rẻ" đã bị ẩn khỏi Cộng đồng Luméa: Nội dung mua bán, quảng cáo ngoài nền tảng.', link: '/community', days: 13, read: false },
 ];
 
-module.exports = { COUPONS, WARRANTIES, COIN_ACTIVITIES, NEWSLETTER, BROADCASTS, PERSONAL_NOTIFICATIONS };
+module.exports = { COUPONS, WARRANTIES, NEWSLETTER, BROADCASTS, PERSONAL_NOTIFICATIONS };

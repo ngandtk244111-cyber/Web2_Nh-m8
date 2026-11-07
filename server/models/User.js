@@ -33,7 +33,6 @@ const userSchema = new mongoose.Schema({
   avatar: { type: String, default: '' },
   active: { type: Boolean, default: true },
   lastLogin: { type: Date, default: null },
-  coins: { type: Number, default: 0 },
 }, {
   timestamps: true,
   // Không bao giờ trả password về client, kể cả vô tình join/log nguyên document.

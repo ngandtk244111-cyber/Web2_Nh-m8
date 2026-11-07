@@ -9,6 +9,8 @@ const orderItemSchema = new mongoose.Schema({
   selectedCustomization: { type: mongoose.Schema.Types.Mixed, default: null },
   unitPrice: { type: Number, required: true },
   totalPrice: { type: Number, required: true },
+  // Mã phiếu bảo hành, cấp khi đơn giao thành công (utils/warranty.js).
+  warrantyCode: { type: String },
 }, { _id: false });
 
 const productionProgressSchema = new mongoose.Schema({
@@ -58,6 +60,22 @@ const returnRequestSchema = new mongoose.Schema({
   rejectedAt: { type: Date, default: null },
 }, { _id: false });
 
+// Hoàn tiền khi đơn đã trả trước bị huỷ (utils/refund-policy.js). PENDING: chờ hoàn, hạn dueAt ->
+// COMPLETED: đã hoàn (kèm mã giao dịch). VOID: không cần hoàn (vd. khách báo CK nhưng tiền chưa về).
+const refundSchema = new mongoose.Schema({
+  status: { type: String, enum: ['PENDING', 'COMPLETED', 'VOID'], default: 'PENDING' },
+  amount: { type: Number, default: 0 },
+  channel: { type: String, default: '' },
+  bankName: { type: String, default: '' },
+  bankAccount: { type: String, default: '' },
+  accountHolder: { type: String, default: '' },
+  requestedAt: { type: Date, default: Date.now },
+  dueAt: { type: Date, default: null },
+  completedAt: { type: Date, default: null },
+  transactionRef: { type: String, default: '' },
+  adminNote: { type: String, default: '' },
+}, { _id: false });
+
 const orderSchema = new mongoose.Schema({
   orderNumber: { type: String, required: true, unique: true },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
@@ -74,9 +92,10 @@ const orderSchema = new mongoose.Schema({
   shippingAddress: { type: shippingAddressSchema, required: true },
   invoice: { type: invoiceSchema, default: null },
   returnRequest: { type: returnRequestSchema, default: null },
+  refund: { type: refundSchema, default: null },
   paymentMethod: { type: String, enum: ['COD', 'BANK_TRANSFER', 'MOMO', 'ZALOPAY', 'ATM'], required: true },
-  // FAILED: cổng MoMo/ZaloPay báo giao dịch thất bại (IPN).
-  paymentStatus: { type: String, enum: ['UNPAID', 'PAID', 'FAILED'], default: 'UNPAID' },
+  // FAILED: cổng MoMo/ZaloPay báo giao dịch thất bại (IPN). REFUNDED: đơn huỷ đã hoàn tiền xong.
+  paymentStatus: { type: String, enum: ['UNPAID', 'PAID', 'FAILED', 'REFUNDED'], default: 'UNPAID' },
   // Khách bấm "Tôi đã chuyển khoản" — chỉ là báo, nhân viên đối soát sao kê rồi mới chuyển PAID.
   transferReportedAt: { type: Date, default: null },
   paidConfirmedBy: { type: String, default: null },

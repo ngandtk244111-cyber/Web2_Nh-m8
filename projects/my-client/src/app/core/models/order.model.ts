@@ -1,5 +1,10 @@
 import { CartItem } from './cart.model';
 
+/** Món trong đơn — có thêm mã phiếu bảo hành, được cấp khi đơn giao thành công. */
+export interface OrderItem extends CartItem {
+  warrantyCode?: string;
+}
+
 export type OrderStatus =
   | 'PENDING'
   | 'CONFIRMED'
@@ -60,6 +65,28 @@ export const RETURN_REASONS = [
 /** Số ngày được gửi yêu cầu trả hàng kể từ khi nhận hàng. */
 export const RETURN_WINDOW_DAYS = 7;
 
+export interface OrderRefund {
+  /** PENDING: đang chờ hoàn · COMPLETED: đã hoàn · VOID: không cần hoàn (vd. tiền chưa về tài khoản shop). */
+  status: 'PENDING' | 'COMPLETED' | 'VOID';
+  amount: number;
+  channel: string;
+  bankName?: string;
+  bankAccount?: string;
+  accountHolder?: string;
+  requestedAt: string;
+  dueAt: string | null;
+  completedAt?: string | null;
+  transactionRef?: string;
+  adminNote?: string;
+}
+
+/** Tài khoản nhận tiền hoàn — khách nhập khi huỷ đơn chuyển khoản ngân hàng. */
+export interface RefundBank {
+  bankName: string;
+  bankAccount: string;
+  accountHolder: string;
+}
+
 export interface Order {
   id: string;
   orderNumber: string;
@@ -69,10 +96,14 @@ export interface Order {
   status: OrderStatus;
   hasPrintOnDemandItems: boolean;
   productionProgress?: ProductionProgress;
-  items: CartItem[];
+  items: OrderItem[];
   shippingAddress: ShippingAddress;
   paymentMethod: 'COD' | 'BANK_TRANSFER' | 'MOMO' | 'ZALOPAY' | 'VNPAY' | 'ATM';
-  paymentStatus: 'PAID' | 'UNPAID' | 'FAILED';
+  paymentStatus: 'PAID' | 'UNPAID' | 'FAILED' | 'REFUNDED';
+  /** Khách đã bấm "Tôi đã chuyển khoản" — chờ nhân viên đối soát. */
+  transferReportedAt?: string | null;
+  /** Hoàn tiền khi đơn đã trả trước bị huỷ (null nếu không cần hoàn). */
+  refund?: OrderRefund | null;
   subtotal: number;
   discount: number;
   shippingFee: number;

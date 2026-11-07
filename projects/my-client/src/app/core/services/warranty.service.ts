@@ -7,7 +7,9 @@ export interface Warranty {
   _id: string;
   warrantyCode: string;
   orderNumber: string;
+  itemId?: string | null;
   productName: string;
+  productImage?: string;
   customerName: string;
   customerPhone: string;
   purchasedAt: string;
@@ -37,7 +39,7 @@ export class WarrantyService {
     );
   }
 
-  submitClaim(warrantyCode: string, note: string): Observable<WarrantyApiResponse> {
-    return this.http.post<WarrantyApiResponse>(`${this.baseUrl}/${encodeURIComponent(warrantyCode)}/claim`, { note });
+  submitClaim(warrantyCode: string, phone: string, note: string): Observable<WarrantyApiResponse> {
+    return this.http.post<WarrantyApiResponse>(`${this.baseUrl}/${encodeURIComponent(warrantyCode)}/claim`, { phone, note });
   }
 }

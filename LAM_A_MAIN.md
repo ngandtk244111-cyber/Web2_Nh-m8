@@ -166,7 +166,6 @@ Chỉ 1 route thật: `'' → AdminComponent`. Toàn bộ điều hướng nội
 | `order.service.ts` | Tạo/tra cứu đơn hàng, cập nhật tiến độ sản xuất | ✅ |
 | `warranty.service.ts` | Tra cứu/tạo yêu cầu bảo hành | ✅ |
 | `payment.service.ts` | Tạo giao dịch MoMo/ZaloPay | ✅ |
-| `coin.service.ts` | Số dư xu + lịch sử, claim thưởng (idempotent theo `reason+refId`) | ✅ |
 | `quiz.service.ts` | Tính kết quả Trắc Nghiệm Phong Cách (thuần client, dữ liệu tĩnh) | — |
 | `support-chat.service.ts` | Chat hỗ trợ realtime qua Socket.IO | ✅ |
 | `ai-assistant.service.ts` | Modal trợ lý AI gợi ý ý tưởng decor | — |
@@ -176,7 +175,7 @@ Chỉ 1 route thật: `'' → AdminComponent`. Toàn bộ điều hướng nội
 | `login-modal.service.ts` | State mở/đóng modal đăng nhập | — |
 | `recently-viewed.service.ts` | Lịch sử xem sản phẩm (localStorage) | ❌ |
 
-**`my-admin`** có bản sao độc lập của: `product.service.ts`, `room.service.ts`, `custom-request.service.ts`, `cart.service.ts`, `order.service.ts` — **không có** `community.service.ts`/`news.service.ts` (admin chưa có tab quản lý 2 mảng này), **không có** `coin.service.ts`/`quiz.service.ts`/toast/cart-fly/quick-view (các tính năng UX đó chỉ dành cho khách hàng).
+**`my-admin`** có bản sao độc lập của: `product.service.ts`, `room.service.ts`, `custom-request.service.ts`, `cart.service.ts`, `order.service.ts` — **không có** `community.service.ts`/`news.service.ts` (admin chưa có tab quản lý 2 mảng này), **không có** `quiz.service.ts`/toast/cart-fly/quick-view (các tính năng UX đó chỉ dành cho khách hàng).
 
 ---
 
@@ -218,7 +217,6 @@ server/
 - **Không tách `utils/` cho business logic phức tạp** như AuraPC-main (build filter, normalize) — route tự xử lý trực tiếp, các route hiện tại đơn giản nên chưa cần tách.
 - **`id` field**: mọi document (Product/Room/CustomRequest/CommunityPost/NewsArticle) có field `id: String` tường minh riêng biệt với `_id` của Mongo — để khớp 1:1 với interface TypeScript phía frontend (vốn dùng `id: string`) mà không cần sửa bất kỳ component nào. `_id`/`__v` vẫn tồn tại trong response nhưng bị frontend bỏ qua.
 - **Bảo mật giá**: order tạo qua `POST /api/orders` nhận thẳng `total`/`subtotal` từ client, **KHÔNG verify lại giá server-side** — khác AuraPC-main (verify giá từ DB khi thanh toán). Rủi ro cần lưu ý nếu có thanh toán thật.
-- **Idempotency**: chỉ `CoinTransaction` có cơ chế chống nhận thưởng trùng (unique index `user+reason+refId`).
 
 ---
 
@@ -230,7 +228,7 @@ Component → service (signal cục bộ) → HttpClient → server/routes/*.js 
                 └──────────────── response { success, data } ──────────────────┘
 ```
 
-- **Tất cả 10 domain đã có backend thật**: User, Order, Warranty, OtpCode, ChatMessage, CoinTransaction (có từ trước) + Product, Room, CustomRequest, CommunityPost, NewsArticle (mới thêm).
+- **Tất cả 10 domain đã có backend thật**: User, Order, Warranty, OtpCode, ChatMessage (có từ trước) + Product, Room, CustomRequest, CommunityPost, NewsArticle (mới thêm).
 - **Còn thuần client-side (localStorage, chưa có backend)**: giỏ hàng (`cart.service.ts`), lịch sử xem gần đây (`recently-viewed.service.ts`), coupon (`MOCK_COUPONS` tĩnh trong `mock-data.ts`), trạng thái like/save cộng đồng theo trình duyệt.
 - `mock-data.ts` (trong `my-client`) giờ chỉ còn vai trò **nguồn seed ban đầu** cho MongoDB (qua `server/seed/`), không còn được service nào đọc trực tiếp lúc runtime nữa.
 - Không có cache/state trung gian phức tạp — mỗi service tự giữ 1 signal, gọi `refresh()` lại sau mỗi lần ghi thành công (`tap()` trong RxJS pipe hoặc gọi thủ công trong `.subscribe()`).
@@ -281,7 +279,6 @@ Component → service (signal cục bộ) → HttpClient → server/routes/*.js 
 | `server/index.js` | Mount toàn bộ route, CORS, error handler |
 | `server/middleware/auth.js` | JWT middleware (chỉ có user, không có admin) |
 | `server/seed/seed.js` | Nạp dữ liệu mẫu vào MongoDB |
-| `server/routes/coinRoutes.js` | Mẫu route có idempotency (tham khảo khi thêm domain mới cần chống trùng) |
 | `REFERENCE_ARCHITECTURE.md` | Bản đồ AuraPC-main (tham khảo màu/font/pattern) |
 | `vita.md` | Bản đồ VitaCare-main (tham khảo cấu trúc CSS/layout) |
 
@@ -291,14 +288,14 @@ Component → service (signal cục bộ) → HttpClient → server/routes/*.js 
 
 **Đã xong:**
 - Tách `my-client`/`my-admin` thành 2 project Angular độc lập, build/serve riêng.
-- Backend thật cho 10 domain (User, Order, Warranty, OtpCode, ChatMessage, CoinTransaction, Product, Room, CustomRequest, CommunityPost, NewsArticle) — CRUD qua MongoDB, có seed script.
+- Backend thật cho 10 domain (User, Order, Warranty, OtpCode, ChatMessage, Product, Room, CustomRequest, CommunityPost, NewsArticle) — CRUD qua MongoDB, có seed script.
 - Retheme toàn site sang theme tối/cam/xanh + font Satoshi/Inter (tham khảo AuraPC-main).
 - Tách rạch ròi "Sản phẩm có sẵn" ↔ "Tùy biến in 3D" ở cả client (catalog/customizer) và admin (2 sub-tab).
 - Hạ tầng hiệu ứng UX: toast, cart-fly animation, product quick-view, scroll-reveal, page transition.
-- Tính năng mới: Trắc Nghiệm Phong Cách Decor (`/style-quiz`), hệ thống coin/rewards (idempotent).
+- Tính năng mới: Trắc Nghiệm Phong Cách Decor (`/style-quiz`).
 - 3D: customizer sản phẩm + phòng "Shop The Room" hỗ trợ model `.glb` thật lẫn procedural fallback.
 - Thanh toán MoMo/ZaloPay/ATM (qua cổng MoMo, `requestType: payWithATM`) sandbox + VietQR (ảnh QR tĩnh qua vietqr.io), tra cứu đơn hàng/bảo hành không cần đăng nhập.
-- Feature Tài khoản đầy đủ (tách shell + 4 sub-component: Hồ sơ, Đơn hàng, Sổ địa chỉ, Xu thưởng) — hồ sơ mở rộng (giới tính/ngày sinh/avatar upload), sổ địa chỉ CRUD với cascading tỉnh/huyện/xã (API hành chính VN công khai), đơn hàng có filter theo trạng thái + tìm kiếm. Tham khảo AuraPC-main (`account-page.component.ts`, `address.service.ts`, route `/profile`/`/avatar`/`/addresses`).
+- Feature Tài khoản đầy đủ (tách shell + 4 sub-component: Hồ sơ, Đơn hàng, Sổ địa chỉ, Voucher) — hồ sơ mở rộng (giới tính/ngày sinh/avatar upload), sổ địa chỉ CRUD với cascading tỉnh/huyện/xã (API hành chính VN công khai), đơn hàng có filter theo trạng thái + tìm kiếm. Tham khảo AuraPC-main (`account-page.component.ts`, `address.service.ts`, route `/profile`/`/avatar`/`/addresses`).
 - **AI Idea Assistant dùng LLM thật** (Google Gemini free tier, `server/routes/aiRoutes.js`) thay cho keyword-matching giả trước đây — có catalog-injection (gợi ý sản phẩm READY_STOCK có thật kèm link) tham khảo pattern AruBot của AuraPC-main.
 - **Bảo mật giá đơn hàng**: `POST /api/orders` tính lại giá từ sản phẩm thật trong DB (`server/utils/pricing.js`), không tin số tiền client gửi lên.
 - **Admin có đăng nhập** (username/password, `pages/login/` + `adminAuthGuard`), các route ghi dữ liệu admin-only đã gắn `requireAdminId`. Xem mục 8 để biết giới hạn (không phải bảo mật thật, chỉ tin id client gửi lên — quyết định có chủ đích để nhất quán với auth hiện có).

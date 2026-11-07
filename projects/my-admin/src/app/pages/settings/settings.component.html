@@ -6,7 +6,7 @@
   <div class="page-header">
     <div>
       <h1 class="page-title">Cài đặt hệ thống</h1>
-      <p class="page-subtitle">Thông tin showroom, đơn giá xưởng in 3D, Xu thưởng và cổng thanh toán</p>
+      <p class="page-subtitle">Thông tin showroom, đơn giá xưởng in 3D và cổng thanh toán</p>
     </div>
     <div class="header-actions" *ngIf="canEdit">
       <button type="button" class="btn-header" [disabled]="!dirty || saving" (click)="reset()"><i class="bi bi-arrow-counterclockwise"></i> Huỷ thay đổi</button>
@@ -84,28 +84,6 @@
             <label class="form-label">Thời gian sản xuất mặc định (ngày)</label>
             <input type="number" min="0" class="form-control" name="defaultLeadDays" [(ngModel)]="form.defaultLeadDays">
           </div>
-        </div>
-      </ng-container>
-
-      <!-- Xu thưởng -->
-      <ng-container *ngIf="tab() === 'loyalty'">
-        <h3 class="section-title">Xu thưởng thành viên</h3>
-        <div class="row g-3">
-          <div class="col-md-4">
-            <label class="form-label">Chi tiêu để nhận 10 Xu (đ)</label>
-            <input type="number" min="0" class="form-control" name="earnCoinRate" [(ngModel)]="form.earnCoinRate">
-          </div>
-          <div class="col-md-4">
-            <label class="form-label">Giá trị 1 Xu khi dùng (đ)</label>
-            <input type="number" min="0" class="form-control" name="coinRedeemValue" [(ngModel)]="form.coinRedeemValue">
-          </div>
-          <div class="col-md-4">
-            <label class="form-label">Dùng Xu tối đa (% giá trị đơn)</label>
-            <input type="number" min="0" max="100" class="form-control" name="maxCoinPerOrder" [(ngModel)]="form.maxCoinPerOrder">
-          </div>
-        </div>
-        <div class="notice-box info mt-3 mb-0">
-          Ví dụ: đơn {{ (form.earnCoinRate * 5) | number:'1.0-0' }}đ được cộng 50 Xu, tương đương {{ (50 * form.coinRedeemValue) | number:'1.0-0' }}đ cho đơn sau.
         </div>
       </ng-container>
 

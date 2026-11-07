@@ -52,7 +52,7 @@ export function couponToVoucher(c: Coupon): UserVoucher {
 }
 
 /**
- * Voucher cá nhân của khách (thay cho Xu Luméa): danh sách voucher, trò chơi nhận voucher
+ * Voucher cá nhân của khách: danh sách voucher, trò chơi nhận voucher
  * và phần thưởng hoạt động (trắc nghiệm phong cách...). Mọi mệnh giá do server quyết định.
  */
 @Injectable({ providedIn: 'root' })

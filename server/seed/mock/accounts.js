@@ -1,6 +1,5 @@
 // Tài khoản mẫu: khách hàng (User) và nhân viên my-admin (Admin).
 // Mật khẩu để ở dạng thô CHỈ cho dữ liệu kiểm thử — seed-all.js băm bằng bcrypt trước khi ghi DB.
-// Trường `coins` của User do build.js tính bằng tổng các CoinTransaction mẫu của user đó.
 const { oid, daysAgo, img } = require('./helpers');
 
 const CUSTOMER_PASSWORD = 'Lumea@123';
@@ -22,7 +21,7 @@ const AVATAR = {
 const addr = (label, fullName, phone, city, district, ward, address, isDefault = false) =>
   ({ label, fullName, phone, city, district, ward, address, isDefault });
 
-// key: khóa nội bộ để các file mock khác tham chiếu (orders, coins, comments...).
+// key: khóa nội bộ để các file mock khác tham chiếu (orders, comments...).
 const USERS = [
   {
     key: 'thaomy', phoneNumber: '0938112201', fullName: 'Nguyễn Thảo My', email: 'thaomy.nguyen@gmail.com',
@@ -69,7 +68,6 @@ const USERS = [
     ],
   },
   {
-    // Sinh nhật đúng ngày 9/10 — dùng để kiểm thử thưởng Xu sinh nhật ở /api/coins/me.
     key: 'maianh', phoneNumber: '0356778807', fullName: 'Huỳnh Mai Anh', email: 'maianh.huynh@gmail.com',
     gender: 'female', dateOfBirth: '2001-10-09', avatar: AVATAR.f4, createdDaysAgo: 95, lastLoginDaysAgo: 0,
     addresses: [

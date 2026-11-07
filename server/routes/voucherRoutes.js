@@ -8,7 +8,7 @@ const { VOUCHER_TIERS, awardVoucher } = require('../utils/vouchers');
 const router = express.Router();
 
 // ===================== Voucher của tôi + trò chơi nhận voucher =====================
-// Thay cho hệ thống Xu: khách chơi game / hoàn thành hoạt động để nhận voucher giảm giá dùng ngay khi thanh toán.
+// Khách chơi game / hoàn thành hoạt động để nhận voucher giảm giá dùng ngay khi thanh toán.
 // Mọi phần thưởng + giới hạn lượt/ngày do server quyết định. Ngày tính theo giờ Việt Nam (UTC+7).
 
 // Phần thưởng có thể nhận qua POST /claim (client chỉ gửi lý do, server tự chọn mệnh giá).

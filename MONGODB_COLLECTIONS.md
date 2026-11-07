@@ -264,7 +264,6 @@ Các collection này được tạo khi người dùng thao tác trên web. Thê
 | `admins` | `Admin` | Seed tạo tài khoản mặc định từ `ADMIN_DEFAULT_USERNAME` / `ADMIN_DEFAULT_PASSWORD` |
 | `orders` | `Order` | Khách đặt hàng (server tự tính lại giá) |
 | `warranties` | `Warranty` | Kích hoạt bảo hành cho đơn hàng |
-| `cointransactions` | `CoinTransaction` | Cộng/trừ xu (quiz, đơn hàng, newsletter...) |
 | `chatmessages` | `ChatMessage` | Chat hỗ trợ khách ↔ nhân viên |
 | `newscomments` | `NewsComment` | Bạn đọc bình luận dưới bài viết |
 | `newslettersubscribers` | `NewsletterSubscriber` | Đăng ký nhận bản tin |

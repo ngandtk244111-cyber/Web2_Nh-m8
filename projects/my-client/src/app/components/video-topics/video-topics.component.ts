@@ -10,6 +10,8 @@ export interface VideoTopic {
   title: string;
   description: string;
   link?: string;
+  /** Tách từ phần "?..." của link (vd '/catalog?cat=sofa') để routerLink không mã hoá mất dấu "?". */
+  queryParams?: Record<string, string>;
   ctaLabel: string;
   poster: string;
   /**
@@ -22,156 +24,140 @@ export interface VideoTopic {
 /** Danh sách dự phòng — dùng khi chưa tải được video do nhân viên đăng ở my-admin (API /videos). */
 const TOPICS: VideoTopic[] = [
   {
-    title: 'Giao Hàng Hỏa Tốc',
-    description: 'Giao nội thành trong 24h, đóng gói chống va đập cẩn thận cho từng món decor.',
-    link: '/orders/track',
-    ctaLabel: 'Tra cứu đơn hàng',
-    poster: 'https://images.unsplash.com/photo-1602874801007-bd458bb1b8b6?auto=format&fit=crop&w=800&q=70',
-    youtubeId: 'OLT1QLyJc0w',
+    title: 'Phòng Ngủ Kèm Góc Học Tập',
+    description: 'Gợi ý decor phòng ngủ kết hợp không gian học tập gọn gàng, đủ ánh sáng và tiện dụng.',
+    link: '/coordinate',
+    ctaLabel: 'Xem ý tưởng phối đồ',
+    poster: '',
+    youtubeId: 'tAjx-GnlWOI',
   },
   {
-    title: 'Bảo Hành 12 Tháng',
-    description: 'Bảo hành kỹ thuật cho mọi sản phẩm in 3D — an tâm sử dụng lâu dài.',
-    link: '/warranty-lookup',
-    ctaLabel: 'Tra cứu bảo hành',
-    poster: 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?auto=format&fit=crop&w=800&q=70',
-    youtubeId: 'd3x3koO73qk',
+    title: 'Decor Phòng Ngủ Ấm Cúng',
+    description: 'Chăn gối, đèn ngủ và món decor nhỏ biến phòng ngủ thành góc nghỉ ngơi thật chill.',
+    link: '/catalog?space=phong-ngu',
+    ctaLabel: 'Mua đồ decor',
+    poster: '',
+    youtubeId: '4KxkCvmOS9Q',
   },
   {
-    title: 'Đặt Làm Theo Yêu Cầu',
-    description: 'Gửi ý tưởng, Luméa tư vấn màu, chất liệu, kích thước và in 3D món đồ của riêng bạn.',
-    link: '/custom-request/new',
-    ctaLabel: 'Gửi yêu cầu',
-    poster: 'https://images.unsplash.com/photo-1612196808214-b8e1d6145a8c?auto=format&fit=crop&w=800&q=70',
-    youtubeId: 'ITgq96NgTDY',
+    title: 'Cảm Hứng Không Gian Sống',
+    description: 'Những góc nhà xinh xắn để bạn lấy cảm hứng trang trí lại không gian của mình.',
+    link: '/community',
+    ctaLabel: 'Vào cộng đồng',
+    poster: '',
+    youtubeId: 'Mada7qj-1NQ',
   },
   {
-    title: 'Thiết Kế Theo Yêu Cầu',
-    description: 'AI & kỹ sư tư vấn dựng concept riêng theo đúng ý tưởng của bạn.',
-    link: '/custom-request',
-    ctaLabel: 'Gửi yêu cầu thiết kế',
-    poster: 'https://images.unsplash.com/photo-1581783342308-f792dbdd27c5?auto=format&fit=crop&w=800&q=70',
-    youtubeId: 'cN64Hm_CfI4',
-  },
-  {
-    title: 'Xem Trước Không Gian 3D',
-    description: 'Dạo quanh phòng mẫu 360° được Luméa phối sẵn trước khi quyết định mua.',
+    title: 'Góc Nhà Mơ Mộng',
+    description: 'Tông màu dịu, ánh sáng ấm và nội thất mềm mại cho một tổ ấm đúng nghĩa.',
     link: '/shop-the-room',
     ctaLabel: 'Khám phá Shop The Room',
-    poster: 'https://images.unsplash.com/photo-1616046229478-9901c5536a45?auto=format&fit=crop&w=800&q=70',
-    youtubeId: 'WrrevTxy5P0',
+    poster: '',
+    youtubeId: '5z4oktlWxpI',
   },
   {
-    title: '100% Nhựa PLA Sinh Học',
-    description: 'Vật liệu in 3D an toàn, thân thiện môi trường cho mọi sản phẩm Luméa.',
-    ctaLabel: 'Tìm hiểu thêm',
-    link: '/catalog',
-    poster: 'https://images.unsplash.com/photo-1594026112284-02bb6f3352fe?auto=format&fit=crop&w=800&q=70',
-    youtubeId: 'WwS7-ELNhZs',
+    title: 'Nhà Xinh Mỗi Ngày',
+    description: 'Chỉ vài thay đổi nhỏ về bố cục và decor cũng đủ khiến ngôi nhà xinh hơn mỗi ngày.',
+    link: '/community',
+    ctaLabel: 'Xem góc nhà thật',
+    poster: '',
+    youtubeId: 'aVfLL37oShs',
   },
   {
-    title: 'Flash Sale Mỗi Ngày',
-    description: 'Săn deal nội thất & decor giá tốt theo khung giờ, số lượng có hạn mỗi ngày.',
+    title: 'Thiết Kế Nội Thất Tinh Tế',
+    description: 'Phối nội thất hài hoà từ màu sắc đến chất liệu — đặt thiết kế riêng theo ý bạn.',
+    link: '/custom-request/new',
+    ctaLabel: 'Gửi yêu cầu thiết kế',
+    poster: '',
+    youtubeId: 'pGVgxbEM-E0',
+  },
+  {
+    title: 'Bếp Ghi Xám Chân Ái 2025',
+    description: 'Tông ghi xám hiện đại, dễ phối, dễ vệ sinh — lựa chọn bền vững cho gian bếp.',
+    link: '/catalog?dept=noi-that',
+    ctaLabel: 'Xem nội thất bếp',
+    poster: '',
+    youtubeId: 'h2G08AxuZE8',
+  },
+  {
+    title: 'Chọn Nội Thất Nhàn Tênh',
+    description: 'Mẫu mã sẵn có, giá rõ ràng, săn deal theo khung giờ — mua nội thất chưa bao giờ dễ thế.',
     link: '/flash-sale',
     ctaLabel: 'Xem Flash Sale',
-    poster: 'assets/decor-deals/flash-sale-hero.jpg',
-    youtubeId: 'BJugxJpzTGQ',
+    poster: '',
+    youtubeId: 'UoXCUaZC4e0',
   },
   {
-    title: 'Trắc Nghiệm Phong Cách',
-    description: 'Trả lời vài câu hỏi nhanh để biết phong cách nội thất hợp với bạn — nhận thêm voucher.',
+    title: 'Tủ Áo Trắng Kem & Nâu Tây',
+    description: 'Phối màu trắng kem và nâu tây cực nịnh mắt, vừa sang vừa rộng rãi cho phòng ngủ.',
+    link: '/catalog?cat=tu',
+    ctaLabel: 'Xem tủ quần áo',
+    poster: '',
+    youtubeId: '3oGbm7YSId0',
+  },
+  {
+    title: 'Thiết Kế Siêu Ưng Ý',
+    description: 'Chia sẻ một bản thiết kế nội thất trọn vẹn — bạn cũng có thể đặt bản của riêng mình.',
+    link: '/custom-request/new',
+    ctaLabel: 'Đặt thiết kế riêng',
+    poster: '',
+    youtubeId: 'DeUCxmPFD84',
+  },
+  {
+    title: 'Phòng Ngủ Dịu Dàng Tiểu Thư',
+    description: 'Tông pastel nhẹ nhàng, đường nét mềm mại — làm trắc nghiệm để biết phong cách hợp với bạn.',
     link: '/style-quiz',
     ctaLabel: 'Làm trắc nghiệm',
-    poster: 'https://images.unsplash.com/photo-1618220179428-22790b461013?auto=format&fit=crop&w=800&q=70',
-    youtubeId: '6CLKldA4zDQ',
+    poster: '',
+    youtubeId: '2SXNzEhmb_I',
   },
   {
-    title: 'Ý Tưởng Phối Đồ',
+    title: 'Sofa Phòng Khách Thư Giãn',
+    description: 'Sofa êm ái, form gọn đẹp — điểm nhấn cho phòng khách và những buổi tối thư giãn.',
+    link: '/catalog?cat=sofa',
+    ctaLabel: 'Xem sofa',
+    poster: '',
+    youtubeId: 'AemhomVIw-I',
+  },
+  {
+    title: 'Bàn Đa Năng 3 Hộc',
+    description: 'Biến góc làm việc trở nên đẳng cấp với bàn đa năng 3 hộc tiện ích, gọn gàng.',
+    link: '/catalog?cat=ban',
+    ctaLabel: 'Xem bàn làm việc',
+    poster: '',
+    youtubeId: 'lusbCFtvCaA',
+  },
+  {
+    title: 'Phối Đồ Theo Không Gian',
     description: 'Gợi ý phối sofa, đèn, decor theo từng không gian — mua lẻ từng món hoặc cả bộ.',
     link: '/coordinate',
     ctaLabel: 'Xem ý tưởng',
-    poster: 'https://images.unsplash.com/photo-1616594039964-ae9021a400a0?auto=format&fit=crop&w=800&q=70',
-    youtubeId: 'Fp7W66vTK1E',
+    poster: '',
+    youtubeId: 'orCKTEX43DM',
   },
   {
-    title: 'Cộng Đồng Decor',
-    description: 'Xem góc nhà thật của khách Luméa, chia sẻ không gian của bạn và lấy cảm hứng.',
-    link: '/community',
-    ctaLabel: 'Vào cộng đồng',
-    poster: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=800&q=70',
-    youtubeId: 'AQb595Y5j3Q',
+    title: 'Ghé Thăm Luméa',
+    description: 'Dạo một vòng cửa hàng nội thất, xem tận mắt chất liệu và màu sắc từng sản phẩm.',
+    link: '/ve-lumea',
+    ctaLabel: 'Về Luméa',
+    poster: '',
+    youtubeId: 'eyNrpEQV4Aw',
   },
   {
-    title: 'Chơi Game Nhận Voucher',
-    description: 'Lật thẻ, vòng quay, hộp quà bí ẩn — nhận voucher giảm giá dùng ngay khi thanh toán.',
-    link: '/voucher',
-    ctaLabel: 'Nhận voucher',
-    poster: 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&w=800&q=70',
-    youtubeId: 'S5B4qfxUQKE',
+    title: 'Khoảnh Khắc Thư Giãn Tại Gia',
+    description: 'Khoảng thời gian đẹp nhất trong ngày là khi được trở về góc nhà yêu thích.',
+    link: '/shop-the-room',
+    ctaLabel: 'Khám phá phòng mẫu',
+    poster: '',
+    youtubeId: 'YV3Zm8EgCO0',
   },
   {
-    title: 'Nội Thất Cho Mọi Không Gian',
-    description: 'Sofa, giường, bàn ghế, tủ kệ cho phòng khách, phòng ngủ, góc làm việc — giao lắp tận nơi.',
-    link: '/catalog',
-    ctaLabel: 'Xem tất cả sản phẩm',
-    poster: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=70',
-    youtubeId: 'b1ZsXPMDlkI',
-  },
-  {
-    title: 'Đổi Trả Trong 7 Ngày',
-    description: 'Lỗi sản xuất, hư hỏng khi vận chuyển hay giao sai mẫu đều được đổi trả nhanh gọn.',
-    link: '/chinh-sach/doi-tra',
-    ctaLabel: 'Xem chính sách đổi trả',
-    poster: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=800&q=70',
-    youtubeId: 'ysg6GVlzz9Y',
-  },
-  {
-    title: 'Thanh Toán Linh Hoạt',
-    description: 'COD, chuyển khoản VietQR, ví MoMo và ZaloPay — chọn cách thanh toán tiện nhất cho bạn.',
-    link: '/chinh-sach/thanh-toan',
-    ctaLabel: 'Phương thức thanh toán',
-    poster: 'https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?auto=format&fit=crop&w=800&q=70',
-    youtubeId: '6vewvgkj4us',
-  },
-  {
-    title: 'Phong Cách Scandinavian',
-    description: 'Gỗ sáng, màu trung tính, đường nét mềm — khám phá dòng nội thất & decor Bắc Âu của Luméa.',
-    link: '/thuong-hieu/scandinavian',
-    ctaLabel: 'Xem dòng Scandinavian',
-    poster: 'https://images.unsplash.com/photo-1577140917170-285929fb55b7?auto=format&fit=crop&w=800&q=70',
-    youtubeId: 'kuVNutQeBBA',
-  },
-  {
-    title: 'Tin Tức & Xu Hướng',
-    description: 'Xu hướng nội thất, mẹo sắp xếp không gian và câu chuyện đằng sau sản phẩm in 3D.',
-    link: '/news',
-    ctaLabel: 'Đọc Insights',
-    poster: 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=800&q=70',
-    youtubeId: 'eeXZJOc0zNg',
-  },
-  {
-    title: 'Lưu Món Yêu Thích',
-    description: 'Thả tim sản phẩm ưng ý để xem lại sau, so sánh và thêm vào giỏ chỉ với một chạm.',
-    link: '/favorites',
-    ctaLabel: 'Danh sách yêu thích',
-    poster: 'https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?auto=format&fit=crop&w=800&q=70',
-    youtubeId: 'pXbO-QQJsxM',
-  },
-  {
-    title: 'Câu Hỏi Thường Gặp',
-    description: 'Giải đáp nhanh về đặt hàng, giao hàng, bảo hành và tùy biến sản phẩm 3D.',
-    link: '/chinh-sach/faq',
-    ctaLabel: 'Xem FAQ',
-    poster: 'https://images.unsplash.com/photo-1594620302200-9a762244a156?auto=format&fit=crop&w=800&q=70',
-    youtubeId: 'K8z4TvBJP0A',
-  },
-  {
-    title: 'Liên Hệ Luméa',
-    description: 'Hotline 1800 6928, chat trực tuyến hoặc đặt thiết kế riêng — Luméa luôn sẵn sàng hỗ trợ.',
-    link: '/chinh-sach/lien-he',
-    ctaLabel: 'Liên hệ ngay',
-    poster: 'https://images.unsplash.com/photo-1611269154421-4e27233ac5c7?auto=format&fit=crop&w=800&q=70',
-    youtubeId: 'iRUlzdjiIIc',
+    title: 'Sofa Góc Cho Mọi Góc Nhà',
+    description: 'Đủ êm để thư giãn, đủ thông minh để định hình không gian — sofa góc cho nhà bạn.',
+    link: '/catalog?cat=sofa',
+    ctaLabel: 'Xem sofa góc',
+    poster: '',
+    youtubeId: 'ohyVsjGcvnY',
   },
 ];
 
@@ -217,6 +203,12 @@ function loadYoutubeIframeApi(): Promise<void> {
   return youtubeApiPromise;
 }
 
+function withQuery(topic: VideoTopic): VideoTopic {
+  const [path, query] = (topic.link ?? '').split('?');
+  if (!query) return topic;
+  return { ...topic, link: path, queryParams: Object.fromEntries(new URLSearchParams(query)) };
+}
+
 @Component({
   selector: 'app-video-topics',
   standalone: true,
@@ -225,7 +217,7 @@ function loadYoutubeIframeApi(): Promise<void> {
   styleUrl: './video-topics.component.css'
 })
 export class VideoTopicsComponent implements OnInit, AfterViewInit, OnDestroy {
-  topics: VideoTopic[] = TOPICS;
+  topics: VideoTopic[] = TOPICS.map(withQuery);
   private loadedIndices = new Set<number>();
   private players = new Map<number, any>();
   /** Index của các topic có youtubeId nhưng video lỗi (không tồn tại, riêng tư, hoặc chủ sở hữu
@@ -350,7 +342,7 @@ export class VideoTopicsComponent implements OnInit, AfterViewInit, OnDestroy {
       ctaLabel: v.ctaLabel || 'Xem thêm',
       poster: v.poster || `https://img.youtube.com/vi/${v.youtubeId}/hqdefault.jpg`,
       youtubeId: v.youtubeId,
-    }));
+    })).map(withQuery);
     this.pageStart = 0;
     // Chờ Angular vẽ lại danh sách thẻ rồi mới đo kích thước để đặt lại carousel.
     setTimeout(() => this.applyCarouselPosition());

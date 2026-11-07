@@ -94,11 +94,44 @@
             <a *ngIf="currentOrder.shipment.trackingUrl" [href]="currentOrder.shipment.trackingUrl" target="_blank" rel="noopener" class="font-semibold text-amber-600 underline">Xem hành trình ↗</a>
             <span *ngIf="currentOrder.paymentMethod === 'COD' && currentOrder.status === 'SHIPPED'">Vui lòng chuẩn bị <strong>{{ currentOrder.total | number }}đ</strong> để thanh toán khi nhận hàng.</span>
           </div>
-          <p *ngIf="currentOrder.status === 'PENDING'" class="text-xs text-neutral-600">Luméa sẽ gọi tới số {{ currentOrder.shippingAddress.phone }} để xác nhận đơn trước khi giao. Vui lòng để ý điện thoại nhé.</p>
-          <div *ngIf="canCancel" class="flex justify-end">
-            <button type="button" class="ot-cancel-btn" (click)="openCancel()">Huỷ đơn hàng</button>
+          <p *ngIf="currentOrder.status === 'PENDING'" class="text-xs text-neutral-600">
+            <ng-container *ngIf="currentOrder.paymentMethod === 'COD'">Luméa sẽ gọi tới số {{ currentOrder.shippingAddress.phone }} để xác nhận đơn trước khi giao. Vui lòng để ý điện thoại nhé. </ng-container>
+            Bạn có thể tự huỷ đơn cho tới khi Luméa xác nhận đơn.
+          </p>
+          <p *ngIf="cancelLocked" class="text-xs text-neutral-600">
+            Đơn đã được xác nhận và đang chuẩn bị, đóng gói nên không thể tự huỷ. Cần hỗ trợ, vui lòng gọi <a href="tel:18006928" class="font-bold text-[#A3152D]">1800 6928</a>.
+          </p>
+          <div *ngIf="canCancel || canViewInvoice" class="flex justify-end gap-2">
+            <button *ngIf="canViewInvoice" type="button" class="ot-invoice-btn" (click)="openInvoice()">
+              <app-icon name="copy" [size]="14"></app-icon>
+              Hóa đơn PDF
+            </button>
+            <button *ngIf="canCancel" type="button" class="ot-cancel-btn" (click)="openCancel()">Huỷ đơn hàng</button>
           </div>
           <p *ngIf="currentOrder.status === 'CANCELLED' && currentOrder.cancelReason" class="text-xs text-rose-500">Lý do huỷ: {{ currentOrder.cancelReason }}</p>
+
+          <!-- Hoàn tiền: đơn đã trả trước bị huỷ -->
+          <div *ngIf="currentOrder.refund as rf" class="ot-refund" [class.ot-refund--done]="rf.status === 'COMPLETED'">
+            <div class="ot-refund__head">
+              <span class="ot-refund__title">Hoàn tiền</span>
+              <span class="ot-refund__chip">{{ refundStatusLabel(rf.status) }}</span>
+            </div>
+            <div class="ot-refund__row"><span>Số tiền hoàn</span><strong>{{ rf.amount | vnd }}</strong></div>
+            <div class="ot-refund__row"><span>Hình thức</span><span>{{ rf.channel }}</span></div>
+            <div *ngIf="rf.bankAccount" class="ot-refund__row">
+              <span>Tài khoản nhận</span><span>{{ rf.bankName }} · {{ rf.bankAccount }} · {{ rf.accountHolder }}</span>
+            </div>
+            <div *ngIf="rf.status === 'PENDING' && rf.dueAt" class="ot-refund__row">
+              <span>Dự kiến hoàn trước</span><strong>{{ rf.dueAt | date:'dd/MM/yyyy' }}</strong>
+            </div>
+            <div *ngIf="rf.status === 'COMPLETED'" class="ot-refund__row">
+              <span>Đã hoàn lúc</span><span>{{ rf.completedAt | date:'dd/MM/yyyy HH:mm' }}<ng-container *ngIf="rf.transactionRef"> · Mã GD: <strong class="font-mono">{{ rf.transactionRef }}</strong></ng-container></span>
+            </div>
+            <p *ngIf="rf.status === 'PENDING' && currentOrder.paymentMethod === 'BANK_TRANSFER' && !rf.bankAccount" class="ot-refund__note">
+              Luméa sẽ liên hệ số {{ currentOrder.shippingAddress.phone }} để lấy tài khoản nhận tiền hoàn.
+            </p>
+            <p *ngIf="rf.status === 'VOID' && rf.adminNote" class="ot-refund__note">{{ rf.adminNote }}</p>
+          </div>
           <p *ngIf="currentOrder.status === 'RETURNED' && currentOrder.returnReason" class="text-xs text-rose-500">Giao không thành công: {{ currentOrder.returnReason }}. Liên hệ Luméa nếu bạn muốn giao lại.</p>
 
           <!-- 3D Production Pipeline Progress Tracker -->
@@ -182,9 +215,28 @@
                 <div class="text-xs font-bold text-amber-400 mt-1">
                   {{ item.totalPrice | vnd }} (Số lượng: {{ item.quantity }})
                 </div>
+
+                <!-- Phiếu bảo hành: cấp khi đơn giao thành công -->
+                <div *ngIf="item.warrantyCode" class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px]">
+                  <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700">
+                    <app-icon name="shield" [size]="12"></app-icon>
+                    Mã bảo hành: <strong class="font-mono">{{ item.warrantyCode }}</strong>
+                  </span>
+                  <a
+                    routerLink="/warranty-lookup"
+                    [queryParams]="{ code: item.warrantyCode }"
+                    [state]="{ phone: currentOrder.shippingAddress.phone }"
+                    class="font-bold text-[#A3152D] hover:underline">
+                    Xem bảo hành →
+                  </a>
+                </div>
               </div>
             </div>
           </div>
+
+          <p *ngIf="['PENDING', 'CONFIRMED', 'IN_PRODUCTION', 'SHIPPED'].includes(currentOrder.status)" class="text-[11px] text-neutral-500">
+            Mã bảo hành 12 tháng cho từng sản phẩm sẽ được cấp ngay khi đơn giao thành công.
+          </p>
 
           <div class="border-t border-neutral-200 pt-3 flex justify-between items-baseline text-sm font-bold text-neutral-900">
             <span>Tổng thanh toán ({{ currentOrder.paymentMethod }}):</span>
@@ -216,9 +268,20 @@
             placeholder="Chia sẻ thêm lý do (không bắt buộc)"
             class="ot-modal__note"></textarea>
 
+          <!-- Đơn đã trả trước: báo trước chính sách hoàn tiền -->
+          <div *ngIf="refundInfo as ri" class="ot-refund ot-refund--modal">
+            <div class="ot-refund__head"><span class="ot-refund__title">Hoàn tiền {{ currentOrder?.total | vnd }}</span></div>
+            <p class="ot-refund__note">{{ ri.channel }} trong vòng <strong>{{ ri.days }} ngày làm việc</strong> (không tính Thứ Bảy, Chủ nhật) kể từ khi huỷ đơn.</p>
+            <ng-container *ngIf="needsRefundBank">
+              <input type="text" [(ngModel)]="refundBank.bankName" maxlength="60" placeholder="Ngân hàng (VD: Vietcombank)" class="ot-modal__input">
+              <input type="text" inputmode="numeric" [(ngModel)]="refundBank.bankAccount" maxlength="24" placeholder="Số tài khoản" class="ot-modal__input">
+              <input type="text" [(ngModel)]="refundBank.accountHolder" maxlength="60" placeholder="Tên chủ tài khoản (không dấu)" class="ot-modal__input uppercase">
+            </ng-container>
+          </div>
+
           <div class="ot-modal__actions">
             <button type="button" class="ot-modal__btn" (click)="closeCancel()">Không phải bây giờ</button>
-            <button type="button" class="ot-modal__btn ot-modal__btn--danger" [disabled]="!cancelReason || cancelling" (click)="confirmCancel()">
+            <button type="button" class="ot-modal__btn ot-modal__btn--danger" [disabled]="!cancelReason || cancelling || (needsRefundBank && !refundBankValid)" (click)="confirmCancel()">
               {{ cancelling ? 'Đang huỷ...' : 'Huỷ đơn hàng' }}
             </button>
           </div>

@@ -48,4 +48,4 @@ function clearExpiredFailures() {
 }
 setInterval(clearExpiredFailures, WINDOW_MS).unref();
 
-module.exports = { canViewOrder, canWatchOrder, isLocked, recordFailure };
+module.exports = { canViewOrder, canWatchOrder, isLocked, recordFailure, normalizePhone };

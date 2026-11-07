@@ -18,7 +18,6 @@ export const CLIENT_PAGES: { link: string; label: string }[] = [
   { link: '/community', label: 'Cộng đồng' },
   { link: '/news', label: 'Tin tức' },
   { link: '/voucher', label: 'Kho voucher' },
-  { link: '/xu', label: 'Luméa Xu' },
   { link: '/ve-lumea', label: 'Về Luméa' },
   { link: '/warranty-lookup', label: 'Tra cứu bảo hành' },
   { link: '/orders/track', label: 'Tra cứu đơn hàng' },

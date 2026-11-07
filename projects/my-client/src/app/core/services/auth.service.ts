@@ -20,7 +20,6 @@ export interface LoggedUser {
   avatar: string;
   active: boolean;
   lastLogin: string | null;
-  coins: number;
   createdAt: string;
   updatedAt: string;
 }

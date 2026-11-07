@@ -7,7 +7,7 @@ import { ToastService } from '../../core/services/toast.service';
 import { AuditService } from '../../core/services/audit.service';
 import { MascotLoadingComponent } from '../../components/mascot-loading/mascot-loading.component';
 
-type SettingsTab = 'general' | 'print3d' | 'loyalty' | 'payment';
+type SettingsTab = 'general' | 'print3d' | 'payment';
 
 /** Mặc định khi chưa lưu lần nào trên server. */
 const DEFAULT_SETTINGS = {
@@ -22,9 +22,6 @@ const DEFAULT_SETTINGS = {
   woodPerGram: 2400,
   finishLaborFee: 45000,
   defaultLeadDays: 4,
-  earnCoinRate: 100000,
-  coinRedeemValue: 1000,
-  maxCoinPerOrder: 30,
   enableCod: true,
   /** Đơn COD dưới mức này (và không có hàng in 3D) giao luôn, không cần gọi xác nhận — server/utils/cod-policy.js. */
   codConfirmThreshold: 500000,
@@ -36,10 +33,10 @@ const DEFAULT_SETTINGS = {
 export type StoreSettings = typeof DEFAULT_SETTINGS;
 
 const NUMBER_FIELDS: (keyof StoreSettings)[] = [
-  'plaPerGram', 'resinPerGram', 'woodPerGram', 'finishLaborFee', 'defaultLeadDays', 'earnCoinRate', 'coinRedeemValue', 'maxCoinPerOrder', 'codConfirmThreshold',
+  'plaPerGram', 'resinPerGram', 'woodPerGram', 'finishLaborFee', 'defaultLeadDays', 'codConfirmThreshold',
 ];
 
-/** Cài đặt hệ thống — thông tin cửa hàng, đơn giá in 3D, Xu thưởng, cổng thanh toán (config 'settings'). */
+/** Cài đặt hệ thống — thông tin cửa hàng, đơn giá in 3D, cổng thanh toán (config 'settings'). */
 @Component({
   selector: 'app-settings',
   standalone: true,
@@ -56,7 +53,6 @@ export class SettingsComponent implements OnInit {
   readonly tabs: { key: SettingsTab; label: string; icon: string }[] = [
     { key: 'general', label: 'Cửa hàng & showroom', icon: 'bi-shop' },
     { key: 'print3d', label: 'Đơn giá in 3D', icon: 'bi-printer' },
-    { key: 'loyalty', label: 'Xu thưởng', icon: 'bi-coin' },
     { key: 'payment', label: 'Thanh toán', icon: 'bi-credit-card' },
   ];
 
@@ -112,11 +108,6 @@ export class SettingsComponent implements OnInit {
       this.toast.warning('Các ô số phải là số không âm');
       return;
     }
-    if (Number(f.maxCoinPerOrder) > 100) {
-      this.tab.set('loyalty');
-      this.toast.warning('Tỉ lệ dùng Xu tối đa không được quá 100%');
-      return;
-    }
     if (!f.enableCod && !f.enableBankQr && !f.enableMomo && !f.enableZaloPay) {
       this.tab.set('payment');
       this.toast.warning('Cần bật ít nhất 1 hình thức thanh toán');
@@ -133,7 +124,7 @@ export class SettingsComponent implements OnInit {
         this.dirty = false;
         this.form = { ...value };
         this.toast.success('Đã lưu cài đặt hệ thống');
-        this.audit.record('Cài Đặt', 'Cập nhật cài đặt hệ thống', 'Thông tin cửa hàng, bảng giá in 3D, Xu thưởng & thanh toán', 'SUCCESS');
+        this.audit.record('Cài Đặt', 'Cập nhật cài đặt hệ thống', 'Thông tin cửa hàng, bảng giá in 3D & thanh toán', 'SUCCESS');
       },
       error: err => {
         this.saving = false;

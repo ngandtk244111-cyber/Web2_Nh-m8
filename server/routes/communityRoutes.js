@@ -134,7 +134,7 @@ router.post('/', attachUserId, async (req, res) => {
       } : {}),
     });
 
-    // Bài bị chặn: vẫn lưu để nhân viên xem lại, không thưởng Xu, báo lỗi cho người đăng.
+    // Bài bị chặn: vẫn lưu để nhân viên xem lại, báo lỗi cho người đăng.
     if (violation) {
       return res.status(422).json({
         success: false,

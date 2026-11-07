@@ -1,11 +1,11 @@
 // Dựng toàn bộ document mẫu từ các file dữ liệu trong thư mục này: gắn ObjectId, nối tham chiếu
 // (user, sản phẩm, đơn hàng, bài viết), tính giá/phí ship bằng đúng utils của server và sinh các
-// bản ghi phái sinh (bảo hành, Xu thưởng giao hàng, thông báo đơn). Không đọc/ghi database.
+// bản ghi phái sinh (bảo hành, thông báo đơn). Không đọc/ghi database.
 const bcrypt = require('bcryptjs');
 const { oid, daysAgo, viLabel, viLabelPadded } = require('./helpers');
 const { USERS, ADMINS, toUserDoc, toAdminDoc, userByKey, adminByKey } = require('./accounts');
 const { ORDERS, PRODUCTION_STEPS } = require('./orders');
-const { COUPONS, WARRANTIES, COIN_ACTIVITIES, NEWSLETTER, BROADCASTS, PERSONAL_NOTIFICATIONS } = require('./engagement');
+const { COUPONS, WARRANTIES, NEWSLETTER, BROADCASTS, PERSONAL_NOTIFICATIONS } = require('./engagement');
 const { CUSTOM_REQUESTS, COMMUNITY_POSTS, NEWS_COMMENTS, CHAT_SESSIONS, AI_CONVERSATIONS } = require('./content');
 const { enrichProduct } = require('./product-content');
 
@@ -21,9 +21,6 @@ const DEFAULT_VIDEOS = require('../default-videos');
 const { resolveUnitPrice, resolveShippingFee } = require('../../utils/pricing');
 const { findCarrier, trackingUrlFor } = require('../../utils/shipping');
 
-const DELIVERY_REWARD_RATE = 0.01; // khớp orderRoutes.js
-const NEWSLETTER_REWARD = 10; // khớp newsletterRoutes.js
-const COMMUNITY_POST_REWARD = 15; // khớp communityRoutes.js
 
 const HOUR = 3600 * 1000;
 const DAY = 24 * HOUR;
@@ -238,35 +235,13 @@ async function buildAll() {
     };
   });
 
-  // Giao dịch Xu: hoạt động độc lập + thưởng giao hàng + đăng ký bản tin + đăng bài cộng đồng.
-  const coinSpecs = [
-    ...COIN_ACTIVITIES,
-    ...orders.filter(o => o.status === 'DELIVERED' && o.userId).map(o => ({
-      userId: o.userId, reason: 'ORDER_DELIVERED', refId: o.orderNumber, amount: Math.round(o.total * DELIVERY_REWARD_RATE),
-      note: `Nhận thưởng từ đơn hàng ${o.orderNumber} đã giao thành công`, at: o.deliveredAt,
-    })),
-    ...NEWSLETTER.filter(n => n.user).map(n => ({
-      user: n.user, reason: 'NEWSLETTER_SUBSCRIBE', refId: 'newsletter-subscribe', amount: NEWSLETTER_REWARD,
-      note: 'Đăng ký nhận bản tin Luméa', at: daysAgo(n.days, 20, 0),
-    })),
-    ...communityPosts.filter(p => p.status === 'PUBLISHED').map(p => ({
-      userId: p.userId, reason: 'COMMUNITY_POST', refId: p.id, amount: COMMUNITY_POST_REWARD,
-      note: 'Chia sẻ góc decor lên Cộng đồng Luméa', at: p.postedAt,
-    })),
-  ];
-  const coinTransactions = coinSpecs.map(c => ({
-    user: c.userId || user(c.user)._id, amount: c.amount, reason: c.reason, refId: c.refId, note: c.note, createdAt: c.at, updatedAt: c.at,
-  }));
-  const coinsByUser = new Map();
-  for (const t of coinTransactions) coinsByUser.set(String(t.user), (coinsByUser.get(String(t.user)) || 0) + t.amount);
-
   // Thông báo: chung + riêng + theo trạng thái đơn của khách có tài khoản.
   const ORDER_NOTICE = {
     PENDING: o => ['Đặt hàng thành công', `Đơn ${o.orderNumber} đang chờ Luméa gọi điện xác nhận trước khi giao.`],
     CONFIRMED: o => ['Đơn hàng đã được xác nhận', `Đơn ${o.orderNumber} đã được xác nhận và đang chuẩn bị hàng.`],
     IN_PRODUCTION: o => ['Đơn hàng đang được sản xuất', `Đơn ${o.orderNumber}: ${o.productionProgress?.stepTitle || 'đang sản xuất'}.`],
     SHIPPED: o => ['Đơn hàng đang trên đường giao', `Đơn ${o.orderNumber} đã bàn giao ${o.shipment.carrierName}${o.shipment.trackingCode ? ` (mã ${o.shipment.trackingCode})` : ''}.`],
-    DELIVERED: o => ['Giao hàng thành công', `Đơn ${o.orderNumber} đã giao thành công — bạn nhận được ${Math.round(o.total * DELIVERY_REWARD_RATE)} Xu thưởng.`],
+    DELIVERED: o => ['Giao hàng thành công', `Đơn ${o.orderNumber} đã giao thành công — Luméa tặng bạn 1 voucher cho lần mua sau.`],
     CANCELLED: o => ['Đơn hàng đã bị huỷ', `Đơn ${o.orderNumber} đã bị huỷ: ${o.cancelReason}`],
     RETURNED: o => ['Giao hàng không thành công', `Đơn ${o.orderNumber} đã hoàn về kho: ${o.returnReason}`],
   };
@@ -338,7 +313,7 @@ async function buildAll() {
   };
   const users = await Promise.all(USERS.map(async u => {
     const doc = toUserDoc(u);
-    return { ...doc, password: doc.password ? await hash(doc.password) : null, coins: coinsByUser.get(String(u._id)) || 0 };
+    return { ...doc, password: doc.password ? await hash(doc.password) : null };
   }));
   const admins = await Promise.all(ADMINS.map(async a => ({ ...toAdminDoc(a), password: await hash(a.password) })));
 
@@ -356,7 +331,6 @@ async function buildAll() {
     { model: 'Video', key: ['youtubeId'], docs: DEFAULT_VIDEOS.map((v, i) => ({ id: `video-default-${i + 1}`, order: i + 1, ...v })) },
     { model: 'Order', key: ['orderNumber'], docs: orders },
     { model: 'Warranty', key: ['warrantyCode'], docs: warranties },
-    { model: 'CoinTransaction', key: ['user', 'reason', 'refId'], docs: coinTransactions },
     { model: 'CustomRequest', key: ['id'], docs: [...MOCK_CUSTOM_REQUESTS, ...CUSTOM_REQUESTS.map(buildCustomRequest)] },
     { model: 'CommunityPost', key: ['id'], docs: [...MOCK_COMMUNITY_POSTS, ...communityPosts] },
     { model: 'NewsComment', key: ['id'], docs: newsComments },

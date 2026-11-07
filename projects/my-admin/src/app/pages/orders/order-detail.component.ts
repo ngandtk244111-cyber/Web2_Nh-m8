@@ -78,6 +78,8 @@ export class OrderDetailComponent implements OnInit {
   cancelReason = '';
   returning = false;
   returnReason = '';
+  refundRef = '';
+  refundNote = '';
 
   shippingOptions: ShippingOptions | null = null;
   shipForm = { carrier: '', trackingCode: '', fee: 0, note: '' };
@@ -97,6 +99,11 @@ export class OrderDetailComponent implements OnInit {
 
   get canEdit(): boolean {
     return this.adminAuth.can('orders.edit');
+  }
+
+  /** Hoàn tiền cần quyền duyệt thanh toán (khớp server: PATCH /refund yêu cầu orders.approve). */
+  get canApprove(): boolean {
+    return this.adminAuth.can('orders.approve');
   }
 
   get customerLink(): string[] | null {
@@ -171,6 +178,24 @@ export class OrderDetailComponent implements OnInit {
     });
   }
 
+  confirmOrder(o: Order): void {
+    this.apply(this.orderService.confirmOrder(o.orderNumber), `Đã xác nhận đơn ${o.orderNumber}`, 'Xác nhận đơn');
+  }
+
+  resolveRefund(o: Order, action: 'complete' | 'void'): void {
+    const ref = this.refundRef.trim();
+    const note = this.refundNote.trim();
+    if (action === 'complete' ? !ref : !note) return;
+    this.apply(
+      this.orderService.resolveRefund(o.orderNumber, action, ref, note),
+      action === 'complete' ? `Đã hoàn tiền đơn ${o.orderNumber}` : `Đơn ${o.orderNumber}: không hoàn tiền`,
+      action === 'complete' ? `Hoàn tiền (mã GD ${ref})` : `Không hoàn tiền: ${note}`,
+      action === 'complete' ? 'SUCCESS' : 'WARNING'
+    );
+    this.refundRef = '';
+    this.refundNote = '';
+  }
+
   confirmPhone(o: Order): void {
     this.apply(this.orderService.confirmPhone(o.orderNumber), `Đã xác nhận đơn ${o.orderNumber} với khách`, 'Gọi xác nhận đơn COD');
   }
@@ -207,7 +232,7 @@ export class OrderDetailComponent implements OnInit {
   async markDelivered(o: Order): Promise<void> {
     const ok = await this.confirmDialog.confirm({
       title: `Đơn ${o.orderNumber} đã giao thành công?`,
-      message: (o.paymentMethod === 'COD' ? 'Shipper đã thu tiền COD (còn chờ đối soát với hãng). ' : '') + 'Khách sẽ được cộng Xu thưởng và đơn không sửa được nữa.',
+      message: (o.paymentMethod === 'COD' ? 'Shipper đã thu tiền COD (còn chờ đối soát với hãng). ' : '') + 'Khách sẽ được tặng voucher cho lần mua sau và đơn không sửa được nữa.',
       confirmLabel: 'Xác nhận đã giao',
       icon: 'bi-truck',
     });

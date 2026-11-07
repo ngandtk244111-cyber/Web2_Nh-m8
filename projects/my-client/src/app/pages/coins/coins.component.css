@@ -1,5 +1,5 @@
-/* Trang Ưu đãi Luméa Xu — bố cục theo trang xu kiểu Shopee nhưng dùng màu thương hiệu
-   (đỏ đô + kem + vàng xu). Thiết kế desktop trước, co về 1 cột trên mobile. */
+/* Trang Voucher Luméa — bố cục kiểu trang ưu đãi Shopee nhưng dùng màu thương hiệu
+   (đỏ đô + kem + vàng). Thiết kế desktop trước, co về 1 cột trên mobile. */
 :host {
   display: block;
   --xu-wine: #A80D27;

@@ -60,17 +60,11 @@ const TOPICS = [
   {
     key: 'sale',
     keywords: ['khuyen mai', 'giam gia', 'sale', 'voucher', 'ma giam', 'coupon', 'flash', 'uu dai'],
-    text: 'Các ưu đãi đang chạy được cập nhật ở trang Flash Sale. Bạn cũng có thể dùng Xu Luméa để giảm giá khi thanh toán.',
+    text: 'Các ưu đãi đang chạy được cập nhật ở trang Flash Sale. Bạn cũng có thể chơi game nhận voucher để giảm giá khi thanh toán.',
     links: [
       { label: 'Xem Flash Sale', url: '/flash-sale' },
-      { label: 'Xu Luméa', url: '/xu' },
+      { label: 'Voucher Luméa', url: '/voucher' },
     ],
-  },
-  {
-    key: 'coins',
-    keywords: ['xu', 'diem thuong', 'tich diem'],
-    text: 'Xu Luméa tích được khi mua hàng và tham gia hoạt động, dùng để giảm giá cho đơn sau.',
-    links: [{ label: 'Xu Luméa', url: '/xu' }],
   },
   {
     key: 'style',

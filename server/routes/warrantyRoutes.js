@@ -2,11 +2,18 @@ const express = require('express');
 const { sendError } = require('../utils/http-error');
 const Warranty = require('../models/Warranty');
 const { requirePermission } = require('../middleware/auth');
+const { createWarranty } = require('../utils/warranty');
+const { isLocked, recordFailure, normalizePhone } = require('../utils/order-access');
 
 const router = express.Router();
 
-function generateWarrantyCode() {
-  return 'WR-' + Math.floor(100000 + Math.random() * 900000);
+/** Phiếu khớp mã + SĐT mua hàng (so SĐT chỉ theo chữ số, mã không phân biệt hoa thường). */
+async function findOwnedWarranty(warrantyCode, phone) {
+  const code = String(warrantyCode || '').trim().toUpperCase();
+  const cleanPhone = normalizePhone(phone);
+  if (!code || !cleanPhone) return null;
+  const warranty = await Warranty.findOne({ warrantyCode: code });
+  return warranty && normalizePhone(warranty.customerPhone) === cleanPhone ? warranty : null;
 }
 
 // Admin: toàn bộ phiếu bảo hành, mới nhất trước.
@@ -44,8 +51,7 @@ router.post('/', requirePermission('orders.edit'), async (req, res) => {
       return res.status(400).json({ success: false, error: 'Thiếu thông tin phiếu bảo hành' });
     }
 
-    const warranty = await Warranty.create({
-      warrantyCode: generateWarrantyCode(),
+    const warranty = await createWarranty({
       orderNumber,
       productName,
       customerName,
@@ -68,8 +74,12 @@ router.get('/lookup', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Thiếu mã bảo hành hoặc số điện thoại' });
     }
 
-    const warranty = await Warranty.findOne({ warrantyCode, customerPhone: phone });
+    if (isLocked(req.ip)) {
+      return res.status(429).json({ success: false, error: 'Bạn đã thử quá nhiều lần, vui lòng thử lại sau 15 phút.' });
+    }
+    const warranty = await findOwnedWarranty(warrantyCode, phone);
     if (!warranty) {
+      recordFailure(req.ip);
       return res.status(404).json({ success: false, error: 'Không tìm thấy phiếu bảo hành phù hợp' });
     }
 
@@ -85,18 +95,23 @@ router.get('/lookup', async (req, res) => {
   }
 });
 
+// Khách gửi yêu cầu bảo hành — phải kèm đúng SĐT mua hàng như khi tra cứu.
 router.post('/:warrantyCode/claim', async (req, res) => {
   try {
-    const { warrantyCode } = req.params;
-    const { note } = req.body;
+    const note = String(req.body.note || '').trim().slice(0, 500);
+    if (!note) return res.status(400).json({ success: false, error: 'Vui lòng mô tả vấn đề của sản phẩm' });
 
-    const warranty = await Warranty.findOne({ warrantyCode });
+    const warranty = await findOwnedWarranty(req.params.warrantyCode, req.body.phone);
     if (!warranty) return res.status(404).json({ success: false, error: 'Không tìm thấy phiếu bảo hành' });
+    if (warranty.status === 'ACTIVE' && warranty.expiresAt < new Date()) {
+      warranty.status = 'EXPIRED';
+      await warranty.save();
+    }
     if (warranty.status !== 'ACTIVE') {
       return res.status(400).json({ success: false, error: 'Phiếu bảo hành không còn hiệu lực' });
     }
 
-    warranty.claimHistory.push({ note: note || 'Yêu cầu bảo hành mới' });
+    warranty.claimHistory.push({ note });
     warranty.status = 'CLAIMED';
     await warranty.save();
 

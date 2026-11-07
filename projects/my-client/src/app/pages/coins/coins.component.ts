@@ -32,8 +32,7 @@ const GAMES: GameInfo[] = [
 ];
 
 /**
- * Trang "Voucher Luméa" (route /voucher, /xu cũ tự chuyển hướng): thay cho Túi Xu. Khách thỉnh thoảng mới vào
- * web nội thất nên không cần điểm danh/tích xu hằng ngày — chỉ giữ trò chơi nhận voucher dùng ngay.
+ * Trang "Voucher Luméa" (route /voucher): khách chơi trò chơi để nhận voucher dùng ngay khi thanh toán.
  */
 @Component({
   selector: 'app-coins',

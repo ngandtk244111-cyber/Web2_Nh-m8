@@ -3,7 +3,10 @@ const mongoose = require('mongoose');
 const warrantySchema = new mongoose.Schema({
   warrantyCode: { type: String, required: true, unique: true },
   orderNumber: { type: String, required: true },
+  // id của món trong order.items — phiếu tự cấp khi giao hàng (xem utils/warranty.js); phiếu tạo tay có thể trống.
+  itemId: { type: String, default: null },
   productName: { type: String, required: true },
+  productImage: { type: String, default: '' },
   customerName: { type: String, required: true },
   customerPhone: { type: String, required: true },
   purchasedAt: { type: Date, required: true },

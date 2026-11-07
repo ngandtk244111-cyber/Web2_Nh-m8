@@ -33,7 +33,7 @@ export class ToastService {
   }
 
   /** Thông báo thêm giỏ hàng — hiển thị riêng ở giữa phía trên màn hình. */
-  cart(message: string, durationMs = 3000): void {
+  cart(message: string, durationMs = 4500): void {
     this.push(message, 'cart', 'check', durationMs);
   }
 

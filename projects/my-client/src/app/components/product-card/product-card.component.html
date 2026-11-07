@@ -17,7 +17,7 @@
           [routerLink]="['/product', product.slug]"
           [attr.aria-label]="product.name"
           class="absolute inset-0 block">
-        <app-product-photo #cardImg [images]="product.images" [alt]="product.name" [eager]="true"></app-product-photo>
+        <app-product-photo [images]="product.images" [alt]="product.name" [eager]="true"></app-product-photo>
 
         </a>
 
@@ -90,7 +90,7 @@
           <button
             *ngIf="!product.customizable"
             type="button"
-            (click)="quickAddToCart()"
+            (click)="openQuickView()"
             class="pc__cart"
             title="Thêm vào giỏ hàng"
             aria-label="Thêm vào giỏ hàng">

@@ -35,21 +35,41 @@
           {{ product.inStock <= 0 ? 'Hết hàng' : (product.inStock <= 10 ? 'Chỉ còn ' + product.inStock + ' sản phẩm' : 'Còn hàng') }}
         </p>
 
-        <div *ngIf="!product.customizable && product.inStock > 0" class="qv-qty" role="group" aria-label="Số lượng">
-          <button type="button" (click)="changeQty(-1)" [disabled]="quantity <= 1" aria-label="Giảm số lượng"><app-icon name="minus" [size]="14"></app-icon></button>
-          <span aria-live="polite">{{ quantity }}</span>
-          <button type="button" (click)="changeQty(1)" [disabled]="quantity >= maxQty" aria-label="Tăng số lượng"><app-icon name="plus" [size]="14"></app-icon></button>
-        </div>
+        <ng-container *ngIf="!product.customizable && product.inStock > 0">
+          <div *ngIf="product.dimensions" class="qv-option">
+            <span class="qv-option__label">Kích thước</span>
+            <div class="qv-sizes" role="radiogroup" aria-label="Kích thước">
+              <button
+                type="button"
+                role="radio"
+                class="qv-size"
+                [class.qv-size--on]="sizeChosen"
+                [attr.aria-checked]="sizeChosen"
+                (click)="sizeChosen = true">
+                {{ product.dimensions }}
+              </button>
+            </div>
+          </div>
+
+          <div class="qv-option">
+            <span class="qv-option__label">Số lượng</span>
+            <div class="qv-qty" role="group" aria-label="Số lượng">
+              <button type="button" (click)="changeQty(-1)" [disabled]="quantity <= 1" aria-label="Giảm số lượng"><app-icon name="minus" [size]="14"></app-icon></button>
+              <span aria-live="polite">{{ quantity }}</span>
+              <button type="button" (click)="changeQty(1)" [disabled]="quantity >= maxQty" aria-label="Tăng số lượng"><app-icon name="plus" [size]="14"></app-icon></button>
+            </div>
+          </div>
+        </ng-container>
 
         <div class="qv-modal__actions">
           <button
             *ngIf="!product.customizable"
             type="button"
             class="qv-btn qv-btn--primary"
-            [disabled]="product.inStock <= 0"
+            [disabled]="product.inStock <= 0 || (!!product.dimensions && !sizeChosen)"
             (click)="addToCart()">
             <app-icon name="cart" [size]="16"></app-icon>
-            <span>{{ product.inStock <= 0 ? 'Hết hàng' : 'Thêm vào giỏ hàng' }}</span>
+            <span>{{ product.inStock <= 0 ? 'Hết hàng' : (product.dimensions && !sizeChosen ? 'Chọn kích thước' : 'Thêm vào giỏ hàng') }}</span>
           </button>
 
           <a

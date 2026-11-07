@@ -27,11 +27,11 @@ const FLOATING_SIDE_BANNERS: FloatingSideBanner[] = [
   },
   {
     side: 'right',
-    badge: 'Freeship',
-    title: 'Đèn Decor Từ 300K',
-    ctaLabel: 'Mua ngay',
-    link: '/catalog',
-    image: 'assets/floating-banners/side-pendant-lamps.jpg',
+    badge: 'Thương hiệu ưa thích',
+    title: 'Luméa Scandinavian',
+    ctaLabel: 'Khám phá',
+    link: '/thuong-hieu/scandinavian',
+    image: 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=600&q=80',
   },
 ];
 

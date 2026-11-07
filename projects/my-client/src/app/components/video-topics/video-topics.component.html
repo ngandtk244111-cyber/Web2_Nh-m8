@@ -50,7 +50,7 @@
             <div class="vt_card__caption">
               <h3 class="vt_card__title">{{ topic.title }}</h3>
               <p class="vt_card__desc">{{ topic.description }}</p>
-              <a *ngIf="topic.link" [routerLink]="topic.link" class="vt_card__cta">
+              <a *ngIf="topic.link" [routerLink]="topic.link" [queryParams]="topic.queryParams" class="vt_card__cta">
                 {{ topic.ctaLabel }} <app-icon name="chevron-right" [size]="13"></app-icon>
               </a>
             </div>
@@ -113,7 +113,7 @@
         </div>
 
         <!-- CTA gắn trên video: chỉ dùng ở màn hẹp (khi bảng mô tả bên phải bị ẩn) -->
-        <a *ngIf="vt.link" [routerLink]="vt.link" (click)="closeViewer()" class="vw__cta">
+        <a *ngIf="vt.link" [routerLink]="vt.link" [queryParams]="vt.queryParams" (click)="closeViewer()" class="vw__cta">
           {{ vt.ctaLabel }}
           <app-icon name="chevron-right" [size]="12"></app-icon>
         </a>
@@ -151,7 +151,7 @@
           <p class="vw__desc-text">{{ vt.description }}</p>
         </div>
 
-        <a *ngIf="vt.link" [routerLink]="vt.link" (click)="closeViewer()" class="vw__btn">
+        <a *ngIf="vt.link" [routerLink]="vt.link" [queryParams]="vt.queryParams" (click)="closeViewer()" class="vw__btn">
           {{ vt.ctaLabel }} <app-icon name="chevron-right" [size]="13"></app-icon>
         </a>
 

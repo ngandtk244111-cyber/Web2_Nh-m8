@@ -61,7 +61,9 @@ export interface Order {
   items: CartItem[];
   shippingAddress: ShippingAddress;
   paymentMethod: 'COD' | 'BANK_TRANSFER' | 'MOMO' | 'ZALOPAY' | 'VNPAY';
-  paymentStatus: 'PAID' | 'UNPAID' | 'FAILED';
+  paymentStatus: 'PAID' | 'UNPAID' | 'FAILED' | 'REFUNDED';
+  /** Hoàn tiền khi đơn đã trả trước bị huỷ. */
+  refund?: OrderRefund | null;
   subtotal: number;
   discount: number;
   shippingFee: number;
@@ -83,6 +85,21 @@ export interface Order {
   returnedAt?: string | null;
   shipment?: Shipment | null;
   returnRequest?: ReturnRequest | null;
+}
+
+export interface OrderRefund {
+  /** PENDING: chờ hoàn · COMPLETED: đã hoàn · VOID: không cần hoàn (tiền chưa về tài khoản shop). */
+  status: 'PENDING' | 'COMPLETED' | 'VOID';
+  amount: number;
+  channel: string;
+  bankName?: string;
+  bankAccount?: string;
+  accountHolder?: string;
+  requestedAt: string;
+  dueAt: string | null;
+  completedAt?: string | null;
+  transactionRef?: string;
+  adminNote?: string;
 }
 
 export interface Shipment {

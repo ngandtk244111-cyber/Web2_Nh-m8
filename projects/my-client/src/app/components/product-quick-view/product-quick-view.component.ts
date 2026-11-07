@@ -15,15 +15,18 @@ import { VndPipe } from '../../shared/pipes/vnd.pipe';
 })
 export class ProductQuickViewComponent {
   quantity = 1;
+  /** Khách phải bấm chọn kích thước trước khi thêm vào giỏ. */
+  sizeChosen = false;
 
   constructor(
     public quickViewService: QuickViewService,
     private cartService: CartService
   ) {
-    // Mỗi lần mở sản phẩm khác thì đặt lại số lượng về 1.
+    // Mỗi lần mở sản phẩm khác thì đặt lại số lượng về 1 và bỏ chọn kích thước.
     effect(() => {
       this.quickViewService.activeProduct();
       this.quantity = 1;
+      this.sizeChosen = false;
     });
   }
 
@@ -48,7 +51,7 @@ export class ProductQuickViewComponent {
   addToCart(): void {
     const product = this.quickViewService.activeProduct();
     if (!product) return;
-    if (product.inStock <= 0) return;
+    if (product.inStock <= 0 || (product.dimensions && !this.sizeChosen)) return;
     if (!this.cartService.addToCart(product, Math.min(this.quantity, product.inStock))) {
       this.quickViewService.close();
       return;

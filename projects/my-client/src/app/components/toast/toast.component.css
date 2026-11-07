@@ -16,17 +16,20 @@
 
 .toast-item {
   pointer-events: auto;
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 14px;
+  gap: 12px;
+  padding: 13px 36px 13px 14px;
   border-radius: 14px;
-  background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
-  color: #111111;
-  font-size: 13px;
-  font-weight: 600;
+  background: #F7F2E7;
+  border: 1px solid #E3D6BE;
+  border-left: 4px solid #A3152D;
+  box-shadow: 0 10px 30px rgba(60, 51, 45, 0.18);
+  color: #3C332D;
+  font-family: var(--font-family-content, 'Inter', system-ui, sans-serif);
+  font-size: 14px;
+  font-weight: 500;
   animation: toast-in 0.25s cubic-bezier(0.2, 1, 0.3, 1);
 }
 
@@ -43,46 +46,50 @@
 
 .toast-item__icon {
   flex-shrink: 0;
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
   border-radius: 999px;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: #A3152D;
+  color: #ffffff;
 }
 
-.toast-item--success .toast-item__icon {
-  background: rgba(163, 21, 45, 0.18);
+/* Thông tin (nhắc đăng nhập...): nền nhạt, icon đỏ rượu — nhẹ hơn thông báo thành công */
+.toast-item--info .toast-item__icon {
+  background: rgba(163, 21, 45, 0.12);
   color: #A3152D;
 }
 
-.toast-item--error .toast-item__icon {
-  background: rgba(220, 38, 38, 0.18);
-  color: #f87171;
+.toast-item--error {
+  border-left-color: #C2410C;
 }
 
-.toast-item--info .toast-item__icon {
-  background: rgba(163, 21, 45, 0.2);
-  color: #5b9bf0;
+.toast-item--error .toast-item__icon {
+  background: #C2410C;
 }
 
 .toast-item__msg {
   flex: 1;
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
 .toast-item__close {
-  flex-shrink: 0;
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
   background: transparent;
   border: none;
-  color: #888888;
+  color: #9A8B7A;
   cursor: pointer;
   padding: 2px;
   display: flex;
 }
 
 .toast-item__close:hover {
-  color: #111111;
+  color: #A3152D;
 }
 
 /* ---------- Thông báo thêm giỏ hàng (giữa phía trên) ---------- */
@@ -133,8 +140,26 @@
   color: #ffffff;
 }
 
-.cart-toast__msg {
+.cart-toast__body {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.cart-toast__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #A3152D;
+  text-decoration: none;
+}
+
+.cart-toast__link:hover {
+  text-decoration: underline;
 }
 
 @keyframes cart-toast-in {

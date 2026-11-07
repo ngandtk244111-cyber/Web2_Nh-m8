@@ -172,6 +172,110 @@
   color: #A3152D;
 }
 
+.ot-refund {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  border: 1px solid #E3D6BE;
+  border-left: 4px solid #A3152D;
+  border-radius: 14px;
+  background: #F7F2E7;
+  font-size: 12px;
+  color: #3C332D;
+}
+
+.ot-refund--done {
+  border-left-color: #5A7A4A;
+}
+
+.ot-refund--modal {
+  margin-top: 12px;
+}
+
+.ot-refund__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.ot-refund__title {
+  font-size: 13px;
+  font-weight: 800;
+  color: #A3152D;
+}
+
+.ot-refund__chip {
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: #FFFFFF;
+  border: 1px solid #E3D6BE;
+  font-size: 11px;
+  font-weight: 700;
+  color: #7A6558;
+}
+
+.ot-refund--done .ot-refund__chip {
+  color: #5A7A4A;
+}
+
+.ot-refund__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ot-refund__row > :first-child {
+  flex-shrink: 0;
+  color: #7A6558;
+}
+
+.ot-refund__row > :last-child {
+  text-align: right;
+}
+
+.ot-refund__note {
+  margin: 0;
+  line-height: 1.5;
+  color: #5C4D44;
+}
+
+.ot-modal__input {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid #E3D6BE;
+  border-radius: 10px;
+  background: #FFFFFF;
+  font-size: 13px;
+  color: #3C332D;
+  outline: none;
+}
+
+.ot-modal__input:focus {
+  border-color: #A3152D;
+}
+
+.ot-invoice-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border: 1px solid #A3152D;
+  border-radius: 999px;
+  background: #A3152D;
+  color: #FFFFFF;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.ot-invoice-btn:hover {
+  background: #891226;
+  border-color: #891226;
+}
+
 .ot-modal {
   position: fixed;
   inset: 0;

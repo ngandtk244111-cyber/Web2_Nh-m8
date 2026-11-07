@@ -34,7 +34,7 @@
             <div class="step-item" [ngClass]="stepState('confirm')">
               <div class="step-badge"><i class="bi" [ngClass]="stepIcon(stepState('confirm'), 'bi-telephone')"></i></div>
               <div class="step-label">Xác nhận đơn</div>
-              <div class="step-sub">{{ o.status === 'CANCELLED' && needsPhoneConfirm(o) ? 'Huỷ trước khi xác nhận' : stepState('confirm') === 'done' ? (o.paymentMethod !== 'COD' ? 'Đã trả trước' : o.phoneConfirmedAt ? 'Đã gọi khách' : 'COD nhỏ, không cần gọi') : 'Chờ gọi khách' }}</div>
+              <div class="step-sub">{{ o.status === 'CANCELLED' && stepState('confirm') === 'failed' ? 'Huỷ trước khi xác nhận' : stepState('confirm') === 'done' ? (o.phoneConfirmedAt ? 'Đã gọi khách' : 'Đã xác nhận') : needsPhoneConfirm(o) ? 'Chờ gọi khách' : 'Chờ xác nhận' }}</div>
               <span class="step-chip">{{ stepChip[stepState('confirm')] }}</span>
             </div>
             <div class="step-item" [ngClass]="stepState('ship')">
@@ -53,6 +53,9 @@
 
           <div class="notice-box warning" *ngIf="o.status === 'CANCELLED'">
             <b>Đơn đã huỷ.</b> Lý do: {{ o.cancelReason || 'Không ghi lý do' }}
+          </div>
+          <div class="notice-box danger" *ngIf="o.refund?.status === 'PENDING'">
+            <b>Chờ hoàn tiền {{ o.refund!.amount | vnd }}</b> — hạn {{ o.refund!.dueAt | date:'dd/MM/yyyy' }}. Xem mục Hoàn tiền bên dưới.
           </div>
           <div class="notice-box danger" *ngIf="o.status === 'RETURNED'">
             <b>Giao thất bại — hàng hoàn về kho.</b> Lý do: {{ o.returnReason || 'Không ghi lý do' }}
@@ -197,6 +200,33 @@
           </div>
         </div>
 
+        <!-- Hoàn tiền: đơn đã trả trước bị huỷ -->
+        <div class="info-card" *ngIf="o.refund as rf">
+          <h3 class="section-title">Hoàn tiền</h3>
+          <div class="info-row"><span class="label">Trạng thái</span><span class="value"><span class="status-badge" [ngClass]="rf.status === 'COMPLETED' ? 'status-green' : rf.status === 'VOID' ? 'status-gray' : 'status-red'">{{ rf.status === 'COMPLETED' ? 'Đã hoàn tiền' : rf.status === 'VOID' ? 'Không hoàn' : 'Chờ hoàn tiền' }}</span></span></div>
+          <div class="info-row"><span class="label">Số tiền</span><span class="value money">{{ rf.amount | vnd }}</span></div>
+          <div class="info-row"><span class="label">Hình thức</span><span class="value">{{ rf.channel }}</span></div>
+          <div class="info-row" *ngIf="rf.bankAccount"><span class="label">Tài khoản nhận</span><span class="value">{{ rf.bankName }} · {{ rf.bankAccount }} · {{ rf.accountHolder }}</span></div>
+          <div class="info-row"><span class="label">Yêu cầu lúc</span><span class="value">{{ rf.requestedAt | date:'dd/MM/yyyy HH:mm' }}</span></div>
+          <div class="info-row" *ngIf="rf.status === 'PENDING'"><span class="label">Hạn hoàn</span><span class="value">{{ rf.dueAt | date:'dd/MM/yyyy' }}</span></div>
+          <div class="info-row" *ngIf="rf.status !== 'PENDING'"><span class="label">Xử lý lúc</span><span class="value">{{ rf.completedAt | date:'dd/MM/yyyy HH:mm' }}</span></div>
+          <div class="info-row" *ngIf="rf.transactionRef"><span class="label">Mã giao dịch</span><span class="value">{{ rf.transactionRef }}</span></div>
+          <div class="info-row" *ngIf="rf.adminNote"><span class="label">Ghi chú</span><span class="value">{{ rf.adminNote }}</span></div>
+
+          <ng-container *ngIf="rf.status === 'PENDING' && canApprove">
+            <p class="small text-muted-2 mt-2 mb-2" *ngIf="o.paymentMethod === 'BANK_TRANSFER' && !rf.bankAccount">Khách chưa cung cấp tài khoản nhận — gọi {{ o.shippingAddress.phone }} để lấy thông tin.</p>
+            <p class="small text-muted-2 mt-2 mb-2" *ngIf="o.paymentStatus !== 'PAID'">Khách mới báo đã chuyển khoản — đối soát sao kê trước khi hoàn.</p>
+            <input type="text" class="form-control mb-2" [(ngModel)]="refundRef" maxlength="100" placeholder="Mã giao dịch hoàn tiền">
+            <input type="text" class="form-control mb-2" [(ngModel)]="refundNote" maxlength="300" placeholder="Ghi chú (bắt buộc khi không hoàn)">
+            <div class="d-flex gap-2">
+              <button type="button" class="btn-save flex-fill justify-content-center" [disabled]="busy() || !refundRef.trim()" (click)="resolveRefund(o, 'complete')">
+                <i class="bi bi-cash-coin"></i> Đã hoàn tiền
+              </button>
+              <button type="button" class="btn-cancel" [disabled]="busy() || !refundNote.trim()" (click)="resolveRefund(o, 'void')">Không hoàn</button>
+            </div>
+          </ng-container>
+        </div>
+
         <!-- Thao tác xử lý đơn -->
         <div class="info-card" *ngIf="canEdit && !isFinal(o)">
           <h3 class="section-title">Xử lý đơn</h3>
@@ -211,6 +241,13 @@
                 <i class="bi bi-telephone-x"></i> Không liên lạc được
               </button>
             </div>
+          </ng-container>
+
+          <ng-container *ngIf="o.status === 'PENDING' && !needsPhoneConfirm(o)">
+            <p class="small text-muted-2 mb-2">Xác nhận để bắt đầu chuẩn bị, đóng gói. Sau khi xác nhận, khách không tự huỷ đơn được nữa.</p>
+            <button type="button" class="btn-save w-100 justify-content-center mb-2" [disabled]="busy()" (click)="confirmOrder(o)">
+              <i class="bi bi-check2-square"></i> Xác nhận đơn
+            </button>
           </ng-container>
 
           <div class="stack" *ngIf="o.status === 'SHIPPED'">

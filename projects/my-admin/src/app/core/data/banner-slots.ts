@@ -70,13 +70,13 @@ export const BANNER_SLOTS: BannerSlot[] = [
     },
   },
   {
-    id: 'hero-print-3d', group: HERO_GROUP, name: 'Slide In 3D', imageRatio: HERO_RATIO, imageHint: HERO_HINT,
+    id: 'hero-warranty', group: HERO_GROUP, name: 'Slide Bảo hành', imageRatio: HERO_RATIO, imageHint: HERO_HINT,
     fields: [...HERO_FIELDS, F.link],
     defaults: {
-      imageUrl: 'assets/hero-banner/hero-print-3d.png', line1: 'IN 3D', line2: 'THEO Ý BẠN', tickerLabel: 'In 3D theo yêu cầu',
-      title: 'In 3D Theo Yêu Cầu — Độc Bản Của Riêng Bạn',
-      subtitle: 'Từ ý tưởng tới sản phẩm hoàn thiện, tùy biến màu sắc, chất liệu và khắc tên cá nhân hóa 100%.',
-      ctaText: 'Tùy biến ngay', ctaLink: '/customizer-3d',
+      imageUrl: 'assets/home/shop-the-room-hero.jpg', line1: 'BẢO HÀNH', line2: '12 THÁNG', tickerLabel: 'Bảo hành 12 tháng',
+      title: 'Bảo Hành 12 Tháng — Yên Tâm Mua Sắm',
+      subtitle: 'Mỗi sản phẩm Luméa đi kèm phiếu bảo hành có mã riêng — tra cứu và gửi yêu cầu bảo hành trực tuyến chỉ trong vài bước.',
+      ctaText: 'Tra cứu bảo hành', ctaLink: '/warranty-lookup',
     },
   },
   {
@@ -132,7 +132,7 @@ export const BANNER_SLOTS: BannerSlot[] = [
     id: 'side-right', group: SIDE_GROUP, name: 'Banner bên phải', imageRatio: SIDE_RATIO, canToggle: true,
     imageHint: 'Chỉ hiện trên desktop, chiều cao khung đổi nhẹ theo màn hình.',
     fields: [F.badge, F.title, F.cta, F.link],
-    defaults: { imageUrl: 'assets/floating-banners/side-pendant-lamps.jpg', eyebrow: 'Freeship', title: 'Đèn Decor Từ 300K', ctaText: 'Mua ngay', ctaLink: '/catalog' },
+    defaults: { imageUrl: 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=600&q=80', eyebrow: 'Thương hiệu ưa thích', title: 'Luméa Scandinavian', ctaText: 'Khám phá', ctaLink: '/thuong-hieu/scandinavian' },
   },
   {
     id: 'grid-room', group: GRID_GROUP, name: 'Banner Phòng 3D', imageRatio: 1498 / 1050,

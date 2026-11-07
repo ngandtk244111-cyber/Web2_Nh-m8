@@ -30,9 +30,8 @@ export class AboutComponent {
   playing = false;
 
   readonly video = {
-    mp4: 'assets/promo-banner/customizer-placeholder.mp4',
-    webm: 'assets/promo-banner/customizer-placeholder.webm',
-    poster: 'assets/hero-banner/hero-print-3d.png',
+    mp4: 'assets/promo-banner/sofa-intro.mp4',
+    poster: 'assets/home/shop-the-room-hero.jpg',
   };
 
   readonly values: AboutValue[] = [

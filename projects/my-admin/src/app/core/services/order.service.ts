@@ -131,6 +131,29 @@ export class OrderService {
     );
   }
 
+  /** Xác nhận đơn -> bắt đầu chuẩn bị/đóng gói; sau bước này khách không tự huỷ được nữa. */
+  confirmOrder(orderNumber: string): Observable<Order> {
+    return this.http.patch<OrderApiResponse>(`${this.baseUrl}/${encodeURIComponent(orderNumber)}/confirm`, {
+      adminId: this.adminAuth.adminId,
+    }).pipe(
+      map(res => this.normalize(res.order!)),
+      tap(order => this.replaceInSignal(order))
+    );
+  }
+
+  /** Hoàn tất hoàn tiền (kèm mã giao dịch) hoặc huỷ yêu cầu hoàn (kèm lý do). */
+  resolveRefund(orderNumber: string, action: 'complete' | 'void', transactionRef: string, adminNote: string): Observable<Order> {
+    return this.http.patch<OrderApiResponse>(`${this.baseUrl}/${encodeURIComponent(orderNumber)}/refund`, {
+      adminId: this.adminAuth.adminId,
+      action,
+      transactionRef,
+      adminNote,
+    }).pipe(
+      map(res => this.normalize(res.order!)),
+      tap(order => this.replaceInSignal(order))
+    );
+  }
+
   /** Đã gọi điện xác nhận đơn với khách (bắt buộc trước khi giao đơn COD). */
   confirmPhone(orderNumber: string): Observable<Order> {
     return this.http.patch<OrderApiResponse>(`${this.baseUrl}/${encodeURIComponent(orderNumber)}/confirm-phone`, {

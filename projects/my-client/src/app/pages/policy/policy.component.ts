@@ -90,6 +90,15 @@ const POLICY_PAGES: Record<string, PolicyPage> = {
           'Hoàn tiền theo phương thức thanh toán ban đầu (chuyển khoản, ví MoMo/ZaloPay) hoặc quy đổi thành voucher mua sắm theo yêu cầu của khách hàng, trong vòng 3-7 ngày làm việc kể từ khi yêu cầu được duyệt.',
         ],
       },
+      {
+        heading: '5. Huỷ đơn & hoàn tiền khi huỷ',
+        body: [
+          'Quý khách tự huỷ được đơn tại trang chi tiết đơn hàng khi đơn đang ở trạng thái "Chờ Luméa xác nhận". Khi Luméa đã xác nhận, đơn chuyển sang chuẩn bị, đóng gói hoặc sản xuất và không thể tự huỷ; vui lòng gọi hotline 1800 6928 nếu cần hỗ trợ.',
+          'Đơn thanh toán khi nhận hàng (COD): huỷ ngay, không phát sinh chi phí.',
+          'Đơn đã thanh toán trước được hoàn đủ số tiền đã trả. Ví MoMo, ZaloPay: hoàn về ví trong 3 ngày làm việc. Thẻ ATM nội địa: hoàn về thẻ/tài khoản đã thanh toán trong 7 ngày làm việc (tuỳ ngân hàng). Chuyển khoản ngân hàng: chuyển về tài khoản quý khách cung cấp khi huỷ đơn trong 5 ngày làm việc.',
+          'Ngày làm việc không tính Thứ Bảy, Chủ nhật. Trạng thái hoàn tiền và mã giao dịch được cập nhật trực tiếp trên trang chi tiết đơn hàng.',
+        ],
+      },
     ],
   },
   'thanh-toan': {

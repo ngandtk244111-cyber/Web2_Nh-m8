@@ -1,13 +1,10 @@
-import { Component, ElementRef, Input, ViewChild } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Product } from '../../core/models/product.model';
-import { CartService } from '../../core/services/cart.service';
-import { CartFlyService } from '../../core/services/cart-fly.service';
 import { ToastService } from '../../core/services/toast.service';
 import { QuickViewService } from '../../core/services/quick-view.service';
 import { FavoriteService } from '../../core/services/favorite.service';
-import { MascotService } from '../../core/services/mascot.service';
 import { ProductService } from '../../core/services/product.service';
 import { departmentOf, has3DModel, subcategoriesOf } from '../../core/data/catalog-taxonomy';
 import { AppIconComponent } from '../icon/icon.component';
@@ -25,15 +22,11 @@ export class ProductCardComponent {
   @Input({ required: true }) product!: Product;
   /** 'grid' (mặc định, card đứng) hoặc 'list' (card ngang — dùng ở trang Tất cả sản phẩm khi bật chế độ danh sách). */
   @Input() layout: 'grid' | 'list' = 'grid';
-  @ViewChild('cardImg', { read: ElementRef }) cardImg?: ElementRef<HTMLElement>;
 
   constructor(
-    private cartService: CartService,
-    private cartFlyService: CartFlyService,
     private toastService: ToastService,
     public quickViewService: QuickViewService,
     public favoriteService: FavoriteService,
-    private mascotService: MascotService,
     private productService: ProductService
   ) {}
 
@@ -53,14 +46,6 @@ export class ProductCardComponent {
   /** Nhãn danh mục theo cây danh mục mới (vd. "Sofa", "Đèn ngủ"), fallback về categoryName cũ. */
   get categoryLabel(): string {
     return subcategoriesOf(this.product)[0]?.label ?? departmentOf(this.product)?.label ?? this.product.categoryName;
-  }
-
-  quickAddToCart(): void {
-    if (!this.cartService.addToCart(this.product, 1)) return;
-    if (this.cardImg) {
-      this.cartFlyService.flyToCart(this.product.images[0], this.cardImg.nativeElement);
-    }
-    this.mascotService.react('happy');
   }
 
   toggleFavorite(event: Event): void {

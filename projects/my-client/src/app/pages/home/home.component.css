@@ -850,12 +850,18 @@
   left: 0;
   right: 0;
   bottom: 0;
-  padding: 28px 10px 10px;
+  padding: 18px 10px 8px;
   background: linear-gradient(to top, rgba(0, 0, 0, 0.66), transparent);
   color: #ffffff;
   font-size: 12.5px;
   font-weight: 700;
   line-height: 1.35;
+  /* Tối đa 2 dòng để chữ không phủ kín ảnh nhỏ */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
 }
 
 @media (max-width: 1023px) {

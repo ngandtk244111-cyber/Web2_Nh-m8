@@ -43,6 +43,8 @@
 .fb-tile {
   display: flex;
   flex-direction: column;
+  /* Tên dài xuống 2 dòng thì ảnh vẫn thẳng hàng: dồn tên + ảnh xuống đáy ô */
+  justify-content: flex-end;
   gap: 14px;
   text-decoration: none;
   color: #3B2418;

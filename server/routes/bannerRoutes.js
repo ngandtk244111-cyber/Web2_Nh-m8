@@ -5,7 +5,7 @@ const AdminConfig = require('../models/AdminConfig');
 // Các vị trí cố định my-client đang hiển thị; my-admin chỉ lưu phần đã sửa, còn lại client dùng nội dung gốc.
 const SLOT_IDS = [
   'popup-home',
-  'hero-room-3d', 'hero-print-3d', 'hero-freeship', 'hero-ai-assistant', 'hero-deal-today',
+  'hero-room-3d', 'hero-warranty', 'hero-freeship', 'hero-ai-assistant', 'hero-deal-today',
   'promo-xa-kho', 'promo-deal-thang', 'promo-phong-3d',
   'side-left', 'side-right',
   'grid-room', 'grid-member', 'grid-wide',

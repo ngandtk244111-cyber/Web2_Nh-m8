@@ -2,7 +2,7 @@ import { Order, OrderStatus, ProductionStep } from '../../core/models/order.mode
 
 /** Nhãn + màu trạng thái đơn dùng chung cho danh sách, chi tiết, dashboard, khách hàng. */
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
-  PENDING: 'Chờ gọi xác nhận',
+  PENDING: 'Chờ xác nhận',
   CONFIRMED: 'Chờ giao',
   IN_PRODUCTION: 'Đang in 3D',
   SHIPPED: 'Đang giao',
@@ -36,6 +36,8 @@ export function paymentMethodLabel(method: string): string {
 
 /** Nhãn thanh toán: đã trả / thất bại / khách báo đã chuyển khoản / chưa trả. */
 export function paymentStatusLabel(o: Order): string {
+  if (o.refund?.status === 'PENDING') return 'Chờ hoàn tiền';
+  if (o.paymentStatus === 'REFUNDED') return 'Đã hoàn tiền';
   if (o.paymentStatus === 'PAID') return 'Đã thanh toán';
   if (o.paymentStatus === 'FAILED') return 'Thanh toán lỗi';
   if (o.status === 'CANCELLED' || o.status === 'RETURNED') return 'Không thu';
@@ -45,6 +47,8 @@ export function paymentStatusLabel(o: Order): string {
 }
 
 export function paymentStatusClass(o: Order): string {
+  if (o.refund?.status === 'PENDING') return 'status-red';
+  if (o.paymentStatus === 'REFUNDED') return 'status-gray';
   if (o.paymentStatus === 'PAID') return 'status-green';
   if (o.paymentStatus === 'FAILED') return 'status-red';
   if (o.status === 'CANCELLED' || o.status === 'RETURNED') return 'status-gray';

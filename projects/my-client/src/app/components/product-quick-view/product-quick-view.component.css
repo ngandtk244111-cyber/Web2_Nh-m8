@@ -251,13 +251,54 @@
   color: #7A6558;
 }
 
+.qv-option {
+  margin-bottom: 14px;
+}
+
+.qv-option__label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #7A6558;
+}
+
+.qv-sizes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.qv-size {
+  padding: 8px 14px;
+  border: 1px solid #E3D6BE;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #3C332D;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+
+.qv-size:hover {
+  border-color: #A3152D;
+}
+
+.qv-size--on {
+  border-color: #A3152D;
+  background: #F7F2E7;
+  color: #A3152D;
+}
+
 .qv-qty {
-  /* Không bị kéo giãn hết chiều ngang (body là flex column). */
+  /* Không bị kéo giãn hết chiều ngang (khung chứa là flex column). */
   align-self: flex-start;
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  margin-bottom: 16px;
   padding: 3px;
   border: 1px solid rgba(0, 0, 0, 0.14);
   border-radius: 999px;

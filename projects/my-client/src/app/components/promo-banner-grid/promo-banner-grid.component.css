@@ -116,6 +116,8 @@
 .pg_photo {
   container-type: size;
   aspect-ratio: 1450 / 640;
+  /* Cao bằng thẻ ưu đãi bên cạnh khi thẻ đó giãn theo nội dung */
+  align-self: stretch;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -185,6 +187,9 @@
 
 .pg_promo {
   aspect-ratio: 1450 / 640;
+  /* clip thay vì hidden: hidden biến thẻ thành scroll container nên aspect-ratio khoá cứng chiều cao và cắt mất nút;
+     clip vẫn cắt glow/bo góc nhưng cho thẻ cao thêm khi nội dung dài */
+  overflow: clip;
   padding: 26px 26px 26px 32px;
   display: flex;
   align-items: center;

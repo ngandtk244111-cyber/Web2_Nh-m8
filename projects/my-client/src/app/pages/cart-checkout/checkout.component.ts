@@ -1,5 +1,5 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, HostListener, OnInit, signal, inject } from '@angular/core';
+import { CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CartService } from '../../core/services/cart.service';
@@ -120,8 +120,25 @@ export class CheckoutComponent implements OnInit {
     private paymentService: PaymentService,
     private router: Router,
     private mascotService: MascotService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private location: Location
   ) {}
+
+  /**
+   * Bấm Back từ cổng thanh toán: trình duyệt có thể khôi phục trang cũ từ bộ nhớ đệm (bfcache) với giao diện
+   * lúc rời đi -> tải lại để ngOnInit đọc ?doiPhuongThuc và mở hộp chọn phương thức khác cho đơn chưa trả tiền.
+   */
+  @HostListener('window:pageshow', ['$event'])
+  onPageShow(event: PageTransitionEvent): void {
+    if (event.persisted && this.route.snapshot.queryParamMap.has('doiPhuongThuc')) {
+      window.location.reload();
+    }
+  }
+
+  /** Trước khi sang cổng thanh toán: ghi mã đơn vào URL hiện tại để Back quay về đúng đơn này (chọn phương thức khác). */
+  private rememberPendingOrder(orderNumber: string): void {
+    this.location.replaceState('/checkout', `doiPhuongThuc=${encodeURIComponent(orderNumber)}`);
+  }
 
   /* ---------- Đổi phương thức thanh toán cho đơn vừa đặt ---------- */
   switchOpen = false;
@@ -170,6 +187,8 @@ export class CheckoutComponent implements OnInit {
         this.switchBusy = false;
         this.switchOpen = false;
         this.switchFromLink = false;
+        // Đã đổi xong: bỏ ?doiPhuongThuc khỏi URL để tải lại trang không mở lại hộp chọn
+        this.location.replaceState('/checkout');
         this.createdOrder = updated;
         this.paymentMethod = updated.paymentMethod as PaymentMethodId;
         this.continuePayment(updated);
@@ -412,6 +431,7 @@ export class CheckoutComponent implements OnInit {
       next: (res) => {
         if (res.success && res.payUrl) {
           onReady();
+          this.rememberPendingOrder(orderNumber);
           window.location.href = res.payUrl;
         } else {
           this.onGatewayFailed(res.error || 'Không tạo được yêu cầu thanh toán MoMo');
@@ -426,6 +446,7 @@ export class CheckoutComponent implements OnInit {
       next: (res) => {
         if (res.success && res.orderUrl) {
           onReady();
+          this.rememberPendingOrder(orderNumber);
           window.location.href = res.orderUrl;
         } else {
           this.onGatewayFailed(res.error || 'Không tạo được yêu cầu thanh toán ZaloPay');

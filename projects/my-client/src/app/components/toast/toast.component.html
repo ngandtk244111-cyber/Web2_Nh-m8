@@ -21,7 +21,13 @@
     <span class="cart-toast__icon">
       <app-icon name="check" [size]="15"></app-icon>
     </span>
-    <span class="cart-toast__msg">{{ t.message }}</span>
+    <div class="cart-toast__body">
+      <span class="cart-toast__msg">{{ t.message }}</span>
+      <a routerLink="/cart" class="cart-toast__link" (click)="toastService.dismiss(t.id)">
+        Xem giỏ hàng
+        <app-icon name="chevron-right" [size]="13"></app-icon>
+      </a>
+    </div>
     <button type="button" class="cart-toast__close" aria-label="Đóng" (click)="toastService.dismiss(t.id)">
       <app-icon name="x" [size]="14"></app-icon>
     </button>

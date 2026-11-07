@@ -1,12 +1,13 @@
 import { Component, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { ToastService } from '../../core/services/toast.service';
 import { AppIconComponent } from '../icon/icon.component';
 
 @Component({
   selector: 'app-toast',
   standalone: true,
-  imports: [CommonModule, AppIconComponent],
+  imports: [CommonModule, RouterLink, AppIconComponent],
   templateUrl: './toast.component.html',
   styleUrl: './toast.component.css'
 })

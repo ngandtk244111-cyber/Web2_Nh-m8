@@ -175,7 +175,7 @@
             type="checkbox" 
             [checked]="isAllSelected()"
             (change)="toggleSelectAll()"
-            class="w-4 h-4 text-amber-500 rounded border-neutral-300 bg-neutral-200 focus:ring-amber-400">
+            class="w-4 h-4 rounded accent-[#A3152D]">
           <span>Chọn tất cả ({{ roomProducts.length }} sản phẩm)</span>
         </label>
         <span class="text-neutral-600 font-medium">
@@ -188,31 +188,28 @@
         <div 
           *ngFor="let p of roomProducts; let i = index"
           class="p-3 rounded-2xl border transition flex items-center gap-3"
-          [class.border-amber-500]="selectedProductIds.has(p.id)"
-          [class.bg-amber-950]="selectedProductIds.has(p.id)"
-          [class.border-neutral-200]="!selectedProductIds.has(p.id)"
-          [class.bg-neutral-100]="!selectedProductIds.has(p.id)">
-          
-          <input 
-            type="checkbox" 
+          [ngClass]="selectedProductIds.has(p.id) ? 'border-[#A3152D] bg-[#F7F2E7]' : 'border-[#E3D6BE] bg-white'">
+
+          <input
+            type="checkbox"
             [checked]="selectedProductIds.has(p.id)"
             (change)="toggleProductSelection(p.id)"
-            class="w-4 h-4 text-amber-500 rounded border-neutral-300 bg-neutral-200 focus:ring-amber-400 flex-shrink-0">
+            class="w-4 h-4 rounded accent-[#A3152D] flex-shrink-0">
 
           <!-- Số thứ tự khớp với điểm đánh dấu trong phòng 3D -->
-          <span class="w-6 h-6 rounded-full bg-white text-neutral-900 border border-neutral-300 text-[11px] font-bold flex items-center justify-center flex-shrink-0">{{ i + 1 }}</span>
+          <span class="w-6 h-6 rounded-full bg-[#A3152D] text-white text-[11px] font-bold flex items-center justify-center flex-shrink-0">{{ i + 1 }}</span>
 
-          <img 
-            [src]="p.images[0]" 
+          <img
+            [src]="p.images[0]"
             [alt]="p.name"
-            class="w-14 h-14 rounded-xl object-cover border border-neutral-300 bg-neutral-200 flex-shrink-0">
+            class="w-14 h-14 rounded-xl object-cover border border-[#E3D6BE] bg-[#EFE6D3] flex-shrink-0">
 
           <div class="min-w-0 flex-1">
-            <h4 class="text-xs font-bold text-neutral-900 truncate" [class.text-white]="selectedProductIds.has(p.id)">{{ p.name }}</h4>
-            <div class="text-[10px] text-neutral-600 mt-0.5" [class.text-amber-200]="selectedProductIds.has(p.id)">{{ p.categoryName }}</div>
+            <h4 class="text-xs font-bold text-[#3B2418] truncate">{{ p.name }}</h4>
+            <div class="text-[10px] text-[#7A6558] mt-0.5">{{ p.categoryName }}</div>
             <div class="mt-1 flex items-baseline gap-2">
-              <span class="text-xs font-bold text-amber-400" [class.text-white]="selectedProductIds.has(p.id)">{{ p.basePrice | vnd }}</span>
-              <a [routerLink]="['/product', p.slug]" target="_blank" class="text-[10px] text-neutral-500 hover:text-amber-400 underline" [class.text-amber-200]="selectedProductIds.has(p.id)">
+              <span class="text-xs font-bold text-[#A3152D]">{{ p.basePrice | vnd }}</span>
+              <a [routerLink]="['/product', p.slug]" target="_blank" class="text-[10px] text-[#93877E] hover:text-[#A3152D] underline">
                 Xem
               </a>
             </div>

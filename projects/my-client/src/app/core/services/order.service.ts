@@ -2,7 +2,7 @@ import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map, tap, catchError, of } from 'rxjs';
 import { io, Socket } from 'socket.io-client';
-import { Order, OrderStatus, ProductionStep, ProductionProgress, ShippingAddress } from '../models/order.model';
+import { Order, OrderStatus, ProductionStep, ProductionProgress, RefundBank, ShippingAddress } from '../models/order.model';
 import { CartItem } from '../models/cart.model';
 import { environment } from '../../../environments/environment';
 import { AuthService } from './auth.service';
@@ -132,8 +132,8 @@ export class OrderService {
   }
 
   /** Khách tự huỷ đơn của mình (chỉ khi đơn chưa sản xuất/giao). Lỗi trả về thông điệp tiếng Việt từ server. */
-  cancelOrder(orderNumber: string, userId: string, reason: string, detail = ''): Observable<Order> {
-    return this.http.patch<OrderApiResponse>(`${this.baseUrl}/${encodeURIComponent(orderNumber)}/cancel`, { userId, reason, detail }).pipe(
+  cancelOrder(orderNumber: string, userId: string, reason: string, detail = '', refundBank?: RefundBank): Observable<Order> {
+    return this.http.patch<OrderApiResponse>(`${this.baseUrl}/${encodeURIComponent(orderNumber)}/cancel`, { userId, reason, detail, refundBank }).pipe(
       map(res => this.normalize(res.order!)),
       tap(order => this.replaceInSignal(order))
     );

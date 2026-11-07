@@ -406,7 +406,7 @@
   position: relative;
   aspect-ratio: 1 / 1;
   overflow: hidden;
-  background: #F3EDE2;
+  background: #EFE6D3;
 }
 
 .fs-card__img {
@@ -414,14 +414,14 @@
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   transition: opacity 0.45s ease-in-out, transform 0.5s ease;
 }
 
 .fs-card__img--alt { opacity: 0; }
 
 .fs-card:hover .fs-card__img,
-.fs-card:focus-within .fs-card__img { transform: scale(1.03); }
+.fs-card:focus-within .fs-card__img { transform: scale(1.04); }
 
 .fs-card:hover .fs-card__img--alt,
 .fs-card:focus-within .fs-card__img--alt { opacity: 1; }

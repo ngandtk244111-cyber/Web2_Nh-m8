@@ -27,6 +27,14 @@ export class CartService {
       const userId = this.auth.currentUser()?._id;
       untracked(() => (userId ? this.syncFromAccount() : this.resetAfterLogout()));
     });
+    // Tab khác (vd. Phòng 3D mở tab mới) vừa đổi giỏ -> cập nhật theo, để tab này không giữ giỏ cũ
+    // rồi ghi đè mất các món vừa thêm ở tab kia.
+    window.addEventListener('storage', e => {
+      if (e.key !== this.storageKey || !e.newValue || !this.auth.currentUser()) return;
+      try {
+        this.itemsSignal.set(JSON.parse(e.newValue));
+      } catch { /* ignore */ }
+    });
   }
 
   // Gom các lần thêm giỏ trong cùng một lượt xử lý (vd. "thêm tất cả") thành một thông báo duy nhất.

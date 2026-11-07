@@ -53,7 +53,6 @@
       <thead>
         <tr>
           <th>Danh mục</th>
-          <th>Đường dẫn</th>
           <th>Nhóm</th>
           <th class="text-right">Sản phẩm</th>
           <th>Trạng thái</th>
@@ -71,7 +70,6 @@
               </div>
             </div>
           </td>
-          <td><code>/{{ c.slug }}</code></td>
           <td><span class="tag">{{ c.group === 'FURNITURE' ? 'Nội thất' : 'Decor' }}</span></td>
           <td class="text-right cell-strong">{{ c.productCount }}</td>
           <td><span class="status-badge" [ngClass]="c.active ? 'status-green' : 'status-gray'">{{ c.active ? 'Hiển thị' : 'Đang ẩn' }}</span></td>

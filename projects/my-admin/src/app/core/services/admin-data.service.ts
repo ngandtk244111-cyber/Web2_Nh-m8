@@ -69,4 +69,12 @@ export class AdminDataService {
   resolveWarrantyClaim(code: string, note: string): Observable<{ success: boolean; warranty: any }> {
     return this.http.patch<{ success: boolean; warranty: any }>(`${WARRANTY}/admin/${encodeURIComponent(code)}/resolve`, { note });
   }
+
+  addWarrantyNote(code: string, note: string): Observable<{ success: boolean; warranty: any }> {
+    return this.http.post<{ success: boolean; warranty: any }>(`${WARRANTY}/admin/${encodeURIComponent(code)}/notes`, { note });
+  }
+
+  extendWarranty(code: string, months: number, reason: string): Observable<{ success: boolean; warranty: any }> {
+    return this.http.patch<{ success: boolean; warranty: any }>(`${WARRANTY}/admin/${encodeURIComponent(code)}/extend`, { months, reason });
+  }
 }

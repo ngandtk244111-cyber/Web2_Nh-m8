@@ -27,9 +27,11 @@ export const PRODUCT_CATEGORY_OPTIONS: ProductCategoryOption[] = [
   { value: 'sculpture', label: 'Tượng & Figure', group: 'DECOR', section: 'Decor' },
   { value: 'plant_pot', label: 'Chậu Cây', group: 'DECOR', section: 'Decor' },
   { value: 'frame', label: 'Khung Ảnh', group: 'DECOR', section: 'Decor' },
+  { value: 'mirror', label: 'Gương Trang Trí', group: 'DECOR', section: 'Decor' },
   { value: 'organizer', label: 'Khay & Hộp Đựng', group: 'FURNITURE', section: 'Đồ dùng & phụ kiện' },
   { value: 'tray', label: 'Khay Decor', group: 'DECOR', section: 'Đồ dùng & phụ kiện' },
   { value: 'bookend', label: 'Giá Đỡ & Bookend', group: 'DECOR', section: 'Đồ dùng & phụ kiện' },
+  { value: 'household', label: 'Đồ Dùng Gia Đình', group: 'DECOR', section: 'Đồ dùng & phụ kiện' },
 ];
 
 /** Danh mục chia theo nhóm lớn — dùng cho <optgroup>. */

@@ -11,6 +11,8 @@ import { PagerComponent, pageSlice } from '../../components/pager/pager.componen
 import { DatePickerDirective } from '../../shared/directives/date-picker.directive';
 import { exportXlsx } from '../../shared/utils/export';
 import { orderItemName } from '../../shared/utils/order-labels';
+import { Order } from '../../core/models/order.model';
+import { CartItem } from '../../core/models/cart.model';
 
 type WarrantyState = 'ACTIVE' | 'CLAIMED' | 'EXPIRED';
 type WarrantyFilter = 'ALL' | WarrantyState;
@@ -73,6 +75,12 @@ export class WarrantyComponent implements OnInit {
   resolving: Warranty | null = null;
   resolveNote = '';
 
+  // Trong popup chi tiết
+  noteDraft = '';
+  extendMonths = 6;
+  extendReason = '';
+  readonly extendOptions = [1, 3, 6, 12, 24];
+
   ngOnInit(): void {
     const status = this.route.snapshot.queryParamMap.get('status') as WarrantyFilter | null;
     if (status && FILTERS.some(f => f.key === status)) this.filter.set(status);
@@ -119,6 +127,81 @@ export class WarrantyComponent implements OnInit {
   }
 
   trackByCode = (_: number, w: Warranty) => w.warrantyCode;
+
+  // ---- Popup chi tiết ----
+  openDetail(w: Warranty): void {
+    this.detail = w;
+    this.noteDraft = '';
+    this.extendMonths = 6;
+    this.extendReason = '';
+  }
+
+  /** Số ngày còn bảo hành (âm = đã hết hạn bấy nhiêu ngày). */
+  daysLeft(w: Warranty): number {
+    const DAY = 24 * 3600 * 1000;
+    return Math.ceil((new Date(w.expiresAt).getTime() - this.today.getTime()) / DAY);
+  }
+
+  /** Phần trăm thời hạn bảo hành đã dùng — vẽ thanh tiến độ. */
+  usedPercent(w: Warranty): number {
+    const start = new Date(w.purchasedAt).getTime();
+    const end = new Date(w.expiresAt).getTime();
+    if (!(end > start)) return 100;
+    return Math.min(100, Math.max(0, Math.round(((this.today.getTime() - start) / (end - start)) * 100)));
+  }
+
+  orderOf(w: Warranty): Order | undefined {
+    return this.orderService.orders().find(o => o.orderNumber === w.orderNumber);
+  }
+
+  /** Món trong đơn được ghi trên phiếu (so theo tên sản phẩm). */
+  isCoveredItem(w: Warranty, item: CartItem): boolean {
+    return !!item.product?.name && w.productName.toLowerCase().includes(item.product.name.toLowerCase());
+  }
+
+  addNote(): void {
+    const w = this.detail;
+    const note = this.noteDraft.trim();
+    if (!w || !note || this.saving) return;
+    this.saving = true;
+    this.warrantyService.addNote(w.warrantyCode, note).subscribe({
+      next: updated => {
+        this.saving = false;
+        this.detail = updated;
+        this.noteDraft = '';
+        this.toast.success('Đã thêm ghi chú');
+        this.audit.record('Bảo Hành', 'Thêm ghi chú phiếu bảo hành', `${w.warrantyCode}: ${note}`, 'INFO');
+      },
+      error: err => {
+        this.saving = false;
+        this.toast.apiError(err, 'Không thêm được ghi chú');
+      },
+    });
+  }
+
+  extend(): void {
+    const w = this.detail;
+    const months = Number(this.extendMonths);
+    if (!w || this.saving) return;
+    if (!Number.isInteger(months) || months <= 0) {
+      this.toast.warning('Chọn số tháng gia hạn');
+      return;
+    }
+    this.saving = true;
+    this.warrantyService.extend(w.warrantyCode, months, this.extendReason.trim()).subscribe({
+      next: updated => {
+        this.saving = false;
+        this.detail = updated;
+        this.extendReason = '';
+        this.toast.success(`Đã gia hạn phiếu ${w.warrantyCode} thêm ${months} tháng`);
+        this.audit.record('Bảo Hành', 'Gia hạn phiếu bảo hành', `${w.warrantyCode}: +${months} tháng`, 'SUCCESS');
+      },
+      error: err => {
+        this.saving = false;
+        this.toast.apiError(err, 'Không gia hạn được phiếu');
+      },
+    });
+  }
 
   // ---- Tạo phiếu ----
   openCreate(): void {

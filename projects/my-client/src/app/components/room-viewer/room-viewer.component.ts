@@ -113,7 +113,7 @@ export class RoomViewerComponent implements OnInit, AfterViewInit, OnChanges, On
     });
 
     // Công cụ debug: click vào phòng 3D để lấy nhanh toạ độ (world + toạ độ gốc file .glb)
-    // in ra console, dùng để điền vào hotspots trong mock-data.ts.
+    // in ra console, dùng để điền vào hotspots của phòng (server/seed/room-*.js).
     if (!this.interactive) return;
     const el = this.canvasContainer.nativeElement;
     el.addEventListener('pointerdown', this.onDebugPointerDown);
@@ -194,7 +194,7 @@ export class RoomViewerComponent implements OnInit, AfterViewInit, OnChanges, On
 
     console.log('%c[Room Debug] Toạ độ tại điểm vừa click:', 'color:#CD818E;font-weight:bold;');
     console.log(
-      'Toạ độ GỐC (dán thẳng vào "position" của hotspot trong mock-data.ts):',
+      'Toạ độ GỐC (dán thẳng vào "position" của hotspot trong server/seed/room-*.js):',
       `[${rawPoint.x.toFixed(3)}, ${rawPoint.y.toFixed(3)}, ${rawPoint.z.toFixed(3)}]`
     );
     console.log(

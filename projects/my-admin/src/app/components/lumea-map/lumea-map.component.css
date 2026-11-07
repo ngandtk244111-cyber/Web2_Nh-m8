@@ -1,5 +1,7 @@
 :host {
   display: block;
+  /* Gói z-index của Leaflet (400–1000) trong bản đồ, không cho đè lên header / dropdown. */
+  isolation: isolate;
 }
 
 .map-card {

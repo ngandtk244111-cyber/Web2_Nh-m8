@@ -47,11 +47,10 @@
           <th>Khách hàng</th>
           <th>Hết hạn</th>
           <th>Trạng thái</th>
-          <th class="text-right">Thao tác</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let w of visible(); trackBy: trackByCode" class="clickable" (click)="detail = w">
+        <tr *ngFor="let w of visible(); trackBy: trackByCode" class="clickable" title="Bấm để xem chi tiết" (click)="openDetail(w)">
           <td class="cell-strong">{{ w.warrantyCode }}</td>
           <td>
             <a class="order-code" [routerLink]="['/orders', w.orderNumber]" (click)="$event.stopPropagation()">{{ w.orderNumber }}</a>
@@ -68,17 +67,6 @@
           <td>
             <span class="status-badge" [ngClass]="stateClass(w)">{{ stateLabel(w) }}</span>
             <span class="cell-sub note" *ngIf="state(w) === 'CLAIMED' && lastNote(w)">“{{ lastNote(w) }}”</span>
-          </td>
-          <td class="text-right">
-            <div class="row-actions">
-              <button type="button" class="icon-btn" title="Xem chi tiết" (click)="$event.stopPropagation(); detail = w">
-                <i class="bi bi-eye"></i>
-              </button>
-              <button type="button" class="action-btn sm success" *ngIf="canEdit && w.status === 'CLAIMED'"
-                (click)="$event.stopPropagation(); openResolve(w)">
-                <i class="bi bi-check2-circle"></i> Đóng yêu cầu
-              </button>
-            </div>
           </td>
         </tr>
       </tbody>
@@ -143,18 +131,49 @@
 
 <!-- Chi tiết phiếu -->
 <div class="modal-overlay" *ngIf="detail as w" (click)="detail = null">
-  <div class="modal-box" (click)="$event.stopPropagation()">
+  <div class="modal-box lg" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h3 class="modal-title">Phiếu {{ w.warrantyCode }}</h3>
       <button type="button" class="close-btn" (click)="detail = null">&times;</button>
     </div>
     <div class="modal-body">
-      <div class="info-row"><span class="label">Trạng thái</span><span class="value"><span class="status-badge" [ngClass]="stateClass(w)">{{ stateLabel(w) }}</span></span></div>
-      <div class="info-row"><span class="label">Đơn hàng</span><span class="value"><a [routerLink]="['/orders', w.orderNumber]" (click)="detail = null">{{ w.orderNumber }}</a></span></div>
-      <div class="info-row"><span class="label">Sản phẩm</span><span class="value">{{ w.productName }}</span></div>
+      <!-- Thời hạn còn lại -->
+      <div class="term-box" [ngClass]="daysLeft(w) <= 0 ? 'expired' : daysLeft(w) <= 30 ? 'soon' : 'ok'">
+        <div class="term-head">
+          <span class="term-days" *ngIf="daysLeft(w) > 0">Còn <strong>{{ daysLeft(w) }}</strong> ngày bảo hành</span>
+          <span class="term-days" *ngIf="daysLeft(w) <= 0">Đã hết hạn <strong>{{ -daysLeft(w) }}</strong> ngày</span>
+          <span class="status-badge" [ngClass]="stateClass(w)">{{ stateLabel(w) }}</span>
+        </div>
+        <div class="term-bar"><span [style.width.%]="usedPercent(w)"></span></div>
+        <div class="term-dates">
+          <span>Mua {{ w.purchasedAt | date:'dd/MM/yyyy' }}</span>
+          <span>{{ w.warrantyMonths }} tháng</span>
+          <span>Hết hạn {{ w.expiresAt | date:'dd/MM/yyyy' }}</span>
+        </div>
+      </div>
+
+      <div class="info-row"><span class="label">Sản phẩm bảo hành</span><span class="value">{{ w.productName }}</span></div>
       <div class="info-row"><span class="label">Khách hàng</span><span class="value">{{ w.customerName }} · {{ w.customerPhone }}</span></div>
-      <div class="info-row"><span class="label">Ngày mua</span><span class="value">{{ w.purchasedAt | date:'dd/MM/yyyy' }}</span></div>
-      <div class="info-row"><span class="label">Hết hạn</span><span class="value">{{ w.expiresAt | date:'dd/MM/yyyy' }} ({{ w.warrantyMonths }} tháng)</span></div>
+
+      <!-- Các món trong đơn -->
+      <div class="divider"></div>
+      <h4 class="section-title">
+        Các món trong đơn
+        <a class="order-code" [routerLink]="['/orders', w.orderNumber]" (click)="detail = null">{{ w.orderNumber }} <i class="bi bi-box-arrow-up-right"></i></a>
+      </h4>
+      <ng-container *ngIf="orderOf(w) as o; else noOrder">
+        <div class="w-item" *ngFor="let item of o.items" [class.covered]="isCoveredItem(w, item)">
+          <img class="w-thumb" *ngIf="item.product.images?.[0]" [src]="item.product.images[0]" [alt]="item.product.name">
+          <div class="w-item-info">
+            <span class="cell-strong">{{ item.product.name }}</span>
+            <span class="cell-sub">SL {{ item.quantity }} · {{ item.unitPrice | number:'1.0-0' }}đ</span>
+          </div>
+          <span class="tag" *ngIf="isCoveredItem(w, item)"><i class="bi bi-shield-check"></i> Món của phiếu này</span>
+        </div>
+      </ng-container>
+      <ng-template #noOrder>
+        <div class="empty-state py-3">Không tìm thấy đơn {{ w.orderNumber }} trong danh sách đơn hàng.</div>
+      </ng-template>
 
       <div class="divider"></div>
       <h4 class="section-title">Lịch sử yêu cầu bảo hành</h4>
@@ -165,6 +184,40 @@
           <span>{{ h.note }}</span>
         </li>
       </ul>
+
+      <!-- Ghi chú nội bộ -->
+      <div class="divider"></div>
+      <h4 class="section-title">Ghi chú nội bộ <span class="cell-sub d-inline">(khách không thấy)</span></h4>
+      <div class="empty-state py-3" *ngIf="!w.adminNotes?.length">Chưa có ghi chú.</div>
+      <ul class="history notes" *ngIf="w.adminNotes?.length">
+        <li *ngFor="let n of w.adminNotes">
+          <span class="time">{{ n.createdAt | date:'HH:mm dd/MM/yyyy' }}<ng-container *ngIf="n.author"> · {{ n.author }}</ng-container></span>
+          <span>{{ n.note }}</span>
+        </li>
+      </ul>
+      <div class="note-form" *ngIf="canEdit">
+        <textarea class="form-control" rows="2" maxlength="500" [(ngModel)]="noteDraft"
+          placeholder="VD: Khách hẹn mang đèn đến showroom thứ 7"></textarea>
+        <button type="button" class="action-btn sm" [disabled]="saving || !noteDraft.trim()" (click)="addNote()">
+          <i class="bi bi-plus-lg"></i> Thêm ghi chú
+        </button>
+      </div>
+
+      <!-- Gia hạn -->
+      <ng-container *ngIf="canEdit">
+        <div class="divider"></div>
+        <h4 class="section-title">Gia hạn phiếu</h4>
+        <div class="extend-form">
+          <select class="form-select" [(ngModel)]="extendMonths">
+            <option *ngFor="let m of extendOptions" [ngValue]="m">+{{ m }} tháng</option>
+          </select>
+          <input class="form-control" maxlength="300" [(ngModel)]="extendReason" placeholder="Lý do (không bắt buộc), VD: bù thời gian sửa chữa">
+          <button type="button" class="action-btn sm success" [disabled]="saving" (click)="extend()">
+            <i class="bi bi-calendar-plus"></i> Gia hạn
+          </button>
+        </div>
+        <div class="form-hint">Phiếu đã hết hạn sẽ có hiệu lực lại nếu ngày hết hạn mới sau hôm nay. Lần gia hạn được ghi vào ghi chú nội bộ.</div>
+      </ng-container>
     </div>
     <div class="modal-footer">
       <button type="button" class="btn-cancel" (click)="detail = null">Đóng</button>

@@ -1,0 +1,51 @@
+services:
+  mongo:
+    image: mongo:7.0.7
+    volumes:
+      - lumea-mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  seed:
+    image: lumea-demo:local
+    build: .
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/lumea_demo
+    command: ["npm", "run", "seed:all", "--prefix", "server"]
+    depends_on:
+      mongo:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    image: lumea-demo:local
+    build: .
+    environment:
+      PORT: 4300
+      MONGODB_URI: mongodb://mongo:27017/lumea_demo
+      CORS_ORIGINS: http://localhost:4200,http://127.0.0.1:4200
+      OTP_DEV_MODE: "true"
+      ADMIN_TOKEN_SECRET: local-demo-secret-do-not-use-in-production
+      ADMIN_DEFAULT_USERNAME: admin
+      ADMIN_DEFAULT_PASSWORD: admin123
+    command: ["npm", "start", "--prefix", "server"]
+    ports:
+      - "127.0.0.1:4300:4300"
+    depends_on:
+      seed:
+        condition: service_completed_successfully
+
+  web:
+    image: lumea-demo:local
+    build: .
+    command: ["./node_modules/.bin/ng", "serve", "my-client", "--host", "0.0.0.0", "--port", "4200"]
+    ports:
+      - "127.0.0.1:4200:4200"
+    depends_on:
+      - api
+
+volumes:
+  lumea-mongo-data:

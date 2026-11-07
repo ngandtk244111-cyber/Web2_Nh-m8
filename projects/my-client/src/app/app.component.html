@@ -34,7 +34,7 @@
   <!-- Hộp thoại xác nhận dùng chung (đăng xuất...) -->
   <app-confirm-dialog></app-confirm-dialog>
 
-  @if (!bare()) {
+  @if (!bare() && !checkoutRoute()) {
     <!-- Floating Side Banners (desktop only) -->
     <app-floating-side-banners></app-floating-side-banners>
 

@@ -44,6 +44,7 @@ export class AppComponent {
 
   /** Route có data.bare (phòng xem 3D mở ở tab riêng): ẩn header, footer và các widget nổi. */
   readonly bare = signal(false);
+  readonly checkoutRoute = signal(false);
 
   constructor(router: Router) {
     // Tắt khôi phục cuộn mặc định của trình duyệt để không giành với restoreScroll() bên dưới.
@@ -51,6 +52,7 @@ export class AppComponent {
     router.events.subscribe((event) => {
       if (event instanceof NavigationEnd) {
         this.bare.set(this.isBareRoute(router.routerState.snapshot.root));
+        this.checkoutRoute.set(/^\/(cart|checkout)(?:[/?#]|$)/.test(event.urlAfterRedirects));
       }
       if (event instanceof NavigationStart) {
         this.routeLeaving.set(true);

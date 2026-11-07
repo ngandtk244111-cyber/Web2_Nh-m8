@@ -56,9 +56,13 @@ export class CheckoutFlowService {
     return false;
   }
 
-  /** Gọi khi vào trang /cart: luôn phản ánh đúng thực tế là đang ở Bước 1. */
+  /**
+   * Gọi khi vào trang /cart: luôn bắt đầu lại từ Bước 1 — các bước sau chưa làm trong lượt này,
+   * không được hiện "đã xong" chỉ vì lần trước khách từng đi tới (hoặc vừa đặt xong một đơn).
+   */
   enterCartPage(): void {
     this.currentStepSignal.set(1);
+    this.maxReachedStepSignal.set(1);
   }
 
   /** Gọi khi vào trang /checkout lần đầu (từ Bước 1 hợp lệ) — không ghi đè nếu đã đang ở giữa luồng. */

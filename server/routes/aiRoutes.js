@@ -6,7 +6,8 @@ const Product = require('../models/Product');
 const router = express.Router();
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
+// flash-lite trả lời nhanh với prompt có danh mục; gemini-3.8-flash chậm (~1 phút) nên không dùng.
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3.1-flash-lite';
 const GEMINI_FALLBACK_MODEL = process.env.GEMINI_FALLBACK_MODEL || 'gemini-3.1-flash-lite';
 // Máy dev không có GEMINI_API_KEY -> chuyển tiếp sang server Render (đã có key) thay vì báo lỗi.
 const AI_PROXY_URL = process.env.AI_PROXY_URL || 'https://web2-nh-m8-2.onrender.com/api/ai/assistant';
@@ -30,7 +31,8 @@ const dbReady = () => mongoose.connection.readyState === 1;
 let catalogCache = null;
 let catalogCacheTime = 0;
 const CATALOG_TTL = 10 * 60 * 1000;
-const CATALOG_MAX = 300;
+// Prompt càng dài Gemini trả lời càng chậm (300 món ~19k token, có lúc >40s) — giữ ở mức vừa đủ.
+const CATALOG_MAX = 150;
 
 async function getCatalogText() {
   const now = Date.now();
@@ -304,19 +306,31 @@ router.post('/assistant', async (req, res) => {
         contents: [{ role: 'user', parts: [{ text: conversationText }] }],
         generationConfig: { temperature: 0.2, maxOutputTokens: 1024, responseMimeType: 'application/json' },
       },
-      { timeout: 25000 }
+      { timeout: 35000 }
     );
 
-    // Model chính quá tải (503) / hết hạn mức (429) / không phản hồi (timeout) -> gọi lại bằng model dự phòng nhẹ hơn.
+    // Quá tải (503) / hết hạn mức (429) thường chỉ thoáng qua -> gọi lại 1 lần bằng model dự phòng
+    // (có thể trùng model chính). Vẫn lỗi (key bị chặn, Google chậm...) -> nhờ server Render trả lời
+    // thay, để khách không thấy "Không thể kết nối AI".
+    const callWithRetry = async () => {
+      try {
+        return await callGemini(GEMINI_MODEL);
+      } catch (err) {
+        const status = err.response?.status;
+        if (status !== 503 && status !== 429) throw err;
+        console.warn(`[aiRoutes] ${GEMINI_MODEL} trả ${status}, gọi lại bằng ${GEMINI_FALLBACK_MODEL}`);
+        return callGemini(GEMINI_FALLBACK_MODEL);
+      }
+    };
+
     let geminiRes;
     try {
-      geminiRes = await callGemini(GEMINI_MODEL);
+      geminiRes = await callWithRetry();
     } catch (err) {
-      const status = err.response?.status;
-      const timedOut = err.code === 'ECONNABORTED' || err.code === 'ETIMEDOUT';
-      if ((status !== 503 && status !== 429 && !timedOut) || GEMINI_FALLBACK_MODEL === GEMINI_MODEL) throw err;
-      console.warn(`[aiRoutes] ${GEMINI_MODEL} trả ${status || err.code}, chuyển sang ${GEMINI_FALLBACK_MODEL}`);
-      geminiRes = await callGemini(GEMINI_FALLBACK_MODEL);
+      if (!AI_PROXY_URL) throw err;
+      console.warn(`[aiRoutes] Gemini lỗi (${err.response?.status || err.code || err.message}), chuyển sang ${AI_PROXY_URL}`);
+      const proxied = await axios.post(AI_PROXY_URL, req.body, { timeout: 90000 });
+      return res.json(proxied.data);
     }
 
     const rawText = geminiRes.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';

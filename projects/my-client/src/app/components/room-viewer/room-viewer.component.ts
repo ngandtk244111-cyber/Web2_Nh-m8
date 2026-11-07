@@ -63,6 +63,8 @@ export class RoomViewerComponent implements OnInit, AfterViewInit, OnChanges, On
   hotspotViewModels: HotspotViewModel[] = [];
   selectedHotspot: HotspotViewModel | null = null;
   hasError = false;
+  loading = false;
+  loadProgress: number | null = null;
 
   readonly qualityOptions: { mode: QualityMode; label: string; description: string }[] = [
     { mode: 'auto', label: 'Tự động', description: 'Tự điều chỉnh FPS theo thiết bị' },
@@ -101,7 +103,7 @@ export class RoomViewerComponent implements OnInit, AfterViewInit, OnChanges, On
   ngOnInit(): void {
     this.qualityManager.setMode(this.qualityMode);
     this.prepareHotspots();
-    this.initRuntime();
+    if (this.interactive) this.initRuntime();
   }
 
   ngAfterViewInit(): void {
@@ -112,6 +114,7 @@ export class RoomViewerComponent implements OnInit, AfterViewInit, OnChanges, On
 
     // Công cụ debug: click vào phòng 3D để lấy nhanh toạ độ (world + toạ độ gốc file .glb)
     // in ra console, dùng để điền vào hotspots trong mock-data.ts.
+    if (!this.interactive) return;
     const el = this.canvasContainer.nativeElement;
     el.addEventListener('pointerdown', this.onDebugPointerDown);
     el.addEventListener('pointerup', this.onDebugPointerUp);
@@ -125,8 +128,7 @@ export class RoomViewerComponent implements OnInit, AfterViewInit, OnChanges, On
     if (changes['room'] && !changes['room'].firstChange) {
       this.selectedHotspot = null;
       this.prepareHotspots();
-      this.buildScene();
-      this.resetCamera();
+      if (this.interactive) { this.buildScene(); this.resetCamera(); }
     }
   }
 
@@ -281,7 +283,7 @@ export class RoomViewerComponent implements OnInit, AfterViewInit, OnChanges, On
       if (!this.interactive) this.runtime.controls.enabled = false;
 
       this.runtime.scene.background = new THREE.Color('#F3F1EC');
-      this.runtime.scene.fog = new THREE.FogExp2('#F3F1EC', 0.04);
+
 
       this.buildScene();
       this.runtime.requestRender(5);
@@ -294,13 +296,17 @@ export class RoomViewerComponent implements OnInit, AfterViewInit, OnChanges, On
 
   private buildScene(): void {
     if (!this.runtime || !this.room) return;
+    this.loading = true;
+    this.loadProgress = null;
     this.roomScenes.buildRoom(this.room, this.runtime.scene, () => {
+      this.ngZone.run(() => { this.loading = false; });
       this.hotspotManager.setOccluders(this.roomScenes.getOccluders());
       this.applyHotspotWorldPositions();
       if (this.runtime) {
-        this.runtime.requestRender(5);
+        this.runtime.invalidateShadows();
       }
-    });
+    }, percent => this.ngZone.run(() => { this.loadProgress = percent; }),
+       () => this.ngZone.run(() => { this.loading = false; this.hasError = true; }));
   }
 
   selectHotspot(item: HotspotViewModel): void {

@@ -111,6 +111,7 @@
           (input)="onOtpDigitChange($any($event.target).value, i)">
       </div>
       <span class="lm_error lm_error--center" *ngIf="errors.otp">{{ errors.otp }}</span>
+      <p class="lm_autofill" *ngIf="otpAutofilled && !errors.otp">Đã tự điền mã từ tin nhắn — bấm Xác nhận để tiếp tục</p>
 
       <p class="lm_timer" *ngIf="otpTimer > 0">Hiệu lực mã còn <strong>{{ otpTimer }}</strong> giây</p>
       <p class="lm_timer" *ngIf="otpTimer <= 0">

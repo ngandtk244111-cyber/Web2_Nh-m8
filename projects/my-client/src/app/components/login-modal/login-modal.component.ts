@@ -89,6 +89,7 @@ export class LoginModalComponent implements AfterViewChecked {
     this.isSubmitting = false;
     this.errors = {};
     this.stopOtpTimer();
+    this.clearAutofill();
   }
 
   private resetSecrets(): void {
@@ -338,7 +339,38 @@ export class LoginModalComponent implements AfterViewChecked {
   private otpSent(res: AuthApiResponse): void {
     this.otpCode = '';
     this.startOtpTimer();
-    if (res.devOtp) this.toastService.info(`[DEV] Mã OTP: ${res.devOtp}`, 8000);
+    if (res.devOtp) this.simulateOtpAutofill(res.devOtp);
+  }
+
+  /** true khi mã vừa được tự điền (chế độ giả lập) — hiện dòng nhắc nhỏ dưới ô OTP. */
+  otpAutofilled = false;
+  private autofillTimers: ReturnType<typeof setTimeout>[] = [];
+
+  /**
+   * Chưa có nhà mạng gửi SMS thật (OTP_DEV_MODE): giả lập tin nhắn về máy — sau ~1s tự điền từng
+   * số vào 6 ô như điện thoại tự đọc mã, khách chỉ cần bấm Xác nhận. Gõ tay giữa chừng thì dừng.
+   */
+  private simulateOtpAutofill(code: string): void {
+    this.clearAutofill();
+    const digits = String(code).replace(/\D/g, '').slice(0, 6);
+    if (digits.length !== 6) return;
+    digits.split('').forEach((_, i) => {
+      this.autofillTimers.push(setTimeout(() => {
+        // Khách đã tự gõ khác đi -> không ghi đè.
+        if (this.otpCode !== digits.slice(0, i)) return this.clearAutofill();
+        this.otpCode = digits.slice(0, i + 1);
+        if (i === 5) {
+          this.otpAutofilled = true;
+          this.otpInputs?.get(5)?.nativeElement?.focus();
+        }
+      }, 1000 + i * 110));
+    });
+  }
+
+  private clearAutofill(): void {
+    this.autofillTimers.forEach(t => clearTimeout(t));
+    this.autofillTimers = [];
+    this.otpAutofilled = false;
   }
 
   // ---------- Đăng nhập ----------

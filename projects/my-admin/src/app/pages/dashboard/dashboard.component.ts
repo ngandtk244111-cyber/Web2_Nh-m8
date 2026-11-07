@@ -39,13 +39,13 @@ interface SalesBar {
 }
 
 const ORDER_STATUS_COLORS: Record<OrderStatus, string> = {
-  PENDING: '#D97706',
-  CONFIRMED: '#2F6690',
-  IN_PRODUCTION: '#7C3AED',
-  SHIPPED: '#1D4ED8',
-  DELIVERED: '#2D7A4F',
-  CANCELLED: '#9CA3AF',
-  RETURNED: '#C42326',
+  PENDING: '#B16C22',
+  CONFIRMED: '#49718A',
+  IN_PRODUCTION: '#806D98',
+  SHIPPED: '#426994',
+  DELIVERED: '#568066',
+  CANCELLED: '#9AA19C',
+  RETURNED: '#B44B50',
 };
 
 const REQUEST_STATUS_LABELS: Record<CustomRequestStatus, string> = {
@@ -58,7 +58,7 @@ const REQUEST_STATUS_LABELS: Record<CustomRequestStatus, string> = {
   REJECTED: 'Đã huỷ',
 };
 
-const PALETTE = ['#A3152D', '#2F6690', '#D97706', '#2D7A4F', '#7C3AED', '#C9566A', '#9CA3AF'];
+const PALETTE = ['#A3152D', '#49718A', '#B16C22', '#568066', '#806D98', '#BB7882', '#9AA19C'];
 
 /** Tổng quan — theo home/ của Vita: biểu đồ doanh thu + cột số liệu, hàng biểu đồ tròn, bản đồ, đơn gần đây. */
 @Component({
@@ -304,7 +304,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           x: { grid: { display: false }, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 10, color: '#7A6F67' } },
           y: {
             beginAtZero: true,
-            grid: { color: '#EDE5D7' },
+            grid: { color: '#E4E7E4' },
             ticks: { color: '#7A6F67', callback: v => this.shortMoney(Number(v)) },
           },
         },

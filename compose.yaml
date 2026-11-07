@@ -14,6 +14,8 @@ services:
     build: .
     environment:
       MONGODB_URI: mongodb://mongo:27017/lumea_demo
+      DEMO_ADMIN_USERNAME: admin
+      DEMO_ADMIN_PASSWORD: admin123
     command: ["npm", "run", "seed:all", "--prefix", "server"]
     depends_on:
       mongo:
@@ -26,7 +28,7 @@ services:
     environment:
       PORT: 4300
       MONGODB_URI: mongodb://mongo:27017/lumea_demo
-      CORS_ORIGINS: http://localhost:4200,http://127.0.0.1:4200
+      CORS_ORIGINS: http://localhost:4200,http://127.0.0.1:4200,http://localhost:4201,http://127.0.0.1:4201
       OTP_DEV_MODE: "true"
       ADMIN_TOKEN_SECRET: local-demo-secret-do-not-use-in-production
       ADMIN_DEFAULT_USERNAME: admin
@@ -41,9 +43,28 @@ services:
   web:
     image: lumea-demo:local
     build: .
-    command: ["./node_modules/.bin/ng", "serve", "my-client", "--host", "0.0.0.0", "--port", "4200"]
+    command: ["./node_modules/.bin/ng", "serve", "my-client", "--host", "0.0.0.0", "--port", "4200", "--poll", "1000"]
+    volumes:
+      - ./projects:/app/projects:ro
+      - ./angular.json:/app/angular.json:ro
+      - ./tsconfig.json:/app/tsconfig.json:ro
+      - ./tailwind.config.js:/app/tailwind.config.js:ro
     ports:
       - "127.0.0.1:4200:4200"
+    depends_on:
+      - api
+
+  admin:
+    image: lumea-demo:local
+    build: .
+    command: ["./node_modules/.bin/ng", "serve", "my-admin", "--host", "0.0.0.0", "--port", "4201", "--poll", "1000"]
+    volumes:
+      - ./projects:/app/projects:ro
+      - ./angular.json:/app/angular.json:ro
+      - ./tsconfig.json:/app/tsconfig.json:ro
+      - ./tailwind.config.js:/app/tailwind.config.js:ro
+    ports:
+      - "127.0.0.1:4201:4201"
     depends_on:
       - api
 

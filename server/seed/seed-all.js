@@ -115,6 +115,18 @@ async function run() {
     r.errors.forEach(e => console.error('   -', e));
   }
 
+  // Chỉ tạo tài khoản quản trị khi môi trường thử nghiệm chủ động cấu hình.
+  // $setOnInsert giữ nguyên tài khoản và mật khẩu nếu đã tồn tại.
+  if (!DRY_RUN && process.env.DEMO_ADMIN_USERNAME && process.env.DEMO_ADMIN_PASSWORD) {
+    const bcrypt = require('bcryptjs');
+    const username = process.env.DEMO_ADMIN_USERNAME;
+    const password = await bcrypt.hash(process.env.DEMO_ADMIN_PASSWORD, 10);
+    await MODELS.Admin.updateOne({ username }, { $setOnInsert: {
+      username, password, fullName: 'Quản trị viên thử nghiệm', role: 'Super Admin', active: true,
+    } }, { upsert: true });
+    console.log('[seed-all] Đã chuẩn bị tài khoản quản trị thử nghiệm.');
+  }
+
   if (!DRY_RUN) await mongoose.connection.close();
   if (failed.length) process.exitCode = 1;
 }

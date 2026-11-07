@@ -9,6 +9,7 @@ export interface ViewerRuntimeOptions {
   container: HTMLElement;
   ngZone: NgZone;
   qualityManager?: QualityManager;
+  toneMappingExposure?: number;
   cameraFov?: number;
   cameraNear?: number;
   cameraFar?: number;
@@ -119,7 +120,7 @@ export class ViewerRuntime {
 
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.05;
+    this.renderer.toneMappingExposure = options.toneMappingExposure ?? 1.05;
     const pmrem = new THREE.PMREMGenerator(this.renderer);
     const environment = new RoomEnvironment();
     this.environmentTarget = pmrem.fromScene(environment);

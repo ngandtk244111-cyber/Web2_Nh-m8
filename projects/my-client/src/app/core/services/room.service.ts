@@ -7,6 +7,25 @@ import { environment } from '../../../environments/environment';
 
 const BASE = `${environment.apiUrl}/rooms`;
 
+// Ảnh chụp từ chính trình xem 3D, chỉ dùng khi dữ liệu còn trỏ tới đúng model tương ứng.
+const ROOM_PREVIEW_MODELS: Record<string, string> = {
+  'room-3': 'phong-khach-bep.glb',
+  'room-4': 'phong-an.glb',
+  'room-5': 'goc-lam-viec.glb',
+  'room-6': 'bep-dao-go-soi.glb',
+  'room-7': 'bep-dao-oc-cho.glb',
+  'room-8': 'goc-gac-mai.glb',
+  'room-9': 'phong-doc-bac-au.glb',
+  'room-10': 'phong-khach-da-cam-thach.glb',
+};
+
+function withViewerPreview(room: Room): Room {
+  const modelName = room.modelUrl?.split('?')[0].split('/').pop();
+  return modelName && ROOM_PREVIEW_MODELS[room.id] === modelName
+    ? { ...room, coverImage: `assets/room-previews/${room.id}.jpg` }
+    : room;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -27,7 +46,7 @@ export class RoomService {
     this.http.get<{ success: boolean; rooms: Room[] }>(BASE).subscribe({
       next: (res) => {
         if (!res.success) return;
-        this.roomsSignal.set(res.rooms);
+        this.roomsSignal.set(res.rooms.map(withViewerPreview));
         if (!this.activeRoomIdSignal() && res.rooms.length > 0) {
           this.activeRoomIdSignal.set(res.rooms[0].id);
         }

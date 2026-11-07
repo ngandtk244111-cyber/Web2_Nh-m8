@@ -467,3 +467,10 @@
     display: none;
   }
 }
+
+/* Viền tiêu điểm sáng trên nền đỏ sẫm của thanh điều hướng. */
+.sidebar :focus-visible,
+.top-bar :focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: -3px;
+}

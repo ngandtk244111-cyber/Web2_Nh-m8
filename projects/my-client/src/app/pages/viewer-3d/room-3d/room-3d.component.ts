@@ -180,7 +180,7 @@ export class Room3dComponent implements AfterViewInit, OnDestroy {
     this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.05;
+    this.renderer.toneMappingExposure = 0.7;
     const pmrem = new THREE.PMREMGenerator(this.renderer);
     const environment = new RoomEnvironment();
     this.environmentTarget = pmrem.fromScene(environment);
@@ -302,7 +302,7 @@ export class Room3dComponent implements AfterViewInit, OnDestroy {
       c.minAzimuthAngle = -Infinity;
       c.maxAzimuthAngle = Infinity;
     }
-    c.autoRotate = true;
+    c.autoRotate = false;
     c.autoRotateSpeed = walk ? AUTO_ROTATE_SPEED * 0.6 : AUTO_ROTATE_SPEED;
     c.enabled = true;
     c.update();
@@ -324,6 +324,7 @@ export class Room3dComponent implements AfterViewInit, OnDestroy {
         s.world.copy(this.roomScenes.rawToWorldPosition(h.position));
       }
       this.renderer.shadowMap.needsUpdate = true;
+      this.controls.autoRotate = true;
       this.ngZone.run(() => {
         this.modelLoaded.set(true);
         this.slowLoad.set(false);

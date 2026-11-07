@@ -78,7 +78,6 @@ export class RoomSceneManager {
           gltf.scene.updateMatrixWorld(true);
           this.setupGenericLighting();
           this.centerAndNormalize(gltf.scene, room.modelFocusBounds);
-          this.roomGroup.add(gltf.scene);
           onReady?.();
         },
         event => { if (token === this.loadToken) onProgress?.(event.lengthComputable && event.total ? Math.round(event.loaded / event.total * 100) : null); },

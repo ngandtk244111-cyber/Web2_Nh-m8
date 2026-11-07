@@ -244,6 +244,7 @@ export class RoomViewerComponent implements OnInit, AfterViewInit, OnChanges, On
         container,
         ngZone: this.ngZone,
         qualityManager: this.qualityManager,
+        toneMappingExposure: 0.7,
         cameraFov: initCam.fov || 46,
         cameraInitialPos: new THREE.Vector3(initCam.x, initCam.y, initCam.z),
         controlsTarget: target,

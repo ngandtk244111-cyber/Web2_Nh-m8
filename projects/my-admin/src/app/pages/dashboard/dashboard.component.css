@@ -155,8 +155,7 @@
 .stat-info .label {
   font-size: 12px;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
+  letter-spacing: 0;
   color: var(--color-text-secondary);
 }
 
@@ -193,7 +192,7 @@
 
 .stat-icon-bg.tone-primary { background: var(--color-primary-bg); color: var(--color-primary); }
 .stat-icon-bg.tone-info { background: var(--color-info-bg); color: var(--color-info); }
-.stat-icon-bg.tone-purple { background: #F1ECFA; color: #7C3AED; }
+.stat-icon-bg.tone-purple { background: #EFEDF5; color: #66557E; }
 .stat-icon-bg.tone-warning { background: var(--color-warning-bg); color: var(--color-warning); }
 
 .mid-charts-grid {
@@ -253,7 +252,7 @@
 }
 
 .queue-info span {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--color-text-tertiary);
 }
 

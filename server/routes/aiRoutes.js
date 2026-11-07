@@ -11,6 +11,8 @@ const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3.1-flash-lite';
 const GEMINI_FALLBACK_MODEL = process.env.GEMINI_FALLBACK_MODEL || 'gemini-3.1-flash-lite';
 // Máy dev không có GEMINI_API_KEY -> chuyển tiếp sang server Render (đã có key) thay vì báo lỗi.
 const AI_PROXY_URL = process.env.AI_PROXY_URL || 'https://web2-nh-m8-2.onrender.com/api/ai/assistant';
+// Hạn chờ TỔNG cho server Render (timeout của axios chỉ tính lúc kết nối im lặng, Render trả nhỏ giọt vẫn treo được).
+const PROXY_OPTIONS = () => ({ timeout: 60000, signal: AbortSignal.timeout(60000) });
 
 // Cơ chế theo AruBot của AuraPC-main (server/routes/chatRoutes.js):
 //   1) Nạp TOÀN BỘ catalog (nhóm theo danh mục, lấy mẫu đều, cache 10 phút) vào system prompt
@@ -278,7 +280,7 @@ router.post('/assistant', async (req, res) => {
       if (!AI_PROXY_URL) {
         return res.status(503).json({ success: false, error: 'GEMINI_API_KEY chưa được cấu hình trên server (xem server/.env.example).' });
       }
-      const proxied = await axios.post(AI_PROXY_URL, req.body, { timeout: 90000 });
+      const proxied = await axios.post(AI_PROXY_URL, req.body, PROXY_OPTIONS());
       return res.json(proxied.data);
     }
 
@@ -329,7 +331,7 @@ router.post('/assistant', async (req, res) => {
     } catch (err) {
       if (!AI_PROXY_URL) throw err;
       console.warn(`[aiRoutes] Gemini lỗi (${err.response?.status || err.code || err.message}), chuyển sang ${AI_PROXY_URL}`);
-      const proxied = await axios.post(AI_PROXY_URL, req.body, { timeout: 90000 });
+      const proxied = await axios.post(AI_PROXY_URL, req.body, PROXY_OPTIONS());
       return res.json(proxied.data);
     }
 

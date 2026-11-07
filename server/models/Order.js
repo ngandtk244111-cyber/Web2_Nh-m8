@@ -88,6 +88,15 @@ const orderSchema = new mongoose.Schema({
   },
   hasPrintOnDemandItems: { type: Boolean, default: false },
   productionProgress: { type: productionProgressSchema, default: null },
+  // Xưởng làm các món in 3D / thiết kế riêng — ghi tự động khi đơn vào "Đang sản xuất" (utils/workshops.js).
+  productionWorkshops: {
+    type: [new mongoose.Schema({
+      workshopId: { type: String, default: null },
+      workshopName: { type: String, default: '' },
+      items: { type: [String], default: [] },
+    }, { _id: false })],
+    default: [],
+  },
   items: { type: [orderItemSchema], required: true },
   shippingAddress: { type: shippingAddressSchema, required: true },
   invoice: { type: invoiceSchema, default: null },

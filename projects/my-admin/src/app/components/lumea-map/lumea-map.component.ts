@@ -26,7 +26,6 @@ export interface MapSupplier {
   category?: string;
   contact?: string;
   phone?: string;
-  rating?: number;
   active?: boolean;
 }
 
@@ -229,7 +228,7 @@ export class LumeaMapComponent implements AfterViewInit, OnChanges, OnDestroy {
         kind: 'supplier',
         name: s.name,
         address: s.address,
-        detail: s.category || 'Đối tác cung ứng',
+        detail: s.category || 'Xưởng sản xuất',
         contact: s.contact,
         phone: s.phone,
         lat: p.lat,

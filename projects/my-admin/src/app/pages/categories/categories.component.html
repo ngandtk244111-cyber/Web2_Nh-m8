@@ -56,11 +56,11 @@
           <th>Nhóm</th>
           <th class="text-right">Sản phẩm</th>
           <th>Trạng thái</th>
-          <th class="text-right">Thao tác</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let c of filtered()">
+        <!-- Bấm vào dòng để xem chi tiết; ẩn / hiện nằm trong cửa sổ chi tiết. -->
+        <tr *ngFor="let c of filtered()" class="clickable" (click)="openDetail(c)">
           <td>
             <div class="cell-media">
               <span class="cat-icon"><i class="bi" [ngClass]="c.icon"></i></span>
@@ -73,20 +73,60 @@
           <td><span class="tag">{{ c.group === 'FURNITURE' ? 'Nội thất' : 'Decor' }}</span></td>
           <td class="text-right cell-strong">{{ c.productCount }}</td>
           <td><span class="status-badge" [ngClass]="c.active ? 'status-green' : 'status-gray'">{{ c.active ? 'Hiển thị' : 'Đang ẩn' }}</span></td>
-          <td>
-            <div class="row-actions" *ngIf="adminAuth.can('products.edit')">
-              <button type="button" class="icon-btn" title="Sửa" (click)="openEdit(c)"><i class="bi bi-pencil"></i></button>
-              <button type="button" class="icon-btn" [title]="c.active ? 'Ẩn' : 'Hiển thị'" [disabled]="saving" (click)="toggleActive(c)">
-                <i class="bi" [ngClass]="c.active ? 'bi-eye-slash' : 'bi-eye'"></i>
-              </button>
-            </div>
-          </td>
         </tr>
       </tbody>
     </table>
     <div class="empty-state" *ngIf="filtered().length === 0">
       <i class="bi bi-tags"></i>
       Không có danh mục nào.
+    </div>
+  </div>
+</div>
+
+<!-- Chi tiết danh mục: các loại sản phẩm bên trong + số sản phẩm -->
+<div class="modal-overlay" *ngIf="current() as c" (click)="detailId.set(null)">
+  <div class="modal-box lg" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="cell-media">
+        <span class="cat-icon"><i class="bi" [ngClass]="c.icon"></i></span>
+        <div>
+          <h3 class="modal-title">{{ c.name }}</h3>
+          <div class="cell-sub">
+            {{ c.group === 'FURNITURE' ? 'Nội thất' : 'Decor' }} ·
+            <span class="status-badge" [ngClass]="c.active ? 'status-green' : 'status-gray'">{{ c.active ? 'Hiển thị' : 'Đang ẩn' }}</span>
+          </div>
+        </div>
+      </div>
+      <button type="button" class="close-btn" (click)="detailId.set(null)">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p class="cell-sub" *ngIf="c.desc">{{ c.desc }}</p>
+      <table class="admin-table" *ngIf="subCategories(c).length; else noSub">
+        <thead>
+          <tr><th>Loại sản phẩm</th><th class="text-right">Sản phẩm</th><th class="text-right">Hàng có sẵn</th><th class="text-right">In theo đơn</th><th class="text-right">Hết / sắp hết</th><th></th></tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let s of subCategories(c)">
+            <td class="cell-strong">{{ s.label }}</td>
+            <td class="text-right cell-strong">{{ s.total }}</td>
+            <td class="text-right">{{ s.ready }}</td>
+            <td class="text-right">{{ s.pod }}</td>
+            <td class="text-right">{{ s.low || '—' }}</td>
+            <td class="text-right">
+              <a class="btn-header" [routerLink]="['/products']" [queryParams]="{ category: s.value }" *ngIf="s.total">Xem SP</a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <ng-template #noSub>
+        <div class="empty-state">Danh mục tự thêm — chưa gắn loại sản phẩm nào ({{ c.productCount }} sản phẩm theo số đã nhập).</div>
+      </ng-template>
+    </div>
+    <div class="modal-footer" *ngIf="adminAuth.can('products.edit')">
+      <button type="button" class="btn-cancel" [disabled]="saving" (click)="toggleActive(c)">
+        <i class="bi" [ngClass]="c.active ? 'bi-eye-slash' : 'bi-eye'"></i>
+        {{ c.active ? 'Ẩn danh mục' : 'Hiển thị lại' }}
+      </button>
     </div>
   </div>
 </div>
@@ -99,13 +139,9 @@
     </div>
     <form class="modal-body" (ngSubmit)="save()">
       <div class="row g-3">
-        <div class="col-md-6">
+        <div class="col-12">
           <label class="form-label">Tên danh mục <span class="req">*</span></label>
           <input class="form-control" name="name" [(ngModel)]="form.name">
-        </div>
-        <div class="col-md-6">
-          <label class="form-label">Đường dẫn (slug)</label>
-          <input class="form-control" name="slug" [(ngModel)]="form.slug" placeholder="Bỏ trống để tự sinh">
         </div>
         <div class="col-md-6">
           <label class="form-label">Nhóm</label>

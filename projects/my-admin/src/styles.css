@@ -282,7 +282,6 @@ a {
   padding: 8px 10px 10px;
   border-radius: var(--radius-lg);
   border: 1px solid var(--color-neutral-30);
-  border-top: 3px solid var(--color-primary);
   box-shadow: 0 2px 8px rgba(31, 23, 18, 0.05);
   display: flex;
   flex-direction: column;
@@ -300,10 +299,10 @@ a {
   box-shadow: 0 8px 16px rgba(31, 23, 18, 0.08);
 }
 
+/* Thẻ thống kê để trung tính (không tô màu theo loại); thẻ đang chọn để lọc chỉ viền đậm hơn. */
 .stat-card.active {
-  border-left: 2px solid var(--color-primary);
-  border-right: 2px solid var(--color-primary);
-  border-bottom: 2px solid var(--color-primary);
+  border-color: var(--color-neutral-80);
+  box-shadow: inset 0 0 0 1px var(--color-neutral-80);
   background: var(--color-bg-light);
 }
 
@@ -328,7 +327,7 @@ a {
   font-size: 22px;
   font-weight: 800;
   line-height: 1.1;
-  color: var(--color-primary);
+  color: var(--color-text-primary);
 }
 
 .stat-sub {
@@ -337,16 +336,6 @@ a {
   margin-top: 2px;
 }
 
-.stat-card.tone-warning { border-top-color: var(--color-warning); }
-.stat-card.tone-warning .stat-value { color: var(--color-warning); }
-.stat-card.tone-info { border-top-color: var(--color-info); }
-.stat-card.tone-info .stat-value { color: var(--color-info); }
-.stat-card.tone-success { border-top-color: var(--color-success); }
-.stat-card.tone-success .stat-value { color: var(--color-success); }
-.stat-card.tone-danger { border-top-color: var(--color-danger); }
-.stat-card.tone-danger .stat-value { color: var(--color-danger); }
-.stat-card.tone-neutral { border-top-color: var(--color-neutral-60); }
-.stat-card.tone-neutral .stat-value { color: var(--color-neutral-80); }
 
 /* ========== FILTER BAR ========== */
 .filter-bar {

@@ -21,7 +21,7 @@ import {
   ORDER_STATUS_LABELS, isRevenueOrder, orderItemName, orderStatusClass, orderStatusLabel,
   paymentMethodLabel, paymentStatusClass, paymentStatusLabel,
 } from '../../shared/utils/order-labels';
-import { DEFAULT_SHOWROOM_ADDRESS, DEFAULT_SUPPLIERS } from '../suppliers/supplier-defaults';
+import { DEFAULT_SHOWROOM_ADDRESS, Workshop, specialtyLabels } from '../../core/data/workshops';
 
 Chart.register(...registerables);
 
@@ -84,6 +84,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   readonly payClass = paymentStatusClass;
   readonly itemName = orderItemName;
   readonly today = new Date();
+  /** "Thứ Bảy, 08/11/2026" — hiện ở góc phải tiêu đề. */
+  readonly todayLabel = this.today.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
 
   loading = signal(true);
   exportMenuOpen = false;
@@ -110,7 +112,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return a?.fullName || a?.username || '';
   }
 
-  readonly suppliers = computed<MapSupplier[]>(() => this.config.get<MapSupplier[]>('suppliers') || DEFAULT_SUPPLIERS);
+  /** Xưởng sản xuất hiện trên bản đồ (cấu hình 'workshops'). */
+  readonly suppliers = computed<MapSupplier[]>(() => (this.config.get<Workshop[]>('workshops') || []).map(w => ({
+    name: w.name, address: w.address, category: specialtyLabels(w), contact: w.contact, phone: w.phone, active: w.active,
+  })));
   readonly showroomAddress = computed(() => this.config.get<{ showroomAddress?: string }>('settings')?.showroomAddress || DEFAULT_SHOWROOM_ADDRESS);
 
   // ---------- Số liệu ----------
@@ -267,45 +272,84 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   // ---------- Biểu đồ ----------
-  private renderRevenueChart(canvas: ElementRef<HTMLCanvasElement> | undefined, bars: SalesBar[], unit: string): void {
+  /** Biểu đồ đường kiểu AuraPC: doanh thu (vùng tô, trục trái) + số đơn (đường, trục phải). */
+  private renderRevenueChart(canvas: ElementRef<HTMLCanvasElement> | undefined, bars: SalesBar[], _unit: string): void {
     if (!canvas) return;
-    const max = Math.max(0, ...bars.map(b => b.amount));
-    const colors = bars.map(b => b.amount === max && max > 0 ? '#A3152D' : '#E2B4BC');
     const existing = this.charts.get('revenue');
     if (existing) {
       existing.data.labels = bars.map(b => b.label);
       existing.data.datasets[0].data = bars.map(b => b.amount);
-      (existing.data.datasets[0] as any).backgroundColor = colors;
+      existing.data.datasets[1].data = bars.map(b => b.orders);
       existing.update();
       return;
     }
-    const config: ChartConfiguration<'bar'> = {
-      type: 'bar',
+    const revenueColor = '#A3152D';
+    const ordersColor = '#292522';
+    const config: ChartConfiguration<'line'> = {
+      type: 'line',
       data: {
         labels: bars.map(b => b.label),
-        datasets: [{ label: 'Doanh số', data: bars.map(b => b.amount), backgroundColor: colors, borderRadius: 6, maxBarThickness: 36 }],
+        datasets: [
+          {
+            label: 'Doanh thu',
+            data: bars.map(b => b.amount),
+            borderColor: revenueColor,
+            backgroundColor: 'rgba(163, 21, 45, 0.10)',
+            fill: true,
+            tension: 0.4,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            pointBackgroundColor: revenueColor,
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            yAxisID: 'y',
+            order: 2,
+          },
+          {
+            label: 'Số đơn',
+            data: bars.map(b => b.orders),
+            borderColor: ordersColor,
+            backgroundColor: 'transparent',
+            fill: false,
+            tension: 0.4,
+            borderWidth: 2,
+            pointRadius: 3,
+            pointBackgroundColor: ordersColor,
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            yAxisID: 'y1',
+            order: 1,
+          },
+        ],
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        interaction: { intersect: false, mode: 'index' },
         plugins: {
           legend: { display: false },
           tooltip: {
             callbacks: {
               title: items => this.salesBars()[items[0].dataIndex]?.fullLabel || '',
-              label: item => {
-                const bar = this.salesBars()[item.dataIndex];
-                return `${(bar?.amount || 0).toLocaleString('vi-VN')}đ · ${bar?.orders || 0} đơn`;
-              },
+              label: item => item.datasetIndex === 0
+                ? `Doanh thu: ${Number(item.parsed.y || 0).toLocaleString('vi-VN')}đ`
+                : `Số đơn: ${item.parsed.y || 0}`,
             },
           },
         },
         scales: {
           x: { grid: { display: false }, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 10, color: '#7A6F67' } },
           y: {
+            position: 'left',
             beginAtZero: true,
             grid: { color: '#E4E7E4' },
             ticks: { color: '#7A6F67', callback: v => this.shortMoney(Number(v)) },
+          },
+          y1: {
+            position: 'right',
+            beginAtZero: true,
+            grid: { drawOnChartArea: false },
+            ticks: { color: '#7A6F67', precision: 0 },
           },
         },
       },

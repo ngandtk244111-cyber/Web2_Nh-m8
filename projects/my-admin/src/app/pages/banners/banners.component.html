@@ -26,7 +26,6 @@
           </div>
           <div class="banner-info">
             <div class="banner-name">{{ slot.name }}</div>
-            <div class="banner-link" *ngIf="value(slot, 'ctaLink') as link"><i class="bi bi-link-45deg"></i> {{ link }}</div>
             <div class="banner-actions">
               <span class="status-badge" [ngClass]="isActive(slot) ? 'status-green' : 'status-gray'">
                 {{ isActive(slot) ? 'Đang hiện' : 'Đang ẩn' }}

@@ -92,7 +92,7 @@ router.get('/my-reviews', requireUserId, async (req, res) => {
 const EDITABLE_FIELDS = ['name', 'slug', 'category', 'categoryName', 'categoryGroup', 'productionType', 'customizable',
   'basePrice', 'originalPrice', 'description', 'story', 'inStock', 'images', 'badge', 'dimensions', 'materialInfo', 'weight',
   'features', 'customization', 'threeModelType', 'modelUrl', 'productionTime', 'printTechnology', 'flashSaleSlot',
-  'style', 'color', 'printMaterial', 'sizeCategory', 'spaces'];
+  'style', 'color', 'printMaterial', 'sizeCategory', 'spaces', 'workshopId'];
 
 function pickEditable(body) {
   return Object.fromEntries(EDITABLE_FIELDS.filter(f => body[f] !== undefined).map(f => [f, body[f]]));

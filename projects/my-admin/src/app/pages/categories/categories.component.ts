@@ -9,6 +9,7 @@ import { ToastService } from '../../core/services/toast.service';
 import { AuditService } from '../../core/services/audit.service';
 import { slugify } from '../../shared/utils/order-labels';
 import { PRODUCT_CATEGORY_OPTIONS, categorySectionOf } from '../products/product-options';
+import { LOW_STOCK_THRESHOLD } from '../../core/services/notice.service';
 
 export interface AdminCategory {
   id: string;
@@ -75,8 +76,34 @@ export class CategoriesComponent implements OnInit {
   search = signal('');
   readonly filtered = computed(() => {
     const q = this.search().toLowerCase().trim();
-    return this.categories().filter(c => !q || c.name.toLowerCase().includes(q) || c.slug.includes(q) || (c.desc || '').toLowerCase().includes(q));
+    return this.categories().filter(c => !q || c.name.toLowerCase().includes(q) || (c.desc || '').toLowerCase().includes(q));
   });
+
+  // ---------- Chi tiết danh mục ----------
+  detailId = signal<string | null>(null);
+  /** Bản mới nhất của danh mục đang xem — ẩn / hiện xong thì cửa sổ cập nhật theo. */
+  readonly current = computed(() => this.categories().find(c => c.id === this.detailId()) || null);
+
+  openDetail(c: AdminCategory): void {
+    this.detailId.set(c.id);
+  }
+
+  /** Các loại sản phẩm thuộc danh mục lớn này, kèm số sản phẩm thật. */
+  subCategories(c: AdminCategory): { value: string; label: string; total: number; ready: number; pod: number; low: number }[] {
+    const products = this.productService.products();
+    return PRODUCT_CATEGORY_OPTIONS.filter(o => o.section === c.name).map(o => {
+      const list = products.filter(p => p.category === o.value);
+      const ready = list.filter(p => p.productionType === 'READY_STOCK');
+      return {
+        value: o.value,
+        label: o.label,
+        total: list.length,
+        ready: ready.length,
+        pod: list.length - ready.length,
+        low: ready.filter(p => (p.inStock ?? 0) <= LOW_STOCK_THRESHOLD).length,
+      };
+    });
+  }
 
   showModal = false;
   editingId: string | null = null;
@@ -105,12 +132,6 @@ export class CategoriesComponent implements OnInit {
     this.showModal = true;
   }
 
-  openEdit(c: AdminCategory): void {
-    this.editingId = c.id;
-    this.form = { name: c.name, slug: c.slug, group: c.group, icon: c.icon, desc: c.desc || '', active: c.active };
-    this.showModal = true;
-  }
-
   /** Lưu cả danh sách; chỉ đóng modal khi server xác nhận. */
   private persist(list: AdminCategory[], onSaved: () => void): void {
     this.saving = true;
@@ -132,6 +153,7 @@ export class CategoriesComponent implements OnInit {
       this.toast.warning('Vui lòng nhập tên danh mục');
       return;
     }
+    // Slug không cho sửa trên form: giữ slug cũ khi sửa, tự sinh từ tên khi thêm mới.
     const entry = { ...this.form, name, slug: this.form.slug.trim() || slugify(name), desc: this.form.desc.trim() };
     const isEdit = !!this.editingId;
     const list = isEdit

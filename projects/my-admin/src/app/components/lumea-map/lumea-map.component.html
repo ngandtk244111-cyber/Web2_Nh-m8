@@ -3,7 +3,7 @@
     <div>
       <h3 class="map-title">Bản đồ Luméa</h3>
       <p class="map-sub">
-        {{ mode === 'orders' ? 'Đơn hàng theo tỉnh/thành giao hàng — bấm vào vòng tròn để xem chi tiết' : 'Showroom và xưởng đối tác cung ứng vật liệu, gốm, gỗ, linh kiện' }}
+        {{ mode === 'orders' ? 'Đơn hàng theo tỉnh/thành giao hàng — bấm vào vòng tròn để xem chi tiết' : 'Showroom và các xưởng sản xuất đối tác' }}
       </p>
     </div>
     <div class="chip-tabs mb-0">
@@ -29,7 +29,7 @@
         </ng-container>
         <ng-container *ngIf="mode === 'network'">
           <span class="legend-item"><span class="dot dot-showroom"></span> Showroom</span>
-          <span class="legend-item"><span class="dot dot-supplier"></span> Xưởng đối tác</span>
+          <span class="legend-item"><span class="dot dot-supplier"></span> Xưởng sản xuất</span>
         </ng-container>
       </div>
     </div>
@@ -100,7 +100,7 @@
         <div class="site-detail">
           <button type="button" class="link-btn" (click)="selectSite(null)"><i class="bi bi-chevron-left"></i> Danh sách địa điểm</button>
           <div>
-            <span class="tag" [ngClass]="site.kind === 'showroom' ? 'primary' : 'success'">{{ site.kind === 'showroom' ? 'Showroom' : 'Xưởng đối tác' }}</span>
+            <span class="tag" [ngClass]="site.kind === 'showroom' ? 'primary' : 'success'">{{ site.kind === 'showroom' ? 'Showroom' : 'Xưởng sản xuất' }}</span>
             <h4 class="detail-title mt-2">{{ site.name }}</h4>
             <p class="row-meta mb-0">{{ site.detail }}</p>
           </div>

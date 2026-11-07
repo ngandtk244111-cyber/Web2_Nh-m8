@@ -127,4 +127,6 @@ export interface Product {
   threeModelType?: 'moon_lamp' | 'geometric_vase' | 'desk_organizer' | 'cube_stool' | 'wall_shelf' | 'abstract_sculpture';
   /** URL file GLB/GLTF thật của sản phẩm (ưu tiên hơn threeModelType). */
   modelUrl?: string | null;
+  /** Xưởng phụ trách admin chọn riêng; trống = tự gán theo loại sản phẩm (core/data/workshops.ts). */
+  workshopId?: string | null;
 }

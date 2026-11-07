@@ -1,11 +1,11 @@
 <div class="admin-page">
   <div class="page-header">
     <div>
-      <h1 class="page-title">Tổng quan hoạt động</h1>
-      <p class="page-subtitle">Doanh thu, đơn hàng và tình trạng xưởng in 3D — hôm nay {{ today | date:'dd/MM/yyyy' }}</p>
+      <h1 class="page-title">Tổng quan</h1>
+      <p class="page-subtitle">Xin chào{{ adminName ? ', ' + adminName : '' }}! Đây là tình hình cửa hàng hôm nay.</p>
     </div>
-    <div class="header-actions" *ngIf="canSeeSales">
-      <div class="export-dropdown">
+    <div class="header-actions">
+      <div class="export-dropdown" *ngIf="canSeeSales">
         <button type="button" class="btn-header primary" (click)="toggleExportMenu($event)">
           <i class="bi bi-download"></i> Xuất báo cáo <i class="bi bi-chevron-down small"></i>
         </button>
@@ -13,6 +13,10 @@
           <button type="button" class="export-menu-item" (click)="exportReport('pdf')"><i class="bi bi-file-earmark-pdf"></i> PDF (.pdf)</button>
           <button type="button" class="export-menu-item" (click)="exportReport('xlsx')"><i class="bi bi-file-earmark-spreadsheet"></i> Excel (.xlsx)</button>
         </div>
+      </div>
+      <div class="today-box">
+        <span class="today-label">Hôm nay</span>
+        <span class="today-value">{{ todayLabel }}</span>
       </div>
     </div>
   </div>
@@ -32,7 +36,47 @@
     <app-mascot-loading *ngIf="loading()" message="Đang tải dữ liệu tổng quan…" [overlay]="false"></app-mascot-loading>
 
     <div [hidden]="loading()">
-      <!-- Doanh số + cột số liệu -->
+      <!-- Hàng số liệu (xếp ngang) -->
+      <div class="stats-row">
+        <button type="button" class="stat-card-mini" (click)="openStat('revenue')">
+          <span class="stat-top">
+            <span class="stat-icon-bg"><i class="bi bi-wallet2"></i></span>
+            <span class="trend" *ngIf="monthRevenue().changePct !== null"
+              [class.up]="monthRevenue().changePct! >= 0" [class.down]="monthRevenue().changePct! < 0">
+              <i class="bi" [ngClass]="monthRevenue().changePct! >= 0 ? 'bi-graph-up-arrow' : 'bi-graph-down-arrow'"></i>
+              {{ monthRevenue().changePct! >= 0 ? '+' : '' }}{{ monthRevenue().changePct }}%
+            </span>
+          </span>
+          <span class="label">Doanh thu tháng này</span>
+          <span class="value">{{ monthRevenue().current | vnd }}</span>
+          <span class="subtext">{{ monthRevenue().changePct !== null ? 'so với tháng trước' : 'Tháng trước chưa có doanh thu' }}</span>
+        </button>
+
+        <button type="button" class="stat-card-mini" (click)="openStat('orders')">
+          <span class="stat-top"><span class="stat-icon-bg"><i class="bi bi-receipt"></i></span></span>
+          <span class="label">Đơn hàng</span>
+          <span class="value">{{ orders().length }}</span>
+          <span class="subtext"><b>{{ podOrdersCount() }}</b> đơn có công đoạn in 3D</span>
+        </button>
+
+        <button type="button" class="stat-card-mini" [disabled]="!can('custom3d.view')" (click)="openStat('requests')">
+          <span class="stat-top"><span class="stat-icon-bg"><i class="bi bi-printer"></i></span></span>
+          <span class="label">Brief in 3D chờ xử lý</span>
+          <span class="value">{{ pendingRequests() }}</span>
+          <span class="subtext">Cần duyệt & báo giá</span>
+        </button>
+
+        <button type="button" class="stat-card-mini" [disabled]="!can('inventory.view')" (click)="openStat('stock')">
+          <span class="stat-top"><span class="stat-icon-bg"><i class="bi bi-archive"></i></span></span>
+          <span class="label">Cảnh báo tồn kho</span>
+          <span class="value">{{ stockAlerts().out.length + stockAlerts().low.length }}</span>
+          <span class="subtext" [title]="'Sắp hết = còn ≤ ' + threshold + ' sản phẩm'">
+            <b [class.down]="stockAlerts().out.length > 0">{{ stockAlerts().out.length }} hết hàng</b> · {{ stockAlerts().low.length }} sắp hết
+          </span>
+        </button>
+      </div>
+
+      <!-- Biểu đồ doanh số -->
       <div class="main-dashboard-grid">
         <div class="info-card chart-card mb-0">
           <div class="chart-head">
@@ -68,59 +112,17 @@
           <div class="chart-box">
             <canvas #revenueChart></canvas>
             <div class="chart-empty" *ngIf="!salesPeak()">
-              <i class="bi bi-bar-chart"></i>
+              <i class="bi bi-graph-up"></i>
               Chưa có doanh số trong khoảng này
             </div>
           </div>
-          <p class="chart-note mb-0" *ngIf="salesPeak() as peak">
-            Cao nhất: {{ peak.fullLabel }} — {{ peak.amount | vnd }} ({{ peak.orders }} đơn)
-          </p>
-        </div>
-
-        <div class="stats-column">
-          <button type="button" class="stat-card-mini" (click)="openStat('revenue')">
-            <span class="stat-info">
-              <span class="label">Doanh thu tháng này</span>
-              <span class="value">{{ monthRevenue().current | vnd }}</span>
-              <span class="subtext" *ngIf="monthRevenue().changePct !== null; else noPrev">
-                <b [class.up]="monthRevenue().changePct! >= 0" [class.down]="monthRevenue().changePct! < 0">
-                  <i class="bi" [ngClass]="monthRevenue().changePct! >= 0 ? 'bi-arrow-up' : 'bi-arrow-down'"></i>
-                  {{ monthRevenue().changePct! >= 0 ? monthRevenue().changePct : -monthRevenue().changePct! }}%
-                </b> so với tháng trước
-              </span>
-              <ng-template #noPrev><span class="subtext">Tháng trước chưa có doanh thu</span></ng-template>
+          <div class="chart-legend">
+            <span class="legend-item"><span class="legend-dot dot-revenue"></span> Doanh thu</span>
+            <span class="legend-item"><span class="legend-dot dot-orders"></span> Số đơn</span>
+            <span class="legend-peak chart-note" *ngIf="salesPeak() as peak">
+              Cao nhất: {{ peak.fullLabel }} — {{ peak.amount | vnd }} ({{ peak.orders }} đơn)
             </span>
-            <span class="stat-icon-bg tone-primary"><i class="bi bi-wallet2"></i></span>
-          </button>
-
-          <button type="button" class="stat-card-mini" (click)="openStat('orders')">
-            <span class="stat-info">
-              <span class="label">Đơn hàng</span>
-              <span class="value">{{ orders().length }}</span>
-              <span class="subtext"><b>{{ podOrdersCount() }}</b> đơn có công đoạn in 3D</span>
-            </span>
-            <span class="stat-icon-bg tone-info"><i class="bi bi-receipt"></i></span>
-          </button>
-
-          <button type="button" class="stat-card-mini" [disabled]="!can('custom3d.view')" (click)="openStat('requests')">
-            <span class="stat-info">
-              <span class="label">Brief in 3D chờ xử lý</span>
-              <span class="value">{{ pendingRequests() }}</span>
-              <span class="subtext">Cần duyệt & báo giá</span>
-            </span>
-            <span class="stat-icon-bg tone-purple"><i class="bi bi-printer"></i></span>
-          </button>
-
-          <button type="button" class="stat-card-mini" [disabled]="!can('inventory.view')" (click)="openStat('stock')">
-            <span class="stat-info">
-              <span class="label">Cảnh báo tồn kho</span>
-              <span class="value">{{ stockAlerts().out.length + stockAlerts().low.length }}</span>
-              <span class="subtext" [title]="'Sắp hết = còn ≤ ' + threshold + ' sản phẩm'">
-                <b [class.down]="stockAlerts().out.length > 0">{{ stockAlerts().out.length }} hết hàng</b> · {{ stockAlerts().low.length }} sắp hết
-              </span>
-            </span>
-            <span class="stat-icon-bg tone-warning"><i class="bi bi-archive"></i></span>
-          </button>
+          </div>
         </div>
       </div>
 

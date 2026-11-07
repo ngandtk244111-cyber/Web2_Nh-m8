@@ -1,0 +1,236 @@
+<div class="admin-page">
+  <div class="page-breadcrumb">
+    Sản phẩm & kho <span class="sep">/</span> <span class="current">Xưởng sản xuất</span>
+  </div>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Xưởng sản xuất</h1>
+      <p class="page-subtitle">Xưởng đối tác làm sản phẩm cho Luméa — sản phẩm tự gắn xưởng theo nhóm hàng, địa chỉ hiện trên bản đồ Tổng quan</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn-header" (click)="exportExcel()"><i class="bi bi-file-earmark-excel"></i> Xuất Excel</button>
+      <button type="button" class="btn-add-action" *ngIf="canCreate" (click)="openAdd()">
+        <i class="bi bi-plus-lg"></i> Thêm xưởng
+      </button>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <button type="button" class="stat-card" [class.active]="filter() === 'ALL'" (click)="filter.set('ALL')">
+      <span class="stat-label">Tất cả xưởng</span>
+      <span class="stat-value">{{ count('ALL') }}</span>
+    </button>
+    <button type="button" class="stat-card" [class.active]="filter() === 'ACTIVE'" (click)="filter.set('ACTIVE')">
+      <span class="stat-label">Đang hợp tác</span>
+      <span class="stat-value">{{ count('ACTIVE') }}</span>
+    </button>
+    <button type="button" class="stat-card" [class.active]="filter() === 'PAUSED'" (click)="filter.set('PAUSED')">
+      <span class="stat-label">Tạm ngưng</span>
+      <span class="stat-value">{{ count('PAUSED') }}</span>
+    </button>
+    <div class="stat-card static">
+      <span class="stat-label">SP chưa có xưởng</span>
+      <span class="stat-value">{{ unassignedCount() }}</span>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <div class="filter-left">
+      <div class="search-wrapper">
+        <input type="text" class="search-input" placeholder="Tên, mã, người liên hệ, nhóm hàng..."
+          [ngModel]="search()" (ngModelChange)="search.set($event)">
+        <i class="bi bi-search search-icon"></i>
+      </div>
+    </div>
+    <span class="selection-info">{{ filtered().length }} xưởng</span>
+  </div>
+
+  <div class="table-scrollable">
+    <!-- Bấm vào dòng để xem chi tiết; sửa / tạm ngưng nằm trong cửa sổ chi tiết. -->
+    <table class="admin-table workshop-table">
+      <thead>
+        <tr>
+          <th class="col-name">Xưởng</th>
+          <th class="col-contact">Liên hệ</th>
+          <th>Nhóm hàng nhận làm</th>
+          <th class="text-center col-count">SP phụ trách</th>
+          <th class="col-last">Lần giao gần nhất</th>
+          <th class="col-status">Trạng thái</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let w of filtered()" class="clickable" (click)="openDetail(w)">
+          <td>
+            <span class="cell-strong">{{ w.name }}</span>
+            <span class="cell-sub">{{ w.code }} · {{ w.address }}</span>
+          </td>
+          <td>
+            {{ w.contact }}
+            <span class="cell-sub">{{ w.phone }}</span>
+          </td>
+          <td>
+            <span class="spec-chip" *ngFor="let s of w.specialties">{{ specialtyNames[s] || s }}</span>
+          </td>
+          <td class="text-center cell-strong">{{ productCount(w) }}</td>
+          <td>
+            <ng-container *ngIf="lastReceipt(w) as r; else noReceipt">
+              {{ r.createdAt | date:'dd/MM/yyyy' }}
+              <span class="cell-sub">{{ r.productName }} × {{ r.qty }}</span>
+            </ng-container>
+            <ng-template #noReceipt><span class="cell-sub">Chưa giao lần nào</span></ng-template>
+          </td>
+          <td>
+            <span class="status-badge" [ngClass]="w.active !== false ? 'status-green' : 'status-gray'">{{ w.active !== false ? 'Đang hợp tác' : 'Tạm ngưng' }}</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="empty-state" *ngIf="!loading() && filtered().length === 0">
+      <i class="bi bi-buildings"></i>
+      Không có xưởng nào khớp bộ lọc.
+    </div>
+  </div>
+</div>
+
+<!-- Thêm / sửa xưởng -->
+<div class="modal-overlay" *ngIf="showModal" (click)="showModal = false">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">{{ editing ? 'Cập nhật xưởng' : 'Thêm xưởng' }}</h3>
+      <button type="button" class="close-btn" (click)="showModal = false">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">Mã</label>
+          <input class="form-control" [(ngModel)]="form.code">
+        </div>
+        <div class="col-md-8">
+          <label class="form-label">Tên xưởng <span class="req">*</span></label>
+          <input class="form-control" [(ngModel)]="form.name">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Người liên hệ</label>
+          <input class="form-control" [(ngModel)]="form.contact">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Số điện thoại</label>
+          <input class="form-control" [(ngModel)]="form.phone">
+        </div>
+        <div class="col-md-8">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-control" [(ngModel)]="form.email">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Số ngày giao thường lệ</label>
+          <input type="number" min="0" step="1" class="form-control" [(ngModel)]="form.leadDays">
+        </div>
+        <div class="col-12">
+          <label class="form-label">Địa chỉ xưởng <span class="req">*</span></label>
+          <input class="form-control" [(ngModel)]="form.address" placeholder="Ghi rõ quận/huyện, tỉnh/thành để hiện trên bản đồ">
+        </div>
+        <div class="col-12">
+          <label class="form-label">Nhóm hàng nhận làm <span class="req">*</span></label>
+          <div class="spec-picker">
+            <button type="button" class="spec-option" *ngFor="let s of specialtyKeys"
+              [class.selected]="form.specialties.includes(s)" (click)="toggleSpecialty(s)">
+              <i class="bi" [ngClass]="form.specialties.includes(s) ? 'bi-check-square-fill' : 'bi-square'"></i>
+              {{ specialtyNames[s] }}
+            </button>
+          </div>
+          <div class="form-hint">Sản phẩm thuộc nhóm hàng này sẽ tự gắn cho xưởng (nhiều xưởng cùng nhóm thì lấy xưởng đứng trước). Muốn gán riêng 1 sản phẩm, chọn ở trang sửa sản phẩm.</div>
+        </div>
+        <div class="col-12">
+          <label class="form-label">Ghi chú</label>
+          <textarea class="form-control" rows="2" [(ngModel)]="form.note"></textarea>
+        </div>
+        <div class="col-12">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="wsActive" [(ngModel)]="form.active">
+            <label class="form-check-label" for="wsActive">Đang hợp tác</label>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn-cancel" (click)="showModal = false">Huỷ</button>
+      <button type="button" class="btn-save" [disabled]="saving()" (click)="save()"><i class="bi bi-check2"></i> Lưu</button>
+    </div>
+  </div>
+</div>
+
+<!-- Chi tiết xưởng: sản phẩm phụ trách, lịch sử giao nhận -->
+<div class="modal-overlay" *ngIf="current() as w" (click)="detail.set(null)">
+  <div class="modal-box lg" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <h3 class="modal-title">{{ w.name }}</h3>
+        <div class="cell-sub">
+          {{ w.code }} ·
+          <span class="status-badge" [ngClass]="w.active !== false ? 'status-green' : 'status-gray'">{{ w.active !== false ? 'Đang hợp tác' : 'Tạm ngưng' }}</span>
+        </div>
+      </div>
+      <button type="button" class="close-btn" (click)="detail.set(null)">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="detail-info">
+        <div><span class="cell-sub">Người liên hệ</span>{{ w.contact || '—' }}</div>
+        <div><span class="cell-sub">Điện thoại</span>{{ w.phone || '—' }}</div>
+        <div><span class="cell-sub">Email</span>{{ w.email || '—' }}</div>
+        <div><span class="cell-sub">Giao thường lệ</span>{{ w.leadDays ? 'Khoảng ' + w.leadDays + ' ngày' : '—' }}</div>
+        <div class="span-2"><span class="cell-sub">Địa chỉ</span>{{ w.address }}</div>
+        <div class="span-2"><span class="cell-sub">Nhóm hàng nhận làm</span>{{ specialtyLabels(w) }}</div>
+        <div class="span-2" *ngIf="w.note"><span class="cell-sub">Ghi chú</span>{{ w.note }}</div>
+      </div>
+
+      <div class="chip-tabs">
+        <button type="button" class="chip-tab" [class.active]="detailTab() === 'products'" (click)="detailTab.set('products')">Sản phẩm phụ trách ({{ productCount(w) }})</button>
+        <button type="button" class="chip-tab" [class.active]="detailTab() === 'receipts'" (click)="detailTab.set('receipts')">Lịch sử giao nhận ({{ detailReceipts().length }})</button>
+      </div>
+
+      <ng-container *ngIf="detailTab() === 'products'">
+        <div class="search-wrapper mb-2">
+          <input type="text" class="search-input" placeholder="Tìm sản phẩm..." [ngModel]="detailSearch()" (ngModelChange)="detailSearch.set($event); detailPage.set(1)">
+          <i class="bi bi-search search-icon"></i>
+        </div>
+        <table class="admin-table">
+          <thead><tr><th>Sản phẩm</th><th>Loại</th><th class="text-center">Tồn kho</th><th>Gắn xưởng</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let p of detailProductsPage()">
+              <td><a class="cell-strong" [routerLink]="['/products/edit', p.id]">{{ p.name }}</a></td>
+              <td>{{ p.categoryName }}<span class="cell-sub">{{ p.productionType === 'PRINT_ON_DEMAND' ? 'In theo đơn' : 'Hàng có sẵn' }}</span></td>
+              <td class="text-center">{{ p.productionType === 'READY_STOCK' ? p.inStock : '—' }}</td>
+              <td><span class="tag" [class.primary]="isPinned(p, w)">{{ isPinned(p, w) ? 'Chọn riêng' : 'Tự động' }}</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="empty-state" *ngIf="!detailProducts().length">Chưa có sản phẩm nào.</div>
+        <app-pager [total]="detailProducts().length" [page]="detailPage()" [pageSize]="detailPageSize" (pageChange)="detailPage.set($event)"></app-pager>
+      </ng-container>
+
+      <ng-container *ngIf="detailTab() === 'receipts'">
+        <table class="admin-table" *ngIf="detailReceipts().length">
+          <thead><tr><th>Thời gian</th><th>Sản phẩm</th><th class="text-center">Số lượng</th><th class="text-center">Tồn sau nhập</th><th>Người nhận / ghi chú</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let r of detailReceipts()">
+              <td>{{ r.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
+              <td><a class="cell-strong" [routerLink]="['/products/edit', r.productId]">{{ r.productName }}</a></td>
+              <td class="text-center">+{{ r.qty }}</td>
+              <td class="text-center">{{ r.stockAfter ?? '—' }}</td>
+              <td>{{ r.by || '—' }}<span class="cell-sub" *ngIf="r.note">{{ r.note }}</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="empty-state" *ngIf="!detailReceipts().length">Xưởng chưa giao lần nào. Nhập hàng ở trang Tồn kho → "Nhập" → "Từ xưởng".</div>
+      </ng-container>
+    </div>
+    <div class="modal-footer" *ngIf="canEdit">
+      <button type="button" class="btn-cancel" [disabled]="saving()" (click)="toggleActive(w)">
+        <i class="bi" [ngClass]="w.active !== false ? 'bi-pause-circle' : 'bi-play-circle'"></i>
+        {{ w.active !== false ? 'Tạm ngưng hợp tác' : 'Hợp tác lại' }}
+      </button>
+      <button type="button" class="btn-save" (click)="editFromDetail(w)"><i class="bi bi-pencil"></i> Sửa thông tin</button>
+    </div>
+  </div>
+</div>

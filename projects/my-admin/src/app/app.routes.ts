@@ -68,9 +68,11 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/inventory/inventory.component').then(m => m.InventoryComponent),
       },
       {
-        path: 'suppliers', data: { title: 'Nhà cung cấp', perm: 'inventory.view' },
-        loadComponent: () => import('./pages/suppliers/suppliers.component').then(m => m.SuppliersComponent),
+        path: 'workshops', data: { title: 'Xưởng sản xuất', perm: 'inventory.view' },
+        loadComponent: () => import('./pages/workshops/workshops.component').then(m => m.WorkshopsComponent),
       },
+      // Link cũ (bookmark) của trang Nhà cung cấp.
+      { path: 'suppliers', redirectTo: 'workshops', pathMatch: 'full' },
 
       // Khách hàng & CSKH
       {

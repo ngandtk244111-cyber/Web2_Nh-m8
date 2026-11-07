@@ -7,7 +7,7 @@ const ADMIN = `${environment.apiUrl}/admin`;
 const COUPONS = `${environment.apiUrl}/coupons`;
 const WARRANTY = `${environment.apiUrl}/warranty`;
 
-export type AdminConfigKey = 'categories' | 'suppliers' | 'banners' | 'settings' | 'permissions';
+export type AdminConfigKey = 'categories' | 'suppliers' | 'workshops' | 'banners' | 'settings' | 'permissions';
 
 /** Dữ liệu riêng của my-admin: cấu hình, nhật ký, nhân viên, mã giảm giá, phiếu bảo hành. */
 @Injectable({ providedIn: 'root' })

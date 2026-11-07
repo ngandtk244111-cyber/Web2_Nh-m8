@@ -261,3 +261,22 @@
   overflow-y: auto;
   padding-right: 2px;
 }
+
+/* Compact rows keep every cart control available on narrow screens. */
+@media (max-width: 640px) {
+  .cd_row--head { display: flex; }
+  .cd_col-label { display: none; }
+  .cd_row:not(.cd_row--head) {
+    grid-template-columns: 22px minmax(0, 1fr) auto;
+    grid-template-areas: "check product product" ". quantity remove" ". price price";
+    gap: 10px;
+  }
+  .cd_item-check { grid-area: check; align-self: start; margin-top: 8px; }
+  .cd_item-link { grid-area: product; align-items: flex-start; }
+  .cd_item-name { max-width: none; white-space: normal; overflow-wrap: anywhere; font-size: 15px; }
+  .cd_qty { grid-area: quantity; justify-self: start; }
+  .cd_qty button { width: 36px; height: 36px; }
+  .cd_item-price { grid-area: price; text-align: left; }
+  .cd_remove { grid-area: remove; min-width: 44px; min-height: 44px; align-items: center; justify-content: center; }
+  .cd_spec-pill, .cd_low-stock { font-size: 12px; }
+}

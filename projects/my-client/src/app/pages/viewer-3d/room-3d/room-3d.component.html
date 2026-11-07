@@ -4,15 +4,15 @@
   <div class="r3__vignette" aria-hidden="true"></div>
 
   <!-- Màn chờ: logo + thanh chạy, mờ dần khi phòng tải xong -->
-  <div class="r3__intro" [class.r3__intro--exit]="modelLoaded()" aria-hidden="true">
+  <div class="r3__intro" [class.r3__intro--exit]="modelLoaded()" role="status">
     <img src="assets/logo/lumea-mark.png" alt="" class="r3__intro-logo">
     <div class="r3__intro-bar"><span></span></div>
-    <p class="r3__intro-text">Đang dựng phòng 3D…</p>
+    <p class="r3__intro-text">Đang tải phòng 3D<span *ngIf="loadProgress() !== null">: {{ loadProgress() }}%</span>…</p>
   </div>
 
   <!-- Không mở được 3D / tải quá lâu: báo rõ thay vì để màn chờ chạy mãi -->
-  <div *ngIf="webglError() || (slowLoad() && !modelLoaded())" class="r3__help" role="alert">
-    <h2>{{ webglError() ? 'Trình duyệt chưa mở được chế độ 3D' : 'Phòng 3D đang tải lâu hơn bình thường' }}</h2>
+  <div *ngIf="webglError() || modelError() || (slowLoad() && !modelLoaded())" class="r3__help" role="alert">
+    <h2>{{ modelError() ? 'Không tải được mô hình phòng' : webglError() ? 'Trình duyệt chưa mở được chế độ 3D' : 'Phòng 3D đang tải lâu hơn bình thường' }}</h2>
     <p>Máy có card đồ hoạ thường dựng phòng trong vài giây. Bạn thử:</p>
     <ul>
       <li>Đóng bớt các tab Luméa / tab có hình 3D khác rồi tải lại.</li>
@@ -95,10 +95,9 @@
     <button
       *ngFor="let s of spots; trackBy: trackSpot"
       type="button"
-      class="r3__spot"
-      [class.r3__spot--hidden]="!s.visible"
-      [style.left.px]="s.x"
-      [style.top.px]="s.y"
+      #spotElement
+      class="r3__spot r3__spot--hidden"
+      tabindex="-1"
       [attr.aria-label]="s.label"
       (click)="focusSpot(s)">
       <span class="r3__spot-ping"></span>

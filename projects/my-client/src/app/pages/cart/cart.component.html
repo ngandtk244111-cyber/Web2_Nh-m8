@@ -34,10 +34,10 @@
 
       <!-- Free shipping banner -->
       <div class="bg-neutral-100 px-6 py-2.5 border-b border-neutral-200 text-xs text-neutral-700 flex items-center justify-between">
-        <span *ngIf="cartService.subtotal() >= 500000" class="font-medium text-emerald-600 flex items-center gap-1.5">
+        <span *ngIf="selectedSubtotal() >= 500000" class="font-medium text-emerald-600 flex items-center gap-1.5">
           <app-icon name="check" [size]="14"></app-icon> Đơn hàng đã đủ điều kiện <strong>Freeship</strong>!
         </span>
-        <span *ngIf="cartService.subtotal() < 500000">
+        <span *ngIf="selectedSubtotal() < 500000">
           Miễn phí vận chuyển cho đơn hàng từ <strong class="text-amber-600">500.000đ</strong>
         </span>
       </div>
@@ -57,7 +57,7 @@
         <div class="cd_row py-4" *ngFor="let item of cartService.items()">
 
           <label class="cd_item-check">
-            <input type="checkbox" [checked]="isItemSelected(item.id)" (change)="toggleItemSelected(item.id, $any($event.target).checked)">
+            <input type="checkbox" [attr.aria-label]="'Chọn ' + item.product.name" [checked]="isItemSelected(item.id)" (change)="toggleItemSelected(item.id, $any($event.target).checked)">
           </label>
 
           <a [routerLink]="['/product', item.product.slug]" class="cd_item-link">

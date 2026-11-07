@@ -41,7 +41,7 @@
       </div>
 
       <!-- Checkout Form & Summary Grid -->
-      <form *ngIf="cartService.checkoutItems().length > 0 && !showBankQrModal && !showOrderSuccess" (ngSubmit)="handlePrimaryAction()" class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <form *ngIf="cartService.checkoutItems().length > 0 && !showBankQrModal && !showOrderSuccess" novalidate (ngSubmit)="handlePrimaryAction()" class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
         <!-- Left: Shipping Address & Payment (7 cols) — chỉ hiển thị đúng 1 khối theo bước hiện tại -->
         <div class="lg:col-span-7 space-y-6">
@@ -61,50 +61,50 @@
             <div class="space-y-4">
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Họ và tên người nhận *</label>
-                  <input 
-                    type="text" 
-                    [(ngModel)]="shipping.fullName" 
-                    name="fullName"
+                  <label for="checkout-fullName" class="block text-xs font-semibold text-neutral-700 mb-1.5">Họ và tên người nhận *</label>
+                  <input
+                    type="text"
+                    [(ngModel)]="shipping.fullName"
+                    id="checkout-fullName" name="fullName" [attr.aria-invalid]="errors['fullName'] ? true : null" [attr.aria-describedby]="errors['fullName'] ? 'checkout-fullName-error' : null"
                     (input)="clearError('fullName')"
                     placeholder="Ví dụ: Nguyễn Văn A"
                     class="w-full text-xs rounded-xl border p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500 transition"
                     [class.border-rose-500]="errors['fullName']"
                     [class.border-neutral-300]="!errors['fullName']">
-                  <span *ngIf="errors['fullName']" class="text-[11px] text-rose-400 mt-1 block font-medium">
+                  <span id="checkout-fullName-error" *ngIf="errors['fullName']" class="text-xs text-rose-700 mt-1 block font-medium">
                     {{ errors['fullName'] }}
                   </span>
                 </div>
 
                 <div>
-                  <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Số điện thoại *</label>
-                  <input 
-                    type="tel" 
-                    [(ngModel)]="shipping.phone" 
-                    name="phone" 
+                  <label for="checkout-phone" class="block text-xs font-semibold text-neutral-700 mb-1.5">Số điện thoại *</label>
+                  <input
+                    type="tel"
+                    [(ngModel)]="shipping.phone"
+                    id="checkout-phone" name="phone" [attr.aria-invalid]="errors['phone'] ? true : null" [attr.aria-describedby]="errors['phone'] ? 'checkout-phone-error' : null"
                     (input)="clearError('phone')"
                     placeholder="Ví dụ: 0912 345 678"
                     class="w-full text-xs rounded-xl border p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500 transition"
                     [class.border-rose-500]="errors['phone']"
                     [class.border-neutral-300]="!errors['phone']">
-                  <span *ngIf="errors['phone']" class="text-[11px] text-rose-400 mt-1 block font-medium">
+                  <span id="checkout-phone-error" *ngIf="errors['phone']" class="text-xs text-rose-700 mt-1 block font-medium">
                     {{ errors['phone'] }}
                   </span>
                 </div>
               </div>
 
               <div>
-                <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Email nhận thông báo tiến độ <span class="font-normal text-neutral-500">(không bắt buộc)</span></label>
-                <input 
-                  type="email" 
-                  [(ngModel)]="shipping.email" 
-                  name="email" 
+                <label for="checkout-email" class="block text-xs font-semibold text-neutral-700 mb-1.5">Email nhận thông báo tiến độ <span class="font-normal text-neutral-500">(không bắt buộc)</span></label>
+                <input
+                  type="email"
+                  [(ngModel)]="shipping.email"
+                  id="checkout-email" name="email" [attr.aria-invalid]="errors['email'] ? true : null" [attr.aria-describedby]="errors['email'] ? 'checkout-email-error' : null"
                   (input)="clearError('email')"
                   placeholder="Ví dụ: customer@example.com"
                   class="w-full text-xs rounded-xl border p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500 transition"
                   [class.border-rose-500]="errors['email']"
                   [class.border-neutral-300]="!errors['email']">
-                <span *ngIf="errors['email']; else emailHint" class="text-[11px] text-rose-400 mt-1 block font-medium">
+                <span id="checkout-email-error" *ngIf="errors['email']; else emailHint" class="text-xs text-rose-700 mt-1 block font-medium">
                   {{ errors['email'] }}
                 </span>
                 <ng-template #emailHint>
@@ -114,10 +114,10 @@
 
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Tỉnh / Thành phố *</label>
+                  <label for="checkout-city" class="block text-xs font-semibold text-neutral-700 mb-1.5">Tỉnh / Thành phố *</label>
                   <select
                     [(ngModel)]="shipping.city"
-                    name="city"
+                    id="checkout-city" name="city" [attr.aria-invalid]="errors['city'] ? true : null" [attr.aria-describedby]="errors['city'] ? 'checkout-city-error' : null"
                     (ngModelChange)="clearError('city'); onProvinceChange()"
                     class="w-full text-xs rounded-xl border p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500 transition"
                     [class.border-rose-500]="errors['city']"
@@ -125,16 +125,16 @@
                     <option value="">-- Chọn Tỉnh / Thành phố --</option>
                     <option *ngFor="let p of addressService.provinces()" [value]="p.name">{{ p.name }}</option>
                   </select>
-                  <span *ngIf="errors['city']" class="text-[11px] text-rose-400 mt-1 block font-medium">
+                  <span id="checkout-city-error" *ngIf="errors['city']" class="text-xs text-rose-700 mt-1 block font-medium">
                     {{ errors['city'] }}
                   </span>
                 </div>
 
                 <div>
-                  <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Quận / Huyện *</label>
+                  <label for="checkout-district" class="block text-xs font-semibold text-neutral-700 mb-1.5">Quận / Huyện *</label>
                   <select
                     [(ngModel)]="shipping.district"
-                    name="district"
+                    id="checkout-district" name="district" [attr.aria-invalid]="errors['district'] ? true : null" [attr.aria-describedby]="errors['district'] ? 'checkout-district-error' : null"
                     (ngModelChange)="clearError('district')"
                     [disabled]="!shipping.city"
                     class="w-full text-xs rounded-xl border p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500 transition disabled:opacity-50"
@@ -143,34 +143,34 @@
                     <option value="">-- Chọn Quận / Huyện --</option>
                     <option *ngFor="let d of districts()" [value]="d.name">{{ d.name }}</option>
                   </select>
-                  <span *ngIf="errors['district']" class="text-[11px] text-rose-400 mt-1 block font-medium">
+                  <span id="checkout-district-error" *ngIf="errors['district']" class="text-xs text-rose-700 mt-1 block font-medium">
                     {{ errors['district'] }}
                   </span>
                 </div>
               </div>
 
               <div>
-                <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Địa chỉ cụ thể (Số nhà, đường) *</label>
-                <input 
-                  type="text" 
-                  [(ngModel)]="shipping.street" 
-                  name="street" 
+                <label for="checkout-street" class="block text-xs font-semibold text-neutral-700 mb-1.5">Địa chỉ cụ thể (Số nhà, đường) *</label>
+                <input
+                  type="text"
+                  [(ngModel)]="shipping.street"
+                  id="checkout-street" name="street" [attr.aria-invalid]="errors['street'] ? true : null" [attr.aria-describedby]="errors['street'] ? 'checkout-street-error' : null"
                   (input)="clearError('street')"
                   placeholder="Ví dụ: 124 Hoàng Hoa Thám, Phường Thụy Khuê"
                   class="w-full text-xs rounded-xl border p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500 transition"
                   [class.border-rose-500]="errors['street']"
                   [class.border-neutral-300]="!errors['street']">
-                <span *ngIf="errors['street']" class="text-[11px] text-rose-400 mt-1 block font-medium">
+                <span id="checkout-street-error" *ngIf="errors['street']" class="text-xs text-rose-700 mt-1 block font-medium">
                   {{ errors['street'] }}
                 </span>
               </div>
 
               <div>
-                <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Ghi chú cho shipper hoặc xưởng in</label>
-                <textarea 
-                  [(ngModel)]="shipping.notes" 
-                  name="notes" 
-                  rows="2" 
+                <label for="checkout-notes" class="block text-xs font-semibold text-neutral-700 mb-1.5">Ghi chú cho shipper hoặc xưởng in</label>
+                <textarea
+                  [(ngModel)]="shipping.notes"
+                  id="checkout-notes" name="notes"
+                  rows="2"
                   placeholder="Giao giờ hành chính, gọi trước khi giao..."
                   class="w-full text-xs rounded-xl border border-neutral-300 p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500"></textarea>
               </div>
@@ -199,36 +199,36 @@
 
                   <ng-container *ngIf="invoice.type === 'company'">
                     <div>
-                      <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Tên công ty *</label>
-                      <input type="text" [(ngModel)]="invoice.companyName" name="invoiceCompany" placeholder="VD: Công ty TNHH Nội Thất ABC"
+                      <label for="checkout-invoiceCompany" class="block text-xs font-semibold text-neutral-700 mb-1.5">Tên công ty *</label>
+                      <input type="text" [(ngModel)]="invoice.companyName" id="checkout-invoiceCompany" name="invoiceCompany" [attr.aria-invalid]="errors['invoiceCompany'] ? true : null" [attr.aria-describedby]="errors['invoiceCompany'] ? 'checkout-invoiceCompany-error' : null" placeholder="VD: Công ty TNHH Nội Thất ABC"
                         class="w-full text-xs rounded-xl border p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500"
                         [class.border-rose-500]="errors['invoiceCompany']" [class.border-neutral-300]="!errors['invoiceCompany']">
-                      <span *ngIf="errors['invoiceCompany']" class="text-[11px] text-rose-400 mt-1 block font-medium">{{ errors['invoiceCompany'] }}</span>
+                      <span id="checkout-invoiceCompany-error" *ngIf="errors['invoiceCompany']" class="text-xs text-rose-700 mt-1 block font-medium">{{ errors['invoiceCompany'] }}</span>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Mã số thuế *</label>
-                        <input type="text" [(ngModel)]="invoice.taxCode" name="invoiceTax" inputmode="numeric" placeholder="10 chữ số"
+                        <label for="checkout-invoiceTax" class="block text-xs font-semibold text-neutral-700 mb-1.5">Mã số thuế *</label>
+                        <input type="text" [(ngModel)]="invoice.taxCode" id="checkout-invoiceTax" name="invoiceTax" [attr.aria-invalid]="errors['invoiceTax'] ? true : null" [attr.aria-describedby]="errors['invoiceTax'] ? 'checkout-invoiceTax-error' : null" inputmode="numeric" placeholder="10 chữ số"
                           class="w-full text-xs rounded-xl border p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500"
                           [class.border-rose-500]="errors['invoiceTax']" [class.border-neutral-300]="!errors['invoiceTax']">
-                        <span *ngIf="errors['invoiceTax']" class="text-[11px] text-rose-400 mt-1 block font-medium">{{ errors['invoiceTax'] }}</span>
+                        <span id="checkout-invoiceTax-error" *ngIf="errors['invoiceTax']" class="text-xs text-rose-700 mt-1 block font-medium">{{ errors['invoiceTax'] }}</span>
                       </div>
                       <div>
-                        <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Địa chỉ công ty *</label>
-                        <input type="text" [(ngModel)]="invoice.companyAddress" name="invoiceAddress" placeholder="Địa chỉ đăng ký kinh doanh"
+                        <label for="checkout-invoiceAddress" class="block text-xs font-semibold text-neutral-700 mb-1.5">Địa chỉ công ty *</label>
+                        <input type="text" [(ngModel)]="invoice.companyAddress" id="checkout-invoiceAddress" name="invoiceAddress" [attr.aria-invalid]="errors['invoiceAddress'] ? true : null" [attr.aria-describedby]="errors['invoiceAddress'] ? 'checkout-invoiceAddress-error' : null" placeholder="Địa chỉ đăng ký kinh doanh"
                           class="w-full text-xs rounded-xl border p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500"
                           [class.border-rose-500]="errors['invoiceAddress']" [class.border-neutral-300]="!errors['invoiceAddress']">
-                        <span *ngIf="errors['invoiceAddress']" class="text-[11px] text-rose-400 mt-1 block font-medium">{{ errors['invoiceAddress'] }}</span>
+                        <span id="checkout-invoiceAddress-error" *ngIf="errors['invoiceAddress']" class="text-xs text-rose-700 mt-1 block font-medium">{{ errors['invoiceAddress'] }}</span>
                       </div>
                     </div>
                   </ng-container>
 
                   <div>
-                    <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Email nhận hóa đơn *</label>
-                    <input type="email" [(ngModel)]="invoice.email" name="invoiceEmail" placeholder="Nhập email xuất hóa đơn"
+                    <label for="checkout-invoiceEmail" class="block text-xs font-semibold text-neutral-700 mb-1.5">Email nhận hóa đơn *</label>
+                    <input type="email" [(ngModel)]="invoice.email" id="checkout-invoiceEmail" name="invoiceEmail" [attr.aria-invalid]="errors['invoiceEmail'] ? true : null" [attr.aria-describedby]="errors['invoiceEmail'] ? 'checkout-invoiceEmail-error' : null" placeholder="Nhập email xuất hóa đơn"
                       class="w-full text-xs rounded-xl border p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500"
                       [class.border-rose-500]="errors['invoiceEmail']" [class.border-neutral-300]="!errors['invoiceEmail']">
-                    <span *ngIf="errors['invoiceEmail']" class="text-[11px] text-rose-400 mt-1 block font-medium">{{ errors['invoiceEmail'] }}</span>
+                    <span id="checkout-invoiceEmail-error" *ngIf="errors['invoiceEmail']" class="text-xs text-rose-700 mt-1 block font-medium">{{ errors['invoiceEmail'] }}</span>
                   </div>
                 </div>
               </div>
@@ -245,6 +245,16 @@
               <button type="button" (click)="goToStep(2)" class="text-xs font-semibold text-neutral-600 hover:text-amber-500 flex items-center gap-1 transition">
                 ← Quay lại thông tin
               </button>
+            </div>
+
+            <div class="rounded-xl border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-700">
+              <div class="flex items-start justify-between gap-4">
+                <h4 class="font-bold text-neutral-900">Thông tin nhận hàng</h4>
+                <button type="button" (click)="goToStep(2)" class="font-semibold text-amber-600 hover:underline">Thay đổi</button>
+              </div>
+              <p class="mt-2 font-medium">{{ shipping.fullName }} · {{ shipping.phone }}</p>
+              <p class="mt-1">{{ shipping.street }}, {{ shipping.district }}, {{ shipping.city }}</p>
+              <p *ngIf="shipping.email" class="mt-1">{{ shipping.email }}</p>
             </div>
 
             <div class="space-y-3">

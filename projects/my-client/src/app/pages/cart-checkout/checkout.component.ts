@@ -280,11 +280,16 @@ export class CheckoutComponent implements OnInit {
     if (this.flow.currentStep() === 2) {
       const ok = this.flow.goToStep(3, { validate: () => this.validateShipping() });
       if (!ok) {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        this.focusFirstError();
       }
     } else if (this.flow.currentStep() === 3) {
       this.placeOrder();
     }
+  }
+
+  private focusFirstError(): void {
+    const first = ['fullName', 'phone', 'email', 'city', 'district', 'street', 'invoiceCompany', 'invoiceTax', 'invoiceAddress', 'invoiceEmail'].find(field => this.errors[field]);
+    if (first) setTimeout(() => document.getElementById(`checkout-${first}`)?.focus());
   }
 
   clearError(field: string): void {
@@ -347,7 +352,8 @@ export class CheckoutComponent implements OnInit {
     }
 
     if (!this.validateShipping()) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      this.goToStep(2);
+      this.focusFirstError();
       return;
     }
 

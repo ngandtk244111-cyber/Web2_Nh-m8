@@ -93,11 +93,11 @@ export class ThreeViewerComponent implements OnInit, OnChanges, OnDestroy {
       }
       if (changes['scaleMultiplier']) {
         this.productScenes.updateScale(this.scaleMultiplier);
-        this.runtime.requestRender(3);
+        this.runtime.invalidateShadows();
       }
       if (changes['showAccessories']) {
         this.productScenes.updateAccessories(this.showAccessories);
-        this.runtime.requestRender(3);
+        this.runtime.invalidateShadows();
       }
       if (changes['customText']) {
         this.debounceTextUpdate(this.customText);
@@ -205,7 +205,7 @@ export class ThreeViewerComponent implements OnInit, OnChanges, OnDestroy {
       this.isLoading = false;
       this.setMascotLoading(false);
       if (this.runtime) {
-        this.runtime.requestRender(5);
+        this.runtime.invalidateShadows();
       }
     }, () => {
       this.isLoading = false;

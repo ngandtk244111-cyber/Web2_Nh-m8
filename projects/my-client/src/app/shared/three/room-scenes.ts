@@ -6,6 +6,19 @@ import { ResourceManager, createConfiguredGLTFLoader } from './resource-manager'
  * để khớp với tầm camera đang dùng cho các phòng dựng bằng code (bàn ~2-3 đơn vị). */
 const GLB_ROOM_TARGET_SIZE = 6;
 
+/**
+ * Ánh sáng phòng .glb — 1 chỗ cho cả trang phòng 3D (room-3d) lẫn khung xem phòng (room-viewer).
+ * Ít ánh sáng "phẳng" (môi trường + bán cầu), nắng chính mạnh hơn -> có mặt sáng / mặt tối / bóng,
+ * phòng rõ khối, không bị trắng bệt.
+ */
+export const ROOM_LIGHTING = {
+  exposure: 0.8,
+  envMapIntensity: 0.5,
+  hemisphere: 0.35,
+  sun: 1.8,
+  fill: 0.3,
+};
+
 export class RoomSceneManager {
   readonly roomGroup = new THREE.Group();
   private lightsGroup = new THREE.Group();
@@ -144,7 +157,7 @@ export class RoomSceneManager {
       for (const material of materials) {
         const pbr = material as THREE.MeshStandardMaterial;
         if (!pbr?.isMeshStandardMaterial) continue;
-        pbr.envMapIntensity = 0.85;
+        pbr.envMapIntensity = ROOM_LIGHTING.envMapIntensity;
         for (const texture of [pbr.map, pbr.normalMap, pbr.roughnessMap]) if (texture) texture.anisotropy = 4;
       }
     });
@@ -154,10 +167,11 @@ export class RoomSceneManager {
   }
 
   private setupGenericLighting(): void {
-    const ambient = new THREE.HemisphereLight(0xfff8f0, 0xd8cfc4, 0.55);
+    // Màu đất của đèn bán cầu tối hơn một chút để mặt dưới / góc khuất có chiều sâu.
+    const ambient = new THREE.HemisphereLight(0xfff8f0, 0xb9ab9a, ROOM_LIGHTING.hemisphere);
     this.lightsGroup.add(ambient);
 
-    const sunLight = new THREE.DirectionalLight(0xfff3e0, 1.35);
+    const sunLight = new THREE.DirectionalLight(0xfff3e0, ROOM_LIGHTING.sun);
     sunLight.position.set(5, 10, 6);
     sunLight.castShadow = true;
     sunLight.shadow.mapSize.width = 1024;
@@ -170,7 +184,7 @@ export class RoomSceneManager {
     sunLight.shadow.normalBias = 0.02;
     this.lightsGroup.add(sunLight);
 
-    const fill = new THREE.DirectionalLight(0xdde8ff, 0.45);
+    const fill = new THREE.DirectionalLight(0xdde8ff, ROOM_LIGHTING.fill);
     fill.position.set(-6, 4, -4);
     this.lightsGroup.add(fill);
   }

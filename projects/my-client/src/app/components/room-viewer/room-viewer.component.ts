@@ -25,7 +25,7 @@ import { MascotService } from '../../core/services/mascot.service';
 import { AppIconComponent } from '../icon/icon.component';
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
 import { ViewerRuntime } from '../../shared/three/viewer-runtime';
-import { RoomSceneManager } from '../../shared/three/room-scenes';
+import { ROOM_LIGHTING, RoomSceneManager } from '../../shared/three/room-scenes';
 import { HotspotManager } from '../../shared/three/hotspot-manager';
 import { QualityManager, QualityMode } from '../../shared/three/quality-manager';
 
@@ -148,9 +148,13 @@ export class RoomViewerComponent implements OnInit, AfterViewInit, OnChanges, On
 
   private prepareHotspots(): void {
     if (!this.room) return;
+    // Tải trước đúng các món gắn trong phòng (không chờ cả danh sách sản phẩm).
+    this.productService.loadByIds(this.room.hotspots.map(h => h.productId));
+    const products = this.productService;
+    // product là getter: sản phẩm tải về lúc nào thì thẻ / nhãn hiện lúc đó.
     this.hotspotViewModels = this.room.hotspots.map(h => ({
       hotspot: h,
-      product: this.productService.getProductById(h.productId),
+      get product() { return products.getProductById(h.productId); },
     }));
     this.applyHotspotWorldPositions();
   }
@@ -244,7 +248,7 @@ export class RoomViewerComponent implements OnInit, AfterViewInit, OnChanges, On
         container,
         ngZone: this.ngZone,
         qualityManager: this.qualityManager,
-        toneMappingExposure: 0.7,
+        toneMappingExposure: ROOM_LIGHTING.exposure,
         cameraFov: initCam.fov || 46,
         cameraInitialPos: new THREE.Vector3(initCam.x, initCam.y, initCam.z),
         controlsTarget: target,

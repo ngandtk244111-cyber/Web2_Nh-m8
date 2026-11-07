@@ -158,11 +158,54 @@ export class ProductService {
   }
 
   getProductById(id: string): Product | undefined {
-    return this.productsSignal().find(p => p.id === id);
+    return this.productsSignal().find(p => p.id === id) || this.byIdSignal().get(id);
+  }
+
+  /** Sản phẩm tải lẻ theo id (khi danh sách đầy đủ chưa về) — không đụng tới danh sách chính. */
+  private byIdSignal = signal<Map<string, Product>>(new Map());
+  private byIdPending = new Set<string>();
+
+  /**
+   * Tải trước vài sản phẩm cần ngay (vd hotspot trong phòng 3D) để không phải chờ cả danh sách ~1000 món.
+   * Món đã có (trong danh sách hoặc đã tải lẻ / đang tải) thì bỏ qua.
+   */
+  loadByIds(ids: string[]): void {
+    const missing = [...new Set(ids)].filter(id => id && !this.getProductById(id) && !this.byIdPending.has(id));
+    if (!missing.length) return;
+    missing.forEach(id => this.byIdPending.add(id));
+    this.http.get<{ success: boolean; products: Product[] }>(`${BASE}/by-ids`, { params: { ids: missing.join(',') } }).subscribe({
+      next: res => {
+        missing.forEach(id => this.byIdPending.delete(id));
+        if (!res.success || !res.products?.length) return;
+        const next = new Map(this.byIdSignal());
+        for (const p of res.products) next.set(p.id, { ...p, customizable: false, customization: undefined });
+        this.byIdSignal.set(next);
+      },
+      error: () => missing.forEach(id => this.byIdPending.delete(id)),
+    });
   }
 
   getProductBySlug(slug: string): Product | undefined {
-    return this.productsSignal().find(p => p.slug === slug);
+    return this.productsSignal().find(p => p.slug === slug)
+      || [...this.byIdSignal().values()].find(p => p.slug === slug);
+  }
+
+  /**
+   * Tải 1 sản phẩm theo slug (kèm đánh giá) khi danh sách đầy đủ chưa về — trang chi tiết mở từ
+   * phòng 3D / link ngoài hiện ngay thay vì chờ cả danh sách. Không tìm thấy -> null.
+   */
+  loadBySlug(slug: string): Observable<Product | null> {
+    return this.http.get<{ success: boolean; product: Product }>(`${BASE}/slug/${encodeURIComponent(slug)}`).pipe(
+      map(res => {
+        if (!res.success || !res.product) return null;
+        const product = { ...res.product, customizable: false, customization: undefined };
+        const next = new Map(this.byIdSignal());
+        next.set(product.id, product);
+        this.byIdSignal.set(next);
+        return product;
+      }),
+      catchError(() => of(null))
+    );
   }
 
   /** Gợi ý liên quan: cùng danh mục con > cùng nhóm lớn > cùng không gian sống. */

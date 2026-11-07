@@ -119,6 +119,20 @@ router.get('/', async (_req, res) => {
   }
 });
 
+// Chỉ lấy vài sản phẩm theo id (vd các món gắn hotspot trong phòng 3D) — không phải chờ tải cả danh sách.
+// GET /api/products/by-ids?ids=a,b,c
+const BY_IDS_LIMIT = 60;
+router.get('/by-ids', async (req, res) => {
+  try {
+    const ids = [...new Set(String(req.query.ids || '').split(',').map(s => s.trim()).filter(Boolean))].slice(0, BY_IDS_LIMIT);
+    if (!ids.length) return res.json({ success: true, products: [] });
+    const products = await Product.find({ id: { $in: ids } }).select('-reviews');
+    res.json({ success: true, products: products.map(toPublicProduct) });
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
 // Admin — gom đánh giá của mọi sản phẩm (kể cả đã ẩn), mới nhất trước.
 router.get('/reviews/admin', requirePermission('customers.view'), async (_req, res) => {
   try {

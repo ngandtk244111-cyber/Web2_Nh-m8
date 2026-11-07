@@ -28,7 +28,7 @@ import { CartService } from '../../../core/services/cart.service';
 import { AppIconComponent } from '../../../components/icon/icon.component';
 import { VndPipe } from '../../../shared/pipes/vnd.pipe';
 import { ResourceManager } from '../../../shared/three/resource-manager';
-import { RoomSceneManager } from '../../../shared/three/room-scenes';
+import { ROOM_LIGHTING, RoomSceneManager } from '../../../shared/three/room-scenes';
 
 /** Điểm sản phẩm trong phòng + vị trí trên màn hình (cập nhật mỗi vài khung hình). */
 interface Spot {
@@ -180,7 +180,7 @@ export class Room3dComponent implements AfterViewInit, OnDestroy {
     this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 0.7;
+    this.renderer.toneMappingExposure = ROOM_LIGHTING.exposure;
     const pmrem = new THREE.PMREMGenerator(this.renderer);
     const environment = new RoomEnvironment();
     this.environmentTarget = pmrem.fromScene(environment);
@@ -254,6 +254,8 @@ export class Room3dComponent implements AfterViewInit, OnDestroy {
     this.active.set(null);
     this.buyOpen.set(false);
     this.selectedProductIds = new Set(room.hotspots.map(h => h.productId));
+    // Tải trước đúng các món gắn trong phòng — thẻ sản phẩm hiện ngay, không chờ cả danh sách ~1000 món.
+    this.productService.loadByIds(room.hotspots.map(h => h.productId));
     this.modelLoaded.set(false);
     this.modelError.set(false);
     this.loadProgress.set(null);
@@ -521,7 +523,9 @@ export class Room3dComponent implements AfterViewInit, OnDestroy {
 
   /** Sản phẩm trong phòng theo thứ tự chấm (cache: sản phẩm có thể tải về sau phòng). */
   get roomProducts(): Product[] {
-    const key = this.loadedRoomId + ':' + this.productService.products().length;
+    // Khoá theo số món của phòng đã có dữ liệu (tải lẻ theo id hoặc từ danh sách đầy đủ).
+    const found = this.spots.reduce((n, s) => n + (this.productOf(s) ? 1 : 0), 0);
+    const key = this.loadedRoomId + ':' + found;
     if (key !== this.rpKey) {
       this.rpKey = key;
       this.rpCache = this.spots.map(s => this.productOf(s)).filter((p): p is Product => !!p);

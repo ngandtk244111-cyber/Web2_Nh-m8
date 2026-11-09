@@ -5,6 +5,10 @@ const ProductImage = require('../models/ProductImage');
 const Order = require('../models/Order');
 const { awardVoucher } = require('../utils/vouchers');
 const { checkContent } = require('../utils/moderation');
+const Notification = require('../models/Notification');
+const User = require('../models/User');
+const { isEmailConfigured, getMailTransporter } = require('../utils/otp');
+const { emitToStaff } = require('../realtime');
 const { requirePermission, attachUserId } = require('../middleware/auth');
 const { IMAGE_TYPES, INVALID_TYPE_ERROR, uploadImage, sendStoredImage, removeUnusedProductImages } = require('../utils/images');
 
@@ -154,6 +158,38 @@ router.get('/reviews/admin', requirePermission('customers.view'), async (_req, r
 });
 
 // Admin — ẩn/hiện, phản hồi công khai, ghim 1 đánh giá.
+/**
+ * Shop vừa trả lời đánh giá: báo khách trên web (chuông thông báo) và qua email nếu server đã cấu hình
+ * SMTP và khách có email. Lỗi gửi thông báo không làm hỏng thao tác trả lời.
+ */
+async function notifyReviewReply(review, product, replyText) {
+  try {
+    const link = `/product/${product.slug}`;
+    await Notification.create({
+      userId: String(review.userId),
+      title: 'Luméa đã trả lời đánh giá của bạn',
+      message: `Về "${product.name}": ${replyText.slice(0, 140)}${replyText.length > 140 ? '…' : ''}`,
+      link,
+    });
+    if (!isEmailConfigured()) return;
+    const user = await User.findById(review.userId, { email: 1, fullName: 1 }).lean().catch(() => null);
+    if (!user?.email) return;
+    const esc = s => String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const shopUrl = (process.env.CLIENT_URL || 'http://localhost:4200') + link;
+    await getMailTransporter().sendMail({
+      from: process.env.MAIL_FROM || `"Luméa" <${process.env.SMTP_USER}>`,
+      to: user.email,
+      subject: `Luméa đã trả lời đánh giá của bạn về ${product.name}`,
+      html: `<p>Xin chào ${esc(user.fullName) || 'bạn'},</p>
+        <p>Luméa đã trả lời đánh giá của bạn về <strong>${esc(product.name)}</strong>:</p>
+        <blockquote style="border-left:3px solid #A3152D;margin:0;padding:6px 12px;color:#333">${esc(replyText)}</blockquote>
+        <p><a href="${shopUrl}">Xem đánh giá trên Luméa</a></p>`,
+    });
+  } catch (err) {
+    console.error('notify review reply error', err.message);
+  }
+}
+
 router.patch('/:id/reviews/:reviewId', requirePermission('customers.edit'), async (req, res) => {
   try {
     const product = await Product.findOne({ id: req.params.id });
@@ -167,14 +203,17 @@ router.patch('/:id/reviews/:reviewId', requirePermission('customers.edit'), asyn
       review.status = status;
       review.hiddenReason = status === 'HIDDEN' ? String(hiddenReason || '').trim() : '';
     }
+    let newReply = '';
     if (reply !== undefined) {
       const text = String(reply || '').trim();
+      if (text && text !== review.reply?.text) newReply = text;
       review.reply = text ? { text, date: new Date().toLocaleDateString('vi-VN') } : null;
     }
     if (pinned !== undefined) review.pinned = !!pinned;
 
     product.markModified('reviews');
     await product.save();
+    if (newReply && review.userId) await notifyReviewReply(review, product, newReply);
     res.json({ success: true, review: { ...review, productId: product.id, productName: product.name, productSlug: product.slug, productImage: (product.images || [])[0] || '' } });
   } catch (err) {
     sendError(res, err);
@@ -342,6 +381,8 @@ router.post('/:id/reviews', attachUserId, async (req, res) => {
 
     product.reviews.unshift(review);
     await product.save();
+    // Báo ngay cho nhân viên đang mở my-admin (chuông thông báo + toast).
+    emitToStaff('review:new', { productName: product.name, author, rating });
 
     // Tặng voucher cho đánh giá đầu tiên của user này trên đúng sản phẩm này.
     if (userId) {

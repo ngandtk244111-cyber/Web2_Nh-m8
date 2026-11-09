@@ -1,4 +1,5 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
+import { Subject } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { io, Socket } from 'socket.io-client';
 import { AdminAuthService } from './admin-auth.service';
@@ -66,6 +67,9 @@ export class ChatService {
   private typingStopTimer: ReturnType<typeof setTimeout> | null = null;
   private customerTypingTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
+  /** Khách vừa gửi đánh giá mới (server phát 'review:new' tới phòng staff). */
+  readonly newReview$ = new Subject<{ productName: string; author: string; rating: number }>();
+
   connect(): void {
     if (this.socket) return;
     this.socket = io(environment.socketUrl);
@@ -75,6 +79,7 @@ export class ChatService {
       this.typingSignal.set(new Set());
     });
     this.socket.on('chat:message', (message: ChatMessage) => this.onMessage(message));
+    this.socket.on('review:new', (review: { productName: string; author: string; rating: number }) => this.newReview$.next(review));
     this.socket.on('chat:presence-list', ({ sessionIds }: { sessionIds: string[] }) => this.onlineSignal.set(new Set(sessionIds)));
     this.socket.on('chat:presence', ({ sessionId, online }: { sessionId: string; online: boolean }) => {
       this.onlineSignal.update(set => this.toggleIn(set, sessionId, online));

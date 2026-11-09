@@ -7,6 +7,7 @@ import { ReviewService } from './review.service';
 import { CommunityService } from './community.service';
 import { ProductService } from './product.service';
 import { WarrantyService } from './warranty.service';
+import { ToastService } from './toast.service';
 
 /** Hàng có sẵn: ≤ 5 cái = sắp hết (đỏ), ≤ 20 cái = còn ít (vàng), trên 20 = còn nhiều (xanh). */
 export const LOW_STOCK_THRESHOLD = 5;
@@ -32,6 +33,15 @@ export class NoticeService {
   private community = inject(CommunityService);
   private products = inject(ProductService);
   private warranty = inject(WarrantyService);
+  private toast = inject(ToastService);
+
+  constructor() {
+    // Đánh giá mới: tải lại danh sách để chuông cập nhật số, và báo ngay cho nhân viên đang mở admin.
+    this.chat.newReview$.subscribe(r => {
+      this.reviews.refresh();
+      this.toast.info(`Đánh giá mới ${r.rating}★ của ${r.author} cho "${r.productName}"`);
+    });
+  }
 
   /** Tải dữ liệu nguồn theo quyền của tài khoản — gọi 1 lần khi vào layout. */
   loadSources(): void {
@@ -55,6 +65,7 @@ export class NoticeService {
       { perm: 'customers.view', label: 'Tin nhắn chưa đọc', count: this.chat.totalUnread(), link: '/messages', icon: 'bi-chat-dots' },
       { perm: 'custom3d.view', label: 'Yêu cầu in 3D chờ báo giá', count: this.customRequests.requests().filter(r => r.status === 'PENDING_REVIEW').length, link: '/custom-requests', query: { status: 'PENDING_REVIEW' }, icon: 'bi-printer' },
       { perm: 'orders.view', label: 'Yêu cầu bảo hành chờ xử lý', count: this.warranty.warranties().filter(w => w.status === 'CLAIMED').length, link: '/warranty', query: { status: 'CLAIMED' }, icon: 'bi-shield-exclamation' },
+      { perm: 'customers.view', label: 'Đánh giá mới chưa phản hồi', count: this.reviews.reviews().filter(r => r.status !== 'HIDDEN' && r.rating > 2 && !r.reply?.text).length, link: '/reviews', query: { filter: 'UNREPLIED' }, icon: 'bi-star' },
       { perm: 'customers.view', label: 'Đánh giá xấu chưa phản hồi', count: this.reviews.reviews().filter(r => r.status !== 'HIDDEN' && r.rating <= 2 && !r.reply?.text).length, link: '/reviews', icon: 'bi-star-half' },
       { perm: 'content.view', label: 'Bài cộng đồng bị chặn cần xem', count: this.community.posts().filter(p => p.status === 'REJECTED').length, link: '/community', query: { filter: 'REJECTED' }, icon: 'bi-camera' },
       { perm: 'inventory.view', label: 'Sản phẩm hết hoặc sắp hết hàng', count: products.filter(p => (p.inStock ?? 0) <= LOW_STOCK_THRESHOLD).length, link: '/inventory', query: { status: outOfStock ? 'OUT' : 'LOW' }, icon: 'bi-archive' },

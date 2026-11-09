@@ -18,4 +18,9 @@ function emitOrderUpdated(order) {
   io.to(orderRoom(order.orderNumber)).emit('order:updated', payload);
 }
 
-module.exports = { setIO, orderRoom, emitOrderUpdated };
+/** Báo cho mọi nhân viên đang mở my-admin (phòng "staff" của socket.js). */
+function emitToStaff(event, payload) {
+  if (io) io.to('staff').emit(event, payload);
+}
+
+module.exports = { setIO, orderRoom, emitOrderUpdated, emitToStaff };

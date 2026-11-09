@@ -1,5 +1,6 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ReviewService, AdminReview } from '../../core/services/review.service';
 import { AdminAuthService } from '../../core/services/admin-auth.service';
@@ -10,11 +11,12 @@ import { PagerComponent, pageSlice } from '../../components/pager/pager.componen
 import { environment } from '../../../environments/environment';
 
 /** Ưu tiên việc cần làm: đánh giá xấu chưa phản hồi. */
-export type ReviewFilter = 'NEEDS_ACTION' | 'UNREPLIED' | 'ALL' | 'PINNED' | 'HIDDEN';
+export type ReviewFilter = 'NEEDS_ACTION' | 'UNREPLIED' | 'REPLIED' | 'ALL' | 'PINNED' | 'HIDDEN';
 
 const FILTERS: { key: ReviewFilter; label: string; tone: string }[] = [
   { key: 'NEEDS_ACTION', label: 'Đánh giá xấu chưa phản hồi', tone: 'tone-danger' },
   { key: 'UNREPLIED', label: 'Chưa phản hồi', tone: 'tone-warning' },
+  { key: 'REPLIED', label: 'Đã phản hồi', tone: 'tone-success' },
   { key: 'ALL', label: 'Tất cả đánh giá', tone: '' },
   { key: 'PINNED', label: 'Đang ghim', tone: 'tone-info' },
   { key: 'HIDDEN', label: 'Đã ẩn', tone: 'tone-neutral' },
@@ -24,6 +26,7 @@ function matchesFilter(r: AdminReview, f: ReviewFilter): boolean {
   switch (f) {
     case 'NEEDS_ACTION': return r.status !== 'HIDDEN' && r.rating <= 2 && !r.reply?.text;
     case 'UNREPLIED': return r.status !== 'HIDDEN' && !r.reply?.text;
+    case 'REPLIED': return !!r.reply?.text;
     case 'PINNED': return !!r.pinned && r.status !== 'HIDDEN';
     case 'HIDDEN': return r.status === 'HIDDEN';
     default: return true;
@@ -40,6 +43,7 @@ function matchesFilter(r: AdminReview, f: ReviewFilter): boolean {
 })
 export class ReviewsComponent implements OnInit {
   private reviewService = inject(ReviewService);
+  private route = inject(ActivatedRoute);
   readonly adminAuth = inject(AdminAuthService);
   private toast = inject(ToastService);
   private audit = inject(AuditService);
@@ -91,6 +95,9 @@ export class ReviewsComponent implements OnInit {
   busy = false;
 
   ngOnInit(): void {
+    // Mở từ chuông thông báo: /reviews?filter=UNREPLIED
+    const f = this.route.snapshot.queryParamMap.get('filter') as ReviewFilter | null;
+    if (f && FILTERS.some(x => x.key === f)) this.filter.set(f);
     this.reviewService.refresh();
   }
 

@@ -11,6 +11,11 @@ const workshopReceiptSchema = new mongoose.Schema({
   qty: { type: Number, required: true, min: 1 },
   stockAfter: { type: Number, default: null },
   note: { type: String, default: '' },
+  // Hoá đơn / phiếu giao nhận / ảnh hàng hoá kèm lô hàng (routes/adminDocumentRoutes.js).
+  attachments: {
+    type: [{ id: String, name: String, contentType: String, size: Number, url: String, _id: false }],
+    default: [],
+  },
   by: { type: String, default: '' },
 }, { timestamps: true });
 

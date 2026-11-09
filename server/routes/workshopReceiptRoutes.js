@@ -2,6 +2,7 @@ const express = require('express');
 const { sendError } = require('../utils/http-error');
 const { requirePermission } = require('../middleware/auth');
 const { loadWorkshops } = require('../utils/workshops');
+const { resolveAttachments } = require('../utils/documents');
 const WorkshopReceipt = require('../models/WorkshopReceipt');
 const Product = require('../models/Product');
 const Admin = require('../models/Admin');
@@ -33,6 +34,11 @@ router.post('/', requirePermission('inventory.edit'), async (req, res) => {
     }
     const workshop = (await loadWorkshops()).find(w => w.id === String(req.body.workshopId || ''));
     if (!workshop) return res.status(400).json({ success: false, error: 'Vui lòng chọn xưởng giao hàng' });
+    // Lô hàng nhập phải có chứng từ (hoá đơn / phiếu giao nhận của xưởng) để đối soát công nợ.
+    const attachments = await resolveAttachments(req.body.attachments);
+    if (!attachments.length) {
+      return res.status(400).json({ success: false, error: 'Cần đính kèm ít nhất 1 chứng từ (hoá đơn, phiếu giao nhận của xưởng...)' });
+    }
 
     const product = await Product.findOneAndUpdate(
       { id: String(req.body.productId || ''), productionType: 'READY_STOCK' },
@@ -50,6 +56,7 @@ router.post('/', requirePermission('inventory.edit'), async (req, res) => {
       qty,
       stockAfter: product.inStock,
       note: String(req.body.note || '').trim().slice(0, 300),
+      attachments,
       by: admin ? admin.fullName || admin.username : '',
     });
     res.json({ success: true, receipt, product });

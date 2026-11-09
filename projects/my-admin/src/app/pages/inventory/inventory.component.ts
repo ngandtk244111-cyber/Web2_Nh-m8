@@ -7,14 +7,17 @@ import { OrderService } from '../../core/services/order.service';
 import { AdminAuthService } from '../../core/services/admin-auth.service';
 import { ToastService } from '../../core/services/toast.service';
 import { AuditService } from '../../core/services/audit.service';
-import { LOW_STOCK_THRESHOLD } from '../../core/services/notice.service';
+import { LOW_STOCK_THRESHOLD, MEDIUM_STOCK_THRESHOLD } from '../../core/services/notice.service';
+import { StockAdjustmentService } from '../../core/services/stock-adjustment.service';
+import { Attachment } from '../../core/services/document.service';
+import { AttachmentPickerComponent } from '../../components/attachment-picker/attachment-picker.component';
 import { PagerComponent, pageSlice } from '../../components/pager/pager.component';
 import { exportXlsx } from '../../shared/utils/export';
 import { AdminConfigService } from '../../core/services/admin-config.service';
 import { WorkshopReceiptService } from '../../core/services/workshop-receipt.service';
 import { Workshop, workshopFor } from '../../core/data/workshops';
 
-type StockStatus = 'SAFE' | 'LOW' | 'OUT';
+type StockStatus = 'SAFE' | 'MEDIUM' | 'LOW' | 'OUT';
 type StockFilter = 'ALL' | StockStatus;
 
 interface InventoryItem {
@@ -30,14 +33,22 @@ interface InventoryItem {
   workshop: string;
 }
 
-const STATUS_LABELS: Record<StockStatus, string> = { SAFE: 'An toàn', LOW: 'Sắp hết', OUT: 'Hết hàng' };
-const STATUS_CLASSES: Record<StockStatus, string> = { SAFE: 'status-green', LOW: 'status-yellow', OUT: 'status-red' };
+const STATUS_LABELS: Record<StockStatus, string> = { SAFE: 'Còn nhiều', MEDIUM: 'Còn ít', LOW: 'Sắp hết', OUT: 'Hết hàng' };
+const STATUS_CLASSES: Record<StockStatus, string> = { SAFE: 'status-green', MEDIUM: 'status-yellow', LOW: 'status-red', OUT: 'status-red' };
+
+/** 0 = hết hàng, 1–5 = sắp hết (đỏ), 6–20 = còn ít (vàng), trên 20 = còn nhiều (xanh). */
+function stockStatus(stock: number): StockStatus {
+  if (stock <= 0) return 'OUT';
+  if (stock <= LOW_STOCK_THRESHOLD) return 'LOW';
+  if (stock <= MEDIUM_STOCK_THRESHOLD) return 'MEDIUM';
+  return 'SAFE';
+}
 
 /** Tồn kho hàng có sẵn: tồn = inStock, đã bán = tổng số lượng trong đơn không huỷ/hoàn. */
 @Component({
   selector: 'app-inventory',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, PagerComponent],
+  imports: [CommonModule, FormsModule, RouterLink, PagerComponent, AttachmentPickerComponent],
   templateUrl: './inventory.component.html',
   styleUrl: './inventory.component.css',
 })
@@ -51,8 +62,10 @@ export class InventoryComponent implements OnInit {
   private audit = inject(AuditService);
   private config = inject(AdminConfigService);
   private receipts = inject(WorkshopReceiptService);
+  private adjustments = inject(StockAdjustmentService);
 
   readonly threshold = LOW_STOCK_THRESHOLD;
+  readonly mediumThreshold = MEDIUM_STOCK_THRESHOLD;
   readonly statusLabels = STATUS_LABELS;
   readonly statusClasses = STATUS_CLASSES;
 
@@ -82,7 +95,7 @@ export class InventoryComponent implements OnInit {
         soldCount: sold.get(p.id) || 0,
         workshopId: workshopFor(p, workshops)?.id || '',
         workshop: workshopFor(p, workshops)?.name || '—',
-        status: (p.inStock ?? 0) <= 0 ? 'OUT' : p.inStock <= LOW_STOCK_THRESHOLD ? 'LOW' : 'SAFE',
+        status: stockStatus(p.inStock ?? 0),
       } as InventoryItem))
       // Hết hàng / sắp hết lên đầu để thấy việc cần nhập trước
       .sort((a, b) => a.currentStock - b.currentStock);
@@ -106,8 +119,13 @@ export class InventoryComponent implements OnInit {
   inSource: 'WORKSHOP' | 'OTHER' = 'WORKSHOP';
   adjustWorkshopId = '';
   adjustNote = '';
+  /** Lý do tự nhập khi chọn "Khác". */
+  adjustOtherReason = '';
+  /** Chứng từ kèm lần nhập / xuất (bắt buộc ít nhất 1). */
+  adjustAttachments: Attachment[] = [];
   saving = signal(false);
-  readonly inReasons = ['Khách trả hàng nhập lại kho', 'Kiểm kê: thừa so với hệ thống'];
+  readonly otherReason = 'Khác (ghi rõ lý do)';
+  readonly inReasons = ['Khách trả hàng nhập lại kho', 'Kiểm kê: thừa so với hệ thống', 'Khác (ghi rõ lý do)'];
   readonly activeWorkshops = computed(() => (this.config.get<Workshop[]>('workshops') || []).filter(w => w.active !== false));
 
   /** Nhập từ xưởng gọi API kho riêng (cần quyền kho), không dùng quyền sửa sản phẩm. */
@@ -118,7 +136,12 @@ export class InventoryComponent implements OnInit {
   get fromWorkshop(): boolean {
     return this.adjustMode === 'IN' && this.inSource === 'WORKSHOP';
   }
-  readonly outReasons = ['Hàng lỗi / hư hỏng', 'Xuất trưng bày showroom', 'Kiểm kê: thiếu so với hệ thống', 'Xuất tặng / quà khuyến mãi'];
+  readonly outReasons = ['Hàng lỗi / hư hỏng', 'Xuất trưng bày showroom', 'Kiểm kê: thiếu so với hệ thống', 'Xuất tặng / quà khuyến mãi', 'Khác (ghi rõ lý do)'];
+
+  /** Lý do cuối cùng gửi lên server (chọn "Khác" thì lấy phần tự ghi). */
+  get finalReason(): string {
+    return this.adjustReason === this.otherReason ? this.adjustOtherReason.trim() : this.adjustReason;
+  }
 
   ngOnInit(): void {
     // Chuông thông báo / dashboard mở kèm ?status=LOW (gồm cả hết hàng) hoặc ?status=OUT
@@ -160,6 +183,8 @@ export class InventoryComponent implements OnInit {
     this.inSource = this.canReceiveFromWorkshop ? 'WORKSHOP' : 'OTHER';
     this.adjustWorkshopId = this.adjusting?.workshopId || this.activeWorkshops()[0]?.id || '';
     this.adjustNote = '';
+    this.adjustOtherReason = '';
+    this.adjustAttachments = [];
   }
 
   get adjustResult(): number | null {
@@ -176,12 +201,16 @@ export class InventoryComponent implements OnInit {
       this.toast.warning('Số lượng phải là số nguyên lớn hơn 0');
       return;
     }
+    if (!this.adjustAttachments.length) {
+      this.toast.warning('Cần đính kèm ít nhất 1 chứng từ (hoá đơn, phiếu giao nhận, ảnh hàng hoá...)');
+      return;
+    }
     if (this.fromWorkshop) {
       this.receiveFromWorkshop(item, qty);
       return;
     }
-    if (!this.adjustReason.trim()) {
-      this.toast.warning('Vui lòng ghi lý do điều chỉnh');
+    if (!this.finalReason) {
+      this.toast.warning('Vui lòng ghi rõ lý do điều chỉnh');
       return;
     }
     const next = this.adjustResult!;
@@ -190,17 +219,21 @@ export class InventoryComponent implements OnInit {
       return;
     }
     const delta = this.adjustMode === 'IN' ? qty : -qty;
+    const reason = this.finalReason;
     this.saving.set(true);
-    this.productService.updateProduct(item.id, { inStock: next }).subscribe({
-      next: () => {
+    this.adjustments.adjust({
+      productId: item.id, type: this.adjustMode, qty, reason, note: this.adjustNote.trim(), attachments: this.adjustAttachments,
+    }).subscribe({
+      next: product => {
         this.saving.set(false);
         this.adjusting = null;
-        this.toast.success(`Đã cập nhật tồn kho ${item.name}: ${next} cái`);
-        this.audit.record('Kho Hàng', 'Điều chỉnh tồn kho', `${item.name} (${item.id}): ${delta > 0 ? '+' : ''}${delta} — ${this.adjustReason.trim()}`, 'SUCCESS');
+        this.productService.refresh();
+        this.toast.success(`Đã cập nhật tồn kho ${item.name}: ${product.inStock} cái`);
+        this.audit.record('Kho Hàng', 'Điều chỉnh tồn kho', `${item.name} (${item.id}): ${delta > 0 ? '+' : ''}${delta} — ${reason}`, 'SUCCESS');
       },
       error: err => {
         this.saving.set(false);
-        this.toast.apiError(err, 'Không lưu được tồn kho lên server');
+        this.toast.apiError(err, 'Không lưu được điều chỉnh tồn kho');
       },
     });
   }
@@ -213,7 +246,7 @@ export class InventoryComponent implements OnInit {
       return;
     }
     this.saving.set(true);
-    this.receipts.receive({ workshopId: workshop.id, productId: item.id, qty, note: this.adjustNote.trim() }).subscribe({
+    this.receipts.receive({ workshopId: workshop.id, productId: item.id, qty, note: this.adjustNote.trim(), attachments: this.adjustAttachments }).subscribe({
       next: product => {
         this.saving.set(false);
         this.adjusting = null;
@@ -234,8 +267,8 @@ export class InventoryComponent implements OnInit {
       this.toast.warning('Không có mặt hàng nào để xuất');
       return;
     }
-    exportXlsx('lumea_ton_kho', ['Mã SP', 'Tên sản phẩm', 'Danh mục', 'Xưởng phụ trách', 'Tồn hiện tại', 'Ngưỡng cảnh báo', 'Đã bán', 'Trạng thái'],
-      rows.map(i => [i.id, i.name, i.category, i.workshop, i.currentStock, LOW_STOCK_THRESHOLD, i.soldCount, STATUS_LABELS[i.status]]), 'Tồn kho');
+    exportXlsx('lumea_ton_kho', ['Mã SP', 'Tên sản phẩm', 'Danh mục', 'Xưởng phụ trách', 'Tồn hiện tại', 'Đã bán', 'Trạng thái'],
+      rows.map(i => [i.id, i.name, i.category, i.workshop, i.currentStock, i.soldCount, STATUS_LABELS[i.status]]), 'Tồn kho');
     this.toast.success(`Đã xuất ${rows.length} mặt hàng ra file Excel`);
   }
 }

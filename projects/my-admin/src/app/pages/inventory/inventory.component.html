@@ -6,7 +6,7 @@
   <div class="page-header">
     <div>
       <h1 class="page-title">Tồn kho</h1>
-      <p class="page-subtitle">Hàng có sẵn: số lượng tồn, đã bán và nhập / xuất điều chỉnh. Sắp hết = còn ≤ {{ threshold }} cái.</p>
+      <p class="page-subtitle">Hàng có sẵn: số lượng tồn, đã bán và nhập / xuất điều chỉnh. Mỗi lần nhập / xuất cần lý do và chứng từ.</p>
     </div>
     <div class="header-actions">
       <button type="button" class="btn-header primary" (click)="exportExcel()"><i class="bi bi-file-earmark-excel"></i> Xuất Excel</button>
@@ -19,12 +19,19 @@
       <span class="stat-value">{{ count('ALL') }}</span>
     </button>
     <button type="button" class="stat-card tone-success" [class.active]="filter() === 'SAFE'" (click)="setFilter('SAFE')">
-      <span class="stat-label">Tồn an toàn</span>
+      <span class="stat-label">Còn nhiều</span>
       <span class="stat-value">{{ count('SAFE') }}</span>
+      <span class="stat-sub">trên {{ mediumThreshold }} cái</span>
     </button>
-    <button type="button" class="stat-card tone-warning" [class.active]="filter() === 'LOW'" (click)="setFilter('LOW')">
+    <button type="button" class="stat-card tone-warning" [class.active]="filter() === 'MEDIUM'" (click)="setFilter('MEDIUM')">
+      <span class="stat-label">Còn ít</span>
+      <span class="stat-value">{{ count('MEDIUM') }}</span>
+      <span class="stat-sub">{{ threshold + 1 }}–{{ mediumThreshold }} cái</span>
+    </button>
+    <button type="button" class="stat-card tone-danger" [class.active]="filter() === 'LOW'" (click)="setFilter('LOW')">
       <span class="stat-label">Sắp hết</span>
       <span class="stat-value">{{ count('LOW') }}</span>
+      <span class="stat-sub">1–{{ threshold }} cái</span>
     </button>
     <button type="button" class="stat-card tone-danger" [class.active]="filter() === 'OUT'" (click)="setFilter('OUT')">
       <span class="stat-label">Hết hàng</span>
@@ -135,8 +142,19 @@
           <select class="form-select" [(ngModel)]="adjustReason">
             <option *ngFor="let r of (adjustMode === 'IN' ? inReasons : outReasons)" [value]="r">{{ r }}</option>
           </select>
+          <input *ngIf="adjustReason === otherReason" class="form-control mt-2" maxlength="200"
+            [(ngModel)]="adjustOtherReason" placeholder="Ghi rõ lý do nhập / xuất">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Ghi chú</label>
+          <input class="form-control" [(ngModel)]="adjustNote" maxlength="500" placeholder="vd: mã phiếu kiểm kê, người giao hàng...">
         </div>
       </ng-template>
+      <div class="mb-3">
+        <label class="form-label">Chứng từ đính kèm <span class="req">*</span></label>
+        <app-attachment-picker [(attachments)]="adjustAttachments"
+          [label]="fromWorkshop ? 'Đính kèm hoá đơn / phiếu giao nhận của xưởng' : 'Đính kèm chứng từ (biên bản, hoá đơn, ảnh hàng hoá...)'"></app-attachment-picker>
+      </div>
       <div class="notice-box mb-0" [ngClass]="adjustResult !== null && adjustResult < 0 ? 'danger' : 'info'" *ngIf="adjustResult !== null">
         Tồn sau điều chỉnh: <b>{{ adjustResult }}</b> cái
         <span *ngIf="adjustResult < 0"> — vượt quá số đang có</span>
@@ -144,7 +162,7 @@
     </div>
     <div class="modal-footer">
       <button type="button" class="btn-cancel" (click)="adjusting = null">Huỷ</button>
-      <button type="button" class="btn-save" [disabled]="saving() || adjustResult === null || adjustResult < 0" (click)="submitAdjust()">
+      <button type="button" class="btn-save" [disabled]="saving() || adjustResult === null || adjustResult < 0 || !adjustAttachments.length" (click)="submitAdjust()">
         <i class="bi bi-check2"></i> Lưu điều chỉnh
       </button>
     </div>

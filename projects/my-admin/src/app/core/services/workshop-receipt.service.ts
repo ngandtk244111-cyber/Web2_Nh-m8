@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, map, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Product } from '../models/product.model';
+import { Attachment } from './document.service';
 
 const BASE = `${environment.apiUrl}/workshop-receipts`;
 
@@ -16,6 +17,7 @@ export interface WorkshopReceipt {
   qty: number;
   stockAfter: number | null;
   note: string;
+  attachments?: Attachment[];
   by: string;
   createdAt: string;
 }
@@ -39,7 +41,7 @@ export class WorkshopReceiptService {
   }
 
   /** Nhập kho từ xưởng: server cộng tồn kho và ghi lịch sử; trả về sản phẩm sau khi cộng. */
-  receive(input: { workshopId: string; productId: string; qty: number; note?: string }): Observable<Product> {
+  receive(input: { workshopId: string; productId: string; qty: number; note?: string; attachments: Attachment[] }): Observable<Product> {
     return this.http.post<{ success: boolean; receipt: WorkshopReceipt; product: Product }>(BASE, input).pipe(
       tap(res => this.receipts.update(list => [res.receipt, ...list])),
       map(res => res.product),

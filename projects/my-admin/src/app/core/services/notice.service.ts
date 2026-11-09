@@ -8,7 +8,9 @@ import { CommunityService } from './community.service';
 import { ProductService } from './product.service';
 import { WarrantyService } from './warranty.service';
 
+/** Hàng có sẵn: ≤ 5 cái = sắp hết (đỏ), ≤ 20 cái = còn ít (vàng), trên 20 = còn nhiều (xanh). */
 export const LOW_STOCK_THRESHOLD = 5;
+export const MEDIUM_STOCK_THRESHOLD = 20;
 
 export interface AdminNotice {
   label: string;

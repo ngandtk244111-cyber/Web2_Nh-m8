@@ -184,9 +184,18 @@
         <div class="span-2" *ngIf="w.note"><span class="cell-sub">Ghi chú</span>{{ w.note }}</div>
       </div>
 
+      <!-- Liên hệ nhanh với xưởng -->
+      <div class="ws-contact-actions">
+        <a *ngIf="w.phone" class="btn-header" [href]="telLink(w)"><i class="bi bi-telephone"></i> Gọi {{ w.phone }}</a>
+        <a *ngIf="w.phone" class="btn-header" [href]="zaloLink(w)" target="_blank" rel="noopener"><i class="bi bi-chat-dots"></i> Nhắn Zalo</a>
+        <a *ngIf="w.email" class="btn-header" [href]="'mailto:' + w.email"><i class="bi bi-envelope"></i> Gửi email</a>
+      </div>
+
       <div class="chip-tabs">
         <button type="button" class="chip-tab" [class.active]="detailTab() === 'products'" (click)="detailTab.set('products')">Sản phẩm phụ trách ({{ productCount(w) }})</button>
         <button type="button" class="chip-tab" [class.active]="detailTab() === 'receipts'" (click)="detailTab.set('receipts')">Lịch sử giao nhận ({{ detailReceipts().length }})</button>
+        <button type="button" class="chip-tab" [class.active]="detailTab() === 'contracts'" (click)="detailTab.set('contracts')">Hợp đồng ({{ w.contracts?.length || 0 }})</button>
+        <button type="button" class="chip-tab" [class.active]="detailTab() === 'contacts'" (click)="detailTab.set('contacts')">Trao đổi ({{ contacts().length }})</button>
       </div>
 
       <ng-container *ngIf="detailTab() === 'products'">
@@ -211,7 +220,7 @@
 
       <ng-container *ngIf="detailTab() === 'receipts'">
         <table class="admin-table" *ngIf="detailReceipts().length">
-          <thead><tr><th>Thời gian</th><th>Sản phẩm</th><th class="text-center">Số lượng</th><th class="text-center">Tồn sau nhập</th><th>Người nhận / ghi chú</th></tr></thead>
+          <thead><tr><th>Thời gian</th><th>Sản phẩm</th><th class="text-center">Số lượng</th><th class="text-center">Tồn sau nhập</th><th>Người nhận / ghi chú</th><th>Chứng từ</th></tr></thead>
           <tbody>
             <tr *ngFor="let r of detailReceipts()">
               <td>{{ r.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
@@ -219,10 +228,55 @@
               <td class="text-center">+{{ r.qty }}</td>
               <td class="text-center">{{ r.stockAfter ?? '—' }}</td>
               <td>{{ r.by || '—' }}<span class="cell-sub" *ngIf="r.note">{{ r.note }}</span></td>
+              <td>
+                <button type="button" class="ws-doc" *ngFor="let a of r.attachments || []" (click)="docs.open(a)" [title]="a.name">
+                  <i class="bi" [ngClass]="a.contentType === 'application/pdf' ? 'bi-file-earmark-pdf' : 'bi-file-earmark-image'"></i>
+                </button>
+                <span class="cell-sub" *ngIf="!r.attachments?.length">—</span>
+              </td>
             </tr>
           </tbody>
         </table>
         <div class="empty-state" *ngIf="!detailReceipts().length">Xưởng chưa giao lần nào. Nhập hàng ở trang Tồn kho → "Nhập" → "Từ xưởng".</div>
+      </ng-container>
+
+      <!-- Hợp đồng ký với xưởng -->
+      <ng-container *ngIf="detailTab() === 'contracts'">
+        <p class="small text-muted-2 mb-2">Lưu hợp đồng, phụ lục, bảng giá đã ký với xưởng (PDF hoặc ảnh scan) để đối chiếu quyền lợi hai bên khi nhập hàng.</p>
+        <app-attachment-picker [attachments]="w.contracts || []" (attachmentsChange)="saveContracts(w, $event)"
+          [disabled]="!canEdit || saving()" [max]="10" label="Tải lên hợp đồng / phụ lục (PDF)"></app-attachment-picker>
+      </ng-container>
+
+      <!-- Nhật ký trao đổi với xưởng -->
+      <ng-container *ngIf="detailTab() === 'contacts'">
+        <div class="ws-contact-form" *ngIf="canEdit">
+          <div class="chip-tabs mb-2">
+            <button type="button" class="chip-tab" *ngFor="let c of contactChannels" [class.active]="contactChannel === c.key" (click)="contactChannel = c.key">
+              <i class="bi" [ngClass]="c.icon"></i> {{ c.label }}
+            </button>
+          </div>
+          <textarea class="form-control mb-2" rows="3" maxlength="1000" [(ngModel)]="contactNote"
+            placeholder="Nội dung đã trao đổi: chốt số lượng, ngày giao, giá, sự cố..."></textarea>
+          <app-attachment-picker [(attachments)]="contactAttachments" label="Đính kèm (báo giá, ảnh mẫu...)"></app-attachment-picker>
+          <div class="text-end mt-2">
+            <button type="button" class="btn-save" [disabled]="savingContact() || !contactNote.trim()" (click)="addContact(w)"><i class="bi bi-journal-plus"></i> Lưu trao đổi</button>
+          </div>
+        </div>
+        <div class="ws-log">
+          <div class="ws-log__item" *ngFor="let c of contacts()">
+            <div class="ws-log__head">
+              <span><i class="bi" [ngClass]="channelIcon(c.channel)"></i> {{ channelLabel(c.channel) }}</span>
+              <span class="cell-sub">{{ c.by || 'Nhân viên' }} · {{ c.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+            </div>
+            <div class="ws-log__note">{{ c.note }}</div>
+            <div *ngIf="c.attachments?.length">
+              <button type="button" class="ws-doc" *ngFor="let a of c.attachments" (click)="docs.open(a)">
+                <i class="bi bi-paperclip"></i> {{ a.name }}
+              </button>
+            </div>
+          </div>
+          <div class="empty-state" *ngIf="!contacts().length">Chưa có lần trao đổi nào được ghi lại.</div>
+        </div>
       </ng-container>
     </div>
     <div class="modal-footer" *ngIf="canEdit">

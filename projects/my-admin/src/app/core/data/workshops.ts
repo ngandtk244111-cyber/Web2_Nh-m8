@@ -1,6 +1,8 @@
 import { Product } from '../models/product.model';
 
 /** Xưởng sản xuất đối tác — lưu ở cấu hình 'workshops' (server trả danh sách mặc định khi chưa lưu). */
+import { Attachment } from '../services/document.service';
+
 export interface Workshop {
   id: string;
   code: string;
@@ -15,6 +17,8 @@ export interface Workshop {
   leadDays: number;
   note: string;
   active: boolean;
+  /** Hợp đồng / phụ lục ký với xưởng (PDF, ảnh scan) — lưu ở kho chứng từ nội bộ. */
+  contracts?: Attachment[];
 }
 
 // Bảng này khớp với server/utils/workshops.js — sửa ở đây thì sửa cả bên đó.

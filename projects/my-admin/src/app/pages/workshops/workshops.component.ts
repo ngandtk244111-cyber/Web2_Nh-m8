@@ -12,15 +12,19 @@ import { SPECIALTY_KEYS, WORKSHOP_SPECIALTIES, Workshop, WorkshopSpecialty, spec
 import { Product } from '../../core/models/product.model';
 import { PagerComponent, pageSlice } from '../../components/pager/pager.component';
 import { exportXlsx } from '../../shared/utils/export';
+import { Attachment } from '../../core/services/document.service';
+import { CONTACT_CHANNELS, ContactChannel, WorkshopContactService } from '../../core/services/workshop-contact.service';
+import { AttachmentPickerComponent } from '../../components/attachment-picker/attachment-picker.component';
+import { DocumentService } from '../../core/services/document.service';
 
 type WorkshopFilter = 'ALL' | 'ACTIVE' | 'PAUSED';
-type DetailTab = 'products' | 'receipts';
+type DetailTab = 'products' | 'receipts' | 'contracts' | 'contacts';
 
 /** Xưởng sản xuất đối tác — lưu ở cấu hình 'workshops'. Sản phẩm tự gắn xưởng theo nhóm hàng. */
 @Component({
   selector: 'app-workshops',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, PagerComponent],
+  imports: [CommonModule, FormsModule, RouterLink, PagerComponent, AttachmentPickerComponent],
   templateUrl: './workshops.component.html',
   styleUrl: './workshops.component.css',
 })
@@ -29,6 +33,8 @@ export class WorkshopsComponent implements OnInit {
   readonly adminAuth = inject(AdminAuthService);
   private productService = inject(ProductService);
   private receiptService = inject(WorkshopReceiptService);
+  private contactService = inject(WorkshopContactService);
+  readonly docs = inject(DocumentService);
   private toast = inject(ToastService);
   private audit = inject(AuditService);
 
@@ -210,6 +216,72 @@ export class WorkshopsComponent implements OnInit {
     this.detailTab.set(tab);
     this.detailSearch.set('');
     this.detailPage.set(1);
+    this.contactNote = '';
+    this.contactAttachments = [];
+    this.contactService.load(w.id);
+  }
+
+  // ---- Liên hệ nhanh ----
+  /** Chỉ giữ chữ số; số bắt đầu bằng 84 thì đổi về 0 cho link Zalo. */
+  private digits(phone: string): string {
+    const d = (phone || '').replace(/\D/g, '');
+    return d.startsWith('84') ? '0' + d.slice(2) : d;
+  }
+
+  telLink(w: Workshop): string {
+    return 'tel:' + this.digits(w.phone);
+  }
+
+  zaloLink(w: Workshop): string {
+    return 'https://zalo.me/' + this.digits(w.phone);
+  }
+
+  // ---- Hợp đồng ----
+  /** Thêm / bỏ file hợp đồng: lưu ngay vào hồ sơ xưởng. */
+  saveContracts(w: Workshop, contracts: Attachment[]): void {
+    const next = this.workshops().map(x => x.id === w.id ? { ...x, contracts } : x);
+    this.persist(next, () => {
+      this.detail.set({ ...w, contracts });
+      this.toast.success('Đã cập nhật hợp đồng của xưởng');
+      this.audit.record('Xưởng Sản Xuất', 'Cập nhật hợp đồng', `${w.name}: ${contracts.length} file`, 'INFO');
+    });
+  }
+
+  // ---- Nhật ký trao đổi ----
+  readonly contactChannels = CONTACT_CHANNELS;
+  readonly contacts = this.contactService.contacts;
+  contactChannel: ContactChannel = 'PHONE';
+  contactNote = '';
+  contactAttachments: Attachment[] = [];
+  savingContact = signal(false);
+
+  channelLabel(key: ContactChannel): string {
+    return CONTACT_CHANNELS.find(c => c.key === key)?.label || 'Khác';
+  }
+
+  channelIcon(key: ContactChannel): string {
+    return CONTACT_CHANNELS.find(c => c.key === key)?.icon || 'bi-three-dots';
+  }
+
+  addContact(w: Workshop): void {
+    const note = this.contactNote.trim();
+    if (!note) {
+      this.toast.warning('Ghi nội dung đã trao đổi với xưởng');
+      return;
+    }
+    this.savingContact.set(true);
+    this.contactService.add({ workshopId: w.id, channel: this.contactChannel, note, attachments: this.contactAttachments }).subscribe({
+      next: () => {
+        this.savingContact.set(false);
+        this.contactNote = '';
+        this.contactAttachments = [];
+        this.toast.success('Đã lưu nội dung trao đổi');
+      },
+      error: err => {
+        this.savingContact.set(false);
+        this.toast.apiError(err, 'Không lưu được nội dung trao đổi');
+      },
+    });
   }
 
   exportExcel(): void {

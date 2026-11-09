@@ -61,17 +61,6 @@ export class HomeComponent implements OnInit {
   @ViewChild(RoomViewerComponent) roomViewer?: RoomViewerComponent;
   communityPosts: any[] = [];
 
-  /** Dải chữ chạy ngang giữa trang — không ghi số tiền/mốc freeship để tránh lệch với trang chính sách. */
-  readonly marqueeItems = [
-    'Nội thất & Decor',
-    'Sofa · Giường · Bàn · Ghế · Tủ · Kệ',
-    'Sản phẩm in 3D theo yêu cầu',
-    'Shop The Room 3D',
-    'Xem trước mô hình 3D',
-    'Thiết kế cùng trợ lý AI',
-    'Giao hàng toàn quốc',
-  ];
-
   /**
    * Danh mục trang chủ — lấy từ cây danh mục chung (core/data/catalog-taxonomy.ts), cùng nguồn với
    * mega menu & bộ lọc: 6 nhóm nội thất chính trước, sau đó Đèn, Decor, 3D & Custom.

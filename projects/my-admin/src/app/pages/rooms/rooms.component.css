@@ -17,10 +17,15 @@
   text-overflow: ellipsis;
 }
 
+/* <fieldset> mặc định không co trong flex (min-height = cao nội dung) -> phần thân form tràn,
+   bị .modal-box cắt mất: không cuộn được, nút Lưu/Huỷ ở chân form bị đẩy ra ngoài.
+   min-height: 0 + flex cho phép co lại để overflow-y: auto của .modal-body hoạt động. */
 fieldset.modal-body {
   border: 0;
   margin: 0;
   min-width: 0;
+  min-height: 0;
+  flex: 1 1 auto;
 }
 
 .cover-box {

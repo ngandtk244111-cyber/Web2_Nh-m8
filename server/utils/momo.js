@@ -44,7 +44,8 @@ async function createMomoPayment({ orderId, amount, orderInfo, requestType = 'ca
     signature,
   };
 
-  const { data } = await axios.post(process.env.MOMO_ENDPOINT, body);
+  // Có hạn chờ: cổng không phản hồi thì báo lỗi sớm (dev chuyển sang trang thanh toán thử) thay vì treo ~20s.
+  const { data } = await axios.post(process.env.MOMO_ENDPOINT, body, { timeout: 10000 });
   return data;
 }
 

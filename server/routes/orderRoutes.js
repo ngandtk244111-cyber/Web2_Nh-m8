@@ -522,6 +522,22 @@ router.patch('/:orderNumber/confirm-phone', requirePermission('orders.edit'), as
   }
 });
 
+// Admin: gọi xác nhận nhưng khách không nghe máy — ghi lại để gọi lại sau, chưa huỷ đơn ngay.
+router.patch('/:orderNumber/call-failed', requirePermission('orders.edit'), async (req, res) => {
+  try {
+    const order = await loadOpenOrder(req, res);
+    if (!order) return;
+    if (order.status !== 'PENDING' || order.phoneConfirmedAt) {
+      return res.status(400).json({ success: false, error: 'Đơn này không còn chờ gọi xác nhận' });
+    }
+    order.failedCallsAt.push(new Date());
+    await order.save();
+    res.json({ success: true, order });
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
 // Admin: hãng vận chuyển phù hợp cho đơn (hàng cồng kềnh? nội thành hay liên tỉnh?).
 router.get('/:orderNumber/shipping-options', requirePermission('orders.view'), async (req, res) => {
   try {

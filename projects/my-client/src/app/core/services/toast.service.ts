@@ -29,7 +29,7 @@ export class ToastService {
   }
 
   info(message: string, durationMs = 3000): void {
-    this.push(message, 'info', 'sparkles', durationMs);
+    this.push(message, 'info', '', durationMs);
   }
 
   /** Thông báo thêm giỏ hàng — hiển thị riêng ở giữa phía trên màn hình. */

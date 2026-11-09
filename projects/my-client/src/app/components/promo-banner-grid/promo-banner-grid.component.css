@@ -124,52 +124,46 @@
   background: #d9c9b0;
 }
 
-/* Ảnh gốc có lề trắng + khung bo góc riêng: cắt đúng phần tranh (1450x754 trong ảnh 1498x1050)
-   và dùng đơn vị cq để luôn "cover" kể cả khi thẻ đổi tỉ lệ trên mobile. */
 .pg_photo__frame {
   position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: max(100cqw, calc(100cqh * 1.9231));
-  height: max(100cqh, calc(100cqw / 1.9231));
+  inset: 0;
   transition: transform 0.6s ease;
 }
 
 .pg_photo:hover .pg_photo__frame {
-  transform: translate(-50%, -50%) scale(1.04);
+  transform: scale(1.04);
 }
 
+/* Ảnh phòng ngủ: giường nằm bên phải, chữ đặt bên trái nên neo ảnh lệch phải */
 .pg_photo__img {
-  position: absolute;
-  max-width: none;
-  width: 103.31%;
-  height: 139.26%;
-  left: -1.655%;
-  top: -19.89%;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 70% 55%;
   display: block;
 }
 
+/* Ảnh nền sáng: phủ nâu đỏ đậm từ trái + đáy để chữ trắng luôn đọc rõ */
 .pg_photo__shade {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(to top, rgba(24, 16, 12, 0.86) 0%, rgba(24, 16, 12, 0.4) 42%, rgba(24, 16, 12, 0) 72%);
+    linear-gradient(90deg, rgba(43, 14, 18, 0.88) 0%, rgba(43, 14, 18, 0.62) 38%, rgba(43, 14, 18, 0.12) 68%, rgba(43, 14, 18, 0) 82%),
+    linear-gradient(to top, rgba(43, 14, 18, 0.55) 0%, rgba(43, 14, 18, 0) 45%);
 }
 
-/* Che luôn icon nhà đã "in" sẵn trong ảnh gốc */
 .pg_chip--icon {
   position: absolute;
-  top: 4px;
-  left: 8px;
-  width: 52px;
-  height: 52px;
-  border-radius: 16px;
+  top: 18px;
+  left: 20px;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #ffffff;
-  background: rgba(43, 33, 28, 0.92);
+  background: #A3152D;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
 }
 
@@ -178,9 +172,30 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  max-width: 476px;
+  align-items: flex-start;
+  gap: 6px;
+  max-width: 420px;
   padding: 26px 28px;
+}
+
+.pg_photo__text .pg_eyebrow {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+  letter-spacing: 0.1em;
+}
+
+.pg_photo__text .pg_title {
+  font-size: 28px;
+  font-weight: 800;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+}
+
+.pg_photo__text .pg_desc {
+  color: rgba(255, 255, 255, 0.92);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.35);
 }
 
 /* ---------- Thẻ ưu đãi + mascot ---------- */
@@ -348,8 +363,14 @@
   }
 
   .pg_title,
-  .pg_title--promo {
+  .pg_title--promo,
+  .pg_photo__text .pg_title {
     font-size: 22px;
+  }
+
+  /* Thẻ dọc trên mobile: chữ nằm dưới đáy nên phủ đậm từ dưới lên thay vì từ trái */
+  .pg_photo__shade {
+    background: linear-gradient(to top, rgba(43, 14, 18, 0.9) 0%, rgba(43, 14, 18, 0.55) 45%, rgba(43, 14, 18, 0.05) 80%);
   }
 
   .pg_wide {

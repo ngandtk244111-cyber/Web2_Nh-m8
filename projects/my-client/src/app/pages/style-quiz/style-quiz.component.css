@@ -461,6 +461,7 @@
 }
 
 .quiz-preview__img {
+  position: relative;
   aspect-ratio: 1;
   border-radius: 10px;
   overflow: hidden;
@@ -512,4 +513,321 @@
 
 .quiz-preview__all:hover {
   text-decoration: underline;
+}
+
+/* ======================================================================
+   Trang kết quả chi tiết: tỉ lệ phong cách, đặc điểm, bí quyết, bộ phối sẵn, bước tiếp theo
+   ====================================================================== */
+.qr-block {
+  margin-bottom: 28px;
+}
+
+.qr-heading {
+  margin: 0 0 10px;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--qz-text);
+}
+
+.qr-note {
+  margin: 0 0 12px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--qz-text-muted);
+}
+
+.qr-note strong {
+  color: var(--qz-text);
+}
+
+.qr-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 28px;
+}
+
+@media (max-width: 640px) {
+  .qr-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Thanh tỉ lệ % */
+.qr-score {
+  display: grid;
+  grid-template-columns: 96px 1fr 44px;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-size: 13.5px;
+}
+
+.qr-score__label {
+  font-weight: 600;
+  color: var(--qz-text);
+}
+
+.qr-score__track {
+  height: 10px;
+  border-radius: 999px;
+  background: #F1ECE6;
+  overflow: hidden;
+}
+
+.qr-score__bar {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: #C9B8AE;
+  transition: width 0.6s ease;
+}
+
+.qr-score__bar--top {
+  background: var(--qz-accent);
+}
+
+.qr-score__pct {
+  text-align: right;
+  font-weight: 700;
+  color: var(--qz-text);
+}
+
+/* Danh sách đặc điểm / bí quyết / nên tránh */
+.qr-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: #333333;
+}
+
+.qr-list li {
+  position: relative;
+  padding-left: 26px;
+}
+
+.qr-list--check li::before,
+.qr-list--x li::before {
+  position: absolute;
+  left: 0;
+  top: 1px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.qr-list--check li::before {
+  content: '✓';
+  background: #E7F4EC;
+  color: #1F7A45;
+}
+
+.qr-list--x li::before {
+  content: '✕';
+  background: #FDECEF;
+  color: var(--qz-accent);
+}
+
+.qr-list--num {
+  counter-reset: tip;
+}
+
+.qr-list--num li {
+  counter-increment: tip;
+}
+
+.qr-list--num li::before {
+  content: counter(tip);
+  position: absolute;
+  left: 0;
+  top: 1px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--qz-accent);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Bảng màu kèm mã */
+.qr-palette {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.qr-swatch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.qr-swatch__chip {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.qr-swatch__hex {
+  font-size: 11.5px;
+  font-family: ui-monospace, 'Consolas', monospace;
+  color: var(--qz-text-muted);
+}
+
+/* Bộ phối sẵn */
+.qr-combo__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.qr-combo__total {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: 12px;
+  color: var(--qz-text-muted);
+}
+
+.qr-combo__total strong {
+  font-size: 20px;
+  color: var(--qz-accent);
+}
+
+.qr-combo {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@media (max-width: 720px) {
+  .qr-combo {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.qr-card {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 8px 12px;
+  border: 1px solid #EEE6DE;
+  border-radius: 14px;
+  background: #ffffff;
+  text-decoration: none;
+  transition: border-color 0.15s ease, transform 0.2s ease;
+}
+
+.qr-card:hover {
+  border-color: var(--qz-border);
+  transform: translateY(-2px);
+}
+
+.qr-card__img {
+  aspect-ratio: 1;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #F2EBE0;
+  margin-bottom: 4px;
+}
+
+.qr-card__cat {
+  font-size: 11px;
+  color: var(--qz-text-muted);
+}
+
+.qr-card__name {
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--qz-text);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.qr-card__price {
+  margin-top: auto;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--qz-accent);
+}
+
+.qr-combo__add {
+  margin-top: 14px;
+}
+
+/* Nhãn "Đúng gu" trên ảnh sản phẩm */
+.qr-match {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  z-index: 2;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--qz-accent);
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+/* Bước tiếp theo */
+.qr-next {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@media (max-width: 720px) {
+  .qr-next {
+    grid-template-columns: 1fr;
+  }
+}
+
+.qr-next__item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 1px solid #EEE6DE;
+  border-radius: 14px;
+  background: #ffffff;
+  text-align: left;
+  text-decoration: none;
+  font: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.qr-next__item:hover {
+  border-color: var(--qz-accent);
+}
+
+.qr-next__item strong {
+  font-size: 14px;
+  color: var(--qz-text);
+}
+
+.qr-next__item span {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--qz-text-muted);
 }

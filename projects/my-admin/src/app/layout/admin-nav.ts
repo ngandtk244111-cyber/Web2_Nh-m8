@@ -50,6 +50,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { path: 'banners', label: 'Banner trang chủ', icon: 'bi-image', perm: 'marketing.view' },
       { path: 'articles', label: 'Tin tức', icon: 'bi-newspaper', perm: 'content.view' },
       { path: 'videos', label: 'Video', icon: 'bi-play-btn', perm: 'content.view' },
+      { path: 'style-quiz', label: 'Trắc nghiệm phong cách', icon: 'bi-ui-checks', perm: 'content.view' },
       { path: 'community', label: 'Cộng đồng', icon: 'bi-camera', perm: 'content.view' },
       { path: 'rooms', label: 'Phòng mẫu 3D', icon: 'bi-house-door', perm: 'content.view' },
     ],

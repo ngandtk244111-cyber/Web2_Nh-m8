@@ -14,6 +14,13 @@
     </div>
   </div>
 
+  <!-- Mở từ trang khách hàng nhưng khách chưa từng chat: phiên chat gắn với trình duyệt của khách nên không nhắn trước được -->
+  <div class="notice-box warning d-flex align-items-center gap-2 flex-wrap" *ngIf="noChatForPhone()">
+    <i class="bi bi-chat-square-dots"></i>
+    <span>Khách {{ noChatForPhone() }} chưa từng nhắn tin qua khung chat trên cửa hàng, nên chưa thể nhắn trước. Hãy gọi điện cho khách.</span>
+    <a class="btn-header primary ms-auto" [href]="'tel:' + noChatForPhone()"><i class="bi bi-telephone"></i> Gọi khách</a>
+  </div>
+
   <div class="chat-shell">
     <!-- Danh sách cuộc chat -->
     <aside class="session-pane" [class.mobile-hidden]="chat.activeSessionId()">

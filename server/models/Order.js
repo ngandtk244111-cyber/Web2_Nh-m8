@@ -109,6 +109,8 @@ const orderSchema = new mongoose.Schema({
   // Đơn cũ không có trường này coi như phải gọi.
   phoneConfirmRequired: { type: Boolean, default: true },
   phoneConfirmedBy: { type: String, default: null },
+  // Các lần nhân viên gọi xác nhận nhưng không liên lạc được khách — đủ số lần mới gợi ý huỷ đơn.
+  failedCallsAt: { type: [Date], default: [] },
   // Shipper đã thu tiền COD khi giao thành công; tiền còn nằm ở hãng vận chuyển tới khi đối soát
   // (lúc đó nhân viên xác nhận → paymentStatus PAID).
   codCollectedAt: { type: Date, default: null },

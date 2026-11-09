@@ -5,7 +5,7 @@
     [class.toast-item--success]="t.type === 'success'"
     [class.toast-item--error]="t.type === 'error'"
     [class.toast-item--info]="t.type === 'info'">
-    <span class="toast-item__icon">
+    <span *ngIf="t.icon" class="toast-item__icon">
       <app-icon [name]="t.icon" [size]="16"></app-icon>
     </span>
     <span class="toast-item__msg">{{ t.message }}</span>

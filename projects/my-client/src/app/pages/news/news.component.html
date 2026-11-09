@@ -1,18 +1,25 @@
-    <!-- ================= TRANG CHI TIẾT BÀI VIẾT (layout theo blog Nitori) ================= -->
+    <!-- ================= TRANG CHI TIẾT BÀI VIẾT (bố cục bài báo: cột đọc + cột "Xem nhiều") ================= -->
     <div *ngIf="selectedArticle as art" class="na">
 
       <nav class="na-crumb" aria-label="Breadcrumb">
-        <a routerLink="/">Trang chủ</a><span>/</span>
-        <a routerLink="/news">Tin tức</a><span>/</span>
-        <a routerLink="/news">{{ art.category }}</a><span>/</span>
+        <a routerLink="/">Trang chủ</a><span aria-hidden="true">›</span>
+        <a routerLink="/news">Tin tức</a><span aria-hidden="true">›</span>
+        <a routerLink="/news">{{ art.category }}</a><span aria-hidden="true">›</span>
         <b>{{ art.title }}</b>
       </nav>
 
       <div class="na-layout">
         <!-- Cột chính -->
         <article class="na-main">
+          <a routerLink="/news" class="na-cat">{{ art.category }}</a>
           <h1 class="na-title">{{ art.title }}</h1>
-          <p class="na-meta">{{ art.publishedAt }} · {{ art.readTime }} · {{ art.author.name }}</p>
+          <p class="na-meta">
+            <span class="na-meta__author">{{ art.author.name }}</span>
+            <span aria-hidden="true">·</span>
+            <span>{{ art.publishedAt }}</span>
+            <span aria-hidden="true">·</span>
+            <span>{{ art.readTime }}</span>
+          </p>
           <p class="na-lead">{{ art.excerpt }}</p>
 
           <figure class="na-figure">
@@ -33,48 +40,37 @@
             </ul>
           </ng-container>
 
-          <div *ngIf="art.videoUrl" class="na-video">
-            <p class="na-video__title">Video hậu trường chế tác</p>
-            <div class="na-video__frame">
-              <app-icon name="cube" [size]="34"></app-icon>
-              <span>Video clip đang được cập nhật</span>
-            </div>
-          </div>
-
-          <!-- Tổng quan sản phẩm -->
+          <!-- Sản phẩm nhắc tới trong bài -->
           <ng-container *ngIf="taggedProducts.length > 0">
-            <h2 class="na-bar">Tổng quan sản phẩm</h2>
+            <h2 class="na-bar">Sản phẩm trong bài viết</h2>
 
-            <section *ngFor="let p of taggedProducts" class="na-product">
-              <h3 class="na-product__name">{{ p.name }}</h3>
-              <a [routerLink]="['/product', p.slug]" class="na-product__img" [attr.aria-label]="'Xem ' + p.name">
-                <img [src]="p.images[0]" [alt]="p.name" loading="lazy">
-              </a>
-              <p class="na-p">
-                &lt;Đặc điểm sản phẩm&gt;<br>
-                {{ p.description }}<br>
-                &lt;Chất liệu&gt;<br>
-                {{ p.materialInfo }}<br>
-                {{ p.dimensions }}: <strong>{{ p.basePrice | vnd }}</strong>
-              </p>
-            </section>
-
-            <div class="na-thumbs">
-              <a *ngFor="let p of taggedProducts" [routerLink]="['/product', p.slug]" class="na-thumb">
+            <a *ngFor="let p of taggedProducts" [routerLink]="['/product', p.slug]" class="na-product">
+              <span class="na-product__img">
                 <app-product-photo [images]="p.images" [alt]="p.name" ratio="1 / 1"></app-product-photo>
-                <span class="na-thumb__cap">{{ p.name }}</span>
-                <strong class="na-thumb__price">{{ p.basePrice | vnd }}</strong>
-              </a>
-            </div>
+              </span>
+              <span class="na-product__body">
+                <span class="na-product__name">{{ p.name }}</span>
+                <span *ngIf="p.description" class="na-product__desc">{{ p.description }}</span>
+                <span class="na-product__specs">
+                  <span *ngIf="p.materialInfo"><b>Chất liệu:</b> {{ p.materialInfo }}</span>
+                  <span *ngIf="p.dimensions"><b>Kích thước:</b> {{ p.dimensions }}</span>
+                </span>
+                <span class="na-product__foot">
+                  <strong class="na-product__price">{{ p.basePrice | vnd }}</strong>
+                  <span class="na-product__cta">Xem sản phẩm <app-icon name="chevron-right" [size]="13"></app-icon></span>
+                </span>
+              </span>
+            </a>
           </ng-container>
 
-          <ul class="na-notes">
-            <li>Đây là trang giới thiệu; vui lòng liên hệ Luméa qua hotline <a href="tel:18006928">1800 6928</a> hoặc khung chat hỗ trợ để được tư vấn thêm.</li>
-            <li>Sản phẩm có thể hết hàng tùy thời điểm; tình trạng tồn kho được hiển thị trên trang sản phẩm.</li>
-            <li>Màu sắc sản phẩm có thể chênh lệch nhẹ so với thực tế do màn hình hiển thị.</li>
-          </ul>
-
-          <p class="na-author">{{ art.author.name }}</p>
+          <aside class="na-notes" aria-label="Lưu ý">
+            <p class="na-notes__title">Lưu ý</p>
+            <ul>
+              <li>Thông tin trong bài mang tính tham khảo; liên hệ Luméa qua hotline <a href="tel:18006928">1800 6928</a> hoặc khung chat hỗ trợ để được tư vấn thêm.</li>
+              <li>Tình trạng tồn kho được cập nhật trên trang sản phẩm.</li>
+              <li>Màu sắc sản phẩm có thể chênh lệch nhẹ so với thực tế do màn hình hiển thị.</li>
+            </ul>
+          </aside>
 
           <!-- Thanh thao tác cuối bài -->
           <div class="na-actions">
@@ -82,7 +78,7 @@
               <app-icon name="chevron-left" [size]="14"></app-icon> Trở lại Tin tức
             </a>
             <button type="button" class="na-actions__btn" (click)="shareArticle(art)">
-              <app-icon name="share-2" [size]="14"></app-icon> Chia sẻ
+              <app-icon name="send" [size]="14"></app-icon> Chia sẻ
             </button>
           </div>
 
@@ -112,12 +108,12 @@
 
         <!-- Cột phải: bài xem nhiều -->
         <aside class="na-side" aria-label="Bài viết xem nhiều">
-          <h2 class="na-side__title">Xem nhiều</h2>
+          <h2 class="na-side__title">Bài viết xem nhiều</h2>
           <a *ngFor="let a of otherArticles" [routerLink]="['/news', a.slug]" class="na-side__item">
             <span class="na-side__img"><img [src]="a.coverImage" [alt]="a.title" loading="lazy"></span>
             <span class="na-side__body">
-              <span class="na-side__date">{{ a.publishedAt }}</span>
               <span class="na-side__text">{{ a.title }}</span>
+              <span class="na-side__date">{{ a.publishedAt }}</span>
             </span>
           </a>
         </aside>

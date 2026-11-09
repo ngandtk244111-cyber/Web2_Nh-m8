@@ -116,6 +116,10 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/videos/videos.component').then(m => m.VideosComponent),
       },
       {
+        path: 'style-quiz', data: { title: 'Trắc nghiệm phong cách', perm: 'content.view' },
+        loadComponent: () => import('./pages/style-quiz/style-quiz.component').then(m => m.StyleQuizComponent),
+      },
+      {
         path: 'community', data: { title: 'Cộng đồng', perm: 'content.view' },
         loadComponent: () => import('./pages/community/community.component').then(m => m.CommunityComponent),
       },

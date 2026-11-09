@@ -46,8 +46,6 @@ export interface CatalogLink {
 }
 
 const img = (id: string, w = 480) => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=${w}&q=70`;
-/** Minh hoạ 3D tông kem có sẵn trong assets (cùng bộ với trang chủ). */
-const art = (name: string) => `assets/categories/${name}.png`;
 
 export const CATALOG_DEPARTMENTS: CatalogDepartment[] = [
   {
@@ -82,9 +80,9 @@ export const CATALOG_DEPARTMENTS: CatalogDepartment[] = [
     description: 'Bình hoa, tượng, chậu cây, khung ảnh — hoàn thiện cá tính cho căn phòng.',
     image: img('1513519245088-0e12902e5a38'),
     subcategories: [
-      { key: 'do-trang-tri', label: 'Đồ trang trí', image: art('phong-cach'), categories: ['vase', 'candle_holder', 'clock'] },
-      { key: 'tuong-figure', label: 'Tượng & figure', image: art('tuong-mo-hinh'), categories: ['sculpture'] },
-      { key: 'chau-cay', label: 'Chậu cây', image: art('chau-cay'), categories: ['plant_pot'] },
+      { key: 'do-trang-tri', label: 'Đồ trang trí', image: img('1612196808214-b8e1d6145a8c'), categories: ['vase', 'candle_holder', 'clock'] },
+      { key: 'tuong-figure', label: 'Tượng & figure', image: img('1618220048045-10a6dbdf83e0'), categories: ['sculpture'] },
+      { key: 'chau-cay', label: 'Chậu cây', image: img('1485955900006-10f4d324d411'), categories: ['plant_pot'] },
       { key: 'khung-anh', label: 'Khung ảnh', image: img('1543487945-139a97f387d5'), categories: ['frame'] },
     ],
   },
@@ -94,8 +92,8 @@ export const CATALOG_DEPARTMENTS: CatalogDepartment[] = [
     description: 'Khay, hộp đựng, giá đỡ — phụ kiện decor gọn gàng cho bàn làm việc.',
     image: img('1524758631624-e2822e304c36'),
     subcategories: [
-      { key: 'khay-hop-dung', label: 'Khay & hộp đựng', image: art('phu-kien'), categories: ['organizer', 'tray'] },
-      { key: 'gia-do', label: 'Giá đỡ & bookend', image: art('decor-ban'), categories: ['bookend'] },
+      { key: 'khay-hop-dung', label: 'Khay & hộp đựng', image: img('1610701596007-11502861dcfa'), categories: ['organizer', 'tray'] },
+      { key: 'gia-do', label: 'Giá đỡ & bookend', image: img('1532372320572-cda25653a26d'), categories: ['bookend'] },
     ],
   },
 ];
@@ -146,7 +144,7 @@ export const MATERIAL_GROUPS: { key: string; label: string; keywords: string[] }
 
 /** Nhánh 3D & Custom trong mega menu — chỉ trỏ tới route/filter có thật. */
 export const THREE_D_CUSTOM_LINKS: CatalogLink[] = [
-  { label: 'Sản phẩm in 3D', link: '/catalog', queryParams: { print: '1' }, image: art('3d-custom') },
+  { label: 'Sản phẩm in 3D', link: '/catalog', queryParams: { print: '1' }, image: img('1563520239648-a24e51d4b570') },
   { label: 'Đặt làm theo yêu cầu', link: '/custom-request/new', image: img('1584589167171-541ce45f1eea') },
   { label: 'Xem sản phẩm 3D', link: '/catalog', queryParams: { has3d: '1' }, image: 'assets/floating-banners/ai-room-3d.png' },
   { label: 'Space Builder', link: '/shop-the-room', image: 'assets/promo-banner/room-3d-collection.png' },

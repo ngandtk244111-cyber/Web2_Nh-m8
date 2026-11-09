@@ -4,9 +4,13 @@
   (click)="toggle()"
   type="button"
   class="scw_fab"
+  [class.scw_fab--unread]="chatService.unreadCount() > 0"
   title="Hỗ trợ"
-  aria-label="Mở khung chat hỗ trợ">
+  [attr.aria-label]="chatService.unreadCount() > 0 ? 'Mở khung chat hỗ trợ — ' + chatService.unreadCount() + ' tin nhắn mới' : 'Mở khung chat hỗ trợ'">
   <app-icon name="message" [size]="24"></app-icon>
+  <span *ngIf="chatService.unreadCount() > 0" class="scw_badge" aria-hidden="true">
+    {{ chatService.unreadCount() > 9 ? '9+' : chatService.unreadCount() }}
+  </span>
 </button>
 
 <!-- Chat panel -->

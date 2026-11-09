@@ -13,7 +13,7 @@
       <span class="hb_blob hb_blob--2" aria-hidden="true"></span>
 
       <!-- Cụm sản phẩm thật ở giữa banner -->
-      <div class="hb_products" *ngIf="picks()[item.art.picks] as list" [class.hb_products--empty]="!list.length" aria-hidden="true">
+      <div class="hb_products" *ngIf="picks()[i] as list" [class.hb_products--empty]="!list.length" aria-hidden="true">
         <div *ngFor="let p of list; let k = index" [class]="'hb_prod hb_prod--' + k">
           <img [src]="p.images[0]" alt="" loading="lazy" draggable="false">
           <span class="hb_prod__tag" *ngIf="discountOf(p) as d; else priceTag">-{{ d }}%</span>

@@ -200,8 +200,20 @@ export class OrderDetailComponent implements OnInit {
     this.apply(this.orderService.confirmPhone(o.orderNumber), `Đã xác nhận đơn ${o.orderNumber} với khách`, 'Gọi xác nhận đơn COD');
   }
 
-  /** Không gọi được khách: mở sẵn ô huỷ với lý do tương ứng. */
-  cannotReach(): void {
+  /** Gọi không được: ghi nhận lần gọi để gọi lại sau; đủ maxFailedCalls lần mới gợi ý huỷ đơn. */
+  readonly maxFailedCalls = 3;
+
+  cannotReach(o: Order): void {
+    const n = (o.failedCallsAt?.length || 0) + 1;
+    this.apply(this.orderService.callFailed(o.orderNumber), `Đã ghi nhận lần gọi thứ ${n} không liên lạc được`, 'Gọi xác nhận đơn COD: không liên lạc được', 'INFO');
+  }
+
+  lastFailedCall(o: Order): string | null {
+    const calls = o.failedCallsAt || [];
+    return calls.length ? calls[calls.length - 1] : null;
+  }
+
+  cancelUnreachable(): void {
     this.cancelling = true;
     this.cancelReason = 'Không liên lạc được khách';
   }

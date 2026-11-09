@@ -748,59 +748,6 @@
   .str_ribbon span + span { border-left: 0; }
 }
 
-/* ---------- Dải chữ chạy ngang (marquee) ---------- */
-.hm-marquee {
-  margin-top: 32px;
-  padding: 8px 0;
-  border-top: 1px solid rgba(31, 23, 18, 0.12);
-  border-bottom: 1px solid rgba(31, 23, 18, 0.12);
-  overflow: hidden;
-  white-space: nowrap;
-  /* mờ dần 2 mép cho cảm giác chữ trôi ra/vào */
-  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 8%, #000 92%, transparent 100%);
-  mask-image: linear-gradient(90deg, transparent 0, #000 8%, #000 92%, transparent 100%);
-}
-
-.hm-marquee__track {
-  display: inline-flex;
-  width: max-content;
-  animation: hm-marquee 45s linear infinite;
-}
-
-.hm-marquee:hover .hm-marquee__track {
-  animation-play-state: paused;
-}
-
-.hm-marquee__item {
-  display: inline-flex;
-  align-items: center;
-  font-family: var(--font-family-heading, 'Inter', sans-serif);
-  font-size: clamp(12px, 0.8vw, 13px);
-  font-style: italic;
-  font-weight: 500;
-  line-height: 1.2;
-  color: #1F1712;
-}
-
-.hm-marquee__sep {
-  margin: 0 clamp(12px, 1.3vw, 20px);
-  font-style: normal;
-  font-size: 0.5em;
-  color: #A80D27;
-}
-
-/* Track gồm 2 bản giống nhau → dịch đúng -50% là lặp liền mạch */
-@keyframes hm-marquee {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hm-marquee__track {
-    animation: none;
-  }
-}
-
 /* ===== Hàng ô ảnh kiểu Nitori (Tin Tức / Ý Tưởng Phối Đồ): 5 ô/hàng desktop, cuộn ngang trên mobile ===== */
 .nt-row {
   display: flex;
@@ -850,13 +797,17 @@
   left: 0;
   right: 0;
   bottom: 0;
-  padding: 18px 10px 8px;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.66), transparent);
+  padding: 22px 10px 9px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.72), transparent);
   color: #ffffff;
   font-size: 12.5px;
   font-weight: 700;
   line-height: 1.35;
-  /* Tối đa 2 dòng để chữ không phủ kín ảnh nhỏ */
+}
+
+/* Cắt 2 dòng ở phần tử con KHÔNG có padding — để line-clamp trên khối có padding thì dòng 3
+   lộ nửa chữ trong vùng đệm dưới. */
+.nt-tile__text {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;

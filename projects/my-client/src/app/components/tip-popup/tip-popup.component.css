@@ -233,7 +233,8 @@
 }
 
 .tp_title {
-  font-family: 'Lora', Georgia, serif;
+  /* Fallback Times New Roman (đủ chữ tiếng Việt dựng sẵn) — Georgia thiếu nên dấu bị tách rời lúc Lora chưa tải xong */
+  font-family: 'Lora', 'Times New Roman', serif;
   font-size: 22px;
   font-weight: 500;
   color: var(--tp-ink);

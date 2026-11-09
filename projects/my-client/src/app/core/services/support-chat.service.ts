@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { io, Socket } from 'socket.io-client';
 import { AuthService } from './auth.service';
 import { ChatPanelService } from './chat-panel.service';
+import { ToastService } from './toast.service';
 import { environment } from '../../../environments/environment';
 
 export interface ChatMessage {
@@ -18,12 +19,15 @@ export interface ChatMessage {
 }
 
 const SESSION_KEY = 'deco3d_chat_session';
+/** Thời điểm khách xem khung chat lần cuối — tin nhân viên gửi sau mốc này tính là chưa đọc. */
+const LAST_READ_KEY = 'deco3d_chat_last_read';
 
 @Injectable({ providedIn: 'root' })
 export class SupportChatService {
   private http = inject(HttpClient);
   private authService = inject(AuthService);
   private chatPanel = inject(ChatPanelService);
+  private toast = inject(ToastService);
 
   private socket: Socket | null = null;
   private historyLoaded = false;
@@ -36,6 +40,9 @@ export class SupportChatService {
   /** Nhân viên đang gõ trả lời — hiện bong bóng ba chấm. */
   readonly staffTyping = signal(false);
 
+  /** Số tin nhân viên gửi tới trong lúc khung chat đang đóng — hiện trên nút chat nổi. */
+  readonly unreadCount = signal(0);
+
   private typingSent = false;
   private typingStopTimer: ReturnType<typeof setTimeout> | null = null;
   private staffTypingTimer: ReturnType<typeof setTimeout> | null = null;
@@ -43,9 +50,35 @@ export class SupportChatService {
   constructor() {
     this.sessionId = this.loadOrCreateSessionId();
     // Khung chat có thể được mở tự động sau khi đăng nhập (ChatPanelService) -> kết nối khi khung mở.
+    // Mở khung = đã đọc hết tin.
     effect(() => {
-      if (this.isOpen()) untracked(() => this.ensureConnected());
+      if (this.isOpen()) untracked(() => {
+        this.ensureConnected();
+        this.markRead();
+      });
     });
+    // Khách đã đăng nhập thì kết nối sẵn (chat chỉ dành cho khách đăng nhập), để vẫn nhận tin
+    // nhân viên trả lời khi khung đang đóng và báo số tin chưa đọc trên nút chat.
+    effect(() => {
+      if (this.authService.currentUser()) untracked(() => this.ensureConnected());
+    });
+  }
+
+  /** Chưa có mốc (máy mới / trước khi có tính năng) -> lấy mốc là bây giờ, không báo dồn tin cũ. */
+  private readLastRead(): number {
+    try {
+      const saved = Number(localStorage.getItem(LAST_READ_KEY));
+      if (saved) return saved;
+      localStorage.setItem(LAST_READ_KEY, String(Date.now()));
+    } catch { /* localStorage bị chặn: coi như đã đọc hết */ }
+    return Date.now();
+  }
+
+  private markRead(): void {
+    this.unreadCount.set(0);
+    try {
+      localStorage.setItem(LAST_READ_KEY, String(Date.now()));
+    } catch { /* bỏ qua: chỉ mất số chưa đọc khi tải lại trang */ }
   }
 
   private loadOrCreateSessionId(): string {
@@ -71,7 +104,16 @@ export class SupportChatService {
     this.socket.on('disconnect', () => this.staffOnline.set(false));
     this.socket.on('chat:message', (message: ChatMessage) => {
       if (message.sender === 'staff') this.setStaffTyping(false);
+      const isNew = !message._id || !this.messages().some(m => m._id === message._id);
       this.appendMessage(message);
+      if (message.sender !== 'staff' || !isNew) return;
+      if (this.isOpen()) {
+        this.markRead();
+      } else {
+        this.unreadCount.update(n => n + 1);
+        // Tin tự động chỉ là trả lời tức thì cho câu khách vừa gửi -> không cần báo riêng.
+        if (!message.auto) this.toast.info('Luméa vừa trả lời bạn trong khung chat hỗ trợ.');
+      }
     });
     this.socket.on('chat:staff-status', ({ online }: { online: boolean }) => {
       this.staffOnline.set(!!online);
@@ -117,6 +159,14 @@ export class SupportChatService {
         // Gộp với tin vừa nhận qua socket trong lúc chờ HTTP, bỏ trùng theo _id.
         const seen = new Set(res.messages.map(m => m._id));
         this.messages.update(live => [...res.messages, ...live.filter(m => !m._id || !seen.has(m._id))]);
+        // Nhân viên trả lời lúc khách đã rời trang -> lần sau vào vẫn thấy số tin chưa đọc.
+        if (this.isOpen()) {
+          this.markRead();
+        } else {
+          const lastRead = this.readLastRead();
+          this.unreadCount.set(res.messages.filter(m =>
+            m.sender === 'staff' && !m.auto && m.createdAt && new Date(m.createdAt).getTime() > lastRead).length);
+        }
       },
       error: () => { this.historyLoaded = false; },
     });

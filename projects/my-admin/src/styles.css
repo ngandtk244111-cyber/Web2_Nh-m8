@@ -283,9 +283,9 @@ a {
   background: var(--color-bg-secondary);
   padding: 8px 10px 10px;
   border-radius: var(--radius-lg);
+  /* Trung tính: viền xám mảnh, không viền màu phía trên — màu chỉ dùng cho ô đang chọn */
   border: 1px solid var(--color-neutral-30);
-  border-top: 4px solid var(--color-primary);
-  box-shadow: 0 2px 8px rgba(31, 23, 18, 0.05);
+  box-shadow: none;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -298,14 +298,12 @@ a {
 }
 
 .stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(31, 23, 18, 0.08);
+  border-color: var(--color-neutral-50);
 }
 
 .stat-card.active {
-  border-left: 2px solid var(--color-primary);
-  border-right: 2px solid var(--color-primary);
-  border-bottom: 2px solid var(--color-primary);
+  border-color: var(--color-primary);
+  box-shadow: inset 0 0 0 1px var(--color-primary);
   background: var(--color-bg-light);
 }
 
@@ -329,9 +327,9 @@ a {
 
 .stat-value {
   font-size: 22px;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1.1;
-  color: var(--color-primary);
+  color: var(--color-text-primary, #1F1712);
 }
 
 .stat-sub {
@@ -340,16 +338,7 @@ a {
   margin-top: 2px;
 }
 
-.stat-card.tone-warning { border-top-color: var(--color-warning); }
-.stat-card.tone-warning .stat-value { color: var(--color-warning); }
-.stat-card.tone-info { border-top-color: var(--color-info); }
-.stat-card.tone-info .stat-value { color: var(--color-info); }
-.stat-card.tone-success { border-top-color: var(--color-success); }
-.stat-card.tone-success .stat-value { color: var(--color-success); }
-.stat-card.tone-danger { border-top-color: var(--color-danger); }
-.stat-card.tone-danger .stat-value { color: var(--color-danger); }
-.stat-card.tone-neutral { border-top-color: var(--color-neutral-60); }
-.stat-card.tone-neutral .stat-value { color: var(--color-neutral-80); }
+/* Các class tone-* trên .stat-card giữ trong template nhưng không còn tô màu (bỏ màu cho đỡ rối mắt). */
 
 /* ========== FILTER BAR ========== */
 .filter-bar {
@@ -666,24 +655,25 @@ a {
   border-top: 1px solid var(--color-neutral-30);
 }
 
-/* ========== STATUS BADGE (chấm màu + chữ, như Vita) ========== */
+/* ========== STATUS BADGE (nhãn bo tròn, nền nhạt cùng tông chữ) ========== */
 .status-badge {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  font-size: 13px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #F3F4F6;
+  font-size: 12.5px;
   font-weight: 600;
+  line-height: 1.4;
   white-space: nowrap;
 }
 
-.status-badge::before {
-  content: '';
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: currentColor;
-  flex-shrink: 0;
-}
+.status-badge.status-yellow { background: #FEF3C7; }
+.status-badge.status-green { background: #DCFCE7; }
+.status-badge.status-blue { background: #DBEAFE; }
+.status-badge.status-red { background: #FEE2E2; }
+.status-badge.status-gray { background: #F3F4F6; }
+.status-badge.status-purple { background: #EDE9FE; }
 
 .status-yellow { color: #B45309; }
 .status-green { color: #047857; }

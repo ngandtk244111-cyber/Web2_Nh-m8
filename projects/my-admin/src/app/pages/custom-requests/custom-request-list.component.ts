@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CustomRequestService } from '../../core/services/custom-request.service';
+import { ToastService } from '../../core/services/toast.service';
 import { CustomRequest, CustomRequestStatus } from '../../core/models/custom-request.model';
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
 import { PagerComponent, pageSlice } from '../../components/pager/pager.component';
@@ -32,6 +33,7 @@ export class CustomRequestListComponent implements OnInit {
   private requestService = inject(CustomRequestService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private toast = inject(ToastService);
 
   readonly filters = FILTERS;
   readonly statusLabel = requestStatusLabel;
@@ -40,6 +42,7 @@ export class CustomRequestListComponent implements OnInit {
   filter = signal<RequestFilter>('ALL');
   search = signal('');
   page = signal(1);
+  reloading = signal(false);
   readonly pageSize = 20;
 
   readonly requests = this.requestService.requests;
@@ -60,8 +63,20 @@ export class CustomRequestListComponent implements OnInit {
     this.requestService.refresh();
   }
 
+  /** Có phản hồi rõ ràng (icon quay + thông báo) — dữ liệu không đổi thì trước đây trông như bấm không ăn. */
   reload(): void {
-    this.requestService.refresh();
+    if (this.reloading()) return;
+    this.reloading.set(true);
+    this.requestService.load().subscribe({
+      next: list => {
+        this.reloading.set(false);
+        this.toast.success(`Đã tải lại ${list.length} yêu cầu`);
+      },
+      error: err => {
+        this.reloading.set(false);
+        this.toast.apiError(err, 'Không tải lại được danh sách');
+      },
+    });
   }
 
   count(f: RequestFilter): number {

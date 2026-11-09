@@ -135,12 +135,12 @@ export const BANNER_SLOTS: BannerSlot[] = [
     defaults: { imageUrl: 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=600&q=80', eyebrow: 'Thương hiệu ưa thích', title: 'Luméa Scandinavian', ctaText: 'Khám phá', ctaLink: '/thuong-hieu/scandinavian' },
   },
   {
-    id: 'grid-room', group: GRID_GROUP, name: 'Banner Phòng 3D', imageRatio: 1498 / 1050,
-    imageHint: 'Khung chỉ hiện phần giữa ảnh, khoảng 14% phía trên và phía dưới sẽ bị che.',
+    id: 'grid-room', group: GRID_GROUP, name: 'Banner Trắc nghiệm phong cách', imageRatio: 1450 / 640,
+    imageHint: 'Ảnh tự cắt vừa khung, chữ đè lên nửa trái — nên chọn ảnh có chủ thể lệch phải.',
     fields: [F.eyebrow, F.title, F.description, F.cta, F.link],
     defaults: {
-      imageUrl: 'assets/promo-banner/room-3d-collection.png', eyebrow: 'Bộ Sưu Tập Phòng 3D', title: 'Dạo Quanh Không Gian Mẫu',
-      subtitle: 'Khám phá phòng khách, phòng ngủ được Luméa phối sẵn theo 360°', ctaText: 'Khám phá ngay', ctaLink: '/shop-the-room',
+      imageUrl: 'assets/promo-banner/style-quiz-bedroom.jpg', eyebrow: 'Trắc Nghiệm Phong Cách', title: 'Nhà Bạn Hợp Phong Cách Nào?',
+      subtitle: 'Trả lời vài câu hỏi nhanh, Luméa gợi ý nội thất hợp gu và tặng voucher', ctaText: 'Làm trắc nghiệm', ctaLink: '/style-quiz',
     },
   },
   {

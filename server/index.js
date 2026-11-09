@@ -34,6 +34,7 @@ app.use('/api/custom-requests', require('./routes/customRequestRoutes'));
 app.use('/api/community', require('./routes/communityRoutes'));
 app.use('/api/news', require('./routes/newsRoutes'));
 app.use('/api/videos', require('./routes/videoRoutes'));
+app.use('/api/style-quiz', require('./routes/styleQuizRoutes'));
 app.use('/api/banners', require('./routes/bannerRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/newsletter', require('./routes/newsletterRoutes'));

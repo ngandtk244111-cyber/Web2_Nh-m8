@@ -8,7 +8,7 @@
     </div>
     <h1 class="quiz-intro__title">Không Gian Của Bạn Hợp Phong Cách Nào?</h1>
     <p class="quiz-intro__desc">
-      Trả lời 5 câu hỏi ngắn để Luméa gợi ý phong cách trang trí phù hợp nhất với gu thẩm mỹ của bạn —
+      Trả lời {{ questions.length }} câu hỏi ngắn để Luméa gợi ý phong cách trang trí phù hợp nhất với gu thẩm mỹ của bạn —
       kèm theo danh mục sản phẩm nên khám phá đầu tiên. Hoàn thành bài test còn được tặng
       <strong>{{ rewardLabel }}</strong>.
     </p>
@@ -73,39 +73,130 @@
       <h2 class="quiz-result__title">{{ result.title }}</h2>
       <p class="quiz-result__desc">{{ result.description }}</p>
 
-      <div class="quiz-palette">
-        <span class="quiz-palette__swatch" *ngFor="let hex of result.paletteHex" [style.backgroundColor]="hex"></span>
+      <!-- Tỉ lệ 4 phong cách -->
+      <div class="qr-block">
+        <h3 class="qr-heading">Gu của bạn gồm những gì?</h3>
+        <p class="qr-note" *ngIf="scores.length">
+          Bạn hợp nhất với <strong>{{ scores[0].label }} ({{ scores[0].percent }}%)</strong><ng-container *ngIf="secondaryStyle as s">, pha thêm chút <strong>{{ s.label }} ({{ s.percent }}%)</strong> — có thể mix vài món của phong cách này để không gian bớt đơn điệu</ng-container>.
+        </p>
+        <div class="qr-score" *ngFor="let s of scores; let first = first">
+          <span class="qr-score__label">{{ s.label }}</span>
+          <span class="qr-score__track"><span class="qr-score__bar" [class.qr-score__bar--top]="first" [style.width.%]="s.percent"></span></span>
+          <span class="qr-score__pct">{{ s.percent }}%</span>
+        </div>
       </div>
 
-      <!-- Danh mục gợi ý: bấm chip để xem nhanh sản phẩm ngay tại đây -->
-      <p class="quiz-result__cat-label">Danh mục hợp với phong cách của bạn</p>
-      <div class="quiz-result__categories" role="tablist">
-        <button
-          type="button"
-          role="tab"
-          *ngFor="let cat of suggestedCategories"
-          class="quiz-chip"
-          [class.quiz-chip--active]="cat === activeCategory"
-          [attr.aria-selected]="cat === activeCategory"
-          (click)="selectCategory(cat)">
-          {{ cat.link.label }}
-        </button>
+      <!-- Đặc điểm + bảng màu -->
+      <div class="qr-grid">
+        <div class="qr-block" *ngIf="result.traits?.length">
+          <h3 class="qr-heading">Dấu hiệu nhận biết</h3>
+          <ul class="qr-list qr-list--check">
+            <li *ngFor="let t of result.traits">{{ t }}</li>
+          </ul>
+        </div>
+        <div class="qr-block">
+          <h3 class="qr-heading">Bảng màu gợi ý</h3>
+          <div class="qr-palette">
+            <div class="qr-swatch" *ngFor="let hex of result.paletteHex">
+              <span class="qr-swatch__chip" [style.backgroundColor]="hex"></span>
+              <span class="qr-swatch__hex">{{ hex }}</span>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div class="quiz-preview" *ngIf="activeCategory as cat">
-        <div class="quiz-preview__grid" *ngIf="previewProducts.length; else noPreview">
-          <a *ngFor="let p of previewProducts" class="quiz-preview__item" [routerLink]="['/product', p.slug]">
-            <span class="quiz-preview__img"><app-product-photo [images]="p.images" [alt]="p.name"></app-product-photo></span>
-            <span class="quiz-preview__name">{{ p.name }}</span>
-            <span class="quiz-preview__price">{{ p.basePrice | vnd }}</span>
+      <!-- Bí quyết + nên tránh -->
+      <div class="qr-grid">
+        <div class="qr-block" *ngIf="result.tips?.length">
+          <h3 class="qr-heading">Bí quyết phối đồ</h3>
+          <ol class="qr-list qr-list--num">
+            <li *ngFor="let t of result.tips">{{ t }}</li>
+          </ol>
+        </div>
+        <div class="qr-block qr-block--avoid" *ngIf="result.avoid?.length">
+          <h3 class="qr-heading">Nên tránh</h3>
+          <ul class="qr-list qr-list--x">
+            <li *ngFor="let t of result.avoid">{{ t }}</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Bộ phối sẵn -->
+      <div class="qr-block" *ngIf="comboProducts.length">
+        <div class="qr-combo__head">
+          <div>
+            <h3 class="qr-heading">Bộ phối sẵn cho phong cách {{ scores.length ? scores[0].label : '' }}</h3>
+            <p class="qr-note">{{ comboProducts.length }} món đã được chọn để đặt cạnh nhau là ra đúng gu.</p>
+          </div>
+          <div class="qr-combo__total">
+            <span>Tổng cả bộ</span>
+            <strong>{{ comboTotal | vnd }}</strong>
+          </div>
+        </div>
+        <div class="qr-combo">
+          <a *ngFor="let p of comboProducts" class="qr-card" [routerLink]="['/product', p.slug]">
+            <span class="qr-card__img"><app-product-photo [images]="p.images" [alt]="p.name"></app-product-photo></span>
+            <span class="qr-card__cat">{{ p.categoryName }}</span>
+            <span class="qr-card__name">{{ p.name }}</span>
+            <span class="qr-card__price">{{ p.basePrice | vnd }}</span>
           </a>
         </div>
-        <ng-template #noPreview>
-          <p class="quiz-preview__empty">Chưa có sản phẩm trong danh mục này.</p>
-        </ng-template>
-        <a class="quiz-preview__all" [routerLink]="cat.link.link" [queryParams]="cat.link.queryParams">
-          Xem tất cả {{ cat.link.label }} →
-        </a>
+        <button type="button" class="quiz-btn quiz-btn--primary qr-combo__add" (click)="addComboToCart()">Thêm cả bộ vào giỏ hàng</button>
+      </div>
+
+      <!-- Danh mục gợi ý: bấm chip để xem nhanh sản phẩm hợp gu ngay tại đây -->
+      <div class="qr-block">
+        <h3 class="qr-heading">Mua thêm theo danh mục</h3>
+        <div class="quiz-result__categories" role="tablist">
+          <button
+            type="button"
+            role="tab"
+            *ngFor="let cat of suggestedCategories"
+            class="quiz-chip"
+            [class.quiz-chip--active]="cat === activeCategory"
+            [attr.aria-selected]="cat === activeCategory"
+            (click)="selectCategory(cat)">
+            {{ categoryName(cat) }}
+          </button>
+        </div>
+
+        <div class="quiz-preview" *ngIf="activeCategory as cat">
+          <div class="quiz-preview__grid" *ngIf="previewProducts.length; else noPreview">
+            <a *ngFor="let p of previewProducts" class="quiz-preview__item" [routerLink]="['/product', p.slug]">
+              <span class="quiz-preview__img">
+                <app-product-photo [images]="p.images" [alt]="p.name"></app-product-photo>
+                <span class="qr-match" *ngIf="matchesStyle(p)">Đúng gu</span>
+              </span>
+              <span class="quiz-preview__name">{{ p.name }}</span>
+              <span class="quiz-preview__price">{{ p.basePrice | vnd }}</span>
+            </a>
+          </div>
+          <ng-template #noPreview>
+            <p class="quiz-preview__empty">Chưa có sản phẩm trong danh mục này.</p>
+          </ng-template>
+          <a class="quiz-preview__all" [routerLink]="cat.link.link" [queryParams]="cat.link.queryParams">
+            Xem tất cả {{ categoryName(cat) }} →
+          </a>
+        </div>
+      </div>
+
+      <!-- Bước tiếp theo -->
+      <div class="qr-block">
+        <h3 class="qr-heading">Bước tiếp theo</h3>
+        <div class="qr-next">
+          <a routerLink="/shop-the-room" class="qr-next__item">
+            <strong>Xem phòng mẫu 3D</strong>
+            <span>Dạo quanh các phòng đã phối sẵn, bấm vào món đồ để mua</span>
+          </a>
+          <button type="button" class="qr-next__item" (click)="askAi()">
+            <strong>Hỏi trợ lý AI</strong>
+            <span>Mô tả căn phòng của bạn để được gợi ý món cụ thể</span>
+          </button>
+          <a routerLink="/custom-request/new" class="qr-next__item">
+            <strong>Đặt thiết kế riêng</strong>
+            <span>Đội ngũ Luméa làm món độc bản theo đúng phong cách của bạn</span>
+          </a>
+        </div>
       </div>
 
       <!-- Voucher reward -->

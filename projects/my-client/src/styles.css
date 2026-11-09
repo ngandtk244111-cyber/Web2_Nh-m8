@@ -424,7 +424,8 @@ body.vw-open .fsb {
 }
 
 /* ======================================================================
-   TIÊU ĐỀ SECTION — chữ đỏ rượu đậm, đổ bóng đỏ sẫm, không viền (cùng kiểu tiêu đề trang Flash Sale)
+   TIÊU ĐỀ SECTION — chữ in hoa đậm, phẳng, màu chữ thường (kiểu tiêu đề mục của các sàn TMĐT),
+   không đổ bóng / viền / gradient.
    Dùng: <h2 class="... lm-3d" data-text="Tiêu đề">Tiêu đề</h2>
    Tên class giữ nguyên để không phải sửa template; data-text không còn được dùng.
    !important vì style riêng của component (.ps-title, .cat-title...) có độ ưu tiên cao hơn.
@@ -433,15 +434,15 @@ body.vw-open .fsb {
   display: block;
   margin: 0 0 4px !important;
   font-family: var(--font-family-heading, 'Inter', sans-serif) !important;
-  font-size: clamp(20px, 2.2vw, 26px) !important;
-  font-weight: 800 !important;
+  font-size: clamp(18px, 1.8vw, 22px) !important;
+  font-weight: 700 !important;
   text-transform: uppercase;
   letter-spacing: 0 !important;
-  line-height: 1.25 !important;
-  color: #A3152D !important;
+  line-height: 1.3 !important;
+  color: #2B2B2B !important;
   background: none !important;
   -webkit-text-stroke: 0 !important;
-  text-shadow: 0 2px 0 #5C0A18 !important;
+  text-shadow: none !important;
 }
 
 .lm-3d::before,

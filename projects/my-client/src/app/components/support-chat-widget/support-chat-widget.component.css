@@ -10,6 +10,26 @@
 .scw_fab:hover { background: #891226; transform: scale(1.05); }
 .scw_fab:active { transform: scale(0.95); }
 
+/* Số tin nhắn chưa đọc */
+.scw_badge {
+  position: absolute; top: -4px; right: -4px;
+  min-width: 22px; height: 22px; padding: 0 6px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 999px; border: 2px solid #fff;
+  background: #E11D48; color: #fff;
+  font-size: 11.5px; font-weight: 800; line-height: 1;
+}
+/* Có tin mới: nút nảy nhẹ vài lần để khách để ý */
+.scw_fab--unread { animation: scw-nudge 1.2s ease-in-out 3; }
+@keyframes scw-nudge {
+  0%, 100% { transform: translateY(0); }
+  20% { transform: translateY(-6px); }
+  40% { transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .scw_fab--unread { animation: none; }
+}
+
 /* ===== Khung chat ===== */
 .scw {
   position: fixed; right: 20px; bottom: 20px; z-index: 40;

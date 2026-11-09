@@ -7,6 +7,8 @@ import { AuthService } from '../../core/services/auth.service';
 import { LoginModalService } from '../../core/services/login-modal.service';
 import { ProductService } from '../../core/services/product.service';
 import { ToastService } from '../../core/services/toast.service';
+import { CartService } from '../../core/services/cart.service';
+import { ChatPanelService } from '../../core/services/chat-panel.service';
 import { DecorStyleTag, QuizOption, StyleResult } from '../../core/models/quiz.model';
 import { Product } from '../../core/models/product.model';
 import { AppIconComponent } from '../../components/icon/icon.component';
@@ -16,7 +18,14 @@ import { ProductPhotoComponent } from '../../components/product-photo/product-ph
 
 /** Giữ kết quả trắc nghiệm trong phiên — bấm xem sản phẩm rồi quay lại vẫn thấy kết quả, không phải làm lại. */
 const RESULT_STORAGE_KEY = 'lumea_style_quiz_result';
-const PREVIEW_LIMIT = 4;
+const PREVIEW_LIMIT = 8;
+
+export const STYLE_LABELS: Record<DecorStyleTag, string> = {
+  minimalist: 'Tối giản',
+  scandinavian: 'Bắc Âu',
+  industrial: 'Công nghiệp',
+  bohemian: 'Bohemian',
+};
 
 interface SavedQuizState {
   answers: Record<number, DecorStyleTag>;
@@ -56,13 +65,19 @@ export class StyleQuizComponent {
   suggestedCategories: SuggestedCategory[] = [];
   activeCategory: SuggestedCategory | null = null;
 
+  /** Tỉ lệ % 4 phong cách theo đáp án, cao nhất trước. */
+  scores: { tag: DecorStyleTag; label: string; percent: number }[] = [];
+  readonly styleLabels = STYLE_LABELS;
+
   constructor(
     private quizService: QuizService,
     public voucherService: VoucherService,
     public authService: AuthService,
     public loginModalService: LoginModalService,
     private productService: ProductService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private cartService: CartService,
+    private chatPanel: ChatPanelService
   ) {
     this.restoreResult();
     // Làm xong khi chưa đăng nhập → đăng nhập (ngay trên trang này) xong thì hiện kết quả luôn.
@@ -71,11 +86,57 @@ export class StyleQuizComponent {
     });
   }
 
-  /** Vài sản phẩm của danh mục đang chọn để xem nhanh ngay dưới kết quả. */
+  /** Sản phẩm của 1 loại, món đúng phong cách (Product.style) lên trước, rồi theo đánh giá. */
+  private rankedProducts(category: string): Product[] {
+    const styles = this.result?.productStyles || [];
+    const score = (p: Product) =>
+      (styles.includes(p.style as string) ? 1000 : 0) + (p.rating || 0) * 10 + Math.min(p.reviewCount || 0, 50) / 10;
+    return this.productService.products()
+      .filter(p => p.category === category && p.images?.length)
+      .sort((a, b) => score(b) - score(a));
+  }
+
+  /** Vài sản phẩm hợp phong cách của danh mục đang chọn để xem nhanh ngay dưới kết quả. */
   get previewProducts(): Product[] {
     const cat = this.activeCategory?.category;
-    if (!cat) return [];
-    return this.productService.products().filter(p => p.category === cat).slice(0, PREVIEW_LIMIT);
+    return cat ? this.rankedProducts(cat).slice(0, PREVIEW_LIMIT) : [];
+  }
+
+  /** Tên danh mục con thật (vd "Bình Hoa & Lọ Decor") — tên nhóm lớn của link có thể trùng giữa các tab. */
+  categoryName(cat: SuggestedCategory): string {
+    return this.productService.products().find(p => p.category === cat.category)?.categoryName || cat.link.label;
+  }
+
+  /** Món có đúng phong cách hay chỉ là món bán chạy cùng loại — để gắn nhãn "Đúng gu". */
+  matchesStyle(p: Product): boolean {
+    return !!this.result?.productStyles?.includes(p.style as string);
+  }
+
+  /** Bộ phối sẵn: mỗi loại trong comboCategories lấy 1 món hợp phong cách nhất, còn hàng. */
+  get comboProducts(): Product[] {
+    return (this.result?.comboCategories || [])
+      .map(cat => this.rankedProducts(cat).find(p => p.productionType !== 'READY_STOCK' || p.inStock > 0))
+      .filter((p): p is Product => !!p);
+  }
+
+  get comboTotal(): number {
+    return this.comboProducts.reduce((sum, p) => sum + p.basePrice, 0);
+  }
+
+  addComboToCart(): void {
+    const items = this.comboProducts;
+    const added = items.filter(p => this.cartService.addToCart(p)).length;
+    if (added) this.toastService.success(`Đã thêm ${added} món của bộ phối sẵn vào giỏ hàng`);
+  }
+
+  /** Phong cách phụ (điểm cao thứ 2) — chỉ nhắc khi đủ đáng kể. */
+  get secondaryStyle(): { label: string; percent: number } | null {
+    const second = this.scores[1];
+    return second && second.percent >= 20 ? second : null;
+  }
+
+  askAi(): void {
+    this.chatPanel.open('ai');
   }
 
   selectCategory(cat: SuggestedCategory): void {
@@ -136,6 +197,7 @@ export class StyleQuizComponent {
 
   private showResult(): void {
     this.result = this.quizService.computeResult(this.answers);
+    this.scores = this.quizService.computeScores(this.answers).map(s => ({ ...s, label: STYLE_LABELS[s.tag] }));
     this.screen = 'result';
     this.suggestedCategories = this.result.suggestedCategories.map(category => ({
       category,
@@ -218,6 +280,7 @@ export class StyleQuizComponent {
     this.result = null;
     this.suggestedCategories = [];
     this.activeCategory = null;
+    this.scores = [];
     this.clearSavedResult();
     this.resetCoinState();
   }

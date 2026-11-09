@@ -27,17 +27,26 @@ export class HeroBannerComponent {
     private productService: ProductService
   ) {}
 
-  /** Cụm sản phẩm minh hoạ cho từng slide, lấy từ dữ liệu thật (có ảnh). */
-  readonly picks = computed<Record<HeroPicks, Product[]>>(() => {
-    const all = this.productService.products().filter(p => p.images?.length);
-    const top = (list: Product[]) => [...list].sort((a, b) => b.rating - a.rating).slice(0, PICK_COUNT);
-    return {
-      has3d: top(all.filter(p => !!p.modelUrl || !!p.threeModelType)),
-      print: top(all.filter(p => p.productionType === 'PRINT_ON_DEMAND')),
-      ready: top(all.filter(p => p.productionType === 'READY_STOCK' && p.inStock > 0)),
-      top: top(all),
-      sale: top(all.filter(p => !!p.originalPrice && p.originalPrice > p.basePrice)),
+  /**
+   * Cụm sản phẩm minh hoạ cho từng slide (theo thứ tự slide), lấy từ dữ liệu thật (có ảnh).
+   * Mỗi sản phẩm chỉ xuất hiện ở 1 slide — kể cả khi 2 slide dùng chung nhóm (vd. 'top'), hoặc
+   * các nhóm trùng nhau (sản phẩm vừa giảm giá vừa có 3D), slide sau lấy tiếp các món chưa dùng.
+   */
+  readonly picks = computed<Product[][]>(() => {
+    const all = [...this.productService.products().filter(p => p.images?.length)].sort((a, b) => b.rating - a.rating);
+    const groups: Record<HeroPicks, (p: Product) => boolean> = {
+      has3d: p => !!p.modelUrl || !!p.threeModelType,
+      print: p => p.productionType === 'PRINT_ON_DEMAND',
+      ready: p => p.productionType === 'READY_STOCK' && p.inStock > 0,
+      top: () => true,
+      sale: p => !!p.originalPrice && p.originalPrice > p.basePrice,
     };
+    const used = new Set<string>();
+    return this.tickerService.items.map(item => {
+      const list = all.filter(p => !used.has(p.id) && groups[item.art.picks](p)).slice(0, PICK_COUNT);
+      list.forEach(p => used.add(p.id));
+      return list;
+    });
   });
 
   /** % giảm của sản phẩm (để gắn tem trên thẻ), null nếu không giảm. */

@@ -92,17 +92,6 @@
       <app-promo-banner-grid></app-promo-banner-grid>
     </div>
 
-    <!-- DẢI CHỮ CHẠY: nhắc lại giá trị cốt lõi, ngăn cách phần promo với nội dung chính (track nhân đôi để lặp liền mạch) -->
-    <div class="hm-marquee" aria-label="Điểm nổi bật của Luméa">
-      <div class="hm-marquee__track">
-        <ng-container *ngFor="let copy of [0, 1]">
-          <span *ngFor="let text of marqueeItems" class="hm-marquee__item" [attr.aria-hidden]="copy === 1 ? 'true' : null">
-            {{ text }}<span class="hm-marquee__sep" aria-hidden="true">✦</span>
-          </span>
-        </ng-container>
-      </div>
-    </div>
-
     <div class="space-y-24 pb-20 pt-16">
 
       <!-- 1. DANH MỤC SẢN PHẨM (đặt trên Flash Sale): nội thất chính + đèn/decor + 3D & Custom (ảnh từ cây danh mục chung) -->
@@ -181,7 +170,7 @@
             [routerLink]="['/coordinate', room.id]"
             class="nt-tile nt-tile--wide">
             <img class="print-layer" [src]="room.coverImage" [alt]="room.name" loading="lazy">
-            <span class="nt-tile__cap line-clamp-2">{{ room.name }}</span>
+            <span class="nt-tile__cap"><span class="nt-tile__text">{{ shortRoomName(room.name) }}</span></span>
           </a>
         </div>
       </section>
@@ -198,8 +187,9 @@
             *ngFor="let post of communityPosts"
             routerLink="/community"
             class="nt-tile nt-tile--wide">
-            <img class="print-layer" [src]="post.imageUrl" [alt]="post.title" loading="lazy">
-            <span class="nt-tile__cap line-clamp-2">{{ post.title }}</span>
+            <!-- Ảnh upload có thể chỉ nằm trên máy người đăng (server/uploads không lên Git) -> lỗi thì ẩn ảnh, giữ nền ô thay vì hiện chữ alt -->
+            <img class="print-layer" [src]="post.imageUrl" [alt]="post.title" loading="lazy" (error)="$any($event.target).style.visibility = 'hidden'">
+            <span class="nt-tile__cap"><span class="nt-tile__text">{{ post.title }}</span></span>
           </a>
         </div>
       </section>
@@ -209,6 +199,6 @@
 
     </div>
 
-    <!-- POPUP "Có thể bạn chưa biết?" — mở khi người dùng cuộn qua ~40% trang, dữ liệu từ bài viết Insights nổi bật -->
+    <!-- POPUP "Có thể bạn chưa biết?" — mở khi người dùng cuộn qua ~40% trang, giới thiệu ngẫu nhiên 1 dịch vụ hữu ích của Luméa -->
     <app-tip-popup></app-tip-popup>
 

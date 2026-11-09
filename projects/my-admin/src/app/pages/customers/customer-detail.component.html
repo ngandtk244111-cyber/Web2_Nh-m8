@@ -19,6 +19,7 @@
       </div>
       <div class="header-actions">
         <button type="button" class="btn-header" (click)="goBack()"><i class="bi bi-arrow-return-left"></i> Quay lại</button>
+        <a class="btn-header" routerLink="/messages" [queryParams]="{ phone: c.phone }"><i class="bi bi-chat-dots"></i> Nhắn tin</a>
         <a class="btn-header primary" [href]="'tel:' + c.phone"><i class="bi bi-telephone"></i> Gọi khách</a>
       </div>
     </div>

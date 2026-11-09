@@ -21,4 +21,13 @@ export interface StyleResult {
   image: string;
   suggestedCategories: ProductCategory[];
   paletteHex: string[];
+  /** Dấu hiệu nhận biết phong cách. */
+  traits?: string[];
+  /** Bí quyết phối đồ. */
+  tips?: string[];
+  avoid?: string[];
+  /** Product.style khớp phong cách — lọc sản phẩm gợi ý. */
+  productStyles?: string[];
+  /** Loại sản phẩm của bộ phối sẵn (mỗi loại 1 món). */
+  comboCategories?: string[];
 }

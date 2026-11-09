@@ -85,7 +85,8 @@ router.post('/momo/create', async (req, res) => {
         error: `Cổng MoMo đang từ chối giao dịch (mã ${err.response.data.resultCode}). Vui lòng chọn ZaloPay, chuyển khoản hoặc COD.`,
       });
     }
-    sendError(res, err);
+    // Cổng không phản hồi / chặn kết nối (403, hết hạn chờ...) -> thông báo dễ hiểu thay vì lỗi kỹ thuật.
+    res.status(502).json({ success: false, error: 'Cổng MoMo đang tạm thời không phản hồi. Vui lòng chọn ZaloPay, chuyển khoản hoặc COD.' });
   }
 });
 
@@ -139,7 +140,7 @@ router.post('/zalopay/create', async (req, res) => {
       return res.json({ success: true, sandbox: true, orderUrl: sandboxPayUrl(req.body.orderNumber, 'zalopay') });
     }
     await cancelUnpaidOrder(req.body.orderNumber, 'ZaloPay').catch(() => {});
-    sendError(res, err);
+    res.status(502).json({ success: false, error: 'Cổng ZaloPay đang tạm thời không phản hồi. Vui lòng chọn MoMo, chuyển khoản hoặc COD.' });
   }
 });
 
@@ -203,11 +204,9 @@ router.post('/zalopay/callback', async (req, res) => {
       return res.json({ return_code: -1, return_message: 'mac not equal' });
     }
 
+    // Như IPN MoMo: chỉ ghi PAID khi số tiền khớp tổng đơn, bỏ qua đơn đã huỷ / đã PAID.
     const data = JSON.parse(dataStr);
-    await Order.findOneAndUpdate(
-      { paymentTransactionId: data.app_trans_id },
-      { paymentStatus: 'PAID' }
-    );
+    await markPaid({ paymentTransactionId: data.app_trans_id, total: Number(data.amount) }, data.app_trans_id);
 
     res.json({ return_code: 1, return_message: 'success' });
   } catch (err) {

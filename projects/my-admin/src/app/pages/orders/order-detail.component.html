@@ -237,9 +237,18 @@
               <button type="button" class="btn-save w-100 justify-content-center" [disabled]="busy()" (click)="confirmPhone(o)">
                 <i class="bi bi-telephone-check"></i> Khách đã xác nhận đơn
               </button>
-              <button type="button" class="btn-cancel w-100 justify-content-center" (click)="cannotReach()">
+              <button type="button" class="btn-cancel w-100 justify-content-center" [disabled]="busy()" (click)="cannotReach(o)">
                 <i class="bi bi-telephone-x"></i> Không liên lạc được
               </button>
+            </div>
+            <!-- Gọi không được: chỉ ghi nhận để gọi lại; gọi đủ số lần mới gợi ý huỷ -->
+            <p class="small text-muted-2 mt-2 mb-0" *ngIf="o.failedCallsAt?.length">
+              <i class="bi bi-telephone-x"></i>
+              Đã gọi không được {{ o.failedCallsAt!.length }} lần · lần cuối {{ lastFailedCall(o) | date:'HH:mm dd/MM' }}
+            </p>
+            <div class="notice-box warning mt-2 mb-0" *ngIf="(o.failedCallsAt?.length || 0) >= maxFailedCalls && !cancelling">
+              Đã gọi {{ o.failedCallsAt!.length }} lần vẫn không liên lạc được khách.
+              <button type="button" class="btn btn-link p-0 align-baseline" (click)="cancelUnreachable()">Huỷ đơn với lý do này</button>
             </div>
           </ng-container>
 

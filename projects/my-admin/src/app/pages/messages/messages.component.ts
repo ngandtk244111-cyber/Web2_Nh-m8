@@ -1,9 +1,12 @@
 import { Component, ElementRef, OnDestroy, OnInit, ViewChild, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ChatService, ChatSession } from '../../core/services/chat.service';
 import { normalizePhone } from '../../shared/utils/order-labels';
+
+/** So SĐT theo 9 số cuối: "0364037150", "+84 364 037 150" là cùng một số. */
+const phoneKey = (phone: string | null | undefined) => (phone || '').replace(/\D/g, '').slice(-9);
 
 /** Tin nhắn hỗ trợ — khách nhắn qua khung chat trên cửa hàng (socket.io), tin mới hiện ngay. */
 @Component({
@@ -15,6 +18,12 @@ import { normalizePhone } from '../../shared/utils/order-labels';
 })
 export class MessagesComponent implements OnInit, OnDestroy {
   readonly chat = inject(ChatService);
+  private route = inject(ActivatedRoute);
+
+  /** Mở từ nút "Nhắn tin" ở trang khách hàng (?phone=...) — tự mở cuộc chat gần nhất của khách đó. */
+  private requestedPhone = '';
+  /** SĐT được yêu cầu nhưng khách chưa từng nhắn qua khung chat. */
+  noChatForPhone = signal('');
 
   @ViewChild('chatScroll') chatScroll?: ElementRef<HTMLDivElement>;
 
@@ -48,9 +57,26 @@ export class MessagesComponent implements OnInit, OnDestroy {
         if (el) el.scrollTop = el.scrollHeight;
       });
     });
+
+    // Danh sách cuộc chat tải xong -> mở cuộc chat của khách được yêu cầu (chỉ làm 1 lần).
+    effect(() => {
+      const sessions = this.chat.sessions();
+      if (!this.requestedPhone || !sessions.length) return;
+      const key = phoneKey(this.requestedPhone);
+      const phone = this.requestedPhone;
+      this.requestedPhone = '';
+      const match = sessions
+        .filter(s => phoneKey(s.customerPhone) === key)
+        .sort((a, b) => new Date(b.lastAt).getTime() - new Date(a.lastAt).getTime())[0];
+      setTimeout(() => {
+        if (match) this.open(match);
+        else this.noChatForPhone.set(phone);
+      });
+    });
   }
 
   ngOnInit(): void {
+    this.requestedPhone = this.route.snapshot.queryParamMap.get('phone') || '';
     this.chat.connect();
     this.chat.refreshSessions();
   }
@@ -83,6 +109,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
   }
 
   open(s: ChatSession): void {
+    this.noChatForPhone.set('');
     this.chat.openSession(s.sessionId);
     this.draft = '';
   }

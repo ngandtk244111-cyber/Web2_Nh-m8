@@ -154,7 +154,7 @@
                   </div>
 
                   <div *ngIf="post.imageUrl" class="cm-media mt-3">
-                    <img [src]="post.imageUrl" [alt]="post.title" loading="lazy">
+                    <img [src]="post.imageUrl" [alt]="post.title" loading="lazy" (error)="$any($event.target).style.visibility = 'hidden'">
                     <span *ngIf="post.productTags.length" class="cm-media__badge">
                       <app-icon name="tag" [size]="12"></app-icon> {{ post.productTags.length }} sản phẩm
                     </span>
@@ -228,7 +228,7 @@
 
                 <!-- Ảnh + chấm gắn thẻ sản phẩm -->
                 <div class="cm-media cm-media--detail mt-3">
-                  <img [src]="post.imageUrl" [alt]="post.title">
+                  <img [src]="post.imageUrl" [alt]="post.title" (error)="$any($event.target).style.visibility = 'hidden'">
                   <ng-container *ngFor="let tag of post.productTags">
                     <div class="absolute -translate-x-1/2 -translate-y-1/2 z-10" [style.left.%]="tag.xPercent" [style.top.%]="tag.yPercent">
                       <div class="relative group/tag">

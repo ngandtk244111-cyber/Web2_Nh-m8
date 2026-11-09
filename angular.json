@@ -194,7 +194,7 @@
                 "output": "assets/floating-banners"
               },
               {
-                "glob": "room-3d-collection.png",
+                "glob": "{room-3d-collection.png,style-quiz-bedroom.jpg}",
                 "input": "projects/my-client/src/assets/promo-banner",
                 "output": "assets/promo-banner"
               },

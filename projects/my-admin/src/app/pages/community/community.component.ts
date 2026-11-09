@@ -57,7 +57,8 @@ export class CommunityComponent implements OnInit {
   ];
 
   readonly posts = this.communityService.posts;
-  filter = signal<CommunityFilter>('TODAY');
+  // Mặc định xem tất cả: tab "Đăng hôm nay" thường trống, trông như trang không có bài nào.
+  filter = signal<CommunityFilter>('ALL');
   search = signal('');
   page = signal(1);
   readonly pageSize = 12;
@@ -102,7 +103,7 @@ export class CommunityComponent implements OnInit {
   setFilter(f: CommunityFilter): void {
     this.filter.set(f);
     this.page.set(1);
-    this.router.navigate([], { queryParams: { filter: f === 'TODAY' ? null : f }, replaceUrl: true });
+    this.router.navigate([], { queryParams: { filter: f === 'ALL' ? null : f }, replaceUrl: true });
   }
 
   onSearch(value: string): void {

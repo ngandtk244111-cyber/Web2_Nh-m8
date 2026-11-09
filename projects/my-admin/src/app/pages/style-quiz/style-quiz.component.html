@@ -1,0 +1,222 @@
+<div class="admin-page">
+  <div class="page-breadcrumb">
+    Nội dung <span class="sep">/</span> <span class="current">Trắc nghiệm phong cách</span>
+  </div>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Trắc nghiệm phong cách</h1>
+      <p class="page-subtitle">Câu hỏi ở trang /style-quiz của cửa hàng — mỗi lựa chọn cộng 1 điểm cho một phong cách, phong cách nhiều điểm nhất là kết quả</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn-add-action" *ngIf="tab === 'questions' && adminAuth.can('content.create')" (click)="openCreate()">
+        <i class="bi bi-plus-lg"></i> Thêm câu hỏi
+      </button>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card static">
+      <span class="stat-label">Tổng câu hỏi</span>
+      <span class="stat-value">{{ sorted().length }}</span>
+    </div>
+    <div class="stat-card static tone-success">
+      <span class="stat-label">Khách đang thấy</span>
+      <span class="stat-value">{{ activeCount() }}</span>
+    </div>
+    <div class="stat-card static tone-neutral">
+      <span class="stat-label">Đang ẩn</span>
+      <span class="stat-value">{{ sorted().length - activeCount() }}</span>
+    </div>
+  </div>
+
+  <div class="chip-tabs mb-3">
+    <button type="button" class="chip-tab" [class.active]="tab === 'questions'" (click)="tab = 'questions'">Câu hỏi</button>
+    <button type="button" class="chip-tab" [class.active]="tab === 'results'" (click)="tab = 'results'">Kết quả 4 phong cách</button>
+  </div>
+
+  <!-- ============ CÂU HỎI ============ -->
+  <ng-container *ngIf="tab === 'questions'">
+    <div class="balance">
+      <span class="balance-label">Số lựa chọn dẫn tới mỗi phong cách (câu đang hiện):</span>
+      <span *ngFor="let b of tagBalance()" class="tag-pill" [attr.data-tag]="b.tag">{{ b.label }} · {{ b.count }}</span>
+    </div>
+
+    <div class="table-scrollable">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th class="text-center">#</th>
+            <th>Câu hỏi & lựa chọn</th>
+            <th>Trạng thái</th>
+            <th class="text-right">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let q of sorted(); let i = index; let last = last">
+            <td class="text-center order-cell">
+              <span class="cell-strong">{{ i + 1 }}</span>
+              <div class="order-buttons" *ngIf="adminAuth.can('content.edit')">
+                <button type="button" class="icon-btn sm-btn" title="Lên" [disabled]="i === 0 || moving" (click)="move(q, -1)"><i class="bi bi-chevron-up"></i></button>
+                <button type="button" class="icon-btn sm-btn" title="Xuống" [disabled]="last || moving" (click)="move(q, 1)"><i class="bi bi-chevron-down"></i></button>
+              </div>
+            </td>
+            <td>
+              <span class="cell-strong">{{ q.text }}</span>
+              <ul class="option-list">
+                <li *ngFor="let o of q.options; let j = index">
+                  <span class="option-letter">{{ optionLetter(j) }}</span>
+                  <span class="option-text">{{ o.label }}</span>
+                  <span class="tag-pill sm" [attr.data-tag]="o.tag">{{ tagLabel(o.tag) }}</span>
+                </li>
+              </ul>
+            </td>
+            <td><span class="status-badge" [ngClass]="q.active ? 'status-green' : 'status-gray'">{{ q.active ? 'Đang hiện' : 'Đang ẩn' }}</span></td>
+            <td>
+              <div class="row-actions">
+                <button type="button" class="icon-btn" [title]="q.active ? 'Ẩn khỏi trắc nghiệm' : 'Hiện trong trắc nghiệm'" *ngIf="adminAuth.can('content.edit')" (click)="toggleActive(q)">
+                  <i class="bi" [ngClass]="q.active ? 'bi-eye-slash' : 'bi-eye'"></i>
+                </button>
+                <button type="button" class="icon-btn" title="Sửa" *ngIf="adminAuth.can('content.edit')" (click)="openEdit(q)"><i class="bi bi-pencil"></i></button>
+                <button type="button" class="icon-btn danger" title="Xoá" *ngIf="adminAuth.can('content.delete')" (click)="remove(q)"><i class="bi bi-trash"></i></button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="empty-state" *ngIf="sorted().length === 0">
+        <i class="bi bi-ui-checks"></i>
+        Chưa có câu hỏi nào.
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ============ KẾT QUẢ ============ -->
+  <div class="result-grid" *ngIf="tab === 'results'">
+    <div class="result-card" *ngFor="let r of results()">
+      <img class="result-img" [src]="r.image" [alt]="r.title">
+      <div class="result-body">
+        <span class="tag-pill sm" [attr.data-tag]="r.tag">{{ tagLabel(r.tag) }}</span>
+        <h3 class="result-title">{{ r.title }}</h3>
+        <p class="result-desc">{{ r.description }}</p>
+        <div class="palette">
+          <span *ngFor="let hex of r.paletteHex" class="swatch" [style.background]="hex" [title]="hex"></span>
+        </div>
+        <div class="cell-sub">Gợi ý: {{ r.suggestedCategories.length ? '' : '—' }}<ng-container *ngFor="let c of r.suggestedCategories; let last = last">{{ categoryLabel(c) }}{{ last ? '' : ', ' }}</ng-container></div>
+        <button type="button" class="btn-cancel mt-2" *ngIf="adminAuth.can('content.edit')" (click)="openResult(r)"><i class="bi bi-pencil"></i> Sửa kết quả</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Thêm / sửa câu hỏi -->
+<div class="modal-overlay" *ngIf="showModal" (click)="showModal = false">
+  <div class="modal-box lg" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">{{ editing ? 'Sửa câu hỏi' : 'Thêm câu hỏi' }}</h3>
+      <button type="button" class="close-btn" (click)="showModal = false">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="row g-3">
+        <div class="col-12">
+          <label class="form-label">Câu hỏi <span class="req">*</span></label>
+          <textarea class="form-control" rows="2" [(ngModel)]="form.text" placeholder="VD: Chọn một chất liệu bạn thích chạm vào nhất:"></textarea>
+        </div>
+        <div class="col-12">
+          <label class="form-label">Lựa chọn <span class="req">*</span></label>
+          <div class="form-hint mb-2">Mỗi lựa chọn cộng 1 điểm cho phong cách được chọn bên phải. Nên có đủ 4 phong cách trong một câu.</div>
+          <div class="option-row" *ngFor="let o of form.options; let j = index">
+            <span class="option-letter">{{ optionLetter(j) }}</span>
+            <input class="form-control" [(ngModel)]="o.label" [name]="'opt' + j" placeholder="Nội dung lựa chọn">
+            <select class="form-select tag-select" [(ngModel)]="o.tag" [name]="'tag' + j">
+              <option *ngFor="let s of styleTags" [value]="s.tag">{{ s.label }}</option>
+            </select>
+            <button type="button" class="icon-btn danger" title="Bỏ lựa chọn" [disabled]="form.options.length <= 2" (click)="removeOption(j)"><i class="bi bi-x-lg"></i></button>
+          </div>
+          <button type="button" class="btn-cancel mt-1" [disabled]="form.options.length >= maxOptions" (click)="addOption()"><i class="bi bi-plus-lg"></i> Thêm lựa chọn</button>
+        </div>
+        <div class="col-12">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="quizActive" [(ngModel)]="form.active">
+            <label class="form-check-label" for="quizActive">Hiện trong trắc nghiệm</label>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn-cancel" (click)="showModal = false">Huỷ</button>
+      <button type="button" class="btn-save" [disabled]="saving" (click)="saveQuestion()"><i class="bi bi-save"></i> {{ editing ? 'Lưu' : 'Thêm câu hỏi' }}</button>
+    </div>
+  </div>
+</div>
+
+<!-- Sửa kết quả -->
+<div class="modal-overlay" *ngIf="resultEditing" (click)="resultEditing = null">
+  <div class="modal-box lg" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">Kết quả: {{ tagLabel(resultEditing.tag) }}</h3>
+      <button type="button" class="close-btn" (click)="resultEditing = null">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="row g-3">
+        <div class="col-12">
+          <label class="form-label">Tên phong cách <span class="req">*</span></label>
+          <input class="form-control" [(ngModel)]="resultForm.title">
+        </div>
+        <div class="col-12">
+          <label class="form-label">Mô tả</label>
+          <textarea class="form-control" rows="3" [(ngModel)]="resultForm.description"></textarea>
+        </div>
+        <div class="col-12">
+          <label class="form-label">Link ảnh minh hoạ</label>
+          <input class="form-control" [(ngModel)]="resultForm.image" placeholder="https://...">
+          <img *ngIf="resultForm.image" class="preview-img" [src]="resultForm.image" alt="Xem trước ảnh">
+        </div>
+        <div class="col-12">
+          <label class="form-label">Bảng màu</label>
+          <input class="form-control" [(ngModel)]="resultForm.paletteHex" placeholder="#F2CC8F, #FDFBF7, #81B29A">
+          <div class="palette mt-2">
+            <span *ngFor="let hex of paletteList" class="swatch" [style.background]="hex" [title]="hex"></span>
+          </div>
+        </div>
+        <div class="col-12">
+          <label class="form-label">Danh mục sản phẩm gợi ý</label>
+          <div class="cat-picker">
+            <button type="button" *ngFor="let c of categories" class="chip-tab" [class.active]="resultForm.suggestedCategories.includes(c.key)" (click)="toggleIn('suggestedCategories', c.key)">{{ c.label }}</button>
+          </div>
+          <div class="form-hint">Hiện thành các tab "Mua thêm theo danh mục" ở trang kết quả.</div>
+        </div>
+        <div class="col-12">
+          <label class="form-label">Bộ phối sẵn</label>
+          <div class="cat-picker">
+            <button type="button" *ngFor="let c of categories" class="chip-tab" [class.active]="resultForm.comboCategories.includes(c.key)" (click)="toggleIn('comboCategories', c.key)">{{ c.label }}</button>
+          </div>
+          <div class="form-hint">Mỗi loại lấy 1 món hợp phong cách nhất, còn hàng — khách thêm cả bộ vào giỏ bằng 1 nút. Nên chọn 4–5 loại.</div>
+        </div>
+        <div class="col-12">
+          <label class="form-label">Phong cách sản phẩm phù hợp</label>
+          <div class="cat-picker">
+            <button type="button" *ngFor="let st of productStyles" class="chip-tab" [class.active]="resultForm.productStyles.includes(st)" (click)="toggleIn('productStyles', st)">{{ st }}</button>
+          </div>
+          <div class="form-hint">Sản phẩm có phong cách này được ưu tiên và gắn nhãn "Đúng gu".</div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Dấu hiệu nhận biết <span class="text-muted-2">(mỗi dòng một ý)</span></label>
+          <textarea class="form-control" rows="4" [(ngModel)]="resultForm.traits"></textarea>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Nên tránh <span class="text-muted-2">(mỗi dòng một ý)</span></label>
+          <textarea class="form-control" rows="4" [(ngModel)]="resultForm.avoid"></textarea>
+        </div>
+        <div class="col-12">
+          <label class="form-label">Bí quyết phối đồ <span class="text-muted-2">(mỗi dòng một bí quyết)</span></label>
+          <textarea class="form-control" rows="4" [(ngModel)]="resultForm.tips"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn-cancel" (click)="resultEditing = null">Huỷ</button>
+      <button type="button" class="btn-save" [disabled]="saving" (click)="saveResult()"><i class="bi bi-save"></i> Lưu</button>
+    </div>
+  </div>
+</div>

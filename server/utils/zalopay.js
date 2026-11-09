@@ -43,7 +43,8 @@ async function createZaloPayOrder({ orderId, amount, description }) {
   const rawSignature = `${order.app_id}|${order.app_trans_id}|${order.app_user}|${order.amount}|${order.app_time}|${order.embed_data}|${order.item}`;
   order.mac = hmacSha256(rawSignature, key1);
 
-  const { data } = await axios.post(process.env.ZALOPAY_ENDPOINT, null, { params: order });
+  // Có hạn chờ: cổng không phản hồi thì báo lỗi sớm (dev chuyển sang trang thanh toán thử) thay vì treo ~20s.
+  const { data } = await axios.post(process.env.ZALOPAY_ENDPOINT, null, { params: order, timeout: 10000 });
   return { ...data, app_trans_id: appTransId };
 }
 

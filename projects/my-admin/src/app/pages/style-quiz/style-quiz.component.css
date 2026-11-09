@@ -1,0 +1,173 @@
+.order-cell {
+  width: 70px;
+}
+
+.order-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.sm-btn {
+  width: 26px;
+  height: 26px;
+  font-size: 12px;
+}
+
+/* ---------- Nhãn phong cách ---------- */
+.tag-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  background: var(--color-neutral-20);
+  color: var(--color-neutral-90, #333);
+}
+
+.tag-pill.sm {
+  padding: 1px 8px;
+  font-size: 11px;
+}
+
+.tag-pill[data-tag='minimalist'] { background: #EEEEEE; color: #333333; }
+.tag-pill[data-tag='scandinavian'] { background: #F6EBD9; color: #7A5524; }
+.tag-pill[data-tag='industrial'] { background: #E3E6EC; color: #3B4252; }
+.tag-pill[data-tag='bohemian'] { background: #FBE3DA; color: #A0452B; }
+
+.balance {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+  font-size: 13px;
+}
+
+.balance-label {
+  color: var(--color-neutral-60, #777);
+  margin-right: 4px;
+}
+
+/* ---------- Bảng câu hỏi ---------- */
+.option-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.option-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.option-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.option-letter {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-neutral-20);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* ---------- Form câu hỏi ---------- */
+.option-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.tag-select {
+  flex: 0 0 150px;
+}
+
+/* ---------- Kết quả ---------- */
+.result-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.result-card {
+  border: 1px solid var(--color-neutral-40);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+}
+
+.result-img {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  background: var(--color-neutral-20);
+}
+
+.result-body {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.result-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.result-desc {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-neutral-60, #666);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.palette {
+  display: flex;
+  gap: 6px;
+}
+
+.swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.preview-img {
+  margin-top: 8px;
+  max-width: 280px;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-neutral-40);
+}
+
+.cat-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}

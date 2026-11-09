@@ -28,6 +28,9 @@ const NEOCLASSIC_ROOM = {
     { id: 'hs-nc-6', productId: 'cat-chair-09', label: 'Ghế Ăn Nhung Nâu', position: [4.18, 0.95, 2.95], annotationNote: 'Lưng tròn bọc nhung nâu trầm, chân cong sơn đen' },
     { id: 'hs-nc-7', productId: 'furn-15', label: 'Ghế Quầy Bar', position: [3.68, 0.95, 1.36], annotationNote: 'Ghế bar nệm nhung chân cao đặt cạnh đảo bếp trắng' },
     { id: 'hs-nc-8', productId: 'cat-pendant-06', label: 'Đèn Chùm Ống Đen', position: [3.39, 2.35, 2.81], annotationNote: 'Chùm nhiều ống đen xếp tầng treo trên bàn ăn' },
+    // Cặp bàn phụ + đèn bàn hai bên sofa (giống hệt nhau) — gắn số vào cặp phía lối vào (Helix012 / Cylinder885755).
+    { id: 'hs-nc-9', productId: 'cat-night-lamp-16', label: 'Đèn Bàn Chụp Vải Kem', position: [-4.18, 1.12, 1.11], annotationNote: 'Chụp vải trụ màu kem trên thân kim loại uốn hoa văn, đặt cạnh sofa' },
+    { id: 'hs-nc-10', productId: 'lumea-ban-0221', label: 'Bàn Phụ Tròn Mặt Đá', position: [-4.18, 0.5, 1.26], annotationNote: 'Mặt tròn đá tối trên ba chân uốn xoắn, kê đèn đọc sách cạnh sofa' },
   ],
 };
 

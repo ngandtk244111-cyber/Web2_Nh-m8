@@ -8,14 +8,10 @@
           <img [src]="banner.image" alt="" class="pg_photo__img" loading="lazy" draggable="false">
         </span>
         <span class="pg_photo__shade" aria-hidden="true"></span>
-        <span class="pg_chip pg_chip--icon">
-          <app-icon [name]="banner.icon" [size]="20"></app-icon>
-        </span>
         <div class="pg_photo__text">
-          <span class="pg_eyebrow">{{ banner.eyebrow }}</span>
           <h3 class="pg_title">{{ banner.title }}</h3>
           <p class="pg_desc">{{ banner.description }}</p>
-          <span class="pg_btn pg_btn--glass">{{ banner.ctaLabel }} <app-icon name="chevron-right" [size]="14"></app-icon></span>
+          <span class="pg_btn pg_btn--light">{{ banner.ctaLabel }} <app-icon name="chevron-right" [size]="14"></app-icon></span>
         </div>
       </a>
 

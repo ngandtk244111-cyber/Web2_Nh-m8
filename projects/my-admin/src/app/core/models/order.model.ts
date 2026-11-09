@@ -77,6 +77,8 @@ export interface Order {
   userId?: string | null;
   /** Nhân viên đã gọi xác nhận đơn với khách (bắt buộc trước khi giao đơn COD). */
   phoneConfirmedAt?: string | null;
+  /** Các lần gọi xác nhận không liên lạc được khách. */
+  failedCallsAt?: string[];
   /** false = đơn COD nhỏ dưới ngưỡng trong Cài đặt, giao không cần gọi. Đơn cũ không có trường này = phải gọi. */
   phoneConfirmRequired?: boolean;
   /** Shipper đã thu tiền COD — còn chờ đối soát với hãng vận chuyển. */

@@ -42,6 +42,10 @@ export class AdminDataService {
     return this.http.patch<{ success: boolean; staff: any }>(`${ADMIN}/staff/${id}/role`, { role });
   }
 
+  deleteStaff(id: string): Observable<{ success: boolean }> {
+    return this.http.delete<{ success: boolean }>(`${ADMIN}/staff/${id}`);
+  }
+
   setStaffActive(id: string, active: boolean): Observable<{ success: boolean; staff: any }> {
     return this.http.patch<{ success: boolean; staff: any }>(`${ADMIN}/staff/${id}/active`, { active });
   }

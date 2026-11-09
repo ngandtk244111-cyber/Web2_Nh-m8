@@ -85,6 +85,10 @@
               <i class="bi" [ngClass]="st.status === 'ACTIVE' ? 'bi-lock' : 'bi-unlock'"></i>
               {{ st.status === 'ACTIVE' ? 'Khoá' : 'Mở khoá' }}
             </button>
+            <button type="button" *ngIf="canManage(st) && canDelete" class="action-btn sm danger ms-1"
+              [disabled]="busyId() === st.id" (click)="deleteStaff(st)" title="Xoá tài khoản">
+              <i class="bi bi-trash"></i> Xoá
+            </button>
           </td>
         </tr>
       </tbody>

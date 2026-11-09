@@ -93,6 +93,10 @@ export class StaffComponent implements OnInit {
     return this.adminAuth.can('staff.create');
   }
 
+  get canDelete(): boolean {
+    return this.adminAuth.can('staff.delete');
+  }
+
   get canEdit(): boolean {
     return this.adminAuth.can('staff.edit');
   }
@@ -158,6 +162,30 @@ export class StaffComponent implements OnInit {
       error: err => {
         this.busyId.set(null);
         this.toast.apiError(err, 'Không đổi được trạng thái nhân viên');
+      },
+    });
+  }
+
+  /** Xoá hẳn tài khoản (khác "Khoá": khoá còn mở lại được, xoá thì mất tài khoản đăng nhập). */
+  async deleteStaff(st: StaffRow): Promise<void> {
+    const ok = await this.confirmDialog.confirm({
+      title: `Xoá tài khoản ${st.name}?`,
+      message: 'Tài khoản bị xoá vĩnh viễn, không đăng nhập lại được. Nhật ký hoạt động của nhân viên này vẫn được giữ. Nếu chỉ tạm nghỉ, hãy dùng "Khoá".',
+      confirmLabel: 'Xoá tài khoản',
+      danger: true,
+      icon: 'bi-trash',
+    });
+    if (!ok) return;
+    this.busyId.set(st.id);
+    this.adminData.deleteStaff(st.id).subscribe({
+      next: () => {
+        this.busyId.set(null);
+        this.staff.update(list => list.filter(x => x.id !== st.id));
+        this.toast.success(`Đã xoá tài khoản ${st.name}`);
+      },
+      error: err => {
+        this.busyId.set(null);
+        this.toast.apiError(err, 'Không xoá được tài khoản nhân viên');
       },
     });
   }

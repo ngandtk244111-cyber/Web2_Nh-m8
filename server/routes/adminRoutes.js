@@ -197,4 +197,28 @@ router.patch('/staff/:id/active', requirePermission('staff.edit'), async (req, r
   }
 });
 
+// Xoá hẳn tài khoản nhân viên (nghỉ việc, tạo nhầm). Nhật ký hoạt động giữ nguyên tên người đã thao tác.
+// Không tự xoá mình; chỉ Super Admin xoá được Super Admin và luôn còn ít nhất 1 Super Admin.
+router.delete('/staff/:id', requirePermission('staff.delete'), async (req, res) => {
+  try {
+    const id = validId(req.params.id);
+    if (!id) return res.status(404).json({ success: false, error: 'Không tìm thấy nhân viên' });
+    if (id === req.adminId) return res.status(400).json({ success: false, error: 'Không thể tự xoá tài khoản đang đăng nhập' });
+    const { actor, isSuperAdmin } = await actorAccess(req);
+    const target = await Admin.findById(id, { role: 1, username: 1, fullName: 1 }).lean();
+    if (!target) return res.status(404).json({ success: false, error: 'Không tìm thấy nhân viên' });
+    if (target.role === SUPER_ADMIN_NAME) {
+      if (!isSuperAdmin) return res.status(403).json({ success: false, error: 'Chỉ Super Admin được xoá Super Admin' });
+      if ((await Admin.countDocuments({ role: SUPER_ADMIN_NAME })) <= 1) {
+        return res.status(400).json({ success: false, error: 'Không thể xoá Super Admin cuối cùng' });
+      }
+    }
+    await Admin.deleteOne({ _id: id });
+    await writeAudit(req, actor, { module: 'Nhân Sự', action: 'Xoá tài khoản nhân viên', detail: `${target.username}${target.fullName ? ' (' + target.fullName + ')' : ''}`, level: 'WARNING' });
+    res.json({ success: true });
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
 module.exports = router;

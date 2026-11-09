@@ -44,6 +44,9 @@ const productSchema = new mongoose.Schema({
   // Không gian phù hợp (phong-khach, phong-ngu, phong-lam-viec, phong-hoc, goc-chill). Rỗng = frontend
   // tự suy ra theo category (xem catalog-taxonomy.ts).
   spaces: { type: [String], default: [] },
+  // Xưởng sản xuất phụ trách do admin chọn riêng (id trong cấu hình `workshops`). null = tự gán theo
+  // loại sản phẩm (xem utils/workshops.js).
+  workshopId: { type: String, default: null },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Product', productSchema);

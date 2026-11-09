@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import { GLTFLoader, GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { createConfiguredGLTFLoader } from './resource-manager';
 import { TextCanvasTexturePool } from './resource-manager';
 
 export interface ProductSceneContext {
@@ -41,7 +42,7 @@ export class ProductSceneManager {
   private textAnchor: THREE.Object3D | null = null;
   private currentModelType = '';
 
-  private readonly gltfLoader = new GLTFLoader();
+  private readonly gltfLoader = createConfiguredGLTFLoader();
   private loadToken = 0;
 
   // KHR_materials_variants của file GLB đang hiển thị (nếu có).

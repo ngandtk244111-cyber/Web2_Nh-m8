@@ -16,6 +16,8 @@ export interface Warranty {
   createdAt?: string;
   /** Lần lượt: ghi chú khách gửi yêu cầu, ghi chú nhân viên đóng yêu cầu... */
   claimHistory?: { note: string; createdAt: string }[];
+  /** Ghi chú nội bộ của nhân viên + nhật ký gia hạn — khách không thấy. */
+  adminNotes?: { note: string; author?: string; createdAt: string }[];
 }
 
 /** Phiếu bảo hành — dùng chung cho trang Bảo hành và chuông thông báo. */
@@ -39,7 +41,20 @@ export class WarrantyService {
   }
 
   resolve(code: string, note: string): Observable<Warranty> {
-    return this.adminData.resolveWarrantyClaim(code, note).pipe(
+    return this.replaceWith(code, this.adminData.resolveWarrantyClaim(code, note));
+  }
+
+  addNote(code: string, note: string): Observable<Warranty> {
+    return this.replaceWith(code, this.adminData.addWarrantyNote(code, note));
+  }
+
+  extend(code: string, months: number, reason: string): Observable<Warranty> {
+    return this.replaceWith(code, this.adminData.extendWarranty(code, months, reason));
+  }
+
+  /** Thay phiếu trong danh sách bằng bản server vừa trả về. */
+  private replaceWith(code: string, req: Observable<{ warranty: any }>): Observable<Warranty> {
+    return req.pipe(
       map(res => res.warranty as Warranty),
       tap(w => this.warranties.update(list => list.map(x => x.warrantyCode === code ? w : x)))
     );

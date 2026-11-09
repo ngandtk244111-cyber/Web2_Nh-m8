@@ -11,6 +11,7 @@ const { buildInvoicePdf } = require('../utils/invoicePdf');
 const { isEmailConfigured, getMailTransporter } = require('../utils/otp');
 const { issueWarrantiesForOrder, ensureOrderWarranties } = require('../utils/warranty');
 const { needsRefund, buildRefund } = require('../utils/refund-policy');
+const { assignProductionWorkshops } = require('../utils/workshops');
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -448,6 +449,7 @@ router.patch('/:orderNumber/confirm-payment', async (req, res) => {
 
 // Admin: xác nhận đã nhận tiền (đối soát chuyển khoản / đã thu COD) hoặc hoàn tác.
 // MoMo/ZaloPay tự cập nhật qua IPN có chữ ký ở paymentRoutes.js, không đi qua route này.
+const ONLINE_GATEWAYS = ['MOMO', 'ZALOPAY', 'VNPAY'];
 router.patch('/:orderNumber/payment-status', requirePermission('orders.approve'), async (req, res) => {
   try {
     const { paymentStatus } = req.body;
@@ -460,6 +462,11 @@ router.patch('/:orderNumber/payment-status', requirePermission('orders.approve')
     // và đã đối soát với hãng.
     if (paymentStatus === 'PAID' && existing.paymentMethod === 'COD' && existing.status !== 'DELIVERED') {
       return res.status(400).json({ success: false, error: 'Đơn COD chỉ xác nhận đã nhận tiền sau khi giao thành công và đối soát với hãng vận chuyển' });
+    }
+    // Đơn trả qua cổng (MoMo/ZaloPay/VNPay): tiền đã thực nhận, không chuyển ngược về chưa thanh toán —
+    // muốn trả tiền cho khách thì đi qua luồng hoàn tiền.
+    if (paymentStatus === 'UNPAID' && existing.paymentStatus === 'PAID' && ONLINE_GATEWAYS.includes(existing.paymentMethod)) {
+      return res.status(400).json({ success: false, error: 'Đơn đã thanh toán qua cổng online, không thể chuyển về chưa thanh toán. Dùng chức năng hoàn tiền nếu cần trả tiền cho khách.' });
     }
     const order = await Order.findOneAndUpdate(
       { orderNumber: req.params.orderNumber },
@@ -500,6 +507,7 @@ router.patch('/:orderNumber/confirm', requirePermission('orders.edit'), async (r
       return res.status(400).json({ success: false, error: 'Đơn COD này cần gọi xác nhận với khách trước' });
     }
     order.status = order.hasPrintOnDemandItems ? 'IN_PRODUCTION' : 'CONFIRMED';
+    await assignProductionWorkshops(order);
     await order.save();
     res.json({ success: true, order });
   } catch (err) {
@@ -515,6 +523,7 @@ router.patch('/:orderNumber/confirm-phone', requirePermission('orders.edit'), as
     order.phoneConfirmedAt = new Date();
     order.phoneConfirmedBy = req.adminId;
     if (order.status === 'PENDING') order.status = order.hasPrintOnDemandItems ? 'IN_PRODUCTION' : 'CONFIRMED';
+    await assignProductionWorkshops(order);
     await order.save();
     res.json({ success: true, order });
   } catch (err) {
@@ -635,6 +644,7 @@ router.patch('/:orderNumber/production', requirePermission('orders.edit'), async
       if (needsRefund(order) && !order.refund) order.refund = buildRefund(order);
     }
     if (status === 'RETURNED') Object.assign(order, { returnReason: String(returnReason).trim(), returnedAt: new Date() });
+    await assignProductionWorkshops(order);
     if (status === 'DELIVERED') {
       order.deliveredAt = new Date();
       // COD: shipper đã thu tiền, còn chờ đối soát với hãng mới tính là đã thanh toán.

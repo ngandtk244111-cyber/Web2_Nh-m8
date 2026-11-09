@@ -16,6 +16,12 @@ const warrantySchema = new mongoose.Schema({
     note: String,
     createdAt: { type: Date, default: Date.now },
   }],
+  /** Ghi chú nội bộ của nhân viên (kể cả nhật ký gia hạn) — không trả về cho khách khi tra cứu. */
+  adminNotes: [{
+    note: String,
+    author: { type: String, default: '' },
+    createdAt: { type: Date, default: Date.now },
+  }],
 }, { timestamps: true });
 
 warrantySchema.virtual('expiresAt').get(function () {

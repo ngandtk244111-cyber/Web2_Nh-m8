@@ -1,0 +1,7 @@
+node_modules
+server/node_modules
+.git
+.angular
+dist
+server/.env
+server/uploads

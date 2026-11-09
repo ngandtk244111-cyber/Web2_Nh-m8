@@ -97,6 +97,11 @@
           <p class="text-muted-2 small" *ngIf="o.productionProgress">
             {{ o.productionProgress.stepTitle }} — cập nhật {{ o.productionProgress.updatedAt }}
           </p>
+          <!-- Xưởng làm các món in 3D / thiết kế riêng — server ghi tự động khi đơn vào "Đang sản xuất". -->
+          <div class="info-row" *ngFor="let w of o.productionWorkshops || []">
+            <span class="label"><i class="bi bi-buildings"></i> {{ w.workshopName }}</span>
+            <span class="value small">{{ w.items.join(', ') }}</span>
+          </div>
           <div class="notice-box info" *ngIf="needsPhoneConfirm(o)">
             Cần gọi xác nhận đơn COD với khách trước khi đưa vào xưởng in.
           </div>
@@ -194,7 +199,8 @@
             <button type="button" class="action-btn success" *ngIf="o.paymentStatus !== 'PAID'" [disabled]="busy()" (click)="setPaid(o, true)">
               <i class="bi bi-cash-coin"></i> {{ o.paymentMethod === 'COD' && o.status === 'DELIVERED' ? 'Đã đối soát COD' : 'Xác nhận đã nhận tiền' }}
             </button>
-            <button type="button" class="action-btn danger" *ngIf="o.paymentStatus === 'PAID'" [disabled]="busy()" (click)="setPaid(o, false)">
+            <!-- Chỉ để sửa khi xác nhận nhầm đơn CK/COD; đơn trả qua cổng online thì hoàn tiền qua mục Đổi trả. -->
+            <button type="button" class="action-btn danger" *ngIf="o.paymentStatus === 'PAID' && (o.paymentMethod === 'BANK_TRANSFER' || o.paymentMethod === 'COD')" [disabled]="busy()" (click)="setPaid(o, false)">
               <i class="bi bi-arrow-counterclockwise"></i> Chuyển về chưa thanh toán
             </button>
           </div>

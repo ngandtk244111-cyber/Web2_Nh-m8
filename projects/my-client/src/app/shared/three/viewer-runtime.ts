@@ -1,5 +1,6 @@
 import { NgZone } from '@angular/core';
 import * as THREE from 'three';
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { QualityManager, QualitySettings } from './quality-manager';
 import { ResourceManager } from './resource-manager';
@@ -8,6 +9,7 @@ export interface ViewerRuntimeOptions {
   container: HTMLElement;
   ngZone: NgZone;
   qualityManager?: QualityManager;
+  toneMappingExposure?: number;
   cameraFov?: number;
   cameraNear?: number;
   cameraFar?: number;
@@ -42,6 +44,7 @@ export class ViewerRuntime {
   readonly ngZone: NgZone;
   readonly qualityManager: QualityManager;
 
+  private environmentTarget: THREE.WebGLRenderTarget | null = null;
   private isInteracting = false;
   private isDestroyed = false;
   private isPaused = false;
@@ -115,6 +118,16 @@ export class ViewerRuntime {
       powerPreference: 'high-performance',
     });
 
+    this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = options.toneMappingExposure ?? 1.05;
+    const pmrem = new THREE.PMREMGenerator(this.renderer);
+    const environment = new RoomEnvironment();
+    this.environmentTarget = pmrem.fromScene(environment);
+    this.scene.environment = this.environmentTarget.texture;
+    environment.dispose();
+    pmrem.dispose();
+    this.renderer.shadowMap.autoUpdate = false;
     this.renderer.setSize(width, height, false);
     const dpr = Math.min(window.devicePixelRatio || 1, initialSettings.maxDpr);
     this.renderer.setPixelRatio(dpr);
@@ -269,6 +282,7 @@ export class ViewerRuntime {
         this.renderer.shadowMap.enabled = false;
       }
 
+      this.updateShadowMapSize(settings.shadowMapSize);
       this.requestRender(4);
     });
   }
@@ -280,8 +294,24 @@ export class ViewerRuntime {
   requestRender(frames = 2): void {
     if (this.isDestroyed || this.isPaused || this.isContextLost) return;
     this.dirtyFrames = Math.max(this.dirtyFrames, frames);
-    this.renderer.shadowMap.needsUpdate = true;
     this.startLoop();
+  }
+
+  private updateShadowMapSize(size: number): void {
+    this.scene.traverse(object => {
+      const light = object as THREE.DirectionalLight;
+      if (!light.isDirectionalLight || !light.castShadow || light.shadow.mapSize.x === size) return;
+      light.shadow.mapSize.set(size, size);
+      light.shadow.map?.dispose();
+      light.shadow.map = null;
+    });
+  }
+
+  invalidateShadows(): void {
+    if (this.isDestroyed) return;
+    this.updateShadowMapSize(this.qualityManager.getSettings().shadowMapSize);
+    this.renderer.shadowMap.needsUpdate = true;
+    this.requestRender(3);
   }
 
   private startLoop(): void {
@@ -407,6 +437,8 @@ export class ViewerRuntime {
       this.controls.dispose();
     }
 
+    this.scene.environment = null;
+    this.environmentTarget?.dispose();
     ResourceManager.deepDispose(this.scene);
 
     if (this.renderer) {

@@ -197,6 +197,8 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
           // Danh sách không kèm nội dung đánh giá: giữ phần đã tải riêng cho trang này.
           found.reviews = this.product.reviews;
           this.product = found;
+          // Sản phẩm đã hiện trước khi danh sách về -> giờ mới dựng được các hàng gợi ý.
+          if (!this.pickRows.length) this.buildPickRows(found);
         } else {
           this.showProduct(found);
         }
@@ -259,8 +261,17 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
       this.slug.set(slug);
       // Đã có danh sách (điều hướng trong app) thì hiện ngay; chưa có thì effect ở constructor lo.
       const found = slug ? this.productService.getProductBySlug(slug) : undefined;
-      if (found) this.showProduct(found);
-      else this.product = undefined;
+      if (found) {
+        this.showProduct(found);
+        return;
+      }
+      this.product = undefined;
+      // Danh sách đầy đủ chưa về (vd mở từ phòng 3D ở tab mới): tải riêng sản phẩm này để hiện ngay.
+      if (slug) {
+        this.productService.loadBySlug(slug).subscribe(p => {
+          if (p && this.slug() === slug && this.product?.id !== p.id) this.showProduct(p);
+        });
+      }
     });
   }
 

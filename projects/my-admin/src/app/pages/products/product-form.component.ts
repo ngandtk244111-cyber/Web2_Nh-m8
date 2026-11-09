@@ -7,6 +7,8 @@ import { AdminAuthService } from '../../core/services/admin-auth.service';
 import { ToastService } from '../../core/services/toast.service';
 import { AuditService } from '../../core/services/audit.service';
 import { ConfirmDialogService } from '../../core/services/confirm-dialog.service';
+import { AdminConfigService } from '../../core/services/admin-config.service';
+import { Workshop, workshopFor } from '../../core/data/workshops';
 import { Product, ProductCategory, ProductionType } from '../../core/models/product.model';
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
 import { MascotLoadingComponent } from '../../components/mascot-loading/mascot-loading.component';
@@ -34,6 +36,8 @@ interface ProductForm {
   image2: string;
   threeModelType: string;
   modelUrl: string;
+  /** '' = tự gán xưởng theo loại sản phẩm. */
+  workshopId: string;
 }
 
 function emptyForm(): ProductForm {
@@ -41,7 +45,7 @@ function emptyForm(): ProductForm {
     name: '', slug: '', category: 'lamp', categoryName: 'Đèn Decor', categoryGroup: 'FURNITURE',
     productionType: 'READY_STOCK', customizable: false, basePrice: 0, originalPrice: 0, inStock: 50,
     dimensions: '', materialInfo: '', description: '', story: '', badge: '',
-    image1: '', image2: '', threeModelType: '', modelUrl: '',
+    image1: '', image2: '', threeModelType: '', modelUrl: '', workshopId: '',
   };
 }
 
@@ -52,7 +56,7 @@ function formFrom(p: Product): ProductForm {
     basePrice: p.basePrice, originalPrice: p.originalPrice || p.basePrice, inStock: p.inStock,
     dimensions: p.dimensions || '', materialInfo: p.materialInfo || '', description: p.description || '',
     story: p.story || '', badge: p.badge || '', image1: p.images?.[0] || '', image2: p.images?.[1] || '',
-    threeModelType: p.threeModelType || '', modelUrl: p.modelUrl || '',
+    threeModelType: p.threeModelType || '', modelUrl: p.modelUrl || '', workshopId: p.workshopId || '',
   };
 }
 
@@ -72,6 +76,15 @@ export class ProductFormComponent implements OnInit {
   private toast = inject(ToastService);
   private audit = inject(AuditService);
   private confirmDialog = inject(ConfirmDialogService);
+  private config = inject(AdminConfigService);
+
+  readonly activeWorkshops = computed(() => (this.config.get<Workshop[]>('workshops') || []).filter(w => w.active !== false));
+
+  /** Xưởng sẽ tự gán nếu không chọn riêng (theo loại + kiểu sản xuất đang chọn trên form). */
+  autoWorkshopName(): string {
+    const auto = workshopFor({ id: this.editing()?.id || '', category: this.form.category, productionType: this.form.productionType, workshopId: null }, this.activeWorkshops());
+    return auto ? auto.name : 'chưa có xưởng phù hợp';
+  }
 
   readonly sections = PRODUCT_CATEGORY_SECTIONS;
   readonly modelTypes = THREE_MODEL_TYPES;
@@ -109,6 +122,7 @@ export class ProductFormComponent implements OnInit {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) this.editId.set(id);
     if (id && !this.productService.products().length) this.productService.refresh();
+    this.config.load();
   }
 
   get readOnly(): boolean {
@@ -215,6 +229,7 @@ export class ProductFormComponent implements OnInit {
       images: [f.image1, f.image2.trim(), ...(editing?.images?.slice(2) ?? [])].filter(Boolean),
       threeModelType: f.threeModelType || null,
       modelUrl: f.modelUrl.trim() || null,
+      workshopId: f.workshopId || null,
     };
 
     this.saving = true;

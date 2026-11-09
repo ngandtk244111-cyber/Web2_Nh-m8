@@ -32,8 +32,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { path: 'products', label: 'Sản phẩm', icon: 'bi-box-seam', perm: 'products.view' },
       { path: 'categories', label: 'Danh mục', icon: 'bi-tags', perm: 'products.view' },
       { path: 'inventory', label: 'Tồn kho', icon: 'bi-archive', perm: 'inventory.view' },
-      { path: 'suppliers', label: 'Nhà cung cấp', icon: 'bi-truck', perm: 'inventory.view' },
-    ],
+      { path: 'workshops', label: 'Xưởng sản xuất', icon: 'bi-buildings', perm: 'inventory.view' },    ],
   },
   {
     key: 'customers', label: 'Khách hàng', icon: 'bi-people',

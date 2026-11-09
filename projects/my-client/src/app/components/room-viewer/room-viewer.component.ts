@@ -25,7 +25,7 @@ import { MascotService } from '../../core/services/mascot.service';
 import { AppIconComponent } from '../icon/icon.component';
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
 import { ViewerRuntime } from '../../shared/three/viewer-runtime';
-import { RoomSceneManager } from '../../shared/three/room-scenes';
+import { ROOM_LIGHTING, RoomSceneManager } from '../../shared/three/room-scenes';
 import { HotspotManager } from '../../shared/three/hotspot-manager';
 import { QualityManager, QualityMode } from '../../shared/three/quality-manager';
 
@@ -63,6 +63,8 @@ export class RoomViewerComponent implements OnInit, AfterViewInit, OnChanges, On
   hotspotViewModels: HotspotViewModel[] = [];
   selectedHotspot: HotspotViewModel | null = null;
   hasError = false;
+  loading = false;
+  loadProgress: number | null = null;
 
   readonly qualityOptions: { mode: QualityMode; label: string; description: string }[] = [
     { mode: 'auto', label: 'Tự động', description: 'Tự điều chỉnh FPS theo thiết bị' },
@@ -101,7 +103,7 @@ export class RoomViewerComponent implements OnInit, AfterViewInit, OnChanges, On
   ngOnInit(): void {
     this.qualityManager.setMode(this.qualityMode);
     this.prepareHotspots();
-    this.initRuntime();
+    if (this.interactive) this.initRuntime();
   }
 
   ngAfterViewInit(): void {
@@ -111,7 +113,8 @@ export class RoomViewerComponent implements OnInit, AfterViewInit, OnChanges, On
     });
 
     // Công cụ debug: click vào phòng 3D để lấy nhanh toạ độ (world + toạ độ gốc file .glb)
-    // in ra console, dùng để điền vào hotspots trong mock-data.ts.
+    // in ra console, dùng để điền vào hotspots của phòng (server/seed/room-*.js).
+    if (!this.interactive) return;
     const el = this.canvasContainer.nativeElement;
     el.addEventListener('pointerdown', this.onDebugPointerDown);
     el.addEventListener('pointerup', this.onDebugPointerUp);
@@ -125,8 +128,7 @@ export class RoomViewerComponent implements OnInit, AfterViewInit, OnChanges, On
     if (changes['room'] && !changes['room'].firstChange) {
       this.selectedHotspot = null;
       this.prepareHotspots();
-      this.buildScene();
-      this.resetCamera();
+      if (this.interactive) { this.buildScene(); this.resetCamera(); }
     }
   }
 
@@ -146,9 +148,13 @@ export class RoomViewerComponent implements OnInit, AfterViewInit, OnChanges, On
 
   private prepareHotspots(): void {
     if (!this.room) return;
+    // Tải trước đúng các món gắn trong phòng (không chờ cả danh sách sản phẩm).
+    this.productService.loadByIds(this.room.hotspots.map(h => h.productId));
+    const products = this.productService;
+    // product là getter: sản phẩm tải về lúc nào thì thẻ / nhãn hiện lúc đó.
     this.hotspotViewModels = this.room.hotspots.map(h => ({
       hotspot: h,
-      product: this.productService.getProductById(h.productId),
+      get product() { return products.getProductById(h.productId); },
     }));
     this.applyHotspotWorldPositions();
   }
@@ -192,7 +198,7 @@ export class RoomViewerComponent implements OnInit, AfterViewInit, OnChanges, On
 
     console.log('%c[Room Debug] Toạ độ tại điểm vừa click:', 'color:#CD818E;font-weight:bold;');
     console.log(
-      'Toạ độ GỐC (dán thẳng vào "position" của hotspot trong mock-data.ts):',
+      'Toạ độ GỐC (dán thẳng vào "position" của hotspot trong server/seed/room-*.js):',
       `[${rawPoint.x.toFixed(3)}, ${rawPoint.y.toFixed(3)}, ${rawPoint.z.toFixed(3)}]`
     );
     console.log(
@@ -242,6 +248,7 @@ export class RoomViewerComponent implements OnInit, AfterViewInit, OnChanges, On
         container,
         ngZone: this.ngZone,
         qualityManager: this.qualityManager,
+        toneMappingExposure: ROOM_LIGHTING.exposure,
         cameraFov: initCam.fov || 46,
         cameraInitialPos: new THREE.Vector3(initCam.x, initCam.y, initCam.z),
         controlsTarget: target,
@@ -281,7 +288,7 @@ export class RoomViewerComponent implements OnInit, AfterViewInit, OnChanges, On
       if (!this.interactive) this.runtime.controls.enabled = false;
 
       this.runtime.scene.background = new THREE.Color('#F3F1EC');
-      this.runtime.scene.fog = new THREE.FogExp2('#F3F1EC', 0.04);
+
 
       this.buildScene();
       this.runtime.requestRender(5);
@@ -294,13 +301,17 @@ export class RoomViewerComponent implements OnInit, AfterViewInit, OnChanges, On
 
   private buildScene(): void {
     if (!this.runtime || !this.room) return;
+    this.loading = true;
+    this.loadProgress = null;
     this.roomScenes.buildRoom(this.room, this.runtime.scene, () => {
+      this.ngZone.run(() => { this.loading = false; });
       this.hotspotManager.setOccluders(this.roomScenes.getOccluders());
       this.applyHotspotWorldPositions();
       if (this.runtime) {
-        this.runtime.requestRender(5);
+        this.runtime.invalidateShadows();
       }
-    });
+    }, percent => this.ngZone.run(() => { this.loadProgress = percent; }),
+       () => this.ngZone.run(() => { this.loading = false; this.hasError = true; }));
   }
 
   selectHotspot(item: HotspotViewModel): void {

@@ -58,17 +58,7 @@ export class CustomRequestDetailComponent implements OnInit {
     const text = this.chatInput.trim();
     this.customRequestService.sendMessage(this.request.id, text, 'CUSTOMER');
     this.chatInput = '';
-
-    // Mock automatic reply from technician
-    setTimeout(() => {
-      if (this.request) {
-        this.customRequestService.sendMessage(
-          this.request.id,
-          'Cảm ơn bạn! Kỹ thuật viên Luméa đã ghi nhận thông tin và sẽ điều chỉnh ngay.',
-          'SHOP_SPECIALIST'
-        );
-      }
-    }, 1200);
+    // Kỹ thuật viên trả lời từ trang admin; server tự xác định người gửi theo token nên FE không giả lập trả lời.
   }
 
   approveAndAddToCart(): void {

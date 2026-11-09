@@ -1,17 +1,29 @@
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { Room } from '../../core/models/room.model';
-import { ResourceManager } from './resource-manager';
+import { ResourceManager, createConfiguredGLTFLoader } from './resource-manager';
 
 /** Kích thước mục tiêu (đơn vị three.js) sau khi canh giữa + scale 1 model .glb thật,
  * để khớp với tầm camera đang dùng cho các phòng dựng bằng code (bàn ~2-3 đơn vị). */
 const GLB_ROOM_TARGET_SIZE = 6;
 
+/**
+ * Ánh sáng phòng .glb — 1 chỗ cho cả trang phòng 3D (room-3d) lẫn khung xem phòng (room-viewer).
+ * Ít ánh sáng "phẳng" (môi trường + bán cầu), nắng chính mạnh hơn -> có mặt sáng / mặt tối / bóng,
+ * phòng rõ khối, không bị trắng bệt.
+ */
+export const ROOM_LIGHTING = {
+  exposure: 0.8,
+  envMapIntensity: 0.5,
+  hemisphere: 0.35,
+  sun: 1.8,
+  fill: 0.3,
+};
+
 export class RoomSceneManager {
   readonly roomGroup = new THREE.Group();
   private lightsGroup = new THREE.Group();
   private occluders: THREE.Object3D[] = [];
-  private readonly gltfLoader = new GLTFLoader();
+  private readonly gltfLoader = createConfiguredGLTFLoader();
   private loadToken = 0;
 
   /**
@@ -49,7 +61,7 @@ export class RoomSceneManager {
     return this.glbObject.worldToLocal(world.clone());
   }
 
-  buildRoom(room: Room, scene: THREE.Scene, onReady?: () => void): void {
+  buildRoom(room: Room, scene: THREE.Scene, onReady?: () => void, onProgress?: (percent: number | null) => void, onError?: () => void): void {
     // Clear and dispose previous room objects and lights
     ResourceManager.deepDispose(this.roomGroup);
     ResourceManager.deepDispose(this.lightsGroup);
@@ -79,15 +91,14 @@ export class RoomSceneManager {
           gltf.scene.updateMatrixWorld(true);
           this.setupGenericLighting();
           this.centerAndNormalize(gltf.scene, room.modelFocusBounds);
-          this.roomGroup.add(gltf.scene);
           onReady?.();
         },
-        undefined,
+        event => { if (token === this.loadToken) onProgress?.(event.lengthComputable && event.total ? Math.round(event.loaded / event.total * 100) : null); },
         (err) => {
-          console.error('Failed to load room .glb, falling back to minimal study', err);
+          console.error('Failed to load room .glb', err);
           if (token !== this.loadToken) return;
-          this.buildMinimalStudy();
-          onReady?.();
+          if (onError) onError();
+          else { this.buildMinimalStudy(); onReady?.(); }
         }
       );
       return;
@@ -134,27 +145,46 @@ export class RoomSceneManager {
     wrapper.updateMatrixWorld(true);
 
     object.traverse((child) => {
-      child.castShadow = true;
-      child.receiveShadow = true;
+      const mesh = child as THREE.Mesh;
+      if (!mesh.isMesh || !mesh.geometry) return;
+      // World-space bounds include each mesh's transforms and the room normalization.
+      const bounds = new THREE.Box3().setFromObject(mesh);
+      const dimensions = bounds.getSize(new THREE.Vector3());
+      mesh.castShadow = Math.max(dimensions.x, dimensions.y, dimensions.z) >= 0.25;
+      mesh.receiveShadow = true;
+      if (bounds.getBoundingSphere(new THREE.Sphere()).radius >= 0.35) this.occluders.push(mesh);
+      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      for (const material of materials) {
+        const pbr = material as THREE.MeshStandardMaterial;
+        if (!pbr?.isMeshStandardMaterial) continue;
+        pbr.envMapIntensity = ROOM_LIGHTING.envMapIntensity;
+        for (const texture of [pbr.map, pbr.normalMap, pbr.roughnessMap]) if (texture) texture.anisotropy = 4;
+      }
     });
 
     this.roomGroup.add(wrapper);
-    this.occluders.push(wrapper);
     this.glbObject = object;
   }
 
   private setupGenericLighting(): void {
-    const ambient = new THREE.AmbientLight(0xffffff, 1.1);
+    // Màu đất của đèn bán cầu tối hơn một chút để mặt dưới / góc khuất có chiều sâu.
+    const ambient = new THREE.HemisphereLight(0xfff8f0, 0xb9ab9a, ROOM_LIGHTING.hemisphere);
     this.lightsGroup.add(ambient);
 
-    const sunLight = new THREE.DirectionalLight(0xfff3e0, 1.6);
+    const sunLight = new THREE.DirectionalLight(0xfff3e0, ROOM_LIGHTING.sun);
     sunLight.position.set(5, 10, 6);
     sunLight.castShadow = true;
     sunLight.shadow.mapSize.width = 1024;
     sunLight.shadow.mapSize.height = 1024;
+    sunLight.shadow.camera.left = sunLight.shadow.camera.bottom = -4.5;
+    sunLight.shadow.camera.right = sunLight.shadow.camera.top = 4.5;
+    sunLight.shadow.camera.near = 0.5;
+    sunLight.shadow.camera.far = 18;
+    sunLight.shadow.bias = -0.0005;
+    sunLight.shadow.normalBias = 0.02;
     this.lightsGroup.add(sunLight);
 
-    const fill = new THREE.DirectionalLight(0xdde8ff, 0.6);
+    const fill = new THREE.DirectionalLight(0xdde8ff, ROOM_LIGHTING.fill);
     fill.position.set(-6, 4, -4);
     this.lightsGroup.add(fill);
   }

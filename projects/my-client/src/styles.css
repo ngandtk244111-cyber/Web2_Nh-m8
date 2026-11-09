@@ -15,13 +15,13 @@
  */
 :root {
   /* Colors — theme be kraft MUJI, accent đỏ MUJI */
-  --bg-primary: #F7F2E7;
-  --bg-section: #EFE6D3;
+  --bg-primary: #FAF9F6;
+  --bg-section: #F2EFEA;
   --bg-card: #ffffff;
   --bg-card-hover: #F8F1EB;
-  --text-primary: #111111;
-  --text-secondary: #333333;
-  --text-muted: #888888;
+  --text-primary: #292522;
+  --text-secondary: #625A54;
+  --text-muted: #625A54;
   --accent-primary: #A3152D;
   --accent-light: #CD818E;
   --accent-dark: #891226;
@@ -29,7 +29,7 @@
   --accent-terracotta: #A3152D;
   --accent-terracotta-dark: #6C0E1E;
   --accent-terracotta-light: #F3E3D9;
-  --border-subtle: rgba(0, 0, 0, 0.08);
+  --border-subtle: #DCD5CC;
 
   /* Typography — Inter cho cả heading lẫn nội dung/UI */
   --font-family-heading: 'Inter', system-ui, sans-serif;
@@ -519,4 +519,9 @@ body.vw-open .fsb {
 
 @media (hover: none) {
   .pp .pp__img--alt { display: none; }
+}
+
+:focus-visible { outline: 3px solid #A3152D; outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
 }

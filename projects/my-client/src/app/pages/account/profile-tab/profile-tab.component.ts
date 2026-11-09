@@ -79,7 +79,13 @@ export class ProfileTabComponent implements OnDestroy {
         this.phoneOtp = '';
         this.startResendTimer();
         this.toastService.success('Đã gửi mã OTP tới ' + phone);
-        if (res.devOtp) this.toastService.info(`[DEV] Mã OTP: ${res.devOtp}`, 8000);
+        // Chưa có nhà mạng gửi SMS thật: giả lập tin nhắn về máy — tự điền mã sau ~1s, khách bấm xác nhận.
+        if (res.devOtp) {
+          const code = res.devOtp;
+          setTimeout(() => {
+            if (this.phoneStep === 'otp' && !this.phoneOtp) this.phoneOtp = code;
+          }, 1000);
+        }
       },
       error: (err) => {
         this.phoneBusy = false;

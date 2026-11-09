@@ -61,12 +61,6 @@
   font-weight: 700;
 }
 
-.banner-link {
-  font-size: 12px;
-  color: var(--color-text-tertiary);
-  word-break: break-all;
-}
-
 .banner-actions {
   display: flex;
   align-items: center;

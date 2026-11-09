@@ -1,6 +1,7 @@
 const express = require('express');
 const { sendError } = require('../utils/http-error');
 const Warranty = require('../models/Warranty');
+const Admin = require('../models/Admin');
 const { requirePermission } = require('../middleware/auth');
 const { createWarranty } = require('../utils/warranty');
 const { isLocked, recordFailure, normalizePhone } = require('../utils/order-access');
@@ -14,6 +15,20 @@ async function findOwnedWarranty(warrantyCode, phone) {
   if (!code || !cleanPhone) return null;
   const warranty = await Warranty.findOne({ warrantyCode: code });
   return warranty && normalizePhone(warranty.customerPhone) === cleanPhone ? warranty : null;
+}
+
+const MAX_EXTEND_MONTHS = 60;
+
+async function adminName(adminId) {
+  const admin = await Admin.findById(adminId, { fullName: 1, username: 1 }).lean();
+  return admin ? admin.fullName || admin.username : '';
+}
+
+/** Phiếu trả cho khách: bỏ ghi chú nội bộ của nhân viên. */
+function publicWarranty(warranty) {
+  const obj = warranty.toJSON();
+  delete obj.adminNotes;
+  return obj;
 }
 
 // Admin: toàn bộ phiếu bảo hành, mới nhất trước.
@@ -36,6 +51,46 @@ router.patch('/admin/:warrantyCode/resolve', requirePermission('orders.edit'), a
     }
     warranty.claimHistory.push({ note: String(req.body.note || 'Đã xử lý yêu cầu bảo hành').trim().slice(0, 500) });
     warranty.status = 'ACTIVE';
+    await warranty.save();
+    res.json({ success: true, warranty });
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
+// Admin: thêm ghi chú nội bộ vào phiếu.
+router.post('/admin/:warrantyCode/notes', requirePermission('orders.edit'), async (req, res) => {
+  try {
+    const note = String(req.body.note || '').trim().slice(0, 500);
+    if (!note) return res.status(400).json({ success: false, error: 'Vui lòng nhập nội dung ghi chú' });
+    const warranty = await Warranty.findOne({ warrantyCode: req.params.warrantyCode });
+    if (!warranty) return res.status(404).json({ success: false, error: 'Không tìm thấy phiếu bảo hành' });
+    warranty.adminNotes.push({ note, author: await adminName(req.adminId) });
+    await warranty.save();
+    res.json({ success: true, warranty });
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
+// Admin: gia hạn phiếu thêm N tháng. Phiếu đã hết hạn được gia hạn qua hôm nay thì có hiệu lực lại.
+router.patch('/admin/:warrantyCode/extend', requirePermission('orders.edit'), async (req, res) => {
+  try {
+    const months = Number(req.body.months);
+    if (!Number.isInteger(months) || months <= 0 || months > MAX_EXTEND_MONTHS) {
+      return res.status(400).json({ success: false, error: `Số tháng gia hạn phải là số nguyên từ 1 đến ${MAX_EXTEND_MONTHS}` });
+    }
+    const reason = String(req.body.reason || '').trim().slice(0, 300);
+    const warranty = await Warranty.findOne({ warrantyCode: req.params.warrantyCode });
+    if (!warranty) return res.status(404).json({ success: false, error: 'Không tìm thấy phiếu bảo hành' });
+
+    warranty.warrantyMonths += months;
+    if (warranty.status === 'EXPIRED' && warranty.expiresAt > new Date()) warranty.status = 'ACTIVE';
+    const until = warranty.expiresAt.toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+    warranty.adminNotes.push({
+      note: `Gia hạn thêm ${months} tháng (đến ${until})${reason ? `: ${reason}` : ''}`,
+      author: await adminName(req.adminId),
+    });
     await warranty.save();
     res.json({ success: true, warranty });
   } catch (err) {
@@ -89,7 +144,7 @@ router.get('/lookup', async (req, res) => {
       await warranty.save();
     }
 
-    res.json({ success: true, warranty });
+    res.json({ success: true, warranty: publicWarranty(warranty) });
   } catch (err) {
     sendError(res, err);
   }
@@ -115,7 +170,7 @@ router.post('/:warrantyCode/claim', async (req, res) => {
     warranty.status = 'CLAIMED';
     await warranty.save();
 
-    res.json({ success: true, warranty });
+    res.json({ success: true, warranty: publicWarranty(warranty) });
   } catch (err) {
     sendError(res, err);
   }

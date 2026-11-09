@@ -39,6 +39,7 @@ app.use('/api/banners', require('./routes/bannerRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/newsletter', require('./routes/newsletterRoutes'));
 app.use('/api/coupons', require('./routes/couponRoutes'));
+app.use('/api/workshop-receipts', require('./routes/workshopReceiptRoutes'));
 app.use('/api/ai/conversations', require('./routes/aiConversationRoutes'));
 app.use('/api/ai', require('./routes/aiRoutes'));
 

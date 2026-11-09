@@ -13,34 +13,34 @@
   --color-primary-lighter: #E7B3BC;
   --color-primary-bg: #F8E8EB;
 
-  --color-success: #2D7A4F;
+  --color-success: #286849;
   --color-success-bg: #E6F4EC;
-  --color-warning: #D97706;
+  --color-warning: #A85408;
   --color-warning-bg: #FFF4E0;
-  --color-danger: #C42326;
+  --color-danger: #B32936;
   --color-danger-bg: #FEEAE9;
-  --color-info: #2F6690;
+  --color-info: #356380;
   --color-info-bg: #E5EFF7;
 
-  --color-neutral-100: #1F1712;
-  --color-neutral-90: #3C332D;
-  --color-neutral-80: #5B514A;
-  --color-neutral-70: #7A6F67;
-  --color-neutral-60: #93877E;
-  --color-neutral-50: #C2B8AA;
-  --color-neutral-40: #E3D9C8;
-  --color-neutral-30: #EDE5D7;
-  --color-neutral-20: #F6F1E8;
+  --color-neutral-100: #292522;
+  --color-neutral-90: #403A35;
+  --color-neutral-80: #544E49;
+  --color-neutral-70: #625A54;
+  --color-neutral-60: #6E6760;
+  --color-neutral-50: #B9B8B3;
+  --color-neutral-40: #D8DCD8;
+  --color-neutral-30: #E4E7E4;
+  --color-neutral-20: #F3F5F3;
   --color-neutral-10: #FFFFFF;
 
-  --color-bg-light: #F7F2E9;
+  --color-bg-light: #F5F6F5;
   --color-bg-secondary: #FFFFFF;
-  --color-text-primary: #1F1712;
-  --color-text-secondary: #5B514A;
-  --color-text-tertiary: #93877E;
+  --color-text-primary: #292522;
+  --color-text-secondary: #625A54;
+  --color-text-tertiary: #625A54;
 
-  --main-dark: #5E0D1B;
-  --sidebar-bg: #7E1426;
+  --main-dark: #48101C;
+  --sidebar-bg: #571321;
   --sidebar-width: 236px;
   --sidebar-collapsed-width: 70px;
   --topbar-height: 64px;
@@ -182,9 +182,8 @@ a {
   margin: 0;
   font-size: 22px;
   font-weight: 700;
-  text-transform: uppercase;
-  color: var(--color-primary);
-  letter-spacing: 0;
+  color: var(--color-text-primary);
+  letter-spacing: -0.02em;
 }
 
 .page-subtitle {
@@ -213,8 +212,7 @@ a {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
+  letter-spacing: 0;
   cursor: pointer;
   transition: background-color 0.2s, transform 0.2s;
 }
@@ -285,7 +283,7 @@ a {
   border-radius: var(--radius-lg);
   /* Trung tính: viền xám mảnh, không viền màu phía trên — màu chỉ dùng cho ô đang chọn */
   border: 1px solid var(--color-neutral-30);
-  box-shadow: none;
+  box-shadow: 0 2px 8px rgba(31, 23, 18, 0.05);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -301,9 +299,10 @@ a {
   border-color: var(--color-neutral-50);
 }
 
+/* Thẻ thống kê để trung tính (không tô màu theo loại); thẻ đang chọn để lọc chỉ viền đậm hơn. */
 .stat-card.active {
-  border-color: var(--color-primary);
-  box-shadow: inset 0 0 0 1px var(--color-primary);
+  border-color: var(--color-neutral-80);
+  box-shadow: inset 0 0 0 1px var(--color-neutral-80);
   background: var(--color-bg-light);
 }
 
@@ -316,11 +315,10 @@ a {
 }
 
 .stat-label {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--color-text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.35px;
+  letter-spacing: 0;
   line-height: 1.25;
   margin-bottom: 4px;
 }
@@ -329,7 +327,7 @@ a {
   font-size: 22px;
   font-weight: 700;
   line-height: 1.1;
-  color: var(--color-text-primary, #1F1712);
+  color: var(--color-text-primary);
 }
 
 .stat-sub {
@@ -338,7 +336,6 @@ a {
   margin-top: 2px;
 }
 
-/* Các class tone-* trên .stat-card giữ trong template nhưng không còn tô màu (bỏ màu cho đỡ rối mắt). */
 
 /* ========== FILTER BAR ========== */
 .filter-bar {
@@ -544,14 +541,13 @@ a {
 }
 
 .admin-table thead th {
-  background: var(--color-primary);
-  color: #fff;
-  padding: 10px 12px;
+  background: #EFF2EF;
+  color: var(--color-text-secondary);
+  padding: 11px 12px;
   text-align: left;
   font-size: 12px;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0;
   white-space: nowrap;
   position: sticky;
   top: 0;
@@ -726,8 +722,7 @@ a {
 .section-title {
   font-size: 14px;
   font-weight: 700;
-  text-transform: uppercase;
-  color: var(--color-primary);
+  color: var(--color-text-primary);
   margin: 0 0 14px;
   display: flex;
   align-items: center;
@@ -1079,4 +1074,10 @@ a {
 .leaflet-container,
 .flatpickr-calendar {
   font-family: var(--font-family-base);
+}
+
+/* Tiêu điểm rõ ràng cho điều hướng và các tác vụ quản trị. */
+:focus-visible { outline: 3px solid #A3152D; outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
 }

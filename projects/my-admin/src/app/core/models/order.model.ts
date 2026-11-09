@@ -58,6 +58,8 @@ export interface Order {
   status: OrderStatus;
   hasPrintOnDemandItems: boolean;
   productionProgress?: ProductionProgress;
+  /** Xưởng làm các món in 3D / thiết kế riêng — ghi khi đơn vào "Đang sản xuất". */
+  productionWorkshops?: { workshopId: string | null; workshopName: string; items: string[] }[];
   items: CartItem[];
   shippingAddress: ShippingAddress;
   paymentMethod: 'COD' | 'BANK_TRANSFER' | 'MOMO' | 'ZALOPAY' | 'VNPAY';

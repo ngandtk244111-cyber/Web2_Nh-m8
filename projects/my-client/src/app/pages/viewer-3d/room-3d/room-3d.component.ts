@@ -1,11 +1,12 @@
 import {
   AfterViewInit,
-  ChangeDetectorRef,
   Component,
   ElementRef,
   NgZone,
   OnDestroy,
   ViewChild,
+  ViewChildren,
+  QueryList,
   HostListener,
   computed,
   effect,
@@ -17,6 +18,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import * as THREE from 'three';
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { Room } from '../../../core/models/room.model';
 import { Product } from '../../../core/models/product.model';
@@ -25,7 +27,8 @@ import { ProductService } from '../../../core/services/product.service';
 import { CartService } from '../../../core/services/cart.service';
 import { AppIconComponent } from '../../../components/icon/icon.component';
 import { VndPipe } from '../../../shared/pipes/vnd.pipe';
-import { RoomSceneManager } from '../../../shared/three/room-scenes';
+import { ResourceManager } from '../../../shared/three/resource-manager';
+import { ROOM_LIGHTING, RoomSceneManager } from '../../../shared/three/room-scenes';
 
 /** Điểm sản phẩm trong phòng + vị trí trên màn hình (cập nhật mỗi vài khung hình). */
 interface Spot {
@@ -80,7 +83,10 @@ export class Room3dComponent implements AfterViewInit, OnDestroy {
   private productService = inject(ProductService);
   private cartService = inject(CartService);
   private ngZone = inject(NgZone);
-  private cdr = inject(ChangeDetectorRef);
+  @ViewChildren('spotElement') spotElements!: QueryList<ElementRef<HTMLButtonElement>>;
+  private environmentTarget: THREE.WebGLRenderTarget | null = null;
+  private lastOcclusionPosition = new THREE.Vector3(Infinity, Infinity, Infinity);
+  private lastOcclusionQuaternion = new THREE.Quaternion(0, 0, 0, 0);
 
   private roomId = toSignal(this.route.paramMap.pipe(map(p => p.get('id') || '')), { initialValue: '' });
   readonly rooms = this.roomService.rooms;
@@ -89,6 +95,8 @@ export class Room3dComponent implements AfterViewInit, OnDestroy {
   readonly status = computed(() => (this.room() ? 'ready' : this.rooms().length ? 'not-found' : 'loading'));
 
   readonly modelLoaded = signal(false);
+  readonly modelError = signal(false);
+  readonly loadProgress = signal<number | null>(null);
   /** Trình duyệt không tạo được WebGL (đang tắt tăng tốc phần cứng, card đồ hoạ lỗi, quá nhiều tab 3D...). */
   readonly webglError = signal(false);
   /** Đã chờ lâu bất thường mà phòng chưa dựng xong -> hiện gợi ý + nút tải lại. */
@@ -153,6 +161,8 @@ export class Room3dComponent implements AfterViewInit, OnDestroy {
     cancelAnimationFrame(this.animationId);
     window.removeEventListener('resize', this.onResize);
     this.controls?.dispose();
+    if (this.scene) { this.scene.environment = null; ResourceManager.deepDispose(this.scene); }
+    this.environmentTarget?.dispose();
     this.renderer?.dispose();
   }
 
@@ -168,10 +178,20 @@ export class Room3dComponent implements AfterViewInit, OnDestroy {
     this.camera = new THREE.PerspectiveCamera(50, w / h, 0.05, 300);
 
     this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+    this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = ROOM_LIGHTING.exposure;
+    const pmrem = new THREE.PMREMGenerator(this.renderer);
+    const environment = new RoomEnvironment();
+    this.environmentTarget = pmrem.fromScene(environment);
+    this.scene.environment = this.environmentTarget.texture;
+    environment.dispose();
+    pmrem.dispose();
     this.renderer.setSize(w, h);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.shadowMap.autoUpdate = false;
     el.appendChild(this.renderer.domElement);
 
     this.createBackground();
@@ -229,11 +249,16 @@ export class Room3dComponent implements AfterViewInit, OnDestroy {
   /** Dựng phòng + đặt camera / giới hạn xoay theo cấu hình phòng (cùng quy ước với room-viewer). */
   private loadRoom(room: Room): void {
     this.loadedRoomId = room.id;
+    this.lastOcclusionPosition.set(Infinity, Infinity, Infinity);
     this.flight = null;
     this.active.set(null);
     this.buyOpen.set(false);
     this.selectedProductIds = new Set(room.hotspots.map(h => h.productId));
+    // Tải trước đúng các món gắn trong phòng — thẻ sản phẩm hiện ngay, không chờ cả danh sách ~1000 món.
+    this.productService.loadByIds(room.hotspots.map(h => h.productId));
     this.modelLoaded.set(false);
+    this.modelError.set(false);
+    this.loadProgress.set(null);
     this.textVisible.set(false);
     this.slowLoad.set(false);
     if (this.textTimer) clearTimeout(this.textTimer);
@@ -279,7 +304,7 @@ export class Room3dComponent implements AfterViewInit, OnDestroy {
       c.minAzimuthAngle = -Infinity;
       c.maxAzimuthAngle = Infinity;
     }
-    c.autoRotate = true;
+    c.autoRotate = false;
     c.autoRotateSpeed = walk ? AUTO_ROTATE_SPEED * 0.6 : AUTO_ROTATE_SPEED;
     c.enabled = true;
     c.update();
@@ -300,13 +325,16 @@ export class Room3dComponent implements AfterViewInit, OnDestroy {
         const h = room.hotspots.find(x => x.id === s.id)!;
         s.world.copy(this.roomScenes.rawToWorldPosition(h.position));
       }
+      this.renderer.shadowMap.needsUpdate = true;
+      this.controls.autoRotate = true;
       this.ngZone.run(() => {
         this.modelLoaded.set(true);
         this.slowLoad.set(false);
         if (this.slowTimer) clearTimeout(this.slowTimer);
         this.textTimer = setTimeout(() => this.textVisible.set(true), 700);
       });
-    });
+    }, percent => this.ngZone.run(() => this.loadProgress.set(percent)),
+       () => this.ngZone.run(() => { this.modelError.set(true); if (this.slowTimer) clearTimeout(this.slowTimer); }));
   }
 
   /* ============================== RENDER LOOP ============================== */
@@ -333,8 +361,14 @@ export class Room3dComponent implements AfterViewInit, OnDestroy {
 
     this.frameCount++;
     if (this.modelLoaded() && this.frameCount % 3 === 0) {
-      this.projectSpots(this.frameCount % 12 === 0);
-      this.cdr.detectChanges();
+      const changed = this.camera.position.distanceToSquared(this.lastOcclusionPosition) > 0.0001 ||
+        1 - Math.abs(this.camera.quaternion.dot(this.lastOcclusionQuaternion)) > 0.00001;
+      const checkOcclusion = this.frameCount % 12 === 0 && changed;
+      if (checkOcclusion) {
+        this.lastOcclusionPosition.copy(this.camera.position);
+        this.lastOcclusionQuaternion.copy(this.camera.quaternion);
+      }
+      this.projectSpots(checkOcclusion);
     }
 
     this.renderer.render(this.scene, this.camera);
@@ -358,13 +392,21 @@ export class Room3dComponent implements AfterViewInit, OnDestroy {
     const focused = this.active() !== null || this.flight !== null;
     const v = new THREE.Vector3();
 
-    for (const s of this.spots) {
+    const elements = this.spotElements?.toArray() || [];
+    for (const [index, s] of this.spots.entries()) {
       if (checkOcclusion) s.occluded = this.isOccluded(s.world);
       v.copy(s.world).project(this.camera);
       s.x = (v.x * 0.5 + 0.5) * w;
       s.y = (-v.y * 0.5 + 0.5) * h;
       s.visible = !focused && !s.occluded && v.z > -1 && v.z < 1
         && s.x > 30 && s.x < w - 30 && s.y > 70 && s.y < h - 60;
+      const el = elements[index]?.nativeElement;
+      if (el) {
+        el.style.left = `${s.x}px`;
+        el.style.top = `${s.y}px`;
+        el.classList.toggle('r3__spot--hidden', !s.visible);
+        el.tabIndex = s.visible ? 0 : -1;
+      }
     }
   }
 
@@ -374,7 +416,7 @@ export class Room3dComponent implements AfterViewInit, OnDestroy {
     this.raycaster.set(origin, point.clone().sub(origin).normalize());
     this.raycaster.near = 0.05;
     this.raycaster.far = dist;
-    const hit = this.raycaster.intersectObject(this.roomScenes.roomGroup, true)[0];
+    const hit = this.raycaster.intersectObjects(this.roomScenes.getOccluders(), false)[0];
     // Điểm có thể nằm sát/bên trong món đồ (vd giữa lòng ghế) -> chừa sai số để không tự che chính nó;
     // chỉ ẩn khi có vật chắn rõ ràng phía trước (tường, món đồ khác).
     return !!hit && hit.distance < dist - Math.max(0.35, dist * 0.15);
@@ -481,7 +523,9 @@ export class Room3dComponent implements AfterViewInit, OnDestroy {
 
   /** Sản phẩm trong phòng theo thứ tự chấm (cache: sản phẩm có thể tải về sau phòng). */
   get roomProducts(): Product[] {
-    const key = this.loadedRoomId + ':' + this.productService.products().length;
+    // Khoá theo số món của phòng đã có dữ liệu (tải lẻ theo id hoặc từ danh sách đầy đủ).
+    const found = this.spots.reduce((n, s) => n + (this.productOf(s) ? 1 : 0), 0);
+    const key = this.loadedRoomId + ':' + found;
     if (key !== this.rpKey) {
       this.rpKey = key;
       this.rpCache = this.spots.map(s => this.productOf(s)).filter((p): p is Product => !!p);

@@ -5,6 +5,7 @@ const { writeAudit } = require('../utils/audit');
 const { requireAdminId, requirePermission, validId } = require('../middleware/auth');
 const { ROLES, SUPER_ADMIN_NAME, getAdminAccess, getPermissionMatrix, allows } = require('../utils/permissions');
 const { removeUnusedProductImages } = require('../utils/images');
+const { DEFAULT_WORKSHOPS } = require('../utils/workshops');
 const Admin = require('../models/Admin');
 const AdminConfig = require('../models/AdminConfig');
 const AuditLog = require('../models/AuditLog');
@@ -16,6 +17,7 @@ router.use(requireAdminId);
 const CONFIG_KEYS = {
   categories: 'array',
   suppliers: 'array',
+  workshops: 'array',
   banners: 'array',
   settings: 'object',
   permissions: 'object',
@@ -24,6 +26,7 @@ const CONFIG_KEYS = {
 const CONFIG_ACCESS = {
   categories: { read: 'products.view', write: 'products.edit' },
   suppliers: { read: 'inventory.view', write: 'inventory.edit' },
+  workshops: { read: 'inventory.view', write: 'inventory.edit' },
   banners: { read: 'marketing.view', write: 'marketing.edit' },
   settings: { read: 'settings.view', write: 'settings.edit' },
   permissions: { read: 'staff.view', write: null },
@@ -55,6 +58,8 @@ router.get('/config', async (req, res) => {
     const docs = await AdminConfig.find({ key: { $in: readable } }, { key: 1, value: 1 }).lean();
     const config = Object.fromEntries(docs.map(d => [d.key, d.value]));
     if (readable.includes('permissions')) config.permissions = await getPermissionMatrix();
+    // Chưa lưu danh sách xưởng lần nào -> trả danh sách mặc định (nguồn duy nhất ở utils/workshops.js).
+    if (readable.includes('workshops') && !config.workshops) config.workshops = DEFAULT_WORKSHOPS;
     res.json({ success: true, config });
   } catch (err) {
     sendError(res, err);

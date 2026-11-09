@@ -7,7 +7,7 @@ const ADMIN = `${environment.apiUrl}/admin`;
 const COUPONS = `${environment.apiUrl}/coupons`;
 const WARRANTY = `${environment.apiUrl}/warranty`;
 
-export type AdminConfigKey = 'categories' | 'suppliers' | 'banners' | 'settings' | 'permissions';
+export type AdminConfigKey = 'categories' | 'suppliers' | 'workshops' | 'banners' | 'settings' | 'permissions';
 
 /** Dữ liệu riêng của my-admin: cấu hình, nhật ký, nhân viên, mã giảm giá, phiếu bảo hành. */
 @Injectable({ providedIn: 'root' })
@@ -68,5 +68,13 @@ export class AdminDataService {
 
   resolveWarrantyClaim(code: string, note: string): Observable<{ success: boolean; warranty: any }> {
     return this.http.patch<{ success: boolean; warranty: any }>(`${WARRANTY}/admin/${encodeURIComponent(code)}/resolve`, { note });
+  }
+
+  addWarrantyNote(code: string, note: string): Observable<{ success: boolean; warranty: any }> {
+    return this.http.post<{ success: boolean; warranty: any }>(`${WARRANTY}/admin/${encodeURIComponent(code)}/notes`, { note });
+  }
+
+  extendWarranty(code: string, months: number, reason: string): Observable<{ success: boolean; warranty: any }> {
+    return this.http.patch<{ success: boolean; warranty: any }>(`${WARRANTY}/admin/${encodeURIComponent(code)}/extend`, { months, reason });
   }
 }

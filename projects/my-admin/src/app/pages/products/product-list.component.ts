@@ -14,7 +14,7 @@ import { PagerComponent, pageSlice } from '../../components/pager/pager.componen
 import { MascotLoadingComponent } from '../../components/mascot-loading/mascot-loading.component';
 import { exportXlsx } from '../../shared/utils/export';
 import { environment } from '../../../environments/environment';
-import { PRODUCT_BADGE_OPTIONS, PRODUCT_CATEGORY_SECTIONS, productionTypeLabel } from './product-options';
+import { PRODUCT_BADGE_OPTIONS, PRODUCT_CATEGORY_OPTIONS, PRODUCT_CATEGORY_SECTIONS, productionTypeLabel } from './product-options';
 import { ImportRow, ImportValues, PRODUCTION_TYPE_TEXT, downloadImportTemplate, readProductFile, validateRows } from './product-import';
 
 export type ProductFilter = 'ALL' | 'READY' | 'POD' | 'CUSTOMIZABLE' | 'LOW';
@@ -81,6 +81,9 @@ export class ProductListComponent implements OnInit {
   ngOnInit(): void {
     const f = this.route.snapshot.queryParamMap.get('filter') as ProductFilter | null;
     if (f && FILTERS.some(x => x.key === f)) this.filter.set(f);
+    // Mở từ chi tiết danh mục: /products?category=sofa
+    const cat = this.route.snapshot.queryParamMap.get('category');
+    if (cat && PRODUCT_CATEGORY_OPTIONS.some(o => o.value === cat)) this.category.set(cat);
     this.productService.refresh();
   }
 

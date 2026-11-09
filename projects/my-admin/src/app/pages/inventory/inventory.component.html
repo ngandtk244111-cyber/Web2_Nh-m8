@@ -49,6 +49,7 @@
         <tr>
           <th>Sản phẩm</th>
           <th>Danh mục</th>
+          <th>Xưởng phụ trách</th>
           <th class="text-right">Tồn hiện tại</th>
           <th class="text-right">Đã bán</th>
           <th>Trạng thái</th>
@@ -67,6 +68,7 @@
             </div>
           </td>
           <td>{{ item.category }}</td>
+          <td>{{ item.workshop }}</td>
           <td class="text-right cell-strong">{{ item.currentStock }}</td>
           <td class="text-right">{{ item.soldCount }}</td>
           <td><span class="status-badge" [ngClass]="statusClasses[item.status]">{{ statusLabels[item.status] }}</span></td>
@@ -106,13 +108,35 @@
         <label class="form-label">Số lượng {{ adjustMode === 'IN' ? 'nhập' : 'xuất' }} <span class="req">*</span></label>
         <input type="number" min="1" step="1" class="form-control" [(ngModel)]="adjustQty">
       </div>
-      <div class="mb-3">
-        <label class="form-label">Lý do <span class="req">*</span></label>
-        <select class="form-select mb-2" [(ngModel)]="adjustReason">
-          <option *ngFor="let r of (adjustMode === 'IN' ? inReasons : outReasons)" [value]="r">{{ r }}</option>
-        </select>
-        <input class="form-control" [(ngModel)]="adjustReason" placeholder="Hoặc ghi lý do khác">
+      <div class="mb-3" *ngIf="adjustMode === 'IN' && canReceiveFromWorkshop">
+        <label class="form-label">Nguồn nhập</label>
+        <div class="chip-tabs mb-0">
+          <button type="button" class="chip-tab" [class.active]="inSource === 'WORKSHOP'" (click)="inSource = 'WORKSHOP'">Từ xưởng</button>
+          <button type="button" class="chip-tab" [class.active]="inSource === 'OTHER'" (click)="inSource = 'OTHER'">Lý do khác</button>
+        </div>
       </div>
+
+      <ng-container *ngIf="fromWorkshop; else reasonBlock">
+        <div class="mb-3">
+          <label class="form-label">Xưởng giao hàng <span class="req">*</span></label>
+          <select class="form-select" [(ngModel)]="adjustWorkshopId">
+            <option *ngFor="let w of activeWorkshops()" [value]="w.id">{{ w.name }}{{ w.id === item.workshopId ? ' (phụ trách)' : '' }}</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Ghi chú</label>
+          <input class="form-control" [(ngModel)]="adjustNote" placeholder="vd: lô tháng 11, thiếu 2 cái giao bù sau">
+          <div class="form-hint">Lần nhập này được lưu vào lịch sử giao nhận của xưởng.</div>
+        </div>
+      </ng-container>
+      <ng-template #reasonBlock>
+        <div class="mb-3">
+          <label class="form-label">Lý do <span class="req">*</span></label>
+          <select class="form-select" [(ngModel)]="adjustReason">
+            <option *ngFor="let r of (adjustMode === 'IN' ? inReasons : outReasons)" [value]="r">{{ r }}</option>
+          </select>
+        </div>
+      </ng-template>
       <div class="notice-box mb-0" [ngClass]="adjustResult !== null && adjustResult < 0 ? 'danger' : 'info'" *ngIf="adjustResult !== null">
         Tồn sau điều chỉnh: <b>{{ adjustResult }}</b> cái
         <span *ngIf="adjustResult < 0"> — vượt quá số đang có</span>

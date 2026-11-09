@@ -103,6 +103,14 @@
               <input type="number" min="0" step="1" class="form-control" name="inStock" [(ngModel)]="form.inStock">
               <div class="form-hint" *ngIf="form.productionType === 'PRINT_ON_DEMAND'">Hàng in theo đơn — tồn kho chỉ để tham khảo.</div>
             </div>
+            <div class="col-md-8">
+              <label class="form-label">Xưởng phụ trách</label>
+              <select class="form-select" name="workshopId" [(ngModel)]="form.workshopId">
+                <option value="">Tự động theo loại sản phẩm — {{ autoWorkshopName() }}</option>
+                <option *ngFor="let w of activeWorkshops()" [value]="w.id">{{ w.name }}</option>
+              </select>
+              <div class="form-hint">Xưởng làm sản phẩm này — dùng khi tạo phiếu đặt xưởng và giao đơn in 3D cho xưởng.</div>
+            </div>
           </div>
         </div>
 

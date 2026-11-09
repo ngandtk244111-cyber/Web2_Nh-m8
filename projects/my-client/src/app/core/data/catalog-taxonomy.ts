@@ -46,6 +46,8 @@ export interface CatalogLink {
 }
 
 const img = (id: string, w = 480) => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=${w}&q=70`;
+/** Minh hoạ 3D tông kem có sẵn trong assets (cùng bộ với trang chủ). */
+const art = (name: string) => `assets/categories/${name}.png`;
 
 export const CATALOG_DEPARTMENTS: CatalogDepartment[] = [
   {
@@ -84,16 +86,18 @@ export const CATALOG_DEPARTMENTS: CatalogDepartment[] = [
       { key: 'tuong-figure', label: 'Tượng & figure', image: img('1618220048045-10a6dbdf83e0'), categories: ['sculpture'] },
       { key: 'chau-cay', label: 'Chậu cây', image: img('1485955900006-10f4d324d411'), categories: ['plant_pot'] },
       { key: 'khung-anh', label: 'Khung ảnh', image: img('1543487945-139a97f387d5'), categories: ['frame'] },
+      { key: 'guong', label: 'Gương trang trí', image: art('khong-gian'), categories: ['mirror'] },
     ],
   },
   {
     key: 'do-dung',
     label: 'Đồ dùng & phụ kiện',
-    description: 'Khay, hộp đựng, giá đỡ — phụ kiện decor gọn gàng cho bàn làm việc.',
+    description: 'Khay, hộp đựng, giá đỡ, thảm, chăn ga và đồ bàn ăn cho ngôi nhà.',
     image: img('1524758631624-e2822e304c36'),
     subcategories: [
       { key: 'khay-hop-dung', label: 'Khay & hộp đựng', image: img('1610701596007-11502861dcfa'), categories: ['organizer', 'tray'] },
       { key: 'gia-do', label: 'Giá đỡ & bookend', image: img('1532372320572-cda25653a26d'), categories: ['bookend'] },
+      { key: 'do-dung-gia-dinh', label: 'Đồ dùng gia đình', image: art('phong-cach'), categories: ['household'] },
     ],
   },
 ];
@@ -129,6 +133,8 @@ const DEFAULT_SPACES: Record<ProductCategory, SpaceKey[]> = {
   candle_holder: ['phong-ngu', 'goc-chill'],
   tray: ['phong-khach', 'phong-lam-viec'],
   bookend: ['phong-hoc', 'phong-lam-viec'],
+  mirror: ['phong-khach', 'phong-ngu'],
+  household: ['phong-khach', 'phong-ngu'],
 };
 
 /** Nhóm chất liệu hiển thị cho người dùng — suy ra từ materialInfo/printMaterial thật của sản phẩm. */

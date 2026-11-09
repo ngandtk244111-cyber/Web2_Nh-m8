@@ -2,6 +2,7 @@ const express = require('express');
 const { sendError } = require('../utils/http-error');
 const Warranty = require('../models/Warranty');
 const Admin = require('../models/Admin');
+const Order = require('../models/Order');
 const { requirePermission } = require('../middleware/auth');
 const { createWarranty } = require('../utils/warranty');
 const { isLocked, recordFailure, normalizePhone } = require('../utils/order-access');
@@ -98,24 +99,49 @@ router.patch('/admin/:warrantyCode/extend', requirePermission('orders.edit'), as
   }
 });
 
-// Admin: issue a warranty card for a shipped order.
+// Admin: cấp phiếu cho các món của 1 đơn ĐÃ GIAO. Khách, sản phẩm, ngày mua lấy từ chính đơn (không
+// nhập tay) và mã phiếu ghi lên món trong đơn — phiếu luôn khớp với trang chi tiết đơn của khách.
+// Món đã có phiếu (tự cấp khi giao hàng) thì bỏ qua, không tạo trùng.
 router.post('/', requirePermission('orders.edit'), async (req, res) => {
   try {
-    const { orderNumber, productName, customerName, customerPhone, purchasedAt, warrantyMonths } = req.body;
-    if (!orderNumber || !productName || !customerName || !customerPhone) {
-      return res.status(400).json({ success: false, error: 'Thiếu thông tin phiếu bảo hành' });
+    const orderNumber = String(req.body.orderNumber || '').trim();
+    const order = await Order.findOne({ orderNumber });
+    if (!order) return res.status(404).json({ success: false, error: 'Không tìm thấy đơn hàng' });
+    if (order.status !== 'DELIVERED') {
+      return res.status(400).json({ success: false, error: 'Chỉ cấp phiếu bảo hành cho đơn đã giao thành công' });
     }
+    const months = Number(req.body.warrantyMonths || 12);
+    if (!Number.isInteger(months) || months < 1 || months > MAX_EXTEND_MONTHS) {
+      return res.status(400).json({ success: false, error: `Thời hạn bảo hành từ 1 đến ${MAX_EXTEND_MONTHS} tháng` });
+    }
+    const wanted = Array.isArray(req.body.itemIds) && req.body.itemIds.length ? req.body.itemIds.map(String) : null;
 
-    const warranty = await createWarranty({
-      orderNumber,
-      productName,
-      customerName,
-      customerPhone,
-      purchasedAt: purchasedAt ? new Date(purchasedAt) : new Date(),
-      warrantyMonths: warrantyMonths || 12,
-    });
-
-    res.json({ success: true, warranty });
+    const created = [];
+    const assigned = {};
+    for (const [index, item] of order.items.entries()) {
+      if (wanted && !wanted.includes(item.id)) continue;
+      if (item.warrantyCode) continue;
+      let warranty = await Warranty.findOne({ orderNumber: order.orderNumber, itemId: item.id });
+      if (!warranty) {
+        warranty = await createWarranty({
+          orderNumber: order.orderNumber,
+          itemId: item.id,
+          productName: item.product?.name || 'Sản phẩm Luméa',
+          productImage: item.product?.images?.[0] || '',
+          customerName: order.shippingAddress.fullName,
+          customerPhone: order.shippingAddress.phone,
+          purchasedAt: order.deliveredAt || order.updatedAt || new Date(),
+          warrantyMonths: months,
+        });
+        created.push(warranty);
+      }
+      assigned[`items.${index}.warrantyCode`] = warranty.warrantyCode;
+    }
+    if (Object.keys(assigned).length) await Order.updateOne({ _id: order._id }, { $set: assigned });
+    if (!created.length) {
+      return res.status(400).json({ success: false, error: 'Các sản phẩm đã chọn đều đã có phiếu bảo hành' });
+    }
+    res.json({ success: true, warranties: created, warranty: created[0] });
   } catch (err) {
     sendError(res, err);
   }

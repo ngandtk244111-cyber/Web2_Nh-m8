@@ -8,9 +8,7 @@ import { AdminAuthService } from '../../core/services/admin-auth.service';
 import { ToastService } from '../../core/services/toast.service';
 import { AuditService } from '../../core/services/audit.service';
 import { PagerComponent, pageSlice } from '../../components/pager/pager.component';
-import { DatePickerDirective } from '../../shared/directives/date-picker.directive';
 import { exportXlsx } from '../../shared/utils/export';
-import { orderItemName } from '../../shared/utils/order-labels';
 import { Order } from '../../core/models/order.model';
 import { CartItem } from '../../core/models/cart.model';
 
@@ -27,13 +25,13 @@ const FILTERS: { key: WarrantyFilter; label: string; tone: string }[] = [
 const STATE_LABELS: Record<WarrantyState, string> = { ACTIVE: 'Còn hiệu lực', CLAIMED: 'Đang xử lý yêu cầu', EXPIRED: 'Hết hạn' };
 const STATE_CLASSES: Record<WarrantyState, string> = { ACTIVE: 'status-green', CLAIMED: 'status-yellow', EXPIRED: 'status-gray' };
 
-const emptyForm = () => ({ orderNumber: '', productName: '', customerName: '', customerPhone: '', purchasedAt: '', warrantyMonths: 12 });
+const emptyForm = () => ({ orderNumber: '', warrantyMonths: 12 });
 
 /** Phiếu bảo hành theo đơn hàng và yêu cầu bảo hành khách gửi từ cửa hàng. */
 @Component({
   selector: 'app-warranty',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, PagerComponent, DatePickerDirective],
+  imports: [CommonModule, FormsModule, RouterLink, PagerComponent],
   templateUrl: './warranty.component.html',
   styleUrl: './warranty.component.css',
 })
@@ -69,7 +67,11 @@ export class WarrantyComponent implements OnInit {
   showCreate = false;
   form = emptyForm();
   saving = false;
-  formOrderFound = false;
+  /** Đơn tìm được theo mã nhập vào; formError = lý do không cấp được (không có đơn / chưa giao). */
+  formOrder: Order | null = null;
+  formError = '';
+  /** id các món được chọn để cấp phiếu. */
+  selectedItems = new Set<string>();
 
   detail: Warranty | null = null;
   resolving: Warranty | null = null;
@@ -203,55 +205,72 @@ export class WarrantyComponent implements OnInit {
     });
   }
 
-  // ---- Tạo phiếu ----
+  // ---- Cấp phiếu từ đơn ----
   openCreate(): void {
     this.form = emptyForm();
-    this.formOrderFound = false;
+    this.formOrder = null;
+    this.formError = '';
+    this.selectedItems = new Set();
     this.showCreate = true;
   }
 
-  /** Nhập đúng mã đơn thì tự điền thông tin khách, sản phẩm và ngày mua (ngày giao nếu có). */
-  fillFromOrder(): void {
+  /** Tìm đơn theo mã: chỉ đơn đã giao mới cấp phiếu; tự chọn sẵn các món chưa có phiếu. */
+  findOrder(): void {
     const code = this.form.orderNumber.trim().toUpperCase();
+    this.formOrder = null;
+    this.selectedItems = new Set();
+    this.formError = '';
+    if (!code) return;
     const order = this.orderService.orders().find(o => o.orderNumber.toUpperCase() === code);
-    this.formOrderFound = !!order;
-    if (!order) return;
-    this.form.orderNumber = order.orderNumber;
-    this.form.productName = orderItemName(order);
-    this.form.customerName = order.shippingAddress?.fullName || '';
-    this.form.customerPhone = order.shippingAddress?.phone || '';
-    this.form.purchasedAt = (order.deliveredAt || order.createdAt || '').slice(0, 10);
+    if (!order) {
+      this.formError = 'Không tìm thấy đơn hàng với mã này.';
+      return;
+    }
+    this.formOrder = order;
+    if (order.status !== 'DELIVERED') {
+      this.formError = 'Đơn chưa giao thành công — phiếu bảo hành chỉ cấp sau khi khách đã nhận hàng.';
+      return;
+    }
+    for (const item of order.items) if (!this.itemWarranty(item.id)) this.selectedItems.add(item.id);
+    if (!this.selectedItems.size) this.formError = 'Tất cả sản phẩm trong đơn đã có phiếu bảo hành.';
+  }
+
+  /** Mã phiếu đã cấp cho món này (ghi trên đơn hoặc có trong danh sách phiếu). */
+  itemWarranty(itemId: string): string {
+    const item = this.formOrder?.items.find(i => i.id === itemId) as (Order['items'][number] & { warrantyCode?: string }) | undefined;
+    return item?.warrantyCode
+      || this.warranties().find(w => w.orderNumber === this.formOrder?.orderNumber && (w as Warranty & { itemId?: string }).itemId === itemId)?.warrantyCode
+      || '';
+  }
+
+  toggleItem(itemId: string): void {
+    const next = new Set(this.selectedItems);
+    if (next.has(itemId)) next.delete(itemId);
+    else next.add(itemId);
+    this.selectedItems = next;
   }
 
   saveWarranty(): void {
-    const f = this.form;
-    if (!f.orderNumber.trim() || !f.productName.trim() || !f.customerName.trim() || !f.customerPhone.trim()) {
-      this.toast.warning('Vui lòng nhập đủ mã đơn, sản phẩm, tên và SĐT khách');
-      return;
-    }
-    const months = Number(f.warrantyMonths);
-    if (!Number.isInteger(months) || months <= 0) {
-      this.toast.warning('Thời hạn bảo hành phải là số tháng nguyên dương');
+    const order = this.formOrder;
+    if (!order || order.status !== 'DELIVERED' || !this.selectedItems.size) return;
+    const months = Number(this.form.warrantyMonths);
+    if (!Number.isInteger(months) || months <= 0 || months > 60) {
+      this.toast.warning('Thời hạn bảo hành từ 1 đến 60 tháng');
       return;
     }
     this.saving = true;
-    this.warrantyService.create({
-      orderNumber: f.orderNumber.trim(),
-      productName: f.productName.trim(),
-      customerName: f.customerName.trim(),
-      customerPhone: f.customerPhone.trim(),
-      purchasedAt: f.purchasedAt || undefined,
-      warrantyMonths: months,
-    }).subscribe({
-      next: w => {
+    this.warrantyService.issueForOrder(order.orderNumber, [...this.selectedItems], months).subscribe({
+      next: list => {
         this.saving = false;
         this.showCreate = false;
-        this.toast.success(`Đã tạo phiếu bảo hành ${w.warrantyCode}`);
-        this.audit.record('Bảo Hành', 'Tạo phiếu bảo hành', `${w.warrantyCode} - đơn ${w.orderNumber}`, 'SUCCESS');
+        this.toast.success(`Đã cấp ${list.length} phiếu bảo hành cho đơn ${order.orderNumber}`);
+        this.audit.record('Bảo Hành', 'Cấp phiếu bảo hành', `Đơn ${order.orderNumber}: ${list.map(w => w.warrantyCode).join(', ')}`, 'SUCCESS');
+        // Đơn trong bộ nhớ chưa có mã phiếu mới -> tải lại để lần mở sau thấy đúng.
+        this.orderService.fetchAll().subscribe();
       },
       error: err => {
         this.saving = false;
-        this.toast.apiError(err, 'Không tạo được phiếu bảo hành');
+        this.toast.apiError(err, 'Không cấp được phiếu bảo hành');
       },
     });
   }

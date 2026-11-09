@@ -11,7 +11,7 @@
     <div class="header-actions">
       <button type="button" class="btn-header" (click)="exportExcel()"><i class="bi bi-file-earmark-excel"></i> Xuất Excel</button>
       <button type="button" class="btn-add-action" *ngIf="canEdit" (click)="openCreate()">
-        <i class="bi bi-plus-lg"></i> Tạo phiếu bảo hành
+        <i class="bi bi-shield-plus"></i> Cấp phiếu từ đơn
       </button>
     </div>
   </div>
@@ -79,52 +79,55 @@
   </div>
 </div>
 
-<!-- Tạo phiếu -->
+<!-- Cấp phiếu từ đơn đã giao -->
 <div class="modal-overlay" *ngIf="showCreate" (click)="showCreate = false">
   <div class="modal-box" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h3 class="modal-title">Tạo phiếu bảo hành</h3>
+      <h3 class="modal-title">Cấp phiếu bảo hành</h3>
       <button type="button" class="close-btn" (click)="showCreate = false">&times;</button>
     </div>
     <div class="modal-body">
-      <div class="mb-3">
-        <label class="form-label">Mã đơn hàng <span class="req">*</span></label>
-        <div class="input-group">
-          <input class="form-control" [(ngModel)]="form.orderNumber" (blur)="fillFromOrder()" (keydown.enter)="fillFromOrder()" placeholder="VD: LM-240925-001">
-          <button type="button" class="btn btn-outline-primary" (click)="fillFromOrder()"><i class="bi bi-magic"></i> Điền từ đơn</button>
-        </div>
-        <div class="form-hint" *ngIf="formOrderFound"><i class="bi bi-check2"></i> Đã điền thông tin từ đơn hàng.</div>
+      <div class="notice-box info mb-3">
+        Phiếu bảo hành <b>tự cấp</b> cho từng sản phẩm khi đơn chuyển sang "Giao thành công".
+        Chỉ dùng mục này để cấp bổ sung cho món còn thiếu — thông tin khách, sản phẩm và ngày mua lấy từ chính đơn hàng.
       </div>
-      <div class="mb-3">
-        <label class="form-label">Sản phẩm <span class="req">*</span></label>
-        <input class="form-control" [(ngModel)]="form.productName">
+
+      <label class="form-label">Mã đơn hàng <span class="req">*</span></label>
+      <div class="input-group mb-2">
+        <input class="form-control" [(ngModel)]="form.orderNumber" (keydown.enter)="findOrder()" placeholder="VD: ORD-VG2QPHHP">
+        <button type="button" class="btn btn-outline-primary" (click)="findOrder()"><i class="bi bi-search"></i> Tìm đơn</button>
       </div>
-      <div class="row g-3 mb-3">
-        <div class="col-md-6">
-          <label class="form-label">Tên khách <span class="req">*</span></label>
-          <input class="form-control" [(ngModel)]="form.customerName">
+
+      <ng-container *ngIf="formOrder as o">
+        <div class="wr-order">
+          <div><span class="text-muted-2">Khách:</span> <b>{{ o.shippingAddress.fullName }}</b> · {{ o.shippingAddress.phone }}</div>
+          <div><span class="text-muted-2">Ngày giao:</span> {{ o.deliveredAt ? (o.deliveredAt | date:'dd/MM/yyyy') : 'Chưa giao' }}</div>
         </div>
-        <div class="col-md-6">
-          <label class="form-label">SĐT khách <span class="req">*</span></label>
-          <input class="form-control" [(ngModel)]="form.customerPhone">
-          <div class="form-hint">Khách tra cứu bảo hành bằng mã phiếu + SĐT này.</div>
+
+        <div *ngIf="o.status === 'DELIVERED'" class="wr-items">
+          <label *ngFor="let it of o.items" class="wr-item" [class.wr-item--done]="!!itemWarranty(it.id)">
+            <input type="checkbox" [disabled]="!!itemWarranty(it.id)"
+              [checked]="!!itemWarranty(it.id) || selectedItems.has(it.id)" (change)="toggleItem(it.id)">
+            <img *ngIf="it.product.images?.[0]" [src]="it.product.images[0]" alt="">
+            <span class="wr-item__name">{{ it.product.name }} <small class="text-muted-2">× {{ it.quantity }}</small></span>
+            <span *ngIf="itemWarranty(it.id) as code" class="status-badge status-green">{{ code }}</span>
+          </label>
         </div>
-      </div>
-      <div class="row g-3">
-        <div class="col-md-6">
-          <label class="form-label">Ngày mua / nhận hàng</label>
-          <input type="text" class="form-control" appDatePicker placeholder="dd/mm/yyyy" [(ngModel)]="form.purchasedAt">
-          <div class="form-hint">Bỏ trống = hôm nay.</div>
-        </div>
-        <div class="col-md-6">
-          <label class="form-label">Thời hạn (tháng)</label>
-          <input type="number" min="1" class="form-control" [(ngModel)]="form.warrantyMonths">
-        </div>
+      </ng-container>
+
+      <div class="notice-box warning mt-2 mb-0" *ngIf="formError">{{ formError }}</div>
+
+      <div class="mt-3" *ngIf="formOrder?.status === 'DELIVERED' && selectedItems.size">
+        <label class="form-label">Thời hạn (tháng)</label>
+        <input type="number" min="1" max="60" class="form-control" style="max-width: 140px" [(ngModel)]="form.warrantyMonths">
+        <div class="form-hint">Mặc định 12 tháng theo Chính sách bảo hành.</div>
       </div>
     </div>
     <div class="modal-footer">
       <button type="button" class="btn-cancel" (click)="showCreate = false">Huỷ</button>
-      <button type="button" class="btn-save" [disabled]="saving" (click)="saveWarranty()"><i class="bi bi-save"></i> Tạo phiếu</button>
+      <button type="button" class="btn-save" [disabled]="saving || formOrder?.status !== 'DELIVERED' || !selectedItems.size" (click)="saveWarranty()">
+        <i class="bi bi-shield-check"></i> Cấp {{ selectedItems.size || '' }} phiếu
+      </button>
     </div>
   </div>
 </div>

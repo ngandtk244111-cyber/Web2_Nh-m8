@@ -33,10 +33,11 @@ export class WarrantyService {
     });
   }
 
-  create(data: Record<string, unknown>): Observable<Warranty> {
-    return this.adminData.createWarranty(data).pipe(
-      map(res => res.warranty as Warranty),
-      tap(w => this.warranties.update(list => [w, ...list]))
+  /** Cấp phiếu cho các món (itemIds) của 1 đơn đã giao — server lấy thông tin khách/sản phẩm từ đơn. */
+  issueForOrder(orderNumber: string, itemIds: string[], warrantyMonths: number): Observable<Warranty[]> {
+    return this.adminData.createWarranty({ orderNumber, itemIds, warrantyMonths }).pipe(
+      map(res => (res.warranties || [res.warranty]) as Warranty[]),
+      tap(list => this.warranties.update(cur => [...list, ...cur]))
     );
   }
 

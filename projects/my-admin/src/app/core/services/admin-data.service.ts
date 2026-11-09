@@ -62,8 +62,8 @@ export class AdminDataService {
     return this.http.get<{ success: boolean; warranties: any[] }>(`${WARRANTY}/admin`);
   }
 
-  createWarranty(data: Record<string, unknown>): Observable<{ success: boolean; warranty: any }> {
-    return this.http.post<{ success: boolean; warranty: any }>(WARRANTY, data);
+  createWarranty(data: Record<string, unknown>): Observable<{ success: boolean; warranty: any; warranties?: any[] }> {
+    return this.http.post<{ success: boolean; warranty: any; warranties?: any[] }>(WARRANTY, data);
   }
 
   resolveWarrantyClaim(code: string, note: string): Observable<{ success: boolean; warranty: any }> {

@@ -61,6 +61,7 @@ export class NoticeService {
     const outOfStock = products.filter(p => (p.inStock ?? 0) <= 0).length;
     const list: (AdminNotice & { perm: string })[] = [
       { perm: 'orders.view', label: 'Đơn COD chờ gọi xác nhận', count: this.orders.orders().filter(o => o.status === 'PENDING').length, link: '/orders', query: { status: 'PENDING' }, icon: 'bi-telephone' },
+      { perm: 'orders.view', label: 'Đơn COD lớn chờ nhận cọc', count: this.orders.orders().filter(o => o.status === 'PENDING' && (o.depositAmount || 0) > 0 && !o.depositPaidAt).length, link: '/orders', query: { status: 'PENDING' }, icon: 'bi-piggy-bank' },
       { perm: 'orders.view', label: 'Khách báo đã chuyển khoản', count: this.orders.orders().filter(o => o.transferReportedAt && o.paymentStatus !== 'PAID' && o.status !== 'CANCELLED').length, link: '/orders', query: { status: 'TRANSFER' }, icon: 'bi-bank' },
       { perm: 'customers.view', label: 'Tin nhắn chưa đọc', count: this.chat.totalUnread(), link: '/messages', icon: 'bi-chat-dots' },
       { perm: 'custom3d.view', label: 'Yêu cầu in 3D chờ báo giá', count: this.customRequests.requests().filter(r => r.status === 'PENDING_REVIEW').length, link: '/custom-requests', query: { status: 'PENDING_REVIEW' }, icon: 'bi-printer' },

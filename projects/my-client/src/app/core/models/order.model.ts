@@ -108,6 +108,9 @@ export interface Order {
   discount: number;
   shippingFee: number;
   total: number;
+  /** Đơn COD từ 5 triệu: tiền cọc 30% chuyển khoản trước; depositPaidAt = lúc Luméa xác nhận đã nhận. */
+  depositAmount?: number;
+  depositPaidAt?: string | null;
   notes?: string;
   cancelReason?: string;
   /** Tài khoản đặt đơn (null nếu khách vãng lai). */

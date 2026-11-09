@@ -288,6 +288,14 @@
               </label>
             </div>
 
+            <!-- Quy định cọc: đơn COD từ 5 triệu chuyển trước 30% -->
+            <div *ngIf="paymentMethod === 'COD' && codDeposit > 0" class="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-xl p-3 leading-relaxed">
+              <strong>Đơn từ {{ depositThreshold | vnd }} cần đặt cọc 30%.</strong>
+              Sau khi đặt hàng, bạn chuyển khoản trước <strong>{{ codDeposit | vnd }}</strong>;
+              phần còn lại <strong>{{ cartService.checkoutTotal() - codDeposit | vnd }}</strong> thanh toán khi nhận hàng.
+              Luméa xác nhận đơn sau khi nhận được tiền cọc.
+            </div>
+
             <div *ngIf="placeOrderError" class="text-xs text-red-500 bg-red-50 border border-red-200 rounded-xl p-3">
               {{ placeOrderError }}
             </div>
@@ -382,7 +390,10 @@
 
           <div class="flex items-start justify-between border-b border-neutral-200 pb-4">
             <div class="space-y-1">
-              <h2 class="font-serif text-xl sm:text-2xl font-bold text-amber-800">Quét Mã Để Thanh Toán</h2>
+              <h2 class="font-serif text-xl sm:text-2xl font-bold text-amber-800">{{ createdOrder.depositAmount ? 'Chuyển Khoản Tiền Cọc' : 'Quét Mã Để Thanh Toán' }}</h2>
+              <p *ngIf="createdOrder.depositAmount" class="text-xs text-neutral-600">
+                Đơn COD từ {{ depositThreshold | vnd }}: cọc trước 30%, còn lại <strong>{{ createdOrder.total - createdOrder.depositAmount | vnd }}</strong> trả khi nhận hàng.
+              </p>
               <p class="text-xs text-neutral-600">
                 Mã đơn hàng: <strong class="text-amber-500 font-mono">{{ createdOrder.orderNumber }}</strong>
               </p>
@@ -429,8 +440,8 @@
                   <span class="font-bold text-neutral-800 uppercase">LUMÉA STUDIO</span>
                 </div>
                 <div class="flex justify-between">
-                  <span class="text-neutral-600">Số tiền:</span>
-                  <span class="font-bold text-amber-500 text-sm">{{ createdOrder.total | vnd }}</span>
+                  <span class="text-neutral-600">{{ createdOrder.depositAmount ? 'Tiền cọc:' : 'Số tiền:' }}</span>
+                  <span class="font-bold text-amber-500 text-sm">{{ qrAmount | vnd }}</span>
                 </div>
                 <div class="flex justify-between">
                   <span class="text-neutral-600">Nội dung CK:</span>
@@ -455,7 +466,7 @@
               type="button"
               (click)="confirmBankTransferPaid()"
               class="flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-600 text-white font-extrabold text-xs sm:text-sm shadow-md transition text-center">
-              Tôi Đã Hoàn Tất Chuyển Khoản
+              {{ createdOrder.depositAmount ? 'Tôi Đã Chuyển Tiền Cọc' : 'Tôi Đã Hoàn Tất Chuyển Khoản' }}
             </button>
 
             <button

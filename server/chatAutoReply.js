@@ -44,8 +44,8 @@ const TOPICS = [
   },
   {
     key: 'payment',
-    keywords: ['thanh toan', 'momo', 'zalopay', 'zalo pay', 'chuyen khoan', 'cod', 'tra gop', 'the ngan hang'],
-    text: 'Luméa nhận thanh toán khi nhận hàng (COD), chuyển khoản/VietQR, ví MoMo và ZaloPay. Chi tiết từng phương thức ở trang dưới đây.',
+    keywords: ['thanh toan', 'momo', 'zalopay', 'zalo pay', 'chuyen khoan', 'cod', 'tra gop', 'the ngan hang', 'dat coc', 'tien coc', 'coc truoc'],
+    text: 'Luméa nhận thanh toán khi nhận hàng (COD), chuyển khoản/VietQR, ví MoMo và ZaloPay. Đơn COD từ 5.000.000đ cần chuyển khoản cọc trước 30%, phần còn lại trả khi nhận hàng. Chi tiết ở trang dưới đây.',
     links: [{ label: 'Phương thức thanh toán', url: '/chinh-sach/thanh-toan' }],
   },
   {

@@ -18,6 +18,8 @@ import { MascotService } from '../../core/services/mascot.service';
 import QRCode from 'qrcode';
 import { VoucherPickerComponent } from '../../components/voucher-picker/voucher-picker.component';
 
+import { DEPOSIT_THRESHOLD, depositFor } from '../../core/data/deposit-policy';
+
 export type PaymentMethodId = 'COD' | 'BANK_TRANSFER' | 'MOMO' | 'ZALOPAY' | 'CARD' | 'VNPAY' | 'ATM';
 type SupportedPaymentMethodId = 'COD' | 'BANK_TRANSFER' | 'MOMO' | 'ZALOPAY' | 'ATM';
 
@@ -101,6 +103,17 @@ export class CheckoutComponent implements OnInit {
     return invoiceUrl(orderNumber, this.authService.token);
   }
   readonly paymentMethods = PAYMENT_METHODS;
+  readonly depositThreshold = DEPOSIT_THRESHOLD;
+
+  /** Tiền cọc phải chuyển trước nếu chọn COD cho đơn hiện tại (0 = không cần cọc). */
+  get codDeposit(): number {
+    return depositFor(this.cartService.checkoutTotal(), 'COD');
+  }
+
+  /** Đơn vừa tạo đang chờ chuyển cọc -> hộp QR hiển thị số tiền cọc thay vì cả đơn. */
+  get qrAmount(): number {
+    return this.createdOrder?.depositAmount || this.createdOrder?.total || 0;
+  }
   paymentMethod: PaymentMethodId = 'COD';
 
   districts = signal<VNLocation[]>([]);
@@ -173,7 +186,7 @@ export class CheckoutComponent implements OnInit {
       this.navigateToTracking();
       return;
     }
-    if (this.createdOrder?.paymentMethod === 'BANK_TRANSFER') this.showBankQrModal = true;
+    if (this.createdOrder?.paymentMethod === 'BANK_TRANSFER' || (this.createdOrder?.depositAmount || 0) > 0) this.showBankQrModal = true;
     else this.showOrderSuccess = true;
   }
 
@@ -416,7 +429,8 @@ export class CheckoutComponent implements OnInit {
           return;
         }
         finish();
-        if (this.paymentMethod === 'BANK_TRANSFER') {
+        // Chuyển khoản, hoặc COD đơn lớn phải chuyển cọc trước: hiện mã QR với đúng số tiền cần chuyển.
+        if (this.paymentMethod === 'BANK_TRANSFER' || (newOrder.depositAmount || 0) > 0) {
           this.buildDemoQr(newOrder);
           this.showBankQrModal = true;
         } else {
@@ -475,7 +489,7 @@ export class CheckoutComponent implements OnInit {
    */
   private buildDemoQr(order: Order): void {
     this.bankQrDataUrl = '';
-    const amount = order.total.toLocaleString('vi-VN') + 'đ';
+    const amount = (order.depositAmount || order.total).toLocaleString('vi-VN') + 'đ' + (order.depositAmount ? ' (tiền cọc 30%)' : '');
     // Giữ nội dung ngắn để mã QR thưa, camera điện thoại quét dễ.
     const text = [
       'ĐỒ ÁN MÔN HỌC WEB 2 - NHÓM 8',

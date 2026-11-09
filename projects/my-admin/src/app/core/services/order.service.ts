@@ -155,6 +155,14 @@ export class OrderService {
   }
 
   /** Đã gọi điện xác nhận đơn với khách (bắt buộc trước khi giao đơn COD). */
+  /** Đã nhận tiền cọc của đơn COD lớn — sau đó mới chốt đơn / gọi xác nhận được. */
+  depositReceived(orderNumber: string): Observable<Order> {
+    return this.http.patch<OrderApiResponse>(`${this.baseUrl}/${encodeURIComponent(orderNumber)}/deposit-received`, {}).pipe(
+      map(res => this.normalize(res.order!)),
+      tap(order => this.replaceInSignal(order))
+    );
+  }
+
   /** Ghi nhận 1 lần gọi xác nhận không liên lạc được khách (gọi lại sau, chưa huỷ). */
   callFailed(orderNumber: string): Observable<Order> {
     return this.http.patch<OrderApiResponse>(`${this.baseUrl}/${encodeURIComponent(orderNumber)}/call-failed`, {}).pipe(

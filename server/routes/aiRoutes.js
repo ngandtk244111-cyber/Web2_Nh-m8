@@ -2,6 +2,7 @@ const express = require('express');
 const axios = require('axios');
 const mongoose = require('mongoose');
 const Product = require('../models/Product');
+const { DEPOSIT_THRESHOLD, DEPOSIT_RATE } = require('../utils/deposit');
 
 const router = express.Router();
 
@@ -88,6 +89,22 @@ async function getCatalogText() {
   }
 }
 
+/** Quy định cửa hàng chatbot phải nói đúng — lấy số từ utils/deposit.js để khớp trang thanh toán. */
+function storePolicies() {
+  const threshold = DEPOSIT_THRESHOLD.toLocaleString('vi-VN') + 'đ';
+  const rate = Math.round(DEPOSIT_RATE * 100) + '%';
+  return 'QUY ĐỊNH CỬA HÀNG (trả lời đúng, KHÔNG tự hứa khác):\n' +
+    `- Đặt cọc: đơn thanh toán khi nhận hàng (COD) có tổng từ ${threshold} trở lên phải chuyển khoản cọc trước ${rate}; ` +
+    'phần còn lại trả khi nhận hàng. Luméa chỉ xác nhận và chuẩn bị đơn sau khi nhận được tiền cọc. Đơn dưới mức này COD toàn bộ bình thường. ' +
+    `KHÔNG BAO GIỜ nói đơn từ ${threshold} được COD 100%.\n` +
+    '- Thanh toán: COD, chuyển khoản/VietQR, ví MoMo, ZaloPay, thẻ ATM. Không hỗ trợ trả góp.\n' +
+    '- Nội thất lớn (sofa, giường, tủ, bàn ăn...): Luméa giao và lắp đặt; nên hỏi kích thước phòng / lối vào trước khi chốt.\n' +
+    '- Bảo hành: mỗi sản phẩm có phiếu bảo hành 12 tháng, cấp tự động khi đơn giao thành công; tra cứu bằng mã phiếu + SĐT ở trang Tra cứu bảo hành.\n' +
+    '- Đổi trả: trong 7 ngày kể từ khi nhận hàng nếu lỗi sản xuất, hư hỏng khi vận chuyển hoặc giao sai mẫu.\n' +
+    '- Sản phẩm in 3D / làm theo yêu cầu (khắc tên, thiết kế riêng) không đổi trả vì lý do cá nhân.\n' +
+    '- Không biết chắc (phí ship cụ thể, ngày giao chính xác, tồn kho) thì nói khách xem trang sản phẩm hoặc nhắn nhân viên, không bịa.\n\n';
+}
+
 function buildSystemPrompt(catalog) {
   return 'QUAN TRỌNG: Bạn CHỈ ĐƯỢC trả về DUY NHẤT một JSON object. KHÔNG markdown, KHÔNG giải thích, KHÔNG ``` fences.\n\n' +
     'Bạn là Goh — "AI Idea Assistant" của Luméa, shop nội thất, đồ decor và sản phẩm in 3D theo yêu cầu.\n' +
@@ -104,6 +121,7 @@ function buildSystemPrompt(catalog) {
     'QUY TẮC DESIGN BRIEF (khi khách mô tả ý tưởng riêng muốn in 3D):\n' +
     '- Điền vào "brief" những trường suy luận được từ tin nhắn MỚI NHẤT: productType, theme, style, color, size, usage, customText, notes.\n' +
     '- Trường chưa chắc thì bỏ trống (không ghi đè bằng chuỗi rỗng). Không liên quan ý tưởng riêng → "brief": null.\n\n' +
+    storePolicies() +
     catalog + '\n\n' +
     'ĐẦU RA BẮT BUỘC — DUY NHẤT một JSON object hợp lệ:\n' +
     '{\n' +
@@ -256,18 +274,27 @@ async function resolveProducts(modelProducts, message) {
   }));
 }
 
-// Có danh sách sản phẩm thật -> viết lại câu trả lời cho khớp đúng các thẻ hiển thị bên dưới.
-function buildProductReply(products) {
-  const lines = products.map((p, i) => {
+// Có danh sách sản phẩm thật -> viết lại PHẦN DANH SÁCH cho khớp đúng các thẻ hiển thị bên dưới, nhưng giữ
+// câu mở đầu / câu kết AI viết (nơi AI trả lời câu hỏi kèm theo: quy định cọc, phí ship...). Trước đây cả câu
+// trả lời bị thay bằng mẫu cố định nên khách hỏi "COD toàn bộ được không?" chỉ nhận về danh sách sản phẩm.
+function buildProductReply(products, aiReply = '') {
+  const items = products.map((p, i) => {
     const price = p.price > 0 ? ` (khoảng ${p.price.toLocaleString('vi-VN')}đ)` : '';
     const discount = p.originalPrice && p.originalPrice > p.price
       ? ` – đang giảm khoảng ${Math.round(((p.originalPrice - p.price) / p.originalPrice) * 100)}%`
       : '';
     return `${i + 1}. **${p.name}**${price}${discount}.`;
   });
-  return 'Dưới đây là một số lựa chọn phù hợp từ cửa hàng Luméa mà bạn có thể tham khảo:\n\n' +
-    lines.join('\n') +
-    '\n\nBạn muốn mình tư vấn kỹ hơn về món nào, hay cần gợi ý thêm trong tầm giá khác không?';
+  const lines = String(aiReply || '').split(/\r?\n/).map(l => l.trim());
+  const isListLine = l => /^(\d+[.)]|[-*•])\s/.test(l);
+  const first = lines.findIndex(isListLine);
+  let last = -1;
+  lines.forEach((l, i) => { if (isListLine(l)) last = i; });
+  const intro = (first < 0 ? lines : lines.slice(0, first)).filter(Boolean).join(' ');
+  const outro = first < 0 ? '' : lines.slice(last + 1).filter(Boolean).join(' ');
+  return (intro || 'Dưới đây là một số lựa chọn phù hợp từ cửa hàng Luméa mà bạn có thể tham khảo:') + '\n\n' +
+    items.join('\n') +
+    '\n\n' + (outro || 'Bạn muốn mình tư vấn kỹ hơn về món nào, hay cần gợi ý thêm trong tầm giá khác không?');
 }
 
 /**
@@ -367,7 +394,7 @@ router.post('/assistant', async (req, res) => {
     } catch (e) {
       console.error('[aiRoutes] product suggestion error:', e.message || e);
     }
-    if (products.length) reply = buildProductReply(products);
+    if (products.length) reply = buildProductReply(products, reply);
 
     res.json({
       success: true,

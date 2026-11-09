@@ -192,6 +192,16 @@
           <h3 class="section-title">Thanh toán</h3>
           <div class="info-row"><span class="label">Hình thức</span><span class="value">{{ methodLabel(o.paymentMethod) }}</span></div>
           <div class="info-row"><span class="label">Trạng thái</span><span class="value"><span class="status-badge" [ngClass]="payClass(o)">{{ payLabel(o) }}</span></span></div>
+          <ng-container *ngIf="o.depositAmount">
+            <div class="info-row"><span class="label">Tiền cọc (30%)</span><span class="value">{{ o.depositAmount | vnd }}
+              <span class="status-badge ms-1" [ngClass]="o.depositPaidAt ? 'status-green' : 'status-yellow'">{{ o.depositPaidAt ? 'Đã nhận cọc' : 'Chờ chuyển cọc' }}</span></span></div>
+            <div class="info-row"><span class="label">Còn thu khi giao</span><span class="value">{{ o.total - o.depositAmount | vnd }}</span></div>
+            <div class="pay-actions" *ngIf="awaitingDeposit(o) && canApprove && o.status !== 'CANCELLED'">
+              <button type="button" class="action-btn success" [disabled]="busy()" (click)="confirmDeposit(o)">
+                <i class="bi bi-piggy-bank"></i> Xác nhận đã nhận cọc
+              </button>
+            </div>
+          </ng-container>
           <div class="info-row" *ngIf="o.transferReportedAt && o.paymentStatus !== 'PAID'">
             <span class="label">Khách báo CK lúc</span><span class="value">{{ o.transferReportedAt | date:'dd/MM/yyyy HH:mm' }}</span>
           </div>
@@ -237,6 +247,9 @@
         <div class="info-card" *ngIf="canEdit && !isFinal(o)">
           <h3 class="section-title">Xử lý đơn</h3>
 
+          <div class="notice-box warning mb-2" *ngIf="o.status === 'PENDING' && awaitingDeposit(o)">
+            Đơn COD từ 5 triệu: chờ khách chuyển cọc {{ o.depositAmount | vnd }}. Xác nhận đã nhận cọc (mục Thanh toán) rồi mới chốt đơn.
+          </div>
           <ng-container *ngIf="o.status === 'PENDING' && needsPhoneConfirm(o)">
             <p class="small text-muted-2 mb-2">Gọi {{ o.shippingAddress.phone }} để xác nhận đơn COD trước khi chuẩn bị hàng.</p>
             <div class="stack">

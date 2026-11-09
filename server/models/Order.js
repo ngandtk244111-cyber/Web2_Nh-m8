@@ -120,6 +120,9 @@ const orderSchema = new mongoose.Schema({
   phoneConfirmedBy: { type: String, default: null },
   // Các lần nhân viên gọi xác nhận nhưng không liên lạc được khách — đủ số lần mới gợi ý huỷ đơn.
   failedCallsAt: { type: [Date], default: [] },
+  // Đơn COD từ 5 triệu: tiền cọc 30% khách chuyển khoản trước (utils/deposit.js) và lúc nhân viên xác nhận đã nhận.
+  depositAmount: { type: Number, default: 0 },
+  depositPaidAt: { type: Date, default: null },
   // Shipper đã thu tiền COD khi giao thành công; tiền còn nằm ở hãng vận chuyển tới khi đối soát
   // (lúc đó nhân viên xác nhận → paymentStatus PAID).
   codCollectedAt: { type: Date, default: null },

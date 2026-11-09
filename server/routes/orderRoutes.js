@@ -10,6 +10,7 @@ const { shippingOptions, findCarrier, trackingUrlFor, isDevMode, devTrackingCode
 const { buildInvoicePdf } = require('../utils/invoicePdf');
 const { isEmailConfigured, getMailTransporter } = require('../utils/otp');
 const { issueWarrantiesForOrder, ensureOrderWarranties } = require('../utils/warranty');
+const { depositFor, awaitingDeposit } = require('../utils/deposit');
 const { needsRefund, buildRefund } = require('../utils/refund-policy');
 const { assignProductionWorkshops } = require('../utils/workshops');
 
@@ -195,6 +196,7 @@ router.post('/', attachUserId, async (req, res) => {
       invoice,
       paymentMethod,
       paymentStatus: 'UNPAID',
+      depositAmount: depositFor(total, paymentMethod),
       subtotal,
       discount,
       shippingFee,
@@ -372,6 +374,8 @@ router.patch('/:orderNumber/payment-method', attachUserId, async (req, res) => {
     }
     if (order.paymentMethod !== paymentMethod) {
       order.paymentMethod = paymentMethod;
+      // Đổi sang / khỏi COD thì tính lại tiền cọc bắt buộc (chưa nhận cọc mới đổi).
+      if (!order.depositPaidAt) order.depositAmount = depositFor(order.total, paymentMethod);
       order.paymentStatus = 'UNPAID';
       order.transferReportedAt = null;
       order.paymentTransactionId = '';
@@ -503,6 +507,7 @@ router.patch('/:orderNumber/confirm', requirePermission('orders.edit'), async (r
     const order = await loadOpenOrder(req, res);
     if (!order) return;
     if (order.status !== 'PENDING') return res.status(400).json({ success: false, error: 'Đơn đã được xác nhận rồi' });
+    if (awaitingDeposit(order)) return res.status(400).json({ success: false, error: 'Đơn chưa nhận tiền cọc — xác nhận đã nhận cọc trước' });
     if (order.paymentMethod === 'COD' && order.phoneConfirmRequired !== false && !order.phoneConfirmedAt) {
       return res.status(400).json({ success: false, error: 'Đơn COD này cần gọi xác nhận với khách trước' });
     }
@@ -520,10 +525,26 @@ router.patch('/:orderNumber/confirm-phone', requirePermission('orders.edit'), as
   try {
     const order = await loadOpenOrder(req, res);
     if (!order) return;
+    if (awaitingDeposit(order)) return res.status(400).json({ success: false, error: 'Đơn chưa nhận tiền cọc — xác nhận đã nhận cọc trước khi chốt đơn với khách' });
     order.phoneConfirmedAt = new Date();
     order.phoneConfirmedBy = req.adminId;
     if (order.status === 'PENDING') order.status = order.hasPrintOnDemandItems ? 'IN_PRODUCTION' : 'CONFIRMED';
     await assignProductionWorkshops(order);
+    await order.save();
+    res.json({ success: true, order });
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
+// Admin: đã nhận tiền cọc của đơn COD lớn (đối soát sao kê). Sau đó mới chốt đơn / gọi xác nhận được.
+router.patch('/:orderNumber/deposit-received', requirePermission('orders.approve'), async (req, res) => {
+  try {
+    const order = await loadOpenOrder(req, res);
+    if (!order) return;
+    if (!(order.depositAmount > 0)) return res.status(400).json({ success: false, error: 'Đơn này không cần đặt cọc' });
+    if (order.depositPaidAt) return res.status(400).json({ success: false, error: 'Đã xác nhận nhận cọc rồi' });
+    order.depositPaidAt = new Date();
     await order.save();
     res.json({ success: true, order });
   } catch (err) {

@@ -196,6 +196,15 @@ export class OrderDetailComponent implements OnInit {
     this.refundNote = '';
   }
 
+  /** Đơn COD lớn còn chờ khách chuyển cọc. */
+  awaitingDeposit(o: Order): boolean {
+    return (o.depositAmount || 0) > 0 && !o.depositPaidAt;
+  }
+
+  confirmDeposit(o: Order): void {
+    this.apply(this.orderService.depositReceived(o.orderNumber), `Đã xác nhận nhận cọc đơn ${o.orderNumber}`, 'Xác nhận đã nhận tiền cọc');
+  }
+
   confirmPhone(o: Order): void {
     this.apply(this.orderService.confirmPhone(o.orderNumber), `Đã xác nhận đơn ${o.orderNumber} với khách`, 'Gọi xác nhận đơn COD');
   }

@@ -2,18 +2,40 @@ import * as XLSX from 'xlsx';
 
 export type ExportRow = (string | number | null | undefined)[];
 
-const stamp = () => new Date().toISOString().slice(0, 10);
+const pad = (n: number) => String(n).padStart(2, '0');
+
+/** "09/11/2026 14:30" theo giờ máy. */
+function dateTimeLabel(d: Date): string {
+  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+/** Hậu tố tên file có cả ngày và giờ xuất (_2026-11-09_14h30) — xuất nhiều lần trong ngày không trùng tên. */
+const stamp = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}_${pad(d.getHours())}h${pad(d.getMinutes())}`;
+};
+
+/** Ngày giờ dạng ISO ("2026-11-09T07:30:00.000Z") còn sót trong dữ liệu -> "09/11/2026 14:30". */
+const ISO_DATETIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/;
 
 /** Ô bắt đầu bằng = + - @ được chèn dấu ' để Excel không chạy như công thức. */
 function safeCell(value: string | number | null | undefined): string | number {
   if (typeof value === 'number') return value;
   const text = String(value ?? '');
+  if (ISO_DATETIME.test(text) && !isNaN(Date.parse(text))) return dateTimeLabel(new Date(text));
   return /^[=+\-@]/.test(text) ? "'" + text : text;
 }
 
 /** Xuất Excel (.xlsx) — như dashboard-export.service của Vita. */
 export function exportXlsx(name: string, headers: string[], rows: ExportRow[], sheetName = 'Dữ liệu'): void {
-  const sheet = XLSX.utils.aoa_to_sheet([headers, ...rows.map(r => r.map(safeCell))]);
+  // Đầu file ghi rõ báo cáo gì, xuất lúc nào, bao nhiêu dòng — in ra hay gửi đi vẫn biết số liệu tính đến lúc nào.
+  const meta = [
+    [`LUMÉA — ${sheetName.toUpperCase()}`],
+    [`Xuất lúc: ${dateTimeLabel(new Date())}`],
+    [`Số dòng: ${rows.length}`],
+    [],
+  ];
+  const sheet = XLSX.utils.aoa_to_sheet([...meta, headers, ...rows.map(r => r.map(safeCell))]);
   sheet['!cols'] = headers.map((h, i) => ({
     wch: Math.min(48, Math.max(h.length, ...rows.map(r => String(r[i] ?? '').length)) + 2),
   }));

@@ -10,6 +10,7 @@ import { ConfirmDialogService } from '../../core/services/confirm-dialog.service
 import { Room, RoomHotspot } from '../../core/models/room.model';
 import { Product } from '../../core/models/product.model';
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
+import { ProductPickerComponent } from '../../components/product-picker/product-picker.component';
 import { environment } from '../../../environments/environment';
 
 type RoomType = Room['roomType'];
@@ -39,7 +40,7 @@ const emptyForm = () => ({
 @Component({
   selector: 'app-rooms',
   standalone: true,
-  imports: [CommonModule, FormsModule, VndPipe],
+  imports: [CommonModule, FormsModule, VndPipe, ProductPickerComponent],
   templateUrl: './rooms.component.html',
   styleUrl: './rooms.component.css',
 })

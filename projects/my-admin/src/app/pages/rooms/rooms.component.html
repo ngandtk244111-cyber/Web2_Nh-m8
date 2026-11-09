@@ -139,10 +139,7 @@
         <div class="hotspot-fields">
           <div class="row g-2">
             <div class="col-md-6">
-              <select class="form-select form-select-sm" [(ngModel)]="h.productId" (ngModelChange)="onHotspotProduct(h)">
-                <option value="">— Chọn sản phẩm —</option>
-                <option *ngFor="let p of products()" [value]="p.id">{{ p.name }}</option>
-              </select>
+              <app-product-picker [(productId)]="h.productId" (productIdChange)="onHotspotProduct(h)"></app-product-picker>
               <span class="tag danger mt-1" *ngIf="h.productId && !product(h.productId)">Sản phẩm không còn tồn tại</span>
             </div>
             <div class="col-md-6">

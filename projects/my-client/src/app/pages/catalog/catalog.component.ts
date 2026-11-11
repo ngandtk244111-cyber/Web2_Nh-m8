@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, effect, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Params, Router, RouterLink } from '@angular/router';
@@ -108,7 +108,14 @@ export class CatalogComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private mascotService: MascotService
-  ) {}
+  ) {
+    // Danh sách sản phẩm tải bất đồng bộ từ API: khi dữ liệu về (hoặc đổi) thì lọc lại,
+    // tránh trường hợp mở thẳng /catalog lúc sản phẩm chưa tải xong sẽ hiện "0 sản phẩm".
+    effect(() => {
+      this.productService.products();
+      untracked(() => this.applyFilters());
+    });
+  }
 
   ngOnInit(): void {
     // Mỗi lần URL đổi (bấm mega menu, footer, trang chủ...) dựng lại toàn bộ bộ lọc từ query params.

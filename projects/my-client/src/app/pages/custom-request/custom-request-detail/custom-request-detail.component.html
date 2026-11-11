@@ -21,23 +21,23 @@
 
         <!-- Status Badge -->
         <div>
-          <span [ngSwitch]="request.status" class="text-xs font-bold px-3.5 py-1.5 rounded-full inline-flex items-center gap-1.5 shadow-sm">
-            <span *ngSwitchCase="'PENDING_REVIEW'" class="text-amber-400 bg-amber-950/40 border border-amber-500/30">
+          <span [ngSwitch]="request.status" class="text-xs font-bold inline-flex">
+            <span *ngSwitchCase="'PENDING_REVIEW'" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-amber-800 bg-amber-100 border border-amber-300">
               <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
               Đang tiếp nhận & Xem xét
             </span>
-            <span *ngSwitchCase="'QUOTED'" class="text-blue-400 bg-blue-950/40 border border-blue-500/30">
+            <span *ngSwitchCase="'QUOTED'" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-blue-800 bg-blue-100 border border-blue-300">
               <span class="w-2 h-2 rounded-full bg-blue-400"></span>
               Đã gửi báo giá
             </span>
-            <span *ngSwitchCase="'PREVIEW_READY'" class="text-purple-400 bg-purple-950/40 border border-purple-500/30">
+            <span *ngSwitchCase="'PREVIEW_READY'" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-purple-800 bg-purple-100 border border-purple-300">
               <span class="w-2 h-2 rounded-full bg-purple-400"></span>
               Đã có mô hình 3D Preview
             </span>
-            <span *ngSwitchCase="'APPROVED'" class="text-emerald-400 bg-emerald-950/40 border border-emerald-500/30">
+            <span *ngSwitchCase="'APPROVED'" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-emerald-800 bg-emerald-100 border border-emerald-300">
               ✓ Đã duyệt thiết kế
             </span>
-            <span *ngSwitchCase="'CONVERTED_TO_ORDER'" class="text-emerald-400 bg-emerald-950/40 border border-emerald-500/30">
+            <span *ngSwitchCase="'CONVERTED_TO_ORDER'" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-emerald-800 bg-emerald-100 border border-emerald-300">
               ✓ Đã chuyển thành đơn hàng
             </span>
           </span>
@@ -129,7 +129,7 @@
                 <app-icon name="cube" [size]="18" class="text-amber-400"></app-icon>
                 <span>Bản Vẽ Mô Phỏng 3D Preview</span>
               </h3>
-              <span class="text-[10px] font-bold text-amber-400 bg-amber-950/40 border border-amber-500/30 px-2.5 py-0.5 rounded-full">
+              <span class="text-[10px] font-bold text-amber-800 bg-amber-100 border border-amber-300 px-2.5 py-0.5 rounded-full">
                 Duyệt trước khi in
               </span>
             </div>
@@ -181,7 +181,7 @@
                 Yêu cầu sửa chi tiết
               </button>
 
-              <div *ngIf="request.status === 'CONVERTED_TO_ORDER'" class="w-full text-center py-2.5 text-xs font-bold text-emerald-400 bg-emerald-950/40 border border-emerald-500/30 rounded-xl">
+              <div *ngIf="request.status === 'CONVERTED_TO_ORDER'" class="w-full text-center py-2.5 text-xs font-bold text-emerald-800 bg-emerald-100 border border-emerald-300 rounded-xl">
                 ✓ Yêu cầu này đã được chuyển thành đơn hàng và đưa vào giỏ hàng!
               </div>
             </div>

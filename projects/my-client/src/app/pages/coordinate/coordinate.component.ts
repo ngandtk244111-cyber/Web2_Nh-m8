@@ -53,9 +53,12 @@ export class CoordinateComponent {
 
   private readonly roomIdSignal = signal<string | null>(null);
 
-  /** Cùng điều kiện với mục "Ý Tưởng Phối Đồ" ở trang chủ: phòng dựng sẵn có điểm sản phẩm. */
+  /**
+   * Mọi phòng mẫu có điểm gắn sản phẩm (kể cả phòng dựng từ file .glb) — trang này chỉ dùng ảnh bìa
+   * và danh sách sản phẩm của phòng nên không phụ thuộc kiểu dựng 3D.
+   */
   readonly rooms = computed(() =>
-    this.roomService.rooms().filter(r => r.roomType !== 'glb_scene' && r.hotspots.length > 0)
+    this.roomService.rooms().filter(r => r.hotspots.length > 0)
   );
 
   readonly room = computed(() => {

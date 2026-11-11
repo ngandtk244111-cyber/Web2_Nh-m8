@@ -26,7 +26,11 @@ export class CustomRequestListComponent implements OnInit {
     });
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    // Service chỉ tải danh sách một lần khi khởi động app; tải lại để thấy yêu cầu của
+    // tài khoản vừa đăng nhập (hoặc vừa gửi / được báo giá) mà không cần F5.
+    this.customRequestService.refresh();
+  }
 
   openAiAssistant(): void {
     this.aiService.openModal();

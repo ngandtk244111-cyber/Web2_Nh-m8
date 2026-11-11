@@ -88,13 +88,13 @@
                 <span class="text-[11px] font-mono text-neutral-600 font-semibold">{{ req.requestCode }}</span>
                 
                 <!-- Status Badge -->
-                <span [ngSwitch]="req.status" class="text-[11px] font-bold px-2.5 py-0.5 rounded-full">
-                  <span *ngSwitchCase="'PENDING_REVIEW'" class="text-amber-400 bg-amber-950/40 border border-amber-500/30">Đang xem xét</span>
-                  <span *ngSwitchCase="'QUOTED'" class="text-blue-400 bg-blue-950/40 border border-blue-500/30">Đã có báo giá</span>
-                  <span *ngSwitchCase="'PREVIEW_READY'" class="text-purple-400 bg-purple-950/40 border border-purple-500/30">Đã có 3D Preview</span>
-                  <span *ngSwitchCase="'APPROVED'" class="text-emerald-400 bg-emerald-950/40 border border-emerald-500/30">Đã duyệt thiết kế</span>
-                  <span *ngSwitchCase="'CONVERTED_TO_ORDER'" class="text-emerald-400 bg-emerald-950/40 border border-emerald-500/30">Đã lên đơn hàng</span>
-                  <span *ngSwitchDefault class="text-neutral-600 bg-neutral-200">Đang xử lý</span>
+                <span [ngSwitch]="req.status" class="text-[11px] font-bold">
+                  <span *ngSwitchCase="'PENDING_REVIEW'" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-amber-800 bg-amber-100 border border-amber-300">Đang xem xét</span>
+                  <span *ngSwitchCase="'QUOTED'" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-blue-800 bg-blue-100 border border-blue-300">Đã có báo giá</span>
+                  <span *ngSwitchCase="'PREVIEW_READY'" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-purple-800 bg-purple-100 border border-purple-300">Đã có 3D Preview</span>
+                  <span *ngSwitchCase="'APPROVED'" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-emerald-800 bg-emerald-100 border border-emerald-300">Đã duyệt thiết kế</span>
+                  <span *ngSwitchCase="'CONVERTED_TO_ORDER'" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-emerald-800 bg-emerald-100 border border-emerald-300">Đã lên đơn hàng</span>
+                  <span *ngSwitchDefault class="inline-flex items-center px-2.5 py-1 rounded-full text-neutral-600 bg-neutral-200">Đang xử lý</span>
                 </span>
               </div>
 

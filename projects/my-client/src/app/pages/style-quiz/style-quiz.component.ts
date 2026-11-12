@@ -187,7 +187,6 @@ export class StyleQuizComponent {
       this.showResult();
     } else {
       this.screen = 'locked';
-      this.loginModalService.open();
     }
   }
 

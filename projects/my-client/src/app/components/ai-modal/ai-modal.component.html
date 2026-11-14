@@ -7,16 +7,16 @@
         (click)="$event.stopPropagation()"
         class="aic"
         role="dialog"
-        aria-label="Trò chuyện với Goh, trợ lý AI của Luméa">
+        aria-label="Trò chuyện với Lami, trợ lý AI của Luméa">
 
         <!-- Header -->
         <header class="aic_head">
           <div class="aic_avatar ai_mascot" [attr.data-expression]="mascotService.expression()">
-            <img [src]="mascotService.image()" alt="Goh - trợ lý Luméa" class="ai_mascot__img">
+            <img [src]="mascotService.image()" alt="Lami - trợ lý Luméa" class="ai_mascot__img">
             <span class="aic_online" aria-hidden="true"></span>
           </div>
           <div class="aic_who">
-            <h3 class="aic_name">Goh · AI Idea Assistant</h3>
+            <h3 class="aic_name">Lami · AI Idea Assistant</h3>
             <p class="aic_status">
               <span class="aic_dot"></span>
               {{ aiService.isThinking() ? 'Đang suy nghĩ...' : 'Đang hoạt động' }}
@@ -163,7 +163,7 @@
           <!-- Typing -->
           <div *ngIf="aiService.isThinking()" class="aic_row">
             <div class="aic_msg">
-              <img src="assets/mascot/goh-thinking.png" alt="Goh đang suy nghĩ" class="aic_msg__av">
+              <img src="assets/mascot/goh-thinking.png" alt="Lami đang suy nghĩ" class="aic_msg__av">
               <div class="aic_bubble aic_typing" aria-label="AI đang soạn tin">
                 <span></span><span></span><span></span>
               </div>

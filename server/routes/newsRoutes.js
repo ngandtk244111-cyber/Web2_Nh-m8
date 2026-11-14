@@ -3,94 +3,11 @@ const { sendError } = require('../utils/http-error');
 const NewsArticle = require('../models/NewsArticle');
 const NewsComment = require('../models/NewsComment');
 const User = require('../models/User');
-const Notification = require('../models/Notification');
 const { requirePermission, requireUserId } = require('../middleware/auth');
-const { emitToContentStaff } = require('../realtime');
-const { isEmailConfigured, getMailTransporter } = require('../utils/otp');
 
 const COMMENT_MAX_LENGTH = 1000;
-const STAFF_NAME = 'Luméa';
-// Ảnh trả lời phải nằm trong kho ảnh của server (tải lên qua POST /api/products/images).
-const STORED_IMAGE = /^(https?:\/\/[^/]+)?\/api\/products\/images\/[a-f0-9]{24}$/;
 
 const router = express.Router();
-
-/**
- * Shop vừa trả lời ý kiến của khách: báo trên web (chuông thông báo) và qua email nếu đã cấu hình SMTP
- * và khách có email. Lỗi gửi thông báo không làm hỏng thao tác trả lời.
- */
-async function notifyCommentReply(parent, article, reply) {
-  try {
-    if (!parent.userId) return;
-    const link = `/news/${article.slug}`;
-    const preview = reply.text ? reply.text.slice(0, 120) : 'Luméa đã trả lời bạn kèm một hình ảnh.';
-    await Notification.create({
-      userId: String(parent.userId),
-      title: 'Luméa đã trả lời bình luận của bạn',
-      message: `Bài "${article.title}": ${preview}`,
-      link,
-    });
-    if (!isEmailConfigured()) return;
-    const user = await User.findById(parent.userId, { email: 1, fullName: 1 }).lean().catch(() => null);
-    if (!user?.email) return;
-    const url = (process.env.CLIENT_URL || 'http://localhost:4200') + link;
-    await getMailTransporter().sendMail({
-      from: process.env.MAIL_FROM || `"Luméa" <${process.env.SMTP_USER}>`,
-      to: user.email,
-      subject: `Luméa đã trả lời bình luận của bạn — ${article.title}`,
-      text: `Chào ${user.fullName || 'bạn'},\n\nLuméa vừa trả lời bình luận của bạn trong bài "${article.title}":\n\n"${preview}"\n\nXem tại: ${url}\n\nLuméa Interior & 3D`,
-    });
-  } catch (err) {
-    console.error('notify news comment reply error', err.message);
-  }
-}
-
-// Admin — toàn bộ ý kiến (cả trả lời) kèm tên / slug bài viết, mới nhất trước.
-// Khai báo trước '/:id/comments' để 'admin' không bị hiểu là id bài viết.
-router.get('/admin/comments', requirePermission('content.view'), async (_req, res) => {
-  try {
-    const comments = await NewsComment.find().sort({ createdAt: -1 }).limit(1000).lean();
-    const articles = await NewsArticle.find({ id: { $in: [...new Set(comments.map(c => c.articleId))] } }, { id: 1, title: 1, slug: 1 }).lean();
-    const byId = new Map(articles.map(a => [a.id, a]));
-    res.json({
-      success: true,
-      comments: comments.map(c => ({ ...c, articleTitle: byId.get(c.articleId)?.title || '(bài đã xoá)', articleSlug: byId.get(c.articleId)?.slug || '' })),
-    });
-  } catch (err) {
-    sendError(res, err);
-  }
-});
-
-// Admin — shop trả lời 1 ý kiến (có chữ và/hoặc ảnh). Trả lời luôn gắn vào ý kiến gốc (lồng 1 cấp).
-router.post('/:id/staff-reply', requirePermission('content.edit'), async (req, res) => {
-  try {
-    const text = String(req.body.text || '').trim();
-    const imageUrl = String(req.body.imageUrl || '').trim();
-    if (!text && !imageUrl) return res.status(400).json({ success: false, error: 'Nhập nội dung hoặc chọn ảnh để trả lời' });
-    if (text.length > COMMENT_MAX_LENGTH) return res.status(400).json({ success: false, error: `Trả lời tối đa ${COMMENT_MAX_LENGTH} ký tự` });
-    if (imageUrl && !STORED_IMAGE.test(imageUrl)) return res.status(400).json({ success: false, error: 'Ảnh không hợp lệ, vui lòng tải lại ảnh' });
-
-    const article = await NewsArticle.findOne({ id: req.params.id }, { id: 1, title: 1, slug: 1 }).lean();
-    if (!article) return res.status(404).json({ success: false, error: 'Không tìm thấy bài viết' });
-    const target = await NewsComment.findOne({ id: String(req.body.parentId || ''), articleId: article.id });
-    if (!target) return res.status(404).json({ success: false, error: 'Không tìm thấy ý kiến được trả lời' });
-
-    const reply = await NewsComment.create({
-      id: 'nc-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
-      articleId: article.id,
-      parentId: target.parentId || target.id,
-      authorName: STAFF_NAME,
-      isStaff: true,
-      text,
-      imageUrl,
-    });
-    // Báo đúng người được trả lời (có thể là 1 câu trả lời trong luồng, không chỉ ý kiến gốc).
-    if (!target.isStaff) await notifyCommentReply(target, article, reply);
-    res.json({ success: true, comment: reply });
-  } catch (err) {
-    sendError(res, err);
-  }
-});
 
 router.get('/', async (_req, res) => {
   try {
@@ -136,7 +53,7 @@ router.post('/:id/comments', requireUserId, async (req, res) => {
       return res.status(400).json({ success: false, error: `Ý kiến tối đa ${COMMENT_MAX_LENGTH} ký tự` });
     }
 
-    const article = await NewsArticle.findOne({ id: req.params.id }, { id: 1, title: 1 }).lean();
+    const article = await NewsArticle.exists({ id: req.params.id });
     if (!article) return res.status(404).json({ success: false, error: 'Không tìm thấy bài viết' });
 
     // Chỉ lồng 1 cấp: trả lời một câu trả lời thì gắn vào ý kiến gốc của nó.
@@ -158,8 +75,6 @@ router.post('/:id/comments', requireUserId, async (req, res) => {
       authorName: user.fullName || user.phoneNumber || 'Bạn đọc',
       text,
     });
-    // Báo ngay cho nhân viên đang mở my-admin (toast + chuông).
-    emitToContentStaff('news-comment:new', { articleId: article.id, articleTitle: article.title, author: comment.authorName, text: text.slice(0, 120) });
     res.json({ success: true, comment });
   } catch (err) {
     console.error('create news comment error', err);
@@ -180,11 +95,6 @@ router.post('/comments/:commentId/:action', async (req, res) => {
       { new: true }
     );
     if (!comment) return res.status(404).json({ success: false, error: 'Không tìm thấy ý kiến' });
-    // Khách tim câu trả lời của shop -> báo nhân viên.
-    if (delta > 0 && comment.isStaff) {
-      const article = await NewsArticle.findOne({ id: comment.articleId }, { title: 1 }).lean();
-      emitToContentStaff('news-comment:liked', { articleTitle: article?.title || '', likesCount: comment.likesCount });
-    }
     res.json({ success: true, comment });
   } catch (err) {
     sendError(res, err);

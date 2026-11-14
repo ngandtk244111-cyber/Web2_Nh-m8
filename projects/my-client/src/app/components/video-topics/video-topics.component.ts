@@ -461,7 +461,7 @@ export class VideoTopicsComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.topics[this.viewerIndex];
   }
 
-  /** Ảnh mascot Goh ở thẻ trái của viewer — đổi theo biểu cảm hiện tại của MascotService. */
+  /** Ảnh mascot Lami ở thẻ trái của viewer — đổi theo biểu cảm hiện tại của MascotService. */
   readonly mascotImg = computed(() => {
     const expression: MascotExpression = this.mascotService.expression();
     return expression === 'idle' ? 'assets/mascot/goh-mascot.png' : `assets/mascot/goh-${expression}.png`;

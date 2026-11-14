@@ -4,7 +4,7 @@ import { AiAssistantService } from '../../core/services/ai-assistant.service';
 import { MascotService, MascotExpression } from '../../core/services/mascot.service';
 import { AppIconComponent } from '../icon/icon.component';
 
-// Mỗi biểu cảm dùng 1 ảnh Goh riêng — đổi biểu cảm thì đổi luôn ảnh, kèm animation pulse nhẹ.
+// Mỗi biểu cảm dùng 1 ảnh Lami riêng — đổi biểu cảm thì đổi luôn ảnh, kèm animation pulse nhẹ.
 const MASCOT_IMAGES: Record<MascotExpression, string> = {
   idle: 'assets/mascot/goh-mascot.png',
   thinking: 'assets/mascot/goh-thinking.png',
@@ -16,13 +16,13 @@ const MASCOT_IMAGES: Record<MascotExpression, string> = {
 };
 
 const MASCOT_ALT: Record<MascotExpression, string> = {
-  idle: 'Goh mascot',
-  thinking: 'Goh đang suy nghĩ',
-  happy: 'Goh đang cười',
-  surprised: 'Goh ngạc nhiên',
-  confident: 'Goh tự tin',
-  sad: 'Goh buồn',
-  angry: 'Goh khó chịu',
+  idle: 'Lami mascot',
+  thinking: 'Lami đang suy nghĩ',
+  happy: 'Lami đang cười',
+  surprised: 'Lami ngạc nhiên',
+  confident: 'Lami tự tin',
+  sad: 'Lami buồn',
+  angry: 'Lami khó chịu',
 };
 
 @Component({

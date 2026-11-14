@@ -1,28 +1,40 @@
     <div
-      class="pc pp-hover group relative flex h-full min-w-0"
+      class="pc group relative flex h-full min-w-0"
       [class.flex-col]="layout === 'grid'"
       [class.flex-row]="layout === 'list'"
       [class.gap-4]="layout === 'list'">
 
       <!-- Image -->
       <div
-        class="pc__img relative overflow-hidden"
-        [class.w-full]="layout === 'grid'"
-        [class.pc__img--grid]="layout === 'grid'"
-        [class.w-36]="layout === 'list'"
-        [class.aspect-square]="layout === 'list'"
-        [class.flex-shrink-0]="layout === 'list'">
-        <!-- Ảnh 1 -> ảnh 2 khi rê chuột vào thẻ: hiệu ứng chung app-product-photo (giống mọi thẻ sản phẩm khác). -->
+        class="pc__img relative overflow-hidden aspect-square flex items-end justify-center pt-2 px-2 pb-0"
+        [ngClass]="layout === 'grid' ? 'w-full' : 'w-36 flex-shrink-0'">
+        <!-- Ảnh 1 (mặc định) -> ảnh 2 khi rê chuột vào thẻ:
+             Frameless Editorial Style: object-contain object-bottom căn đáy như đặt trên kệ, hòa vào nền trang -->
         <a
           [routerLink]="['/product', product.slug]"
           [attr.aria-label]="product.name"
-          class="absolute inset-0 block">
-        <app-product-photo [images]="product.images" [alt]="product.name" [eager]="true"></app-product-photo>
-
+          class="absolute inset-0 flex items-end justify-center pt-2 px-2 pb-0">
+          <img
+            [src]="product.images[0]"
+            [alt]="product.name"
+            loading="lazy"
+            decoding="async"
+            draggable="false"
+            class="w-full h-full object-contain object-bottom transition-[transform,opacity] duration-500 ease-out group-hover:scale-105"
+            [ngClass]="product.images[1] ? 'group-hover:opacity-0' : ''">
+          <img
+            *ngIf="product.images[1]"
+            [src]="product.images[1]"
+            alt=""
+            aria-hidden="true"
+            loading="lazy"
+            decoding="async"
+            draggable="false"
+            class="pc__img-alt absolute inset-0 w-full h-full pt-2 px-2 pb-0 object-contain object-bottom opacity-0 transition-[transform,opacity] duration-500 ease-out group-hover:scale-105 group-hover:opacity-100">
         </a>
 
         <!-- Badges: Sale / 3D -->
-        <div class="absolute top-2.5 left-2.5 flex flex-col gap-1 items-start">
+        <div class="absolute top-2.5 left-2.5 z-20 flex flex-col gap-1 items-start">
           <span *ngIf="discountPercent > 0" class="pc__tag pc__tag--sale">-{{ discountPercent }}%</span>
           <span *ngIf="has3D" class="pc__tag pc__tag--dark" title="Có mô hình 3D xem trực tiếp">
             <app-icon name="cube" [size]="11"></app-icon>
@@ -34,7 +46,7 @@
         <button
           type="button"
           (click)="toggleFavorite($event)"
-          class="pc__fav absolute top-2.5 right-2.5 z-10 w-8 h-8 rounded-full flex items-center justify-center transition hover:scale-110"
+          class="pc__fav absolute top-2.5 right-2.5 z-20 w-8 h-8 rounded-full flex items-center justify-center transition hover:scale-110"
           [class.text-neutral-700]="!favoriteService.isFavorite(product.id)"
           [class.text-rose-500]="favoriteService.isFavorite(product.id)"
           [attr.aria-label]="favoriteService.isFavorite(product.id) ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'"
@@ -47,7 +59,7 @@
         </button>
 
         <!-- Hover actions -->
-        <div class="pc__actions absolute inset-x-0 bottom-0 p-2.5 flex items-center justify-center gap-2 flex-wrap">
+        <div class="pc__actions absolute inset-x-0 bottom-0 z-20 p-2.5 flex items-center justify-center gap-2 flex-wrap">
           <a
             *ngIf="has3D"
             [routerLink]="['/phong-3d', product.id]"
@@ -65,7 +77,9 @@
       </div>
 
       <!-- Content -->
-      <div class="pc__body flex-1 flex flex-col min-w-0" [class.pt-3.5]="layout === 'grid'">
+      <div
+        class="pc__body flex-1 flex flex-col min-w-0"
+        [ngClass]="layout === 'grid' ? 'px-0 pt-3 pb-2' : 'py-1 pr-0 pl-0'">
         <div class="flex items-center justify-between gap-2 pc__meta">
           <span class="pc__cat truncate">{{ categoryLabel }}</span>
           <span class="pc-rating flex items-center gap-1 flex-shrink-0">

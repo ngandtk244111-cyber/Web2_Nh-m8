@@ -3,8 +3,8 @@
 .pc-rating { color: #A3152D; font-size: 11px; font-weight: 600; }
 .pc__count { color: #93877E; font-weight: 400; }
 
-.pc__img { background: #EFE6D3; border-radius: 4px; }
-.pc__img--grid { aspect-ratio: 4 / 5; }
+/* Thẻ sản phẩm: Frameless Editorial Style tối giản không viền, căn đáy */
+@media (hover: none) { .pc__img-alt { display: none; } }
 
 
 .pc__tag {

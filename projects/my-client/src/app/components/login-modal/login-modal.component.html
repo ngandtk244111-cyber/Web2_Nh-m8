@@ -16,7 +16,7 @@
           *ngIf="mascotService.expression() === 'idle'; else mascotFace"
           src="assets/logo/lumea-logo.png" alt="Luméa Interior &amp; 3D" class="lm_head__logo">
         <ng-template #mascotFace>
-          <img [src]="mascotService.image()" alt="Goh - trợ lý Luméa" class="lm_head__mascot">
+          <img [src]="mascotService.image()" alt="Lami - trợ lý Luméa" class="lm_head__mascot">
         </ng-template>
       </div>
       <h2 *ngIf="mode !== 'login'" id="lm-title" class="lm_title">{{ title }}</h2>

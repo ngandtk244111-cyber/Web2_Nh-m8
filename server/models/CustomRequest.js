@@ -24,11 +24,6 @@ const customRequestSchema = new mongoose.Schema({
   adminNote: { type: String, default: '' },
   preview3dModelType: { type: String, default: null },
   messages: { type: [mongoose.Schema.Types.Mixed], default: [] },
-  // Báo giá hiện hành (model Quote) và đơn đã tạo từ báo giá. quotationPrice/estimatedDays ở trên
-  // được giữ để tương thích dữ liệu cũ và hiển thị nhanh, luôn đồng bộ theo báo giá đã gửi mới nhất.
-  currentQuoteVersion: { type: Number, default: null },
-  acceptedQuoteId: { type: mongoose.Schema.Types.ObjectId, ref: 'Quote', default: null },
-  orderNumber: { type: String, default: null },
 });
 
 module.exports = mongoose.model('CustomRequest', customRequestSchema);

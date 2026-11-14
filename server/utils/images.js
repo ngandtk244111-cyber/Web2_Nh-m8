@@ -3,7 +3,6 @@ const Product = require('../models/Product');
 const ProductImage = require('../models/ProductImage');
 const Order = require('../models/Order');
 const AdminConfig = require('../models/AdminConfig');
-const NewsComment = require('../models/NewsComment');
 const { validId } = require('../middleware/auth');
 
 const upload = multer({
@@ -54,9 +53,7 @@ function isProductImageUsed(id) {
     Order.exists({ 'items.product.images': pattern }),
     // Banner dùng chung kho ảnh này khi admin tải ảnh lên ở tab Banner.
     AdminConfig.exists({ key: 'banners', 'value.imageUrl': pattern }),
-    // Shop trả lời bình luận Tin tức kèm ảnh cũng lưu ở kho ảnh này.
-    NewsComment.exists({ imageUrl: pattern }),
-  ]).then(([product, order, banner, comment]) => !!(product || order || banner || comment));
+  ]).then(([product, order, banner]) => !!(product || order || banner));
 }
 
 /** Xoá các ảnh trong `urls` đã không còn sản phẩm, đơn hàng hay banner nào dùng. Lỗi dọn dẹp không làm hỏng thao tác chính. */

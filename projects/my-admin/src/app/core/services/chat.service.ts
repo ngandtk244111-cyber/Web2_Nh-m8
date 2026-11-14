@@ -69,10 +69,6 @@ export class ChatService {
 
   /** Khách vừa gửi đánh giá mới (server phát 'review:new' tới phòng staff). */
   readonly newReview$ = new Subject<{ productName: string; author: string; rating: number }>();
-  /** Bạn đọc vừa bình luận bài Tin tức ('news-comment:new'). */
-  readonly newNewsComment$ = new Subject<{ articleId: string; articleTitle: string; author: string; text: string }>();
-  /** Bạn đọc vừa tim câu trả lời của shop dưới bài Tin tức ('news-comment:liked'). */
-  readonly newsCommentLiked$ = new Subject<{ articleTitle: string; likesCount: number }>();
 
   connect(): void {
     if (this.socket) return;
@@ -84,15 +80,12 @@ export class ChatService {
     });
     this.socket.on('chat:message', (message: ChatMessage) => this.onMessage(message));
     this.socket.on('review:new', (review: { productName: string; author: string; rating: number }) => this.newReview$.next(review));
-    this.socket.on('news-comment:new', (c: { articleId: string; articleTitle: string; author: string; text: string }) => this.newNewsComment$.next(c));
-    this.socket.on('news-comment:liked', (l: { articleTitle: string; likesCount: number }) => this.newsCommentLiked$.next(l));
     this.socket.on('chat:presence-list', ({ sessionIds }: { sessionIds: string[] }) => this.onlineSignal.set(new Set(sessionIds)));
     this.socket.on('chat:presence', ({ sessionId, online }: { sessionId: string; online: boolean }) => {
       this.onlineSignal.update(set => this.toggleIn(set, sessionId, online));
     });
     this.socket.on('chat:typing', ({ sessionId, typing }: { sessionId: string; typing: boolean }) => this.setCustomerTyping(sessionId, typing));
-    // Tài khoản chỉ có quyền nội dung cũng mở socket (nhận báo bình luận Tin tức) nhưng không xem chat.
-    if (this.adminAuth.can('customers.view')) this.refreshSessions();
+    this.refreshSessions();
   }
 
   disconnect(): void {

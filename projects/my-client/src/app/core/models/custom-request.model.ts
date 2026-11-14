@@ -51,47 +51,4 @@ export interface CustomRequest {
   adminNote?: string;
   preview3dModelType?: 'moon_lamp' | 'geometric_vase' | 'abstract_sculpture' | 'desk_organizer';
   messages: RequestChatMessage[];
-  /** Phiên bản báo giá đang hiệu lực và đơn đã tạo từ báo giá. */
-  currentQuoteVersion?: number | null;
-  orderNumber?: string | null;
-}
-
-export type QuoteStatus = 'DRAFT' | 'SENT' | 'ACCEPTED' | 'REJECTED' | 'EXPIRED' | 'SUPERSEDED';
-
-export interface QuoteItem {
-  name: string;
-  description?: string;
-  material?: string;
-  size?: string;
-  quantity: number;
-  unitPrice: number;
-  discount: number;
-  lineTotal: number;
-}
-
-/** Báo giá có phiên bản do shop gửi (server tính tổng / tiền cọc, khách chỉ xem và chấp nhận). */
-export interface Quote {
-  _id: string;
-  version: number;
-  status: QuoteStatus;
-  items: QuoteItem[];
-  subtotal: number;
-  itemDiscountTotal: number;
-  quoteDiscount: number;
-  total: number;
-  estimatedDays: number;
-  note?: string;
-  deposit: { amount: number; remaining: number; rate: number; minimum: number; overridden: boolean; overrideReason?: string } | null;
-  issuedAt: string | null;
-  validUntil: string | null;
-  acceptedAt?: string | null;
-  rejectReason?: string;
-}
-
-/** Chính sách cọc hiện hành (hiển thị cho khách trước khi chấp nhận). */
-export interface DepositPolicy {
-  defaultDepositRate: number;
-  minimumDepositAmount: number;
-  quoteValidityDays: number;
-  depositPaymentDeadlineHours: number;
 }

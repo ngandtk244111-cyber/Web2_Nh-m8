@@ -76,76 +76,8 @@ const refundSchema = new mongoose.Schema({
   adminNote: { type: String, default: '' },
 }, { _id: false });
 
-// Kế hoạch thanh toán chụp lúc tạo đơn đặt làm theo báo giá: mọi số tiền, tỉ lệ cọc, tài khoản nhận
-// và nội dung chuyển khoản cố định theo thời điểm đó — đổi Cài đặt sau này không ảnh hưởng đơn cũ.
-const paymentPlanSchema = new mongoose.Schema({
-  type: { type: String, enum: ['FULL', 'DEPOSIT'], required: true },
-  goodsSubtotal: { type: Number, default: 0 }, // tiền hàng trước chiết khấu
-  goodsDiscount: { type: Number, default: 0 }, // chiết khấu trong báo giá
-  goodsTotal: { type: Number, default: 0 }, // tiền hàng sau chiết khấu (căn cứ tính cọc)
-  depositRate: { type: Number, default: 0 },
-  depositMinimum: { type: Number, default: 0 },
-  depositAmount: { type: Number, default: 0 },
-  depositOverridden: { type: Boolean, default: false },
-  depositOverrideReason: { type: String, default: '' },
-  shippingFee: { type: Number, default: 0 },
-  remainingAmount: { type: Number, default: 0 }, // = goodsTotal - depositAmount + shippingFee
-  balanceMethod: { type: String, enum: ['COD', 'BANK_TRANSFER'], default: 'COD' },
-  termsVersion: { type: String, default: '' },
-  policySnapshot: { type: mongoose.Schema.Types.Mixed, default: null },
-  bank: {
-    type: new mongoose.Schema({
-      bankCode: String, bankName: String, accountNumber: String, accountName: String,
-    }, { _id: false }),
-    default: null,
-  },
-  transferContent: { type: String, default: '' },
-  // Hạn trả cọc theo giờ server. Đang đối soát (VERIFYING) thì tạm dừng xét hết hạn.
-  deadlineAt: { type: Date, default: null },
-  graceUsed: { type: Boolean, default: false },
-  verifySlaAt: { type: Date, default: null },
-  customerReportCount: { type: Number, default: 0 },
-  // Tăng mỗi lần sổ giao dịch của đơn thay đổi; chỉ lần tính lại mang số mới nhất được ghi trạng thái
-  // (tránh 2 nhân viên đối soát cùng lúc ghi đè tổng tiền cũ).
-  ledgerRev: { type: Number, default: 0 },
-  extensions: {
-    type: [new mongoose.Schema({
-      hours: Number, reason: String, byName: String, at: { type: Date, default: Date.now }, previousDeadline: Date,
-    }, { _id: false })],
-    default: [],
-  },
-  depositPaidAt: { type: Date, default: null },
-  expiredAt: { type: Date, default: null },
-  // Quá hạn nhưng đã nhận một phần tiền: KHÔNG tự huỷ, chờ nhân viên xử lý thủ công / hoàn tiền.
-  expiredWithFunds: { type: Boolean, default: false },
-}, { _id: false });
-
 const orderSchema = new mongoose.Schema({
   orderNumber: { type: String, required: true, unique: true },
-  // STANDARD: đơn mua từ giỏ hàng. CUSTOM_QUOTE: đơn đặt làm tạo từ báo giá (có cọc).
-  orderType: { type: String, enum: ['STANDARD', 'CUSTOM_QUOTE'], default: 'STANDARD' },
-  // Phiên bản quy tắc thanh toán lúc tạo đơn. Đơn cũ (không có / 1) giữ quy tắc cũ; >= 2: hàng in 3D
-  // phải trả đủ 100% trước khi sản xuất, không COD.
-  paymentPolicyVersion: { type: Number, default: 1 },
-  customRequestRef: {
-    type: new mongoose.Schema({
-      requestId: String,
-      requestCode: String,
-      quoteId: { type: mongoose.Schema.Types.ObjectId, ref: 'Quote' },
-      quoteVersion: Number,
-    }, { _id: false }),
-    default: null,
-  },
-  paymentPlan: { type: paymentPlanSchema, default: null },
-  depositStatus: {
-    type: String,
-    enum: ['UNPAID', 'VERIFYING', 'PAID', 'REFUND_PENDING', 'PARTIALLY_REFUNDED', 'REFUNDED', null],
-    default: null,
-  },
-  // Tổng tiền cọc đã xác nhận nhận được — luôn tính lại từ sổ PaymentTransaction (CONFIRMED).
-  depositReceived: { type: Number, default: 0 },
-  productionStartedAt: { type: Date, default: null },
-  productionStartedBy: { type: String, default: null },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   createdAtLabel: { type: String, default: '' },
   status: {
@@ -227,7 +159,6 @@ const orderSchema = new mongoose.Schema({
     transform(_doc, ret) {
       delete ret.paidConfirmedBy;
       delete ret.phoneConfirmedBy;
-      delete ret.productionStartedBy;
       if (ret.shipment) delete ret.shipment.createdBy;
       (ret.items || []).forEach(item => { if (item.product) delete item.product.reviews; });
       return ret;
@@ -240,13 +171,6 @@ orderSchema.index({ createdAt: -1 });
 orderSchema.index({ 'items.product.id': 1 });
 orderSchema.index({ 'items.product.images': 1 });
 orderSchema.index({ paymentTransactionId: 1 });
-// Chống tạo đơn trùng: mỗi phiên bản báo giá chỉ sinh tối đa 1 đơn (bấm checkout liên tục vẫn chỉ 1).
-orderSchema.index(
-  { 'customRequestRef.quoteId': 1 },
-  { unique: true, partialFilterExpression: { 'customRequestRef.quoteId': { $type: 'objectId' } } },
-);
-// Quét đơn cọc quá hạn.
-orderSchema.index({ depositStatus: 1, 'paymentPlan.deadlineAt': 1 });
 
 // Realtime: mọi thay đổi đơn hàng (route orders/payments, dù dùng save() hay findOneAndUpdate)
 // đều được đẩy tới trang Tra cứu đơn đang mở mã đơn đó — không phải thêm lệnh emit ở từng route.

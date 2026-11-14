@@ -268,8 +268,7 @@ router.post('/bulk', requirePermission('products.create'), async (req, res) => {
   }
 });
 
-// content.edit: nhân viên nội dung tải ảnh khi trả lời bình luận Tin tức.
-router.post('/images',requirePermission('products.create', 'products.edit', 'marketing.edit', 'content.edit'), uploadImage('image'), async (req, res) => {
+router.post('/images',requirePermission('products.create', 'products.edit', 'marketing.edit'), uploadImage('image'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ success: false, error: 'Thiếu file ảnh' });
     if (!IMAGE_TYPES.includes(req.file.mimetype)) {

@@ -46,17 +46,8 @@ export class PaymentSandboxComponent implements OnInit {
   /** Thẻ ATM thử điền sẵn — chỉ để mô phỏng bước nhập thẻ. */
   card = { number: '9704 0000 0000 0018', name: 'NGUYEN VAN A', issued: '03/07', otp: '' };
 
-  /** Lượt trả cọc đơn đặt làm (server tạo, gắn vào URL) — có thì thanh toán phần cọc thay vì cả đơn. */
-  depositRef = '';
-
   get methodLabel(): string {
     return METHOD_LABELS[this.method];
-  }
-
-  /** Phần cọc còn thiếu (server cũng tự tính lại khi xác nhận). */
-  get depositDue(): number {
-    const o = this.order;
-    return o ? Math.max(0, (o.paymentPlan?.depositAmount || 0) - (o.depositReceived || 0)) : 0;
   }
 
   ngOnInit(): void {
@@ -64,7 +55,6 @@ export class PaymentSandboxComponent implements OnInit {
     const m = params.get('method') as SandboxMethod;
     if (m && m in METHOD_LABELS) this.method = m;
     const orderNumber = params.get('orderNumber') || '';
-    this.depositRef = params.get('deposit') || '';
     this.orderService.getOrderByNumber(orderNumber).subscribe(order => {
       this.loading = false;
       if (!order) {
@@ -72,7 +62,7 @@ export class PaymentSandboxComponent implements OnInit {
         return;
       }
       this.order = order;
-      if (this.depositRef ? order.depositStatus === 'PAID' : order.paymentStatus === 'PAID') this.goResult(true);
+      if (order.paymentStatus === 'PAID') this.goResult(true);
       else if (order.status === 'CANCELLED') this.error = 'Đơn hàng này đã bị huỷ.';
     });
   }
@@ -93,7 +83,7 @@ export class PaymentSandboxComponent implements OnInit {
     if (!this.order || this.busy || (action === 'pay' && !this.canPay)) return;
     this.busy = true;
     this.error = '';
-    this.paymentService.confirmSandbox(this.order.orderNumber, action, this.depositRef || undefined).subscribe({
+    this.paymentService.confirmSandbox(this.order.orderNumber, action).subscribe({
       next: res => {
         this.busy = false;
         this.goResult(!!res.paid);
@@ -108,12 +98,6 @@ export class PaymentSandboxComponent implements OnInit {
   /** Quay về trang thanh toán để đổi phương thức cho đơn này (đơn giữ nguyên, chưa thanh toán). */
   switchMethod(): void {
     if (!this.order) return;
-    // Trả cọc: quay về trang đơn hàng để chọn cổng khác / chuyển khoản.
-    if (this.depositRef) {
-      this.paymentService.confirmSandbox(this.order.orderNumber, 'cancel', this.depositRef).subscribe({ error: () => undefined });
-      this.router.navigate(['/orders/track'], { queryParams: { orderNumber: this.order.orderNumber }, replaceUrl: true });
-      return;
-    }
     this.router.navigate(['/checkout'], { queryParams: { doiPhuongThuc: this.order.orderNumber }, replaceUrl: true });
   }
 

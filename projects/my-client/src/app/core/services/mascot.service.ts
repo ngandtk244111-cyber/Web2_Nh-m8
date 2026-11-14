@@ -11,7 +11,7 @@ const LOADING_MAX_MS = 20000;
 const MIN_THINKING_MS = 700;
 
 /**
- * Điều phối biểu cảm mascot Goh theo trạng thái tương tác thực của site (AI chat, tìm kiếm,
+ * Điều phối biểu cảm mascot Lami theo trạng thái tương tác thực của site (AI chat, tìm kiếm,
  * giỏ hàng, đăng nhập, flash sale, tùy biến 3D...). Biểu cảm phản ứng (react) tự quay về 'idle'
  * sau một khoảng ngắn; 'thinking' là trạng thái liên tục, chỉ đổi khi gọi stopThinking().
  */

@@ -9,12 +9,11 @@ import { ProductService } from '../../core/services/product.service';
 import { departmentOf, has3DModel, subcategoriesOf } from '../../core/data/catalog-taxonomy';
 import { AppIconComponent } from '../icon/icon.component';
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
-import { ProductPhotoComponent } from '../../components/product-photo/product-photo.component';
 
 @Component({
   selector: 'app-product-card',
   standalone: true,
-  imports: [ProductPhotoComponent, CommonModule, RouterLink, AppIconComponent, VndPipe],
+  imports: [CommonModule, RouterLink, AppIconComponent, VndPipe],
   templateUrl: './product-card.component.html',
   styleUrl: './product-card.component.css'
 })

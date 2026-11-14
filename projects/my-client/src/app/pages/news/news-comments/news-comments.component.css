@@ -207,38 +207,6 @@
   color: #222222;
 }
 
-/* Trả lời của shop: avatar đỏ đô, nhãn "Cửa hàng", ảnh đính kèm. */
-.nc-avatar--staff {
-  background: #A3152D;
-  color: #fff;
-}
-
-.nc-badge {
-  display: inline-block;
-  margin-right: 6px;
-  padding: 1px 7px;
-  border-radius: 999px;
-  background: #F3E3D9;
-  color: #891226;
-  font-size: 11px;
-  font-weight: 700;
-  vertical-align: 1px;
-}
-
-.nc-image {
-  display: inline-block;
-  margin-top: 6px;
-}
-
-.nc-image img {
-  display: block;
-  max-width: min(280px, 100%);
-  max-height: 220px;
-  border-radius: 10px;
-  object-fit: cover;
-  border: 1px solid #EFE6DE;
-}
-
 .nc-meta {
   display: flex;
   align-items: center;

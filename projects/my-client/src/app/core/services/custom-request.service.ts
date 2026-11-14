@@ -1,17 +1,12 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map, tap } from 'rxjs';
-import { CustomRequest, DepositPolicy, Quote } from '../models/custom-request.model';
-import { Order, ShippingAddress } from '../models/order.model';
+import { CustomRequest, CustomRequestStatus } from '../models/custom-request.model';
+import { CartService } from './cart.service';
+import { Product } from '../models/product.model';
 import { environment } from '../../../environments/environment';
 
 const BASE = `${environment.apiUrl}/custom-requests`;
-
-export interface QuotesResponse {
-  quotes: Quote[];
-  policy: DepositPolicy;
-  termsVersion: string;
-}
 
 @Injectable({
   providedIn: 'root'
@@ -22,7 +17,7 @@ export class CustomRequestService {
   private requestsSignal = signal<CustomRequest[]>([]);
   readonly requests = this.requestsSignal.asReadonly();
 
-  constructor() {
+  constructor(private cartService: CartService) {
     this.refresh();
   }
 
@@ -39,10 +34,6 @@ export class CustomRequestService {
     return this.requestsSignal().find(r => r.id === id || r.requestCode === id);
   }
 
-  private replace(request: CustomRequest): void {
-    this.requestsSignal.update(list => list.map(r => r.id === request.id ? request : r));
-  }
-
   createRequest(data: Omit<CustomRequest, 'id' | 'requestCode' | 'createdAt' | 'updatedAt' | 'messages' | 'status'>): Observable<CustomRequest> {
     return this.http.post<{ success: boolean; request: CustomRequest }>(BASE, data).pipe(
       map(res => res.request),
@@ -50,40 +41,60 @@ export class CustomRequestService {
     );
   }
 
-  sendMessage(requestId: string, text: string): void {
-    this.http.post<{ success: boolean; request: CustomRequest }>(`${BASE}/${requestId}/messages`, { text }).subscribe({
+  sendMessage(requestId: string, text: string, sender: 'CUSTOMER' | 'SHOP_SPECIALIST' = 'CUSTOMER'): void {
+    this.http.post<{ success: boolean; request: CustomRequest }>(`${BASE}/${requestId}/messages`, { text, sender }).subscribe({
       next: (res) => {
-        if (res.success) this.replace(res.request);
+        if (res.success) this.requestsSignal.update(list => list.map(r => r.id === requestId ? res.request : r));
       },
     });
   }
 
-  // ---- Báo giá có phiên bản & đặt hàng (giá, tiền cọc do server tính từ báo giá trong DB) ----
-
-  getQuotes(requestId: string): Observable<QuotesResponse> {
-    return this.http.get<QuotesResponse & { success: boolean }>(`${BASE}/${requestId}/quotes`);
+  updateStatus(requestId: string, status: CustomRequestStatus, quotationPrice?: number, estimatedDays?: number, preview3dModelType?: any): void {
+    this.http.patch<{ success: boolean; request: CustomRequest }>(`${BASE}/${requestId}/status`, {
+      status, quotationPrice, estimatedDays, preview3dModelType,
+    }).subscribe({
+      next: (res) => {
+        if (res.success) this.requestsSignal.update(list => list.map(r => r.id === requestId ? res.request : r));
+      },
+    });
   }
 
-  /** Chấp nhận báo giá — bắt buộc đồng ý chính sách cọc. */
-  acceptQuote(requestId: string, version: number): Observable<CustomRequest> {
-    return this.http.post<{ success: boolean; request: CustomRequest }>(`${BASE}/${requestId}/quotes/${version}/accept`, { agreeDepositTerms: true }).pipe(
-      map(res => res.request),
-      tap(r => this.replace(r))
-    );
+  convertRequestToCart(request: CustomRequest): void {
+    if (!request.quotationPrice) return;
+
+    // Create a virtual custom product and put into cart
+    const customProduct: Product = {
+      id: 'custom-' + request.id,
+      name: `[Custom POD] ${request.title}`,
+      slug: 'custom-' + request.id,
+      category: 'lamp',
+      categoryName: request.brief.productType || 'Sản Phẩm Thiết Kế Riêng',
+      categoryGroup: 'FURNITURE',
+      productionType: 'PRINT_ON_DEMAND',
+      customizable: true,
+      basePrice: request.quotationPrice,
+      description: `Đơn đặt hàng thiết kế riêng mã ${request.requestCode}. Quy cách: ${request.brief.theme}, ${request.brief.style}, Kích thước: ${request.brief.size}, Màu: ${request.brief.color}. Khắc chữ: ${request.brief.customText || 'Không'}.`,
+      rating: 5.0,
+      reviewCount: 1,
+      inStock: 1,
+      images: [
+        request.aiConceptImage || request.customerImages[0] || 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=800&q=80'
+      ],
+      badge: 'Thiết Kế Riêng',
+      dimensions: request.brief.size || 'Theo thỏa thuận',
+      materialInfo: 'Nhựa sinh học in 3D theo thiết kế kỹ thuật',
+      weight: 'Theo thực tế',
+      features: ['Sản xuất độc bản 1 chiếc duy nhất', 'Hỗ trợ bảo hành kỹ thuật 12 tháng'],
+      reviews: [],
+    };
+
+    if (!this.cartService.addToCart(customProduct, 1)) return;
+    if (request.status !== 'APPROVED' && request.status !== 'CONVERTED_TO_ORDER') {
+      this.updateStatus(request.id, 'APPROVED');
+    }
   }
 
-  rejectQuote(requestId: string, version: number, reason: string): Observable<CustomRequest> {
-    return this.http.post<{ success: boolean; request: CustomRequest }>(`${BASE}/${requestId}/quotes/${version}/reject`, { reason }).pipe(
-      map(res => res.request),
-      tap(r => this.replace(r))
-    );
-  }
-
-  /** Tạo đơn đặt làm từ báo giá đã chấp nhận (bấm nhiều lần server vẫn chỉ tạo 1 đơn). */
-  checkout(requestId: string, body: { quoteVersion: number; shippingAddress: ShippingAddress; balanceMethod: 'COD' | 'BANK_TRANSFER'; notes?: string }): Observable<Order> {
-    return this.http.post<{ success: boolean; order: Order }>(`${BASE}/${requestId}/checkout`, { ...body, agreeDepositTerms: true }).pipe(
-      map(res => res.order),
-      tap(() => this.refresh())
-    );
+  markRequestConvertedToOrder(requestId: string): void {
+    this.updateStatus(requestId, 'CONVERTED_TO_ORDER');
   }
 }

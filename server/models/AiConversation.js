@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-// Lịch sử trò chuyện với trợ lý AI Goh của khách đã đăng nhập (khách vãng lai lưu ở localStorage).
+// Lịch sử trò chuyện với trợ lý AI Lami của khách đã đăng nhập (khách vãng lai lưu ở localStorage).
 // `id` do client sinh để tin nhắn đầu tiên lưu được ngay, không chờ server cấp. `messages` giữ
 // nguyên hình dạng AiChatMessage phía FE (ai-assistant.service.ts), kể cả thẻ sản phẩm gợi ý.
 const aiConversationSchema = new mongoose.Schema({

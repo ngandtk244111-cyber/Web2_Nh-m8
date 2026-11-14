@@ -11,22 +11,17 @@
   </div>
 
   <h1 class="font-serif text-2xl font-bold text-amber-800">
-    {{ isDeposit ? (isSuccess ? 'Đã Nhận Tiền Cọc' : 'Thanh Toán Cọc Chưa Hoàn Tất') : (isSuccess ? 'Thanh Toán ZaloPay Thành Công' : 'Thanh Toán ZaloPay Chưa Hoàn Tất') }}
+    {{ isSuccess ? 'Thanh Toán ZaloPay Thành Công' : 'Thanh Toán ZaloPay Chưa Hoàn Tất' }}
   </h1>
 
-  <p *ngIf="isDeposit" class="text-sm text-neutral-600">
-    {{ isSuccess
-      ? 'Luméa đã nhận đủ tiền cọc đơn ' + orderNumber + ' qua ZaloPay. Đơn sẽ được đưa vào sản xuất.'
-      : 'Giao dịch chưa thành công hoặc đã bị huỷ. Bạn có thể thanh toán lại ở trang đơn hàng trước hạn cọc.' }}
-  </p>
-  <p *ngIf="!isDeposit" class="text-sm text-neutral-600">
+  <p class="text-sm text-neutral-600">
     {{ isSuccess
       ? 'Đơn hàng của bạn đã được ghi nhận thanh toán qua ZaloPay.'
       : 'Giao dịch không thành công hoặc đã bị huỷ. Bạn có thể thử lại hoặc chọn phương thức khác.' }}
   </p>
 
   <a
-    *ngIf="isSuccess && orderNumber && !isDeposit"
+    *ngIf="isSuccess && orderNumber"
     [href]="invoiceLink()"
     target="_blank"
     rel="noopener"

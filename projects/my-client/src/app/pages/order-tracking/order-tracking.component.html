@@ -92,7 +92,7 @@
             <span class="flex items-center gap-1.5 font-bold text-neutral-800"><app-icon name="truck" [size]="15"></app-icon>{{ currentOrder.shipment.carrierName }}</span>
             <span *ngIf="currentOrder.shipment.trackingCode">Mã vận đơn: <strong class="font-mono">{{ currentOrder.shipment.trackingCode }}</strong></span>
             <a *ngIf="currentOrder.shipment.trackingUrl" [href]="currentOrder.shipment.trackingUrl" target="_blank" rel="noopener" class="font-semibold text-amber-600 underline">Xem hành trình ↗</a>
-            <span *ngIf="currentOrder.paymentMethod === 'COD' && currentOrder.status === 'SHIPPED'">Vui lòng chuẩn bị <strong>{{ (currentOrder.orderType === 'CUSTOM_QUOTE' ? currentOrder.total - (currentOrder.depositReceived || 0) : currentOrder.total) | number }}đ</strong> để thanh toán khi nhận hàng.</span>
+            <span *ngIf="currentOrder.paymentMethod === 'COD' && currentOrder.status === 'SHIPPED'">Vui lòng chuẩn bị <strong>{{ currentOrder.total | number }}đ</strong> để thanh toán khi nhận hàng.</span>
           </div>
           <p *ngIf="currentOrder.status === 'PENDING'" class="text-xs text-neutral-600">
             <ng-container *ngIf="currentOrder.paymentMethod === 'COD'">Luméa sẽ gọi tới số {{ currentOrder.shippingAddress.phone }} để xác nhận đơn trước khi giao. Vui lòng để ý điện thoại nhé. </ng-container>
@@ -109,9 +109,6 @@
             <button *ngIf="canCancel" type="button" class="ot-cancel-btn" (click)="openCancel()">Huỷ đơn hàng</button>
           </div>
           <p *ngIf="currentOrder.status === 'CANCELLED' && currentOrder.cancelReason" class="text-xs text-rose-500">Lý do huỷ: {{ currentOrder.cancelReason }}</p>
-
-          <!-- Đơn đặt làm theo báo giá: thanh toán cọc (MoMo / ZaloPay / ATM tự xác nhận, hoặc chuyển khoản) -->
-          <app-deposit-panel *ngIf="currentOrder.orderType === 'CUSTOM_QUOTE'" [order]="currentOrder" (changed)="currentOrder = $event"></app-deposit-panel>
 
           <!-- Hoàn tiền: đơn đã trả trước bị huỷ -->
           <div *ngIf="currentOrder.refund as rf" class="ot-refund" [class.ot-refund--done]="rf.status === 'COMPLETED'">
@@ -273,7 +270,7 @@
 
           <!-- Đơn đã trả trước: báo trước chính sách hoàn tiền -->
           <div *ngIf="refundInfo as ri" class="ot-refund ot-refund--modal">
-            <div class="ot-refund__head"><span class="ot-refund__title">Hoàn tiền {{ (currentOrder?.orderType === 'CUSTOM_QUOTE' ? currentOrder?.depositReceived : currentOrder?.total) | vnd }}</span></div>
+            <div class="ot-refund__head"><span class="ot-refund__title">Hoàn tiền {{ currentOrder?.total | vnd }}</span></div>
             <p class="ot-refund__note">{{ ri.channel }} trong vòng <strong>{{ ri.days }} ngày làm việc</strong> (không tính Thứ Bảy, Chủ nhật) kể từ khi huỷ đơn.</p>
             <ng-container *ngIf="needsRefundBank">
               <input type="text" [(ngModel)]="refundBank.bankName" maxlength="60" placeholder="Ngân hàng (VD: Vietcombank)" class="ot-modal__input">

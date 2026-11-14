@@ -1,4 +1,4 @@
-import { Injectable, computed, signal, inject } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map, tap } from 'rxjs';
 import { NewsArticle } from '../models/news.model';
@@ -57,55 +57,4 @@ export class NewsService {
       tap(() => this.articlesSignal.update(list => list.filter(a => a.id !== id)))
     );
   }
-
-  // ---------- Bình luận của bạn đọc ----------
-
-  private commentsSignal = signal<AdminNewsComment[]>([]);
-  readonly comments = this.commentsSignal.asReadonly();
-  readonly commentsLoaded = signal(false);
-
-  /** Ý kiến gốc của khách mà shop chưa trả lời trong luồng đó. */
-  readonly unrepliedCount = computed(() => unrepliedRoots(this.commentsSignal()).length);
-
-  refreshComments(): void {
-    this.http.get<{ success: boolean; comments: AdminNewsComment[] }>(`${BASE}/admin/comments`).subscribe({
-      next: res => {
-        if (res.success) this.commentsSignal.set(res.comments);
-        this.commentsLoaded.set(true);
-      },
-      error: () => this.commentsLoaded.set(true),
-    });
-  }
-
-  /** Shop trả lời 1 ý kiến (chữ và/hoặc ảnh). */
-  replyComment(articleId: string, parentId: string, text: string, imageUrl: string): Observable<AdminNewsComment> {
-    return this.http.post<{ success: boolean; comment: AdminNewsComment }>(`${BASE}/${articleId}/staff-reply`, { parentId, text, imageUrl }).pipe(
-      map(res => res.comment),
-      tap(comment => {
-        const article = this.commentsSignal().find(c => c.articleId === articleId);
-        this.commentsSignal.update(list => [{ ...comment, articleTitle: article?.articleTitle || '', articleSlug: article?.articleSlug || '' }, ...list]);
-      })
-    );
-  }
-}
-
-/** Ý kiến bạn đọc kèm tên / slug bài viết (GET /news/admin/comments). */
-export interface AdminNewsComment {
-  id: string;
-  articleId: string;
-  articleTitle: string;
-  articleSlug: string;
-  parentId: string | null;
-  authorName: string;
-  text: string;
-  isStaff?: boolean;
-  imageUrl?: string;
-  likesCount: number;
-  createdAt: string;
-}
-
-/** Ý kiến gốc của khách chưa có câu trả lời nào của shop trong luồng. */
-export function unrepliedRoots(comments: AdminNewsComment[]): AdminNewsComment[] {
-  const repliedRoots = new Set(comments.filter(c => c.isStaff && c.parentId).map(c => c.parentId));
-  return comments.filter(c => !c.parentId && !c.isStaff && !repliedRoots.has(c.id));
 }

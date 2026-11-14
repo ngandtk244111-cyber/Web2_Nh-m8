@@ -3,9 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CustomRequestService } from '../../../core/services/custom-request.service';
+import { CartService } from '../../../core/services/cart.service';
 import { CustomRequest } from '../../../core/models/custom-request.model';
 import { ThreeViewerComponent } from '../../../components/three-viewer/three-viewer.component';
-import { QuotePanelComponent } from '../../../components/quote-panel/quote-panel.component';
 import { AppIconComponent } from '../../../components/icon/icon.component';
 import { VndPipe } from '../../../shared/pipes/vnd.pipe';
 
@@ -17,9 +17,8 @@ import { VndPipe } from '../../../shared/pipes/vnd.pipe';
     FormsModule, 
     RouterLink, 
     ThreeViewerComponent, 
-    AppIconComponent,
-    VndPipe,
-    QuotePanelComponent
+    AppIconComponent, 
+    VndPipe
   ],
   templateUrl: './custom-request-detail.component.html',
   styleUrl: './custom-request-detail.component.css'
@@ -32,6 +31,7 @@ export class CustomRequestDetailComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private customRequestService: CustomRequestService,
+    private cartService: CartService,
     private router: Router
   ) {
     // requests giờ nạp/cập nhật bất đồng bộ từ backend — effect() tự đồng bộ this.request
@@ -56,9 +56,22 @@ export class CustomRequestDetailComponent implements OnInit {
   sendChatMessage(): void {
     if (!this.request || !this.chatInput.trim()) return;
     const text = this.chatInput.trim();
-    this.customRequestService.sendMessage(this.request.id, text);
+    this.customRequestService.sendMessage(this.request.id, text, 'CUSTOMER');
     this.chatInput = '';
     // Kỹ thuật viên trả lời từ trang admin; server tự xác định người gửi theo token nên FE không giả lập trả lời.
   }
 
+  approveAndAddToCart(): void {
+    if (!this.request) return;
+    this.customRequestService.convertRequestToCart(this.request);
+  }
+
+  requestRevision(): void {
+    if (!this.request) return;
+    this.customRequestService.sendMessage(
+      this.request.id,
+      'Tôi muốn điều chỉnh một chút về kích thước và chi tiết khắc chữ trước khi duyệt, shop hỗ trợ giúp nhé!',
+      'CUSTOMER'
+    );
+  }
 }

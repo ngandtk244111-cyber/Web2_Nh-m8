@@ -6,7 +6,7 @@ import { ToastService } from './toast.service';
 export type ActiveChatPanel = 'none' | 'ai' | 'support';
 
 /**
- * Chỉ cho mở 1 khung chat tại một thời điểm: trợ lý AI (Goh) hoặc chat hỗ trợ trực tiếp.
+ * Chỉ cho mở 1 khung chat tại một thời điểm: trợ lý AI (Lami) hoặc chat hỗ trợ trực tiếp.
  * Cả hai đều cần đăng nhập (giống Long Châu): chưa đăng nhập thì mở popup đăng nhập, đăng nhập xong
  * tự mở luôn khung chat vừa bấm; đăng xuất thì đóng khung đang mở.
  */

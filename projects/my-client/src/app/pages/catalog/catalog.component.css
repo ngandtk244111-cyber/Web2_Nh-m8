@@ -592,16 +592,14 @@
   color: #1F1712;
 }
 
-/* Ô sản phẩm: thẻ kéo giãn đều chiều cao trong hàng. */
+/* Ô sản phẩm: Masonry item tránh bị ngắt ngang cột */
 .cg_item {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  display: block;
   min-width: 0;
+  break-inside: avoid;
 }
 
 .cg_item > app-product-card {
-  flex: 1;
   display: block;
 }
 

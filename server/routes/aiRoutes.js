@@ -107,7 +107,7 @@ function storePolicies() {
 
 function buildSystemPrompt(catalog) {
   return 'QUAN TRỌNG: Bạn CHỈ ĐƯỢC trả về DUY NHẤT một JSON object. KHÔNG markdown, KHÔNG giải thích, KHÔNG ``` fences.\n\n' +
-    'Bạn là Goh — "AI Idea Assistant" của Luméa, shop nội thất, đồ decor và sản phẩm in 3D theo yêu cầu.\n' +
+    'Bạn là Lami — "AI Idea Assistant" của Luméa, shop nội thất, đồ decor và sản phẩm in 3D theo yêu cầu.\n' +
     'Bạn luôn trả lời ngắn gọn, rõ ràng, thân thiện bằng tiếng Việt.\n' +
     'Nhiệm vụ: (a) tư vấn và gợi ý sản phẩm có trong shop; (b) giúp khách chốt "Design Brief" cho món đồ in 3D theo ý tưởng riêng.\n\n' +
     'QUY TẮC ƯU TIÊN CAO NHẤT:\n' +
@@ -323,9 +323,9 @@ router.post('/assistant', async (req, res) => {
       ...(Array.isArray(history) ? history : [])
         .filter((m) => m && m.text)
         .slice(-20)
-        .map((m) => `${m.sender === 'USER' ? 'Khách' : 'Goh'}: ${String(m.text)}`),
+        .map((m) => `${m.sender === 'USER' ? 'Khách' : 'Lami'}: ${String(m.text)}`),
       currentBrief ? `[Design Brief hiện tại]: ${JSON.stringify(currentBrief)}` : null,
-      `Khách: ${userText}\nGoh (trả JSON, không markdown):`,
+      `Khách: ${userText}\nLami (trả JSON, không markdown):`,
     ].filter(Boolean).join('\n');
 
     const callGemini = (model) => axios.post(

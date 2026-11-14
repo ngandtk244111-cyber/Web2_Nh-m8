@@ -17,8 +17,6 @@ export class CheckoutMomoReturnComponent implements OnInit {
   isSuccess = false;
   /** Đơn chưa thanh toán, chưa huỷ/giao -> cho quay lại chọn phương thức khác. */
   canSwitch = false;
-  /** Lượt trả cọc của đơn đặt làm (không phải thanh toán cả đơn). */
-  isDeposit = false;
   /** Đang hỏi server trạng thái thanh toán thật của đơn. */
   checking = true;
   orderNumber = '';
@@ -46,11 +44,7 @@ export class CheckoutMomoReturnComponent implements OnInit {
     // (IPN không về được localhost); cổng thử thì server đã ghi nhận sẵn. Cuối cùng đọc trạng thái đơn.
     if (params['signature']) {
       this.paymentService.verifyMomoReturn(params).subscribe({
-        // Lượt trả cọc: orderId trên URL là mã lượt trả, server trả về mã đơn thật.
-        next: res => {
-          if (res.orderNumber) this.orderNumber = res.orderNumber;
-          this.loadStatus();
-        },
+        next: () => this.loadStatus(),
         error: () => this.loadStatus(),
       });
     } else {
@@ -61,9 +55,8 @@ export class CheckoutMomoReturnComponent implements OnInit {
   private loadStatus(): void {
     this.orderService.getOrderByNumber(this.orderNumber).subscribe(order => {
       this.checking = false;
-      this.isDeposit = order?.orderType === 'CUSTOM_QUOTE';
-      this.isSuccess = this.isDeposit ? order?.depositStatus === 'PAID' : order?.paymentStatus === 'PAID';
-      this.canSwitch = !this.isDeposit && !!order && !this.isSuccess && ['PENDING', 'CONFIRMED', 'IN_PRODUCTION'].includes(order.status);
+      this.isSuccess = order?.paymentStatus === 'PAID';
+      this.canSwitch = !!order && !this.isSuccess && ['PENDING', 'CONFIRMED', 'IN_PRODUCTION'].includes(order.status);
     });
   }
 }

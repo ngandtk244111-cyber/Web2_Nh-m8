@@ -18,17 +18,9 @@ function emitOrderUpdated(order) {
   io.to(orderRoom(order.orderNumber)).emit('order:updated', payload);
 }
 
-// Nhân viên có quyền nội dung (content.view) — nhận báo bình luận / tim bài Tin tức.
-const CONTENT_ROOM = 'content';
-
-/** Báo cho nhân viên nội dung đang mở my-admin. */
-function emitToContentStaff(event, payload) {
-  if (io) io.to(CONTENT_ROOM).emit(event, payload);
-}
-
 /** Báo cho mọi nhân viên đang mở my-admin (phòng "staff" của socket.js). */
 function emitToStaff(event, payload) {
   if (io) io.to('staff').emit(event, payload);
 }
 
-module.exports = { setIO, orderRoom, emitOrderUpdated, emitToStaff, emitToContentStaff, CONTENT_ROOM };
+module.exports = { setIO, orderRoom, emitOrderUpdated, emitToStaff };

@@ -4,7 +4,7 @@ const Order = require('./models/Order');
 const { adminIdFromToken, userIdFromToken } = require('./middleware/auth');
 const { adminHasPermission } = require('./utils/permissions');
 const { canWatchOrder, isLocked, recordFailure } = require('./utils/order-access');
-const { setIO, orderRoom, CONTENT_ROOM } = require('./realtime');
+const { setIO, orderRoom } = require('./realtime');
 const { buildAutoReply } = require('./chatAutoReply');
 
 // Phòng chung của nhân viên my-admin: nhận mọi tin nhắn của mọi cuộc chat để cập nhật hộp thư.
@@ -97,10 +97,7 @@ function attachSocket(httpServer, corsOrigins) {
     // Nhân viên (my-admin) vào phòng chung — chỉ khi token hợp lệ.
     socket.on('chat:staff-join', async (adminToken) => {
       const adminId = await adminIdFromToken(adminToken);
-      if (!adminId) return;
-      // Nhân viên nội dung: phòng riêng nhận báo bình luận Tin tức — không vào phòng chat với khách.
-      if (await adminHasPermission(adminId, 'content.view')) socket.join(CONTENT_ROOM);
-      if (!(await adminHasPermission(adminId, 'customers.view'))) return;
+      if (!adminId || !(await adminHasPermission(adminId, 'customers.view'))) return;
       const wasOnline = staffOnline();
       socket.join(STAFF_ROOM);
       socket.data.isStaff = true;

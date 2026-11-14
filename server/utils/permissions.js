@@ -12,12 +12,8 @@ const ROLES = [
 ];
 const SUPER_ADMIN_ID = 'r-1';
 const SUPER_ADMIN_NAME = 'Super Admin';
-const MODULES = ['products', 'orders', 'custom3d', 'inventory', 'customers', 'marketing', 'content', 'staff', 'settings', 'payments'];
+const MODULES = ['products', 'orders', 'custom3d', 'inventory', 'customers', 'marketing', 'content', 'staff', 'settings'];
 const ACTIONS = ['view', 'create', 'edit', 'delete', 'approve'];
-// Phân hệ có bộ hành động riêng. payments.config = sửa tài khoản ngân hàng nhận tiền — tách khỏi
-// settings.edit; mặc định chỉ Super Admin có, vai trò khác chỉ có khi Super Admin cấp.
-const MODULE_ACTIONS = { payments: ['view', 'config'] };
-const actionsFor = (module) => MODULE_ACTIONS[module] || ACTIONS;
 
 /** Viết gọn từng dòng quyền: 'vced' = view, create, edit, delete; 'a' = approve. */
 function perms(letters) {
@@ -37,7 +33,7 @@ const DEFAULT_MATRIX = {
 };
 
 function superAdminPermissions() {
-  return Object.fromEntries(MODULES.map(m => [m, Object.fromEntries(actionsFor(m).map(a => [a, true]))]));
+  return Object.fromEntries(MODULES.map(m => [m, perms('vcdea')]));
 }
 
 /** Bảng quyền đầy đủ của mọi vai trò. Super Admin luôn toàn quyền để không ai khóa được hệ thống. */
@@ -48,7 +44,7 @@ async function getPermissionMatrix() {
   for (const { id } of ROLES.filter(r => r.id !== SUPER_ADMIN_ID)) {
     matrix[id] = Object.fromEntries(MODULES.map(m => [
       m,
-      Object.fromEntries(actionsFor(m).map(a => [a, !!(stored[id]?.[m]?.[a] ?? DEFAULT_MATRIX[id]?.[m]?.[a])])),
+      Object.fromEntries(ACTIONS.map(a => [a, !!(stored[id]?.[m]?.[a] ?? DEFAULT_MATRIX[id]?.[m]?.[a])])),
     ]));
   }
   return matrix;

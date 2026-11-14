@@ -58,7 +58,7 @@ export class BrandComponent {
     return this.mergedBanners();
   }
 
-  /** Avatar "Đội ngũ Luméa" xoay vòng các biểu cảm Goh cho sinh động. */
+  /** Avatar "Đội ngũ Luméa" xoay vòng các biểu cảm Lami cho sinh động. */
   readonly staffAvatars = [
     'assets/mascot/goh-happy.png',
     'assets/mascot/goh-confident.png',

@@ -7,35 +7,6 @@ import { CartItem } from '../models/cart.model';
 import { environment } from '../../../environments/environment';
 import { AuthService } from './auth.service';
 
-/** Một lần thanh toán / báo chuyển khoản cọc (sổ giao dịch của đơn đặt làm). */
-export interface DepositTransaction {
-  _id: string;
-  status: 'REPORTED' | 'CONFIRMED' | 'REJECTED' | 'INITIATED' | 'FAILED';
-  source: 'CUSTOMER' | 'STAFF' | 'GATEWAY';
-  gateway?: 'MOMO' | 'ATM' | 'ZALOPAY' | null;
-  reportedAmount?: number | null;
-  receivedAmount?: number | null;
-  expectedAmount?: number | null;
-  sandbox?: boolean;
-  rejectReason?: string;
-  createdAt: string;
-  verifiedAt?: string | null;
-}
-
-export interface DepositInfo {
-  order: Order;
-  transactions: DepositTransaction[];
-  payment: {
-    bank: { bankCode: string; bankName: string; accountNumber: string; accountName: string } | null;
-    amount: number;
-    depositAmount: number;
-    received: number;
-    transferContent: string;
-    qrUrl: string;
-    deadlineAt: string | null;
-  } | null;
-}
-
 interface OrderApiResponse {
   success: boolean;
   order?: Order & { _id?: string };
@@ -155,22 +126,6 @@ export class OrderService {
 
   confirmPayment(orderNumber: string, phone: string): Observable<Order> {
     return this.http.patch<OrderApiResponse>(`${this.baseUrl}/${encodeURIComponent(orderNumber)}/confirm-payment`, { phone }).pipe(
-      map(res => this.normalize(res.order!)),
-      tap(order => this.replaceInSignal(order))
-    );
-  }
-
-  /** Đơn đặt làm: hướng dẫn trả cọc + lịch sử các lần thanh toán / báo chuyển khoản (chỉ chủ đơn). */
-  getDeposit(orderNumber: string): Observable<DepositInfo> {
-    return this.http.get<DepositInfo & { success: boolean }>(`${this.baseUrl}/${encodeURIComponent(orderNumber)}/deposit`).pipe(
-      map(res => ({ ...res, order: this.normalize(res.order) })),
-      tap(res => this.replaceInSignal(res.order))
-    );
-  }
-
-  /** Đơn đặt làm: khách báo đã chuyển khoản cọc — chỉ là báo, shop đối soát rồi mới xác nhận. */
-  reportDepositTransfer(orderNumber: string, amount: number, note: string): Observable<Order> {
-    return this.http.post<OrderApiResponse>(`${this.baseUrl}/${encodeURIComponent(orderNumber)}/deposit/report`, { amount, note }).pipe(
       map(res => this.normalize(res.order!)),
       tap(order => this.replaceInSignal(order))
     );

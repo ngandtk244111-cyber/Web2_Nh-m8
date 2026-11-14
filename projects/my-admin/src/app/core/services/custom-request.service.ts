@@ -1,7 +1,7 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map, tap } from 'rxjs';
-import { CustomRequest, CustomRequestStatus } from '../models/custom-request.model';
+import { CustomRequest, CustomRequestStatus, DepositPolicy, Quote, QuoteInput } from '../models/custom-request.model';
 import { CartService } from './cart.service';
 import { Product } from '../models/product.model';
 import { AdminAuthService } from './admin-auth.service';
@@ -62,6 +62,27 @@ export class CustomRequestService {
     }).pipe(
       map(res => res.request),
       tap(updated => this.requestsSignal.update(list => list.map(r => r.id === requestId ? updated : r)))
+    );
+  }
+
+  // ---- Báo giá có phiên bản (tổng tiền, tiền cọc do server tính) ----
+
+  getQuotes(requestId: string): Observable<{ quotes: Quote[]; policy: DepositPolicy }> {
+    return this.http.get<{ success: boolean; quotes: Quote[]; policy: DepositPolicy }>(`${BASE}/${requestId}/quotes`);
+  }
+
+  /** Lưu bản nháp: chưa có thì tạo phiên bản mới, có rồi thì sửa (chỉ sửa được bản nháp). */
+  saveQuoteDraft(requestId: string, input: QuoteInput, version?: number): Observable<Quote> {
+    const req = version
+      ? this.http.put<{ success: boolean; quote: Quote }>(`${BASE}/${requestId}/quotes/${version}`, input)
+      : this.http.post<{ success: boolean; quote: Quote }>(`${BASE}/${requestId}/quotes`, input);
+    return req.pipe(map(res => res.quote));
+  }
+
+  /** Gửi bản nháp cho khách: server chốt tiền cọc, hạn hiệu lực, thay thế báo giá cũ, nhắn khách. */
+  sendQuote(requestId: string, version: number): Observable<{ quote: Quote; request: CustomRequest }> {
+    return this.http.post<{ success: boolean; quote: Quote; request: CustomRequest }>(`${BASE}/${requestId}/quotes/${version}/send`, {}).pipe(
+      tap(res => this.requestsSignal.update(list => list.map(r => r.id === requestId ? res.request : r)))
     );
   }
 

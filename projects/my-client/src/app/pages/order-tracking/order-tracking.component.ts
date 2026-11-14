@@ -11,6 +11,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { CANCEL_REASONS, CANCEL_REASON_OTHER } from '../../core/data/cancel-reasons';
 import { AppIconComponent } from '../../components/icon/icon.component';
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
+import { DepositPanelComponent } from '../../components/deposit-panel/deposit-panel.component';
 
 /** Mức tiến triển của trạng thái đơn — dùng cho thanh tiến trình tổng quát. */
 const STATUS_RANK: Partial<Record<OrderStatus, number>> = {
@@ -24,7 +25,7 @@ const STATUS_RANK: Partial<Record<OrderStatus, number>> = {
 @Component({
   selector: 'app-order-tracking',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, AppIconComponent, VndPipe],
+  imports: [CommonModule, FormsModule, RouterLink, AppIconComponent, VndPipe, DepositPanelComponent],
   templateUrl: './order-tracking.component.html',
   styleUrl: './order-tracking.component.css'
 })
@@ -152,11 +153,13 @@ export class OrderTrackingComponent implements OnInit, OnDestroy {
   get refundInfo(): { days: number; channel: string } | null {
     const order = this.currentOrder;
     if (!order || !orderNeedsRefund(order)) return null;
+    // Đơn đặt làm: hoàn 100% tiền cọc đã nhận về tài khoản khách cung cấp.
+    if (order.orderType === 'CUSTOM_QUOTE') return REFUND_POLICY['BANK_TRANSFER'];
     return REFUND_POLICY[order.paymentMethod] || { days: 7, channel: 'Hoàn về phương thức đã thanh toán' };
   }
 
   get needsRefundBank(): boolean {
-    return !!this.refundInfo && this.currentOrder?.paymentMethod === 'BANK_TRANSFER';
+    return !!this.refundInfo && (this.currentOrder?.paymentMethod === 'BANK_TRANSFER' || this.currentOrder?.orderType === 'CUSTOM_QUOTE');
   }
 
   get refundBankValid(): boolean {

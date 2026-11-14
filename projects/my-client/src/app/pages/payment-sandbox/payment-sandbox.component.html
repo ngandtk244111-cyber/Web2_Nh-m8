@@ -16,11 +16,12 @@
 
     <div *ngIf="order as o" class="ps__body">
       <div class="ps__amount">
-        <span>Số tiền thanh toán</span>
-        <strong>{{ o.total | vnd }}</strong>
+        <span>{{ depositRef ? 'Tiền cọc đơn đặt làm' : 'Số tiền thanh toán' }}</span>
+        <strong>{{ (depositRef ? depositDue : o.total) | vnd }}</strong>
       </div>
       <dl class="ps__rows">
         <div><dt>Mã đơn hàng</dt><dd class="ps__mono">{{ o.orderNumber }}</dd></div>
+        <div *ngIf="depositRef"><dt>Mã giao dịch</dt><dd class="ps__mono">{{ depositRef }}</dd></div>
         <div><dt>Người nhận</dt><dd>{{ o.shippingAddress.fullName }}</dd></div>
         <div><dt>Số sản phẩm</dt><dd>{{ o.items.length }}</dd></div>
         <div *ngIf="o.discount > 0"><dt>Đã giảm (voucher)</dt><dd>-{{ o.discount | vnd }}</dd></div>

@@ -1,0 +1,144 @@
+<div class="admin-page">
+  <div class="page-breadcrumb">
+    Marketing & nội dung <span class="sep">/</span> <span class="current">Bình luận tin tức</span>
+  </div>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Bình luận tin tức</h1>
+      <p class="page-subtitle">Ý kiến bạn đọc dưới các bài Tin tức — trả lời (kèm ảnh) thì khách được báo trên web và qua email</p>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <button type="button" class="stat-card" [class.active]="filter() === 'UNREPLIED'" (click)="setFilter('UNREPLIED')">
+      <span class="stat-label">Chưa trả lời</span>
+      <span class="stat-value">{{ count('UNREPLIED') }}</span>
+    </button>
+    <button type="button" class="stat-card" [class.active]="filter() === 'REPLIED'" (click)="setFilter('REPLIED')">
+      <span class="stat-label">Đã trả lời</span>
+      <span class="stat-value">{{ count('REPLIED') }}</span>
+    </button>
+    <button type="button" class="stat-card" [class.active]="filter() === 'ALL'" (click)="setFilter('ALL')">
+      <span class="stat-label">Tất cả ý kiến</span>
+      <span class="stat-value">{{ count('ALL') }}</span>
+    </button>
+  </div>
+
+  <div class="filter-bar">
+    <div class="filter-left">
+      <div class="search-wrapper">
+        <input type="text" class="search-input" placeholder="Người bình luận, nội dung, tên bài..."
+          [ngModel]="search()" (ngModelChange)="search.set($event); page.set(1)">
+        <i class="bi bi-search search-icon"></i>
+      </div>
+      <select class="form-select article-select" [ngModel]="articleFilter()" (ngModelChange)="articleFilter.set($event); page.set(1)">
+        <option value="ALL">Tất cả bài viết</option>
+        <option *ngFor="let a of articles()" [value]="a.id">{{ a.title }}</option>
+      </select>
+    </div>
+    <span class="selection-info">{{ filtered().length }} ý kiến</span>
+  </div>
+
+  <div class="table-scrollable">
+    <table class="admin-table comment-table">
+      <thead>
+        <tr>
+          <th class="col-author">Bạn đọc</th>
+          <th>Ý kiến</th>
+          <th class="col-article">Bài viết</th>
+          <th class="col-status">Trạng thái</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let t of paged()" class="clickable" (click)="open(t)">
+          <td>
+            <span class="cell-strong">{{ t.root.authorName }}</span>
+            <span class="cell-sub">{{ t.root.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+          </td>
+          <td>
+            <span class="comment-text">{{ t.root.text }}</span>
+            <span class="cell-sub">
+              <i class="bi bi-heart"></i> {{ t.root.likesCount }}
+              <ng-container *ngIf="t.replies.length"> · {{ t.replies.length }} trả lời</ng-container>
+            </span>
+          </td>
+          <td>{{ t.root.articleTitle }}</td>
+          <td>
+            <span class="status-badge" [ngClass]="t.replied ? 'status-green' : 'status-yellow'">{{ t.replied ? 'Đã trả lời' : 'Chưa trả lời' }}</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="empty-state" *ngIf="loaded() && filtered().length === 0">
+      <i class="bi bi-chat-left-text"></i>
+      Không có ý kiến nào ở mục này.
+    </div>
+    <app-pager [total]="filtered().length" [page]="page()" [pageSize]="pageSize" (pageChange)="page.set($event)"></app-pager>
+  </div>
+</div>
+
+<!-- Luồng bình luận + trả lời -->
+<div class="modal-overlay" *ngIf="current() as t" (click)="close()">
+  <div class="modal-box lg" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <h3 class="modal-title">{{ t.root.articleTitle }}</h3>
+        <a class="cell-sub" *ngIf="articleLink(t.root) as link" [href]="link" target="_blank" rel="noopener">
+          <i class="bi bi-box-arrow-up-right"></i> Xem bài trên cửa hàng
+        </a>
+      </div>
+      <button type="button" class="close-btn" (click)="close()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="thread">
+        <ng-container *ngTemplateOutlet="commentTpl; context: { $implicit: t.root }"></ng-container>
+        <div class="thread-replies">
+          <ng-container *ngFor="let r of t.replies">
+            <ng-container *ngTemplateOutlet="commentTpl; context: { $implicit: r }"></ng-container>
+          </ng-container>
+        </div>
+      </div>
+
+      <div class="reply-box" *ngIf="canReply">
+        <label class="form-label">
+          Trả lời <b>{{ replyTarget?.authorName || t.root.authorName }}</b>
+          <button type="button" class="link-reset" *ngIf="replyTarget && replyTarget.id !== t.root.id" (click)="replyTarget = t.root">(trả lời ý kiến gốc)</button>
+        </label>
+        <textarea class="form-control" rows="3" maxlength="1000" [(ngModel)]="replyText" placeholder="Nhập câu trả lời của Luméa…"></textarea>
+        <div class="reply-image" *ngIf="replyImage">
+          <img [src]="replyImage" alt="Ảnh đính kèm">
+          <button type="button" class="remove-image" (click)="replyImage = ''" title="Bỏ ảnh"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="reply-actions">
+          <label class="btn-header upload-btn" [class.disabled]="uploading">
+            <i class="bi" [ngClass]="uploading ? 'bi-hourglass-split' : 'bi-image'"></i>
+            {{ uploading ? 'Đang tải ảnh…' : (replyImage ? 'Đổi ảnh' : 'Tải ảnh lên') }}
+            <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden [disabled]="uploading" (change)="onPickImage($event)">
+          </label>
+          <button type="button" class="btn-save" [disabled]="sending || uploading" (click)="send(t)">
+            <i class="bi bi-send"></i> Gửi trả lời
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<ng-template #commentTpl let-c>
+  <div class="comment" [class.comment--staff]="c.isStaff">
+    <span class="avatar" [class.avatar--staff]="c.isStaff">{{ c.isStaff ? 'L' : (c.authorName || '?').charAt(0).toUpperCase() }}</span>
+    <div class="comment-body">
+      <div class="comment-head">
+        <span class="cell-strong">{{ c.authorName }}</span>
+        <span class="tag primary" *ngIf="c.isStaff">Cửa hàng</span>
+        <span class="cell-sub">{{ c.createdAt | date:'dd/MM/yyyy HH:mm' }} · <i class="bi bi-heart"></i> {{ c.likesCount }}</span>
+      </div>
+      <p class="comment-content" *ngIf="c.text">{{ c.text }}</p>
+      <a *ngIf="c.imageUrl" [href]="c.imageUrl" target="_blank" rel="noopener" class="comment-image"><img [src]="c.imageUrl" alt="Ảnh đính kèm"></a>
+      <button type="button" class="link-reset reply-link" *ngIf="canReply && !c.isStaff" (click)="replyTo(c)">
+        <i class="bi bi-reply"></i> Trả lời
+      </button>
+    </div>
+  </div>
+</ng-template>

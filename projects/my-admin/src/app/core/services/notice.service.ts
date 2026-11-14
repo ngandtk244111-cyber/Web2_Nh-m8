@@ -8,6 +8,7 @@ import { CommunityService } from './community.service';
 import { ProductService } from './product.service';
 import { WarrantyService } from './warranty.service';
 import { ToastService } from './toast.service';
+import { NewsService } from './news.service';
 
 /** Hàng có sẵn: ≤ 5 cái = sắp hết (đỏ), ≤ 20 cái = còn ít (vàng), trên 20 = còn nhiều (xanh). */
 export const LOW_STOCK_THRESHOLD = 5;
@@ -34,12 +35,23 @@ export class NoticeService {
   private products = inject(ProductService);
   private warranty = inject(WarrantyService);
   private toast = inject(ToastService);
+  private news = inject(NewsService);
 
   constructor() {
     // Đánh giá mới: tải lại danh sách để chuông cập nhật số, và báo ngay cho nhân viên đang mở admin.
     this.chat.newReview$.subscribe(r => {
       this.reviews.refresh();
       this.toast.info(`Đánh giá mới ${r.rating}★ của ${r.author} cho "${r.productName}"`);
+    });
+    // Bình luận / tim dưới bài Tin tức do shop đăng — chỉ nhân viên nội dung mới được báo.
+    this.chat.newNewsComment$.subscribe(c => {
+      if (!this.adminAuth.can('content.view')) return;
+      this.news.refreshComments();
+      this.toast.info(`${c.author} vừa bình luận bài "${c.articleTitle}": ${c.text}`);
+    });
+    this.chat.newsCommentLiked$.subscribe(l => {
+      if (!this.adminAuth.can('content.view')) return;
+      this.toast.info(`Có người vừa thích câu trả lời của shop trong bài "${l.articleTitle}" (${l.likesCount} lượt thích)`);
     });
   }
 
@@ -52,7 +64,12 @@ export class NoticeService {
       this.reviews.refresh();
       this.chat.connect();
     }
-    if (can('content.view')) this.community.refresh();
+    if (can('content.view')) {
+      this.community.refresh();
+      this.news.refreshComments();
+      // Cần socket để nhận báo bình luận Tin tức realtime (kể cả tài khoản không xem tin nhắn khách).
+      this.chat.connect();
+    }
   }
 
   readonly notices = computed<AdminNotice[]>(() => {
@@ -68,6 +85,7 @@ export class NoticeService {
       { perm: 'orders.view', label: 'Yêu cầu bảo hành chờ xử lý', count: this.warranty.warranties().filter(w => w.status === 'CLAIMED').length, link: '/warranty', query: { status: 'CLAIMED' }, icon: 'bi-shield-exclamation' },
       { perm: 'customers.view', label: 'Đánh giá mới chưa phản hồi', count: this.reviews.reviews().filter(r => r.status !== 'HIDDEN' && r.rating > 2 && !r.reply?.text).length, link: '/reviews', query: { filter: 'UNREPLIED' }, icon: 'bi-star' },
       { perm: 'customers.view', label: 'Đánh giá xấu chưa phản hồi', count: this.reviews.reviews().filter(r => r.status !== 'HIDDEN' && r.rating <= 2 && !r.reply?.text).length, link: '/reviews', icon: 'bi-star-half' },
+      { perm: 'content.view', label: 'Bình luận Tin tức chưa trả lời', count: this.news.unrepliedCount(), link: '/news-comments', query: { filter: 'UNREPLIED' }, icon: 'bi-chat-left-text' },
       { perm: 'content.view', label: 'Bài cộng đồng bị chặn cần xem', count: this.community.posts().filter(p => p.status === 'REJECTED').length, link: '/community', query: { filter: 'REJECTED' }, icon: 'bi-camera' },
       { perm: 'inventory.view', label: 'Sản phẩm hết hoặc sắp hết hàng', count: products.filter(p => (p.inStock ?? 0) <= LOW_STOCK_THRESHOLD).length, link: '/inventory', query: { status: outOfStock ? 'OUT' : 'LOW' }, icon: 'bi-archive' },
     ];

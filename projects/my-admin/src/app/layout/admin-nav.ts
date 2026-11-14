@@ -48,6 +48,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { path: 'promotions', label: 'Khuyến mãi', icon: 'bi-ticket-perforated', perm: 'marketing.view' },
       { path: 'banners', label: 'Banner trang chủ', icon: 'bi-image', perm: 'marketing.view' },
       { path: 'articles', label: 'Tin tức', icon: 'bi-newspaper', perm: 'content.view' },
+      { path: 'news-comments', label: 'Bình luận tin tức', icon: 'bi-chat-left-text', perm: 'content.view' },
       { path: 'videos', label: 'Video', icon: 'bi-play-btn', perm: 'content.view' },
       { path: 'style-quiz', label: 'Trắc nghiệm phong cách', icon: 'bi-ui-checks', perm: 'content.view' },
       { path: 'community', label: 'Cộng đồng', icon: 'bi-camera', perm: 'content.view' },

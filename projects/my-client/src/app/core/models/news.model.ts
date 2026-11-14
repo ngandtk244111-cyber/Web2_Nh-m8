@@ -55,6 +55,10 @@ export interface NewsComment {
   parentId: string | null;
   authorName: string;
   text: string;
+  /** Trả lời của shop (nhân viên Luméa). */
+  isStaff?: boolean;
+  /** Ảnh shop đính kèm khi trả lời. */
+  imageUrl?: string;
   likesCount: number;
   createdAt: string; // ISO date
   isLiked?: boolean;

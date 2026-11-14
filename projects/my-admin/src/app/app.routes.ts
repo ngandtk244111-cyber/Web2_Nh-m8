@@ -106,6 +106,10 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/articles/article-list.component').then(m => m.ArticleListComponent),
       },
       {
+        path: 'news-comments', data: { title: 'Bình luận tin tức', perm: 'content.view' },
+        loadComponent: () => import('./pages/articles/news-comments.component').then(m => m.NewsCommentsComponent),
+      },
+      {
         path: 'articles/create', data: { title: 'Viết bài', perm: 'content.create' },
         loadComponent: () => import('./pages/articles/article-form.component').then(m => m.ArticleFormComponent),
       },

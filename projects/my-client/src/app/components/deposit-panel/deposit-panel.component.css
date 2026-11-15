@@ -1,0 +1,264 @@
+/* Cùng tông với khung "Hoàn tiền" của trang đơn hàng (.ot-refund). */
+.dp {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid #E3D6BE;
+  border-left: 4px solid #B7791F;
+  border-radius: 14px;
+  background: #FBF8F2;
+  font-size: 12px;
+  color: #3B2F28;
+}
+
+.dp--paid {
+  border-left-color: #5A7A4A;
+}
+
+.dp__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.dp__title {
+  font-size: 13px;
+  font-weight: 800;
+  color: #8A5A12;
+}
+
+.dp--paid .dp__title {
+  color: #5A7A4A;
+}
+
+.dp__chip {
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: #FFFFFF;
+  border: 1px solid #E3D6BE;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.dp__grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dp__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.dp__row > :first-child {
+  flex-shrink: 0;
+  color: #7A6558;
+}
+
+.dp__row > :last-child {
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.dp__due {
+  color: #A3152D;
+}
+
+.dp__late {
+  color: #A3152D;
+  font-weight: 700;
+}
+
+.dp__note {
+  margin: 0;
+  line-height: 1.5;
+  color: #5C4D44;
+}
+
+.dp__note--ok {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #3F5F33;
+  font-weight: 600;
+}
+
+.dp__lead {
+  margin: 4px 0 0;
+}
+
+.dp__gateways {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.dp__gw {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 8px;
+  border: 1px solid #E3D6BE;
+  border-radius: 12px;
+  background: #FFFFFF;
+  font-weight: 700;
+  font-size: 12px;
+  color: #3B2F28;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.dp__gw img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+
+.dp__gw:hover:not(:disabled) {
+  border-color: #B7791F;
+  box-shadow: 0 2px 8px rgba(183, 121, 31, 0.15);
+}
+
+.dp__gw:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.dp__toggle {
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #8A5A12;
+  font-weight: 700;
+  font-size: 12px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.dp__bank {
+  display: flex;
+  gap: 14px;
+  padding: 12px;
+  border: 1px dashed #E3D6BE;
+  border-radius: 12px;
+  background: #FFFFFF;
+}
+
+.dp__qr {
+  width: 150px;
+  height: auto;
+  align-self: flex-start;
+  border-radius: 8px;
+}
+
+.dp__bank-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dp__mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.dp__copy {
+  margin-left: 4px;
+  padding: 0 6px;
+  border: 1px solid #E3D6BE;
+  border-radius: 6px;
+  background: #FBF8F2;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.dp__report {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.dp__input {
+  flex: 1 1 140px;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid #E3D6BE;
+  border-radius: 10px;
+  font-size: 12px;
+  background: #FFFFFF;
+}
+
+.dp__btn {
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 10px;
+  background: #3B2F28;
+  color: #FFFFFF;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.dp__btn:disabled {
+  opacity: 0.6;
+}
+
+.dp__history {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 8px;
+  border-top: 1px solid #EFE6D6;
+}
+
+.dp__history-title {
+  font-weight: 700;
+  color: #7A6558;
+}
+
+.dp__txn {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 2px 10px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: #FFFFFF;
+}
+
+.dp__txn small {
+  width: 100%;
+  color: #A3152D;
+}
+
+.dp__txn--ok > :last-child {
+  color: #3F5F33;
+  font-weight: 700;
+}
+
+.dp__txn--bad > :nth-child(2) {
+  color: #A3152D;
+}
+
+@media (max-width: 560px) {
+  .dp__bank {
+    flex-direction: column;
+  }
+
+  .dp__qr {
+    align-self: center;
+  }
+
+  .dp__gateways {
+    grid-template-columns: 1fr;
+  }
+}

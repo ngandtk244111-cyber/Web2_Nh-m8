@@ -13,5 +13,7 @@ export const REFUND_POLICY: Record<string, { days: number; channel: string }> = 
 
 /** Đơn đã trả trước (hoặc đã báo chuyển khoản) thì huỷ sẽ được hoàn tiền. */
 export function orderNeedsRefund(order: Order): boolean {
+  // Đơn đặt làm: chỉ hoàn phần tiền cọc shop đã xác nhận nhận được.
+  if (order.orderType === 'CUSTOM_QUOTE') return (order.depositReceived || 0) > 0;
   return order.paymentMethod !== 'COD' && (order.paymentStatus === 'PAID' || !!order.transferReportedAt);
 }

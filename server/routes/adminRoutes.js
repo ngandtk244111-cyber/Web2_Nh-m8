@@ -6,6 +6,7 @@ const { requireAdminId, requirePermission, validId } = require('../middleware/au
 const { ROLES, SUPER_ADMIN_NAME, getAdminAccess, getPermissionMatrix, allows } = require('../utils/permissions');
 const { removeUnusedProductImages } = require('../utils/images');
 const { DEFAULT_WORKSHOPS } = require('../utils/workshops');
+const { validateBankConfig, getReceivingBank } = require('../utils/payment-config');
 const Admin = require('../models/Admin');
 const AdminConfig = require('../models/AdminConfig');
 const AuditLog = require('../models/AuditLog');
@@ -83,6 +84,39 @@ router.put('/config/:key', async (req, res) => {
     ).lean();
     if (key === 'banners') await removeUnusedProductImages((previous?.value || []).map(b => b.imageUrl));
     res.json({ success: true });
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
+// Tài khoản ngân hàng nhận cọc: tách khỏi /config để chỉ quyền payments.config được sửa và mọi
+// thay đổi đều ghi nhật ký kèm giá trị cũ / mới. Đơn đã tạo giữ bản chụp riêng (paymentPlan.bank).
+router.get('/payment-config', requirePermission('payments.view', 'payments.config'), async (_req, res) => {
+  try {
+    const doc = await AdminConfig.findOne({ key: 'payment' }, { value: 1 }).lean();
+    const { bank } = validateBankConfig(doc?.value?.bank || null);
+    res.json({ success: true, bank: bank || null, usingEnvFallback: !bank && !!(await getReceivingBank()) });
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
+router.put('/payment-config', requirePermission('payments.config'), async (req, res) => {
+  try {
+    const { bank, error } = validateBankConfig(req.body?.bank);
+    if (error) return res.status(400).json({ success: false, error });
+    const previous = await AdminConfig.findOneAndUpdate(
+      { key: 'payment' },
+      { $set: { 'value.bank': bank, updatedBy: req.adminId } },
+      { upsert: true }
+    ).lean();
+    const before = previous?.value?.bank;
+    const fmt = (b) => (b ? `${b.bankName} (${b.bankCode}) - ${b.accountNumber} - ${b.accountName}` : '(chưa có)');
+    const actor = await Admin.findById(req.adminId);
+    await writeAudit(req, actor, {
+      module: 'Thanh Toán', action: 'Sửa tài khoản nhận tiền', detail: `Cũ: ${fmt(before)} → Mới: ${fmt(bank)}`, level: 'WARNING',
+    });
+    res.json({ success: true, bank });
   } catch (err) {
     sendError(res, err);
   }

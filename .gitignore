@@ -47,3 +47,7 @@ Thumbs.db
 
 # Ảnh người dùng tải lên (avatar, ảnh bài cộng đồng) — dữ liệu chạy thật, không đưa lên git
 server/uploads/
+
+# Kết quả sinh ra từ seed/import-lumea-products.js (dữ liệu dùng chung nằm trên MongoDB)
+server/seed/lumea-products/products.normalized.json
+server/seed/lumea-products/report.md

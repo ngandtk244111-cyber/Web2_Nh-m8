@@ -80,6 +80,24 @@ export interface OrderRefund {
   adminNote?: string;
 }
 
+/** Trạng thái tiền cọc của đơn đặt làm theo báo giá. */
+export type DepositStatus = 'UNPAID' | 'VERIFYING' | 'PAID' | 'REFUND_PENDING' | 'PARTIALLY_REFUNDED' | 'REFUNDED';
+
+/** Kế hoạch thanh toán chụp lúc tạo đơn đặt làm (số tiền cố định, không đổi theo cấu hình mới). */
+export interface PaymentPlan {
+  type: 'FULL' | 'DEPOSIT';
+  goodsTotal: number;
+  depositAmount: number;
+  shippingFee: number;
+  remainingAmount: number;
+  balanceMethod: 'COD' | 'BANK_TRANSFER';
+  bank?: { bankCode: string; bankName: string; accountNumber: string; accountName: string } | null;
+  transferContent: string;
+  deadlineAt: string | null;
+  depositPaidAt?: string | null;
+  expiredWithFunds?: boolean;
+}
+
 /** Tài khoản nhận tiền hoàn — khách nhập khi huỷ đơn chuyển khoản ngân hàng. */
 export interface RefundBank {
   bankName: string;
@@ -94,6 +112,12 @@ export interface Order {
   /** Chuỗi ngày giờ đã định dạng tiếng Việt do backend trả về (vd: "18/09/2026 20:38"). */
   createdAtLabel?: string;
   status: OrderStatus;
+  /** CUSTOM_QUOTE: đơn đặt làm tạo từ báo giá (thanh toán cọc trước khi sản xuất). */
+  orderType?: 'STANDARD' | 'CUSTOM_QUOTE';
+  paymentPlan?: PaymentPlan | null;
+  depositStatus?: DepositStatus | null;
+  /** Tổng tiền cọc shop đã xác nhận nhận được. */
+  depositReceived?: number;
   hasPrintOnDemandItems: boolean;
   productionProgress?: ProductionProgress;
   items: OrderItem[];

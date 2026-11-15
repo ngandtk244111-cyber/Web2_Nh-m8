@@ -11,6 +11,7 @@ import { ConfirmDialogService } from '../../core/services/confirm-dialog.service
 import { CustomRequest, CustomRequestStatus } from '../../core/models/custom-request.model';
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
 import { REQUEST_FLOW, requestStatusClass, requestStatusLabel } from './request-labels';
+import { QuoteEditorComponent } from './quote-editor.component';
 
 type PreviewModel = NonNullable<CustomRequest['preview3dModelType']>;
 
@@ -25,7 +26,7 @@ const PREVIEW_MODELS: { value: PreviewModel; label: string }[] = [
 @Component({
   selector: 'app-custom-request-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, VndPipe],
+  imports: [CommonModule, FormsModule, RouterLink, VndPipe, QuoteEditorComponent],
   templateUrl: './custom-request-detail.component.html',
   styleUrl: './custom-request-detail.component.css',
 })
@@ -52,8 +53,6 @@ export class CustomRequestDetailComponent implements OnInit, AfterViewChecked {
   readonly request = computed(() =>
     this.requestService.requests().find(r => r.id === this.requestId || r.requestCode === this.requestId) || null);
 
-  quotePrice: number | null = null;
-  quoteDays = 4;
   previewModel: PreviewModel = 'moon_lamp';
   messageDraft = '';
   zoomImage: string | null = null;
@@ -87,8 +86,6 @@ export class CustomRequestDetailComponent implements OnInit, AfterViewChecked {
   }
 
   private fillForm(r: CustomRequest): void {
-    this.quotePrice = r.quotationPrice || null;
-    this.quoteDays = r.estimatedDays || 4;
     this.previewModel = r.preview3dModelType || 'moon_lamp';
   }
 
@@ -113,32 +110,9 @@ export class CustomRequestDetailComponent implements OnInit, AfterViewChecked {
     this.router.navigate(['/custom-requests']);
   }
 
-  /** Báo giá: lưu giá + số ngày rồi gửi tin báo cho khách; chỉ báo thành công khi cả 2 bước đều xong. */
-  submitQuotation(r: CustomRequest): void {
-    const price = Number(this.quotePrice);
-    const days = Number(this.quoteDays) || 4;
-    if (!price || price <= 0) {
-      this.toast.warning('Vui lòng nhập giá báo giá hợp lệ');
-      return;
-    }
-    this.busy.set(true);
-    this.requestService.updateStatus(r.id, 'QUOTED', price, days).pipe(
-      concatMap(() => this.requestService.sendMessage(
-        r.id,
-        `Shop Luméa đã kiểm tra yêu cầu và gửi báo giá chính thức: ${price.toLocaleString('vi-VN')}đ. Thời gian in và xử lý hoàn thiện khoảng ${days} ngày.`,
-        'SHOP_SPECIALIST'
-      ))
-    ).subscribe({
-      next: () => {
-        this.busy.set(false);
-        this.toast.success(`Đã gửi báo giá ${price.toLocaleString('vi-VN')}đ cho khách`);
-        this.audit.record('Yêu Cầu In 3D', 'Gửi báo giá tùy biến', `${r.requestCode}: ${price.toLocaleString('vi-VN')}đ (${days} ngày)`, 'SUCCESS');
-      },
-      error: err => {
-        this.busy.set(false);
-        this.toast.apiError(err, 'Không gửi được báo giá lên server');
-      },
-    });
+  /** Sau khi gửi báo giá: tải lại để thấy trạng thái + tin nhắn server vừa gửi cho khách. */
+  reload(): void {
+    this.requestService.load().subscribe({ error: () => undefined });
   }
 
   setPreviewReady(r: CustomRequest): void {

@@ -5,7 +5,6 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CartService } from '../../core/services/cart.service';
 import { OrderService, invoiceUrl } from '../../core/services/order.service';
 import { AuthService } from '../../core/services/auth.service';
-import { CustomRequestService } from '../../core/services/custom-request.service';
 import { PaymentService } from '../../core/services/payment.service';
 import { Order } from '../../core/models/order.model';
 import { CheckoutFlowService } from '../../core/services/checkout-flow.service';
@@ -129,7 +128,6 @@ export class CheckoutComponent implements OnInit {
     public flow: CheckoutFlowService,
     public addressService: AddressService,
     private orderService: OrderService,
-    private customRequestService: CustomRequestService,
     private paymentService: PaymentService,
     private router: Router,
     private mascotService: MascotService,
@@ -399,13 +397,6 @@ export class CheckoutComponent implements OnInit {
         this.placingOrder = false;
         this.mascotService.endLoading('happy');
 
-        // Check if any items belong to a custom request, and convert to order
-        items.forEach(item => {
-          if (item.product.id.startsWith('custom-')) {
-            const requestId = item.product.id.replace('custom-', '');
-            this.customRequestService.markRequestConvertedToOrder(requestId);
-          }
-        });
 
         this.createdOrder = newOrder;
         const finish = () => {

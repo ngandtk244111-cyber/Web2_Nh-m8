@@ -1,0 +1,79 @@
+<section class="dp" *ngIf="plan" [class.dp--paid]="order.depositStatus === 'PAID'">
+  <div class="dp__head">
+    <span class="dp__title">Thanh toán cọc đơn đặt làm</span>
+    <span class="dp__chip">{{ statusLabel }}</span>
+  </div>
+
+  <div class="dp__grid">
+    <div class="dp__row"><span>Tiền cọc</span><strong>{{ plan.depositAmount | vnd }}</strong></div>
+    <div class="dp__row"><span>Đã nhận</span><span>{{ order.depositReceived || 0 | vnd }}</span></div>
+    <div class="dp__row" *ngIf="due > 0 && order.status !== 'CANCELLED'"><span>Còn thiếu</span><strong class="dp__due">{{ due | vnd }}</strong></div>
+    <div class="dp__row"><span>Thanh toán khi nhận hàng</span><span>{{ plan.remainingAmount | vnd }} ({{ plan.balanceMethod === 'COD' ? 'COD' : 'chuyển khoản' }})</span></div>
+    <div class="dp__row" *ngIf="order.depositStatus === 'UNPAID' && order.status === 'PENDING'">
+      <span>Hạn thanh toán cọc</span>
+      <span [class.dp__late]="msLeft <= 0">{{ plan.deadlineAt | date:'HH:mm dd/MM/yyyy' }} · {{ timeLeftLabel }}</span>
+    </div>
+  </div>
+
+  <p *ngIf="order.depositStatus === 'PAID'" class="dp__note dp__note--ok">
+    <app-icon name="check" [size]="14"></app-icon> Shop đã nhận đủ tiền cọc. Đơn của bạn sẽ được đưa vào sản xuất.
+  </p>
+  <p *ngIf="order.depositStatus === 'VERIFYING'" class="dp__note">
+    Shop đang đối soát khoản chuyển khoản bạn đã báo. Thời hạn cọc tạm dừng trong lúc đối soát — bạn không cần làm gì thêm.
+  </p>
+  <p *ngIf="plan.expiredWithFunds" class="dp__note">
+    Đơn đã quá hạn cọc nhưng shop đã nhận một phần tiền. Nhân viên Luméa sẽ liên hệ để tiếp tục đơn hoặc hoàn tiền cho bạn.
+  </p>
+
+  <ng-container *ngIf="!loggedIn && canPay">
+    <p class="dp__note">Vui lòng đăng nhập đúng tài khoản đã đặt đơn để thanh toán cọc.</p>
+  </ng-container>
+
+  <ng-container *ngIf="loggedIn && canPay">
+    <p class="dp__lead">Thanh toán <strong>{{ due | vnd }}</strong> — đơn tự xác nhận ngay khi cổng báo thành công:</p>
+    <div class="dp__gateways">
+      <button type="button" class="dp__gw" [disabled]="!!paying" (click)="pay('momo')">
+        <img src="assets/payment-methods/momo.png" alt="">
+        <span>{{ paying === 'momo' ? 'Đang mở...' : 'Ví MoMo' }}</span>
+      </button>
+      <button type="button" class="dp__gw" [disabled]="!!paying" (click)="pay('zalopay')">
+        <img src="assets/payment-methods/zalopay.png" alt="">
+        <span>{{ paying === 'zalopay' ? 'Đang mở...' : 'ZaloPay' }}</span>
+      </button>
+      <button type="button" class="dp__gw" [disabled]="!!paying" (click)="pay('atm')">
+        <img src="assets/payment-methods/atm-card.png" alt="">
+        <span>{{ paying === 'atm' ? 'Đang mở...' : 'Thẻ ATM' }}</span>
+      </button>
+    </div>
+
+    <button type="button" class="dp__toggle" (click)="showBank = !showBank">
+      {{ showBank ? 'Ẩn chuyển khoản ngân hàng' : 'Hoặc chuyển khoản ngân hàng (VietQR)' }}
+    </button>
+
+    <div *ngIf="showBank && info?.payment as p" class="dp__bank">
+      <img *ngIf="p.qrUrl" [src]="p.qrUrl" alt="Mã VietQR thanh toán cọc" class="dp__qr" loading="lazy">
+      <div class="dp__bank-info">
+        <div class="dp__row"><span>Ngân hàng</span><span>{{ p.bank?.bankName }}</span></div>
+        <div class="dp__row"><span>Số tài khoản</span><span class="dp__mono">{{ p.bank?.accountNumber }} <button type="button" class="dp__copy" (click)="copy(p.bank?.accountNumber || '')">Sao chép</button></span></div>
+        <div class="dp__row"><span>Chủ tài khoản</span><span>{{ p.bank?.accountName }}</span></div>
+        <div class="dp__row"><span>Số tiền</span><strong>{{ p.amount | vnd }}</strong></div>
+        <div class="dp__row"><span>Nội dung</span><span class="dp__mono">{{ p.transferContent }} <button type="button" class="dp__copy" (click)="copy(p.transferContent)">Sao chép</button></span></div>
+        <p class="dp__note">Chuyển khoản cần shop đối soát sao kê nên xác nhận chậm hơn thanh toán qua ví. Ghi đúng nội dung để shop tìm nhanh.</p>
+        <div class="dp__report">
+          <input type="number" min="1" step="1000" [(ngModel)]="reportAmount" placeholder="Số tiền đã chuyển" class="dp__input">
+          <input type="text" maxlength="120" [(ngModel)]="reportNote" placeholder="Mã giao dịch / ghi chú (không bắt buộc)" class="dp__input">
+          <button type="button" class="dp__btn" [disabled]="reporting" (click)="report()">{{ reporting ? 'Đang gửi...' : 'Tôi đã chuyển khoản' }}</button>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <div *ngIf="history.length" class="dp__history">
+    <span class="dp__history-title">Lịch sử thanh toán cọc</span>
+    <div *ngFor="let t of history" class="dp__txn" [class.dp__txn--ok]="t.status === 'CONFIRMED'" [class.dp__txn--bad]="t.status === 'REJECTED' || t.status === 'FAILED'">
+      <span>{{ t.createdAt | date:'dd/MM HH:mm' }} · {{ txnLabel(t) }}<em *ngIf="t.sandbox"> (giao dịch thử)</em></span>
+      <span>{{ txnAmount(t) | vnd }} · {{ txnStatus(t) }}</span>
+      <small *ngIf="t.status === 'REJECTED' && t.rejectReason">Lý do: {{ t.rejectReason }}</small>
+    </div>
+  </div>
+</section>

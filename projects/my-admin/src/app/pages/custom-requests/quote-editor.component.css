@@ -1,0 +1,151 @@
+.qe {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.qe-current {
+  padding: 12px 14px;
+  border: 1px solid var(--border-color, #E5E1DA);
+  border-radius: 12px;
+  background: var(--surface-2, #FAF8F4);
+}
+
+.qe-current__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.qe-eyebrow {
+  font-size: 11px;
+  color: var(--text-muted, #7A6F66);
+}
+
+.qe-total {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.qe-kv {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  font-size: 13px;
+}
+
+.qe-kv > :nth-child(odd) {
+  color: var(--text-muted, #7A6F66);
+}
+
+.qe-kv > :nth-child(even) {
+  text-align: right;
+}
+
+.qe-reject {
+  color: #B42318;
+}
+
+.qe-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px dashed var(--border-color, #D9D2C6);
+  border-radius: 12px;
+}
+
+.qe-form__title {
+  font-weight: 700;
+}
+
+.qe-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid var(--border-color, #E5E1DA);
+  border-radius: 10px;
+  background: var(--surface, #FFFFFF);
+}
+
+.qe-item__row {
+  display: flex;
+  gap: 6px;
+}
+
+.qe-item__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.qe-item__grid--nums {
+  grid-template-columns: 0.6fr 1fr 1fr;
+}
+
+.qe-item__grid label span {
+  display: block;
+  font-size: 11px;
+  color: var(--text-muted, #7A6F66);
+  margin-bottom: 2px;
+}
+
+.qe-item__total {
+  text-align: right;
+  font-size: 13px;
+}
+
+.qe-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--surface-2, #FAF8F4);
+  font-size: 13px;
+}
+
+.qe-summary > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.qe-summary__total {
+  font-weight: 700;
+}
+
+.qe-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.qe-deposit {
+  font-size: 13px;
+}
+
+.qe-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.qe-history summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+@media (max-width: 560px) {
+  .qe-item__grid,
+  .qe-item__grid--nums {
+    grid-template-columns: 1fr;
+  }
+}

@@ -8,7 +8,11 @@ const newsCommentSchema = new mongoose.Schema({
   parentId: { type: String, default: null },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   authorName: { type: String, required: true },
-  text: { type: String, required: true },
+  text: { type: String, default: '' },
+  // Trả lời của shop (nhân viên trả lời từ my-admin) — hiện tên "Luméa" + nhãn cửa hàng ở my-client.
+  isStaff: { type: Boolean, default: false },
+  // Ảnh đính kèm (shop trả lời kèm ảnh) — URL kho ảnh /api/products/images/:id.
+  imageUrl: { type: String, default: '' },
   likesCount: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now },
 });

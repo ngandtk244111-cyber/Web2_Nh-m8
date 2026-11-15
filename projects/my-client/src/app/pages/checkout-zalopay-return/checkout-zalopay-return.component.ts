@@ -17,6 +17,8 @@ export class CheckoutZalopayReturnComponent implements OnInit {
   isSuccess = false;
   /** Đơn chưa thanh toán, chưa huỷ/giao -> cho quay lại chọn phương thức khác. */
   canSwitch = false;
+  /** Lượt trả cọc của đơn đặt làm (không phải thanh toán cả đơn). */
+  isDeposit = false;
   /** Đang hỏi server trạng thái thanh toán thật của đơn. */
   checking = true;
   orderNumber = '';
@@ -58,8 +60,9 @@ export class CheckoutZalopayReturnComponent implements OnInit {
     }
     this.orderService.getOrderByNumber(this.orderNumber).subscribe(order => {
       this.checking = false;
-      this.isSuccess = order?.paymentStatus === 'PAID';
-      this.canSwitch = !!order && !this.isSuccess && ['PENDING', 'CONFIRMED', 'IN_PRODUCTION'].includes(order.status);
+      this.isDeposit = order?.orderType === 'CUSTOM_QUOTE';
+      this.isSuccess = this.isDeposit ? order?.depositStatus === 'PAID' : order?.paymentStatus === 'PAID';
+      this.canSwitch = !this.isDeposit && !!order && !this.isSuccess && ['PENDING', 'CONFIRMED', 'IN_PRODUCTION'].includes(order.status);
     });
   }
 }

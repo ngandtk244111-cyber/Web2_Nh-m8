@@ -9,7 +9,10 @@
     "seed:all": "node seed/seed-all.js",
     "seed:verify": "node seed/verify-seed.js",
     "seed:product-content": "node seed/enrich-product-content.js",
-    "migrate:storage": "node seed/migrate-storage.js"
+    "migrate:storage": "node seed/migrate-storage.js",
+    "test:unit": "node --test \"test/unit/*.test.js\"",
+    "test:integration": "node --test --test-concurrency=1 \"test/integration/*.test.js\"",
+    "test": "npm run test:unit && npm run test:integration"
   },
   "dependencies": {
     "axios": "^1.7.9",

@@ -65,6 +65,12 @@ connectDB()
   // Google/Facebook thứ 2 không có SĐT bị E11000. syncIndexes dựng lại index cho khớp schema User.
   .then(() => require('./models/User').syncIndexes())
   .then(() => require('./utils/permissions').ensureSuperAdmin())
+  .then(() => {
+    // Quét đơn đặt làm quá hạn cọc mỗi 10 phút khi server đang thức. Chỉ là bổ sung: mọi API đọc /
+    // thao tác đơn đều tự kiểm tra hạn theo giờ server (Render free có thể "ngủ").
+    const { sweepExpiredDeposits } = require('./utils/custom-order');
+    setInterval(() => sweepExpiredDeposits().catch(err => console.error('deposit sweep error', err.message)), 10 * 60 * 1000).unref();
+  })
   .catch(err => {
     // Không có MongoDB vẫn mở server: chatbox AI (Gemini) vẫn trả lời được, chỉ thiếu gợi ý sản phẩm từ DB.
     // Các chức năng cần dữ liệu (sản phẩm, đơn hàng, đăng nhập...) sẽ lỗi cho tới khi MongoDB chạy.

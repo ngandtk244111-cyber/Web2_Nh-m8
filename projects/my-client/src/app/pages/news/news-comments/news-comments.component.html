@@ -74,10 +74,17 @@
 </section>
 
 <ng-template #commentTpl let-c let-root="root">
-  <div class="nc-comment">
-    <span class="nc-avatar" aria-hidden="true">{{ initial(c.authorName) }}</span>
+  <div class="nc-comment" [class.nc-comment--staff]="c.isStaff">
+    <span class="nc-avatar" [class.nc-avatar--staff]="c.isStaff" aria-hidden="true">{{ c.isStaff ? 'L' : initial(c.authorName) }}</span>
     <div class="nc-body">
-      <p class="nc-text"><strong class="nc-name">{{ c.authorName }}</strong>{{ c.text }}</p>
+      <p class="nc-text">
+        <strong class="nc-name">{{ c.authorName }}</strong>
+        <span class="nc-badge" *ngIf="c.isStaff">Cửa hàng</span>
+        {{ c.text }}
+      </p>
+      <a *ngIf="c.imageUrl" class="nc-image" [href]="c.imageUrl" target="_blank" rel="noopener">
+        <img [src]="c.imageUrl" alt="Ảnh Luméa gửi kèm trả lời" loading="lazy">
+      </a>
       <div class="nc-meta">
         <button
           type="button"

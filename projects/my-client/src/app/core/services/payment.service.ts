@@ -14,7 +14,14 @@ export interface VerifyReturnResponse {
   success: boolean;
   paid?: boolean;
   orderNumber?: string;
+  /** Lượt trả cọc đơn đặt làm (không phải thanh toán toàn bộ đơn). */
+  deposit?: boolean;
   error?: string;
+}
+
+interface CreateDepositResponse extends CreatePaymentResponse {
+  amount?: number;
+  sandbox?: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -40,8 +47,13 @@ export class PaymentService {
     return this.http.post<VerifyReturnResponse>(`${this.baseUrl}/zalopay/verify-return`, params);
   }
 
-  /** Cổng thanh toán thử (chạy dev): xác nhận đã thanh toán hoặc huỷ giao dịch. */
-  confirmSandbox(orderNumber: string, action: 'pay' | 'cancel'): Observable<VerifyReturnResponse> {
-    return this.http.post<VerifyReturnResponse>(`${this.baseUrl}/sandbox/confirm`, { orderNumber, action });
+  /** Trả phần cọc còn thiếu của đơn đặt làm qua cổng (số tiền do server tính). */
+  createDepositPayment(orderNumber: string, method: 'momo' | 'atm' | 'zalopay'): Observable<CreateDepositResponse> {
+    return this.http.post<CreateDepositResponse>(`${this.baseUrl}/deposit/create`, { orderNumber, method });
+  }
+
+  /** Cổng thanh toán thử (chạy dev): xác nhận đã thanh toán hoặc huỷ giao dịch. depositRef: lượt trả cọc. */
+  confirmSandbox(orderNumber: string, action: 'pay' | 'cancel', depositRef?: string): Observable<VerifyReturnResponse> {
+    return this.http.post<VerifyReturnResponse>(`${this.baseUrl}/sandbox/confirm`, { orderNumber, action, ...(depositRef ? { depositRef } : {}) });
   }
 }

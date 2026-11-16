@@ -1,0 +1,1082 @@
+[
+ {
+  "_id": {
+   "$oid": "6ab65c4297d33cce57cd93f6"
+  },
+  "id": "video-1790336066200-0",
+  "title": "Giao Hàng Hỏa Tốc",
+  "description": "Giao nội thành trong 24h, đóng gói chống va đập cẩn thận cho từng món decor.",
+  "youtubeId": "OLT1QLyJc0w",
+  "poster": "https://images.unsplash.com/photo-1602874801007-bd458bb1b8b6?auto=format&fit=crop&w=800&q=70",
+  "link": "/orders/track",
+  "ctaLabel": "Tra cứu đơn hàng",
+  "active": false,
+  "order": {
+   "$numberInt": "2"
+  },
+  "createdBy": null,
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790336066216"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794075332343"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ab65c4297d33cce57cd93f7"
+  },
+  "id": "video-1790336066200-1",
+  "title": "Bảo Hành 12 Tháng",
+  "description": "Bảo hành kỹ thuật cho mọi sản phẩm in 3D — an tâm sử dụng lâu dài.",
+  "youtubeId": "d3x3koO73qk",
+  "poster": "https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?auto=format&fit=crop&w=800&q=70",
+  "link": "/warranty-lookup",
+  "ctaLabel": "Tra cứu bảo hành",
+  "active": false,
+  "order": {
+   "$numberInt": "2"
+  },
+  "createdBy": null,
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790336066218"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794014476547"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ab65c4297d33cce57cd93f8"
+  },
+  "id": "video-1790336066200-2",
+  "title": "Tùy Biến 3D",
+  "description": "Đổi màu, chất liệu, kích thước và khắc tên riêng ngay trên trình xem 3D.",
+  "youtubeId": "ITgq96NgTDY",
+  "poster": "https://images.unsplash.com/photo-1612196808214-b8e1d6145a8c?auto=format&fit=crop&w=800&q=70",
+  "link": "/customizer-3d",
+  "ctaLabel": "Vào trình tùy biến",
+  "active": false,
+  "order": {
+   "$numberInt": "3"
+  },
+  "createdBy": null,
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790336066218"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794014476547"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ab65c4297d33cce57cd93f9"
+  },
+  "id": "video-1790336066200-3",
+  "title": "Thiết Kế Theo Yêu Cầu",
+  "description": "AI & kỹ sư tư vấn dựng concept riêng theo đúng ý tưởng của bạn.",
+  "youtubeId": "cN64Hm_CfI4",
+  "poster": "https://images.unsplash.com/photo-1581783342308-f792dbdd27c5?auto=format&fit=crop&w=800&q=70",
+  "link": "/custom-request",
+  "ctaLabel": "Gửi yêu cầu thiết kế",
+  "active": false,
+  "order": {
+   "$numberInt": "4"
+  },
+  "createdBy": null,
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790336066219"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794014476547"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ab65c4297d33cce57cd93fa"
+  },
+  "id": "video-1790336066200-4",
+  "title": "Xem Trước Không Gian 3D",
+  "description": "Dạo quanh phòng mẫu 360° được Luméa phối sẵn trước khi quyết định mua.",
+  "youtubeId": "WrrevTxy5P0",
+  "poster": "https://images.unsplash.com/photo-1616046229478-9901c5536a45?auto=format&fit=crop&w=800&q=70",
+  "link": "/shop-the-room",
+  "ctaLabel": "Khám phá Shop The Room",
+  "active": false,
+  "order": {
+   "$numberInt": "5"
+  },
+  "createdBy": null,
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790336066219"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794014476547"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ab65c4297d33cce57cd93fb"
+  },
+  "id": "video-1790336066200-5",
+  "title": "100% Nhựa PLA Sinh Học",
+  "description": "Vật liệu in 3D an toàn, thân thiện môi trường cho mọi sản phẩm Luméa.",
+  "youtubeId": "WwS7-ELNhZs",
+  "poster": "https://images.unsplash.com/photo-1594026112284-02bb6f3352fe?auto=format&fit=crop&w=800&q=70",
+  "link": "/catalog",
+  "ctaLabel": "Tìm hiểu thêm",
+  "active": false,
+  "order": {
+   "$numberInt": "6"
+  },
+  "createdBy": null,
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790336066219"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794014476547"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ad45697bda88eadcfd09bef"
+  },
+  "youtubeId": "BJugxJpzTGQ",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "active": false,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1792300695178"
+   }
+  },
+  "createdBy": null,
+  "ctaLabel": "Xem Flash Sale",
+  "description": "Săn deal nội thất & decor giá tốt theo khung giờ, số lượng có hạn mỗi ngày.",
+  "id": "video-default-7",
+  "link": "/flash-sale",
+  "order": {
+   "$numberInt": "7"
+  },
+  "poster": "assets/decor-deals/flash-sale-hero.jpg",
+  "title": "Flash Sale Mỗi Ngày",
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794014476547"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ad45697bda88eadcfd09bf0"
+  },
+  "youtubeId": "6CLKldA4zDQ",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "active": false,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1792300695178"
+   }
+  },
+  "createdBy": null,
+  "ctaLabel": "Làm trắc nghiệm",
+  "description": "Trả lời vài câu hỏi nhanh để biết phong cách nội thất hợp với bạn — nhận thêm Xu.",
+  "id": "video-default-8",
+  "link": "/style-quiz",
+  "order": {
+   "$numberInt": "8"
+  },
+  "poster": "https://images.unsplash.com/photo-1618220179428-22790b461013?auto=format&fit=crop&w=800&q=70",
+  "title": "Trắc Nghiệm Phong Cách",
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794014476547"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ad45697bda88eadcfd09bf1"
+  },
+  "youtubeId": "Fp7W66vTK1E",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "active": false,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1792300695178"
+   }
+  },
+  "createdBy": null,
+  "ctaLabel": "Xem ý tưởng",
+  "description": "Gợi ý phối sofa, đèn, decor theo từng không gian — mua lẻ từng món hoặc cả bộ.",
+  "id": "video-default-9",
+  "link": "/coordinate",
+  "order": {
+   "$numberInt": "9"
+  },
+  "poster": "https://images.unsplash.com/photo-1616594039964-ae9021a400a0?auto=format&fit=crop&w=800&q=70",
+  "title": "Ý Tưởng Phối Đồ",
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794014476547"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ad45697bda88eadcfd09bf2"
+  },
+  "youtubeId": "AQb595Y5j3Q",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "active": false,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1792300695178"
+   }
+  },
+  "createdBy": null,
+  "ctaLabel": "Vào cộng đồng",
+  "description": "Xem góc nhà thật của khách Luméa, chia sẻ không gian của bạn và lấy cảm hứng.",
+  "id": "video-default-10",
+  "link": "/community",
+  "order": {
+   "$numberInt": "10"
+  },
+  "poster": "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=800&q=70",
+  "title": "Cộng Đồng Decor",
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794014476547"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ad45697bda88eadcfd09bf3"
+  },
+  "youtubeId": "S5B4qfxUQKE",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "active": false,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1792300695178"
+   }
+  },
+  "createdBy": null,
+  "ctaLabel": "Xem ví Xu",
+  "description": "Mua sắm và tham gia hoạt động để tích Xu, dùng Xu giảm trực tiếp khi thanh toán.",
+  "id": "video-default-11",
+  "link": "/xu",
+  "order": {
+   "$numberInt": "11"
+  },
+  "poster": "https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&w=800&q=70",
+  "title": "Tích Xu Luméa",
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794014476547"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ad45697bda88eadcfd09bf4"
+  },
+  "youtubeId": "b1ZsXPMDlkI",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "active": false,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1792300695178"
+   }
+  },
+  "createdBy": null,
+  "ctaLabel": "Xem tất cả sản phẩm",
+  "description": "Sofa, giường, bàn ghế, tủ kệ cho phòng khách, phòng ngủ, góc làm việc — giao lắp tận nơi.",
+  "id": "video-default-12",
+  "link": "/catalog",
+  "order": {
+   "$numberInt": "12"
+  },
+  "poster": "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=70",
+  "title": "Nội Thất Cho Mọi Không Gian",
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794014476547"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ad45697bda88eadcfd09bf5"
+  },
+  "youtubeId": "ysg6GVlzz9Y",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "active": false,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1792300695178"
+   }
+  },
+  "createdBy": null,
+  "ctaLabel": "Xem chính sách đổi trả",
+  "description": "Lỗi sản xuất, hư hỏng khi vận chuyển hay giao sai mẫu đều được đổi trả nhanh gọn.",
+  "id": "video-default-13",
+  "link": "/chinh-sach/doi-tra",
+  "order": {
+   "$numberInt": "13"
+  },
+  "poster": "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=800&q=70",
+  "title": "Đổi Trả Trong 7 Ngày",
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794014476547"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ad45697bda88eadcfd09bf6"
+  },
+  "youtubeId": "6vewvgkj4us",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "active": false,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1792300695178"
+   }
+  },
+  "createdBy": null,
+  "ctaLabel": "Phương thức thanh toán",
+  "description": "COD, chuyển khoản VietQR, ví MoMo và ZaloPay — chọn cách thanh toán tiện nhất cho bạn.",
+  "id": "video-default-14",
+  "link": "/chinh-sach/thanh-toan",
+  "order": {
+   "$numberInt": "14"
+  },
+  "poster": "https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?auto=format&fit=crop&w=800&q=70",
+  "title": "Thanh Toán Linh Hoạt",
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794014476547"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ad45697bda88eadcfd09bf7"
+  },
+  "youtubeId": "kuVNutQeBBA",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "active": false,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1792300695178"
+   }
+  },
+  "createdBy": null,
+  "ctaLabel": "Xem dòng Scandinavian",
+  "description": "Gỗ sáng, màu trung tính, đường nét mềm — khám phá dòng nội thất & decor Bắc Âu của Luméa.",
+  "id": "video-default-15",
+  "link": "/thuong-hieu/scandinavian",
+  "order": {
+   "$numberInt": "15"
+  },
+  "poster": "https://images.unsplash.com/photo-1577140917170-285929fb55b7?auto=format&fit=crop&w=800&q=70",
+  "title": "Phong Cách Scandinavian",
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794014476547"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ad45697bda88eadcfd09bf8"
+  },
+  "youtubeId": "eeXZJOc0zNg",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "active": false,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1792300695178"
+   }
+  },
+  "createdBy": null,
+  "ctaLabel": "Đọc Insights",
+  "description": "Xu hướng nội thất, mẹo sắp xếp không gian và câu chuyện đằng sau sản phẩm in 3D.",
+  "id": "video-default-16",
+  "link": "/news",
+  "order": {
+   "$numberInt": "16"
+  },
+  "poster": "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=800&q=70",
+  "title": "Tin Tức & Xu Hướng",
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794014476547"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ad45697bda88eadcfd09bf9"
+  },
+  "youtubeId": "pXbO-QQJsxM",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "active": false,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1792300695179"
+   }
+  },
+  "createdBy": null,
+  "ctaLabel": "Danh sách yêu thích",
+  "description": "Thả tim sản phẩm ưng ý để xem lại sau, so sánh và thêm vào giỏ chỉ với một chạm.",
+  "id": "video-default-17",
+  "link": "/favorites",
+  "order": {
+   "$numberInt": "17"
+  },
+  "poster": "https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?auto=format&fit=crop&w=800&q=70",
+  "title": "Lưu Món Yêu Thích",
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794014476547"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ad45697bda88eadcfd09bfa"
+  },
+  "youtubeId": "K8z4TvBJP0A",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "active": false,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1792300695179"
+   }
+  },
+  "createdBy": null,
+  "ctaLabel": "Xem FAQ",
+  "description": "Giải đáp nhanh về đặt hàng, giao hàng, bảo hành và tùy biến sản phẩm 3D.",
+  "id": "video-default-18",
+  "link": "/chinh-sach/faq",
+  "order": {
+   "$numberInt": "18"
+  },
+  "poster": "https://images.unsplash.com/photo-1594620302200-9a762244a156?auto=format&fit=crop&w=800&q=70",
+  "title": "Câu Hỏi Thường Gặp",
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794014476547"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ad45697bda88eadcfd09bfb"
+  },
+  "youtubeId": "iRUlzdjiIIc",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "active": false,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1792300695179"
+   }
+  },
+  "createdBy": null,
+  "ctaLabel": "Liên hệ ngay",
+  "description": "Hotline 1800 6928, chat trực tuyến hoặc đặt thiết kế riêng — Luméa luôn sẵn sàng hỗ trợ.",
+  "id": "video-default-19",
+  "link": "/chinh-sach/lien-he",
+  "order": {
+   "$numberInt": "19"
+  },
+  "poster": "https://images.unsplash.com/photo-1611269154421-4e27233ac5c7?auto=format&fit=crop&w=800&q=70",
+  "title": "Liên Hệ Luméa",
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794014476547"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6aee7d0c4c668448ea91d39c"
+  },
+  "id": "video-1794014476620-0",
+  "title": "Phòng Ngủ Kèm Góc Học Tập",
+  "description": "Gợi ý decor phòng ngủ kết hợp không gian học tập gọn gàng, đủ ánh sáng và tiện dụng.",
+  "youtubeId": "tAjx-GnlWOI",
+  "poster": "",
+  "link": "/coordinate",
+  "ctaLabel": "Xem ý tưởng phối đồ",
+  "active": true,
+  "order": {
+   "$numberInt": "3"
+  },
+  "createdBy": null,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1794014476702"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794075329614"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6aee7d0c4c668448ea91d39f"
+  },
+  "id": "video-1794014476620-1",
+  "title": "Decor Phòng Ngủ Ấm Cúng",
+  "description": "Chăn gối, đèn ngủ và món decor nhỏ biến phòng ngủ thành góc nghỉ ngơi thật chill.",
+  "youtubeId": "4KxkCvmOS9Q",
+  "poster": "",
+  "link": "/catalog",
+  "ctaLabel": "Mua đồ decor",
+  "active": true,
+  "order": {
+   "$numberInt": "1"
+  },
+  "createdBy": null,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1794014476828"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794075332405"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6aee7d0c4c668448ea91d3a2"
+  },
+  "id": "video-1794014476620-2",
+  "title": "Cảm Hứng Không Gian Sống",
+  "description": "Những góc nhà xinh xắn để bạn lấy cảm hứng trang trí lại không gian của mình.",
+  "youtubeId": "Mada7qj-1NQ",
+  "poster": "",
+  "link": "/community",
+  "ctaLabel": "Vào cộng đồng",
+  "active": true,
+  "order": {
+   "$numberInt": "3"
+  },
+  "createdBy": null,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1794014476928"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794014476928"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6aee7d0d4c668448ea91d3a5"
+  },
+  "id": "video-1794014476620-3",
+  "title": "Góc Nhà Mơ Mộng",
+  "description": "Tông màu dịu, ánh sáng ấm và nội thất mềm mại cho một tổ ấm đúng nghĩa.",
+  "youtubeId": "5z4oktlWxpI",
+  "poster": "",
+  "link": "/shop-the-room",
+  "ctaLabel": "Khám phá Shop The Room",
+  "active": true,
+  "order": {
+   "$numberInt": "4"
+  },
+  "createdBy": null,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1794014477032"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794014477032"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6aee7d0d4c668448ea91d3a8"
+  },
+  "id": "video-1794014476620-4",
+  "title": "Nhà Xinh Mỗi Ngày",
+  "description": "Chỉ vài thay đổi nhỏ về bố cục và decor cũng đủ khiến ngôi nhà xinh hơn mỗi ngày.",
+  "youtubeId": "aVfLL37oShs",
+  "poster": "",
+  "link": "/community",
+  "ctaLabel": "Xem góc nhà thật",
+  "active": true,
+  "order": {
+   "$numberInt": "5"
+  },
+  "createdBy": null,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1794014477135"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794014477135"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6aee7d0d4c668448ea91d3ab"
+  },
+  "id": "video-1794014476620-5",
+  "title": "Thiết Kế Nội Thất Tinh Tế",
+  "description": "Phối nội thất hài hoà từ màu sắc đến chất liệu — đặt thiết kế riêng theo ý bạn.",
+  "youtubeId": "pGVgxbEM-E0",
+  "poster": "",
+  "link": "/custom-request",
+  "ctaLabel": "Gửi yêu cầu thiết kế",
+  "active": true,
+  "order": {
+   "$numberInt": "6"
+  },
+  "createdBy": null,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1794014477235"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794014477235"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6aee7d0d4c668448ea91d3ae"
+  },
+  "id": "video-1794014476620-6",
+  "title": "Bếp Ghi Xám Chân Ái 2025",
+  "description": "Tông ghi xám hiện đại, dễ phối, dễ vệ sinh — lựa chọn bền vững cho gian bếp.",
+  "youtubeId": "h2G08AxuZE8",
+  "poster": "",
+  "link": "/catalog",
+  "ctaLabel": "Xem nội thất bếp",
+  "active": true,
+  "order": {
+   "$numberInt": "7"
+  },
+  "createdBy": null,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1794014477334"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794014477334"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6aee7d0d4c668448ea91d3b1"
+  },
+  "id": "video-1794014476620-7",
+  "title": "Chọn Nội Thất Nhàn Tênh",
+  "description": "Mẫu mã sẵn có, giá rõ ràng, săn deal theo khung giờ — mua nội thất chưa bao giờ dễ thế.",
+  "youtubeId": "UoXCUaZC4e0",
+  "poster": "",
+  "link": "/flash-sale",
+  "ctaLabel": "Xem Flash Sale",
+  "active": true,
+  "order": {
+   "$numberInt": "8"
+  },
+  "createdBy": null,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1794014477430"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794014477430"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6aee7d0d4c668448ea91d3b4"
+  },
+  "id": "video-1794014476620-8",
+  "title": "Tủ Áo Trắng Kem & Nâu Tây",
+  "description": "Phối màu trắng kem và nâu tây cực nịnh mắt, vừa sang vừa rộng rãi cho phòng ngủ.",
+  "youtubeId": "3oGbm7YSId0",
+  "poster": "",
+  "link": "/catalog",
+  "ctaLabel": "Xem tủ quần áo",
+  "active": true,
+  "order": {
+   "$numberInt": "9"
+  },
+  "createdBy": null,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1794014477550"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794014477550"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6aee7d0d4c668448ea91d3b7"
+  },
+  "id": "video-1794014476620-9",
+  "title": "Thiết Kế Siêu Ưng Ý",
+  "description": "Chia sẻ một bản thiết kế nội thất trọn vẹn — bạn cũng có thể đặt bản của riêng mình.",
+  "youtubeId": "DeUCxmPFD84",
+  "poster": "",
+  "link": "/custom-request",
+  "ctaLabel": "Đặt thiết kế riêng",
+  "active": true,
+  "order": {
+   "$numberInt": "10"
+  },
+  "createdBy": null,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1794014477649"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794014477649"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6aee7d0d4c668448ea91d3ba"
+  },
+  "id": "video-1794014476620-10",
+  "title": "Phòng Ngủ Dịu Dàng Tiểu Thư",
+  "description": "Tông pastel nhẹ nhàng, đường nét mềm mại — làm trắc nghiệm để biết phong cách hợp với bạn.",
+  "youtubeId": "2SXNzEhmb_I",
+  "poster": "",
+  "link": "/style-quiz",
+  "ctaLabel": "Làm trắc nghiệm",
+  "active": true,
+  "order": {
+   "$numberInt": "11"
+  },
+  "createdBy": null,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1794014477753"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794014477753"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6aee7d0d4c668448ea91d3bd"
+  },
+  "id": "video-1794014476620-11",
+  "title": "Sofa Phòng Khách Thư Giãn",
+  "description": "Sofa êm ái, form gọn đẹp — điểm nhấn cho phòng khách và những buổi tối thư giãn.",
+  "youtubeId": "AemhomVIw-I",
+  "poster": "",
+  "link": "/catalog",
+  "ctaLabel": "Xem sofa",
+  "active": true,
+  "order": {
+   "$numberInt": "12"
+  },
+  "createdBy": null,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1794014477848"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794014477848"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6aee7d0d4c668448ea91d3c0"
+  },
+  "id": "video-1794014476620-12",
+  "title": "Bàn Đa Năng 3 Hộc",
+  "description": "Biến góc làm việc trở nên đẳng cấp với bàn đa năng 3 hộc tiện ích, gọn gàng.",
+  "youtubeId": "lusbCFtvCaA",
+  "poster": "",
+  "link": "/catalog",
+  "ctaLabel": "Xem bàn làm việc",
+  "active": true,
+  "order": {
+   "$numberInt": "13"
+  },
+  "createdBy": null,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1794014477956"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794014477956"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6aee7d0e4c668448ea91d3c3"
+  },
+  "id": "video-1794014476620-13",
+  "title": "Phối Đồ Theo Không Gian",
+  "description": "Gợi ý phối sofa, đèn, decor theo từng không gian — mua lẻ từng món hoặc cả bộ.",
+  "youtubeId": "orCKTEX43DM",
+  "poster": "",
+  "link": "/coordinate",
+  "ctaLabel": "Xem ý tưởng",
+  "active": true,
+  "order": {
+   "$numberInt": "14"
+  },
+  "createdBy": null,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1794014478057"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794014478057"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6aee7d0e4c668448ea91d3c6"
+  },
+  "id": "video-1794014476620-14",
+  "title": "Ghé Thăm Luméa",
+  "description": "Dạo một vòng cửa hàng nội thất, xem tận mắt chất liệu và màu sắc từng sản phẩm.",
+  "youtubeId": "eyNrpEQV4Aw",
+  "poster": "",
+  "link": "/ve-lumea",
+  "ctaLabel": "Về Luméa",
+  "active": true,
+  "order": {
+   "$numberInt": "15"
+  },
+  "createdBy": null,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1794014478156"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794014478156"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6aee7d0e4c668448ea91d3c9"
+  },
+  "id": "video-1794014476620-15",
+  "title": "Khoảnh Khắc Thư Giãn Tại Gia",
+  "description": "Khoảng thời gian đẹp nhất trong ngày là khi được trở về góc nhà yêu thích.",
+  "youtubeId": "YV3Zm8EgCO0",
+  "poster": "",
+  "link": "/shop-the-room",
+  "ctaLabel": "Khám phá phòng mẫu",
+  "active": true,
+  "order": {
+   "$numberInt": "16"
+  },
+  "createdBy": null,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1794014478255"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794014478255"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6aee7d0e4c668448ea91d3cc"
+  },
+  "id": "video-1794014476620-16",
+  "title": "Sofa Góc Cho Mọi Góc Nhà",
+  "description": "Đủ êm để thư giãn, đủ thông minh để định hình không gian — sofa góc cho nhà bạn.",
+  "youtubeId": "ohyVsjGcvnY",
+  "poster": "",
+  "link": "/catalog",
+  "ctaLabel": "Xem sofa góc",
+  "active": true,
+  "order": {
+   "$numberInt": "17"
+  },
+  "createdBy": null,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1794014478351"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794014478351"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ }
+]

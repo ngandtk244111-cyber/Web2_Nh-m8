@@ -1,0 +1,319 @@
+[
+ {
+  "_id": {
+   "$oid": "6ac757a95f2b6b1e899151a1"
+  },
+  "code": "LUMÉANEW",
+  "description": "Giảm 10% cho đơn hàng đầu tiên",
+  "discountPercent": {
+   "$numberInt": "10"
+  },
+  "maxDiscount": {
+   "$numberInt": "50000"
+  },
+  "minSpend": {
+   "$numberInt": "200000"
+  },
+  "active": true,
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791449001596"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791449001596"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac757a95f2b6b1e899151a2"
+  },
+  "code": "FREESHIP",
+  "description": "Giảm 30.000đ phí vận chuyển",
+  "discountPercent": {
+   "$numberInt": "100"
+  },
+  "maxDiscount": {
+   "$numberInt": "30000"
+  },
+  "minSpend": {
+   "$numberInt": "300000"
+  },
+  "active": true,
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791449001596"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791449001596"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac757a95f2b6b1e899151a3"
+  },
+  "code": "ROOMCOMBO",
+  "description": "Giảm 15% khi mua trọn bộ phòng 3D",
+  "discountPercent": {
+   "$numberInt": "15"
+  },
+  "maxDiscount": {
+   "$numberInt": "150000"
+  },
+  "minSpend": {
+   "$numberInt": "800000"
+  },
+  "active": true,
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791449001596"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791449001596"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ad45697bda88eadcfd09bd4"
+  },
+  "code": "DECOR20",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "active": true,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1792300695162"
+   }
+  },
+  "description": "Giảm 20% đồ decor, tối đa 80.000đ cho đơn từ 400.000đ",
+  "discountPercent": {
+   "$numberInt": "20"
+  },
+  "maxDiscount": {
+   "$numberInt": "80000"
+  },
+  "minSpend": {
+   "$numberInt": "400000"
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1792300695162"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ad45697bda88eadcfd09bd5"
+  },
+  "code": "NOITHAT5",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "active": true,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1792300695162"
+   }
+  },
+  "description": "Giảm 5% nội thất lớn, tối đa 500.000đ cho đơn từ 3.000.000đ",
+  "discountPercent": {
+   "$numberInt": "5"
+  },
+  "maxDiscount": {
+   "$numberInt": "500000"
+  },
+  "minSpend": {
+   "$numberInt": "3000000"
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1792300695162"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ad45697bda88eadcfd09bd6"
+  },
+  "code": "SALE1010",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "active": true,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1792300695162"
+   }
+  },
+  "description": "Siêu sale 10.10 — giảm 10% tối đa 100.000đ cho đơn từ 300.000đ",
+  "discountPercent": {
+   "$numberInt": "10"
+  },
+  "maxDiscount": {
+   "$numberInt": "100000"
+  },
+  "minSpend": {
+   "$numberInt": "300000"
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1792300695162"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ad45697bda88eadcfd09bd7"
+  },
+  "code": "XINCHAOTHU",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "active": false,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1792300695162"
+   }
+  },
+  "description": "Chào thu 2026 — đã hết hạn",
+  "discountPercent": {
+   "$numberInt": "12"
+  },
+  "maxDiscount": {
+   "$numberInt": "60000"
+  },
+  "minSpend": {
+   "$numberInt": "250000"
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1792300695162"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ad45697bda88eadcfd09bd8"
+  },
+  "code": "TET2026",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "active": false,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1792300695162"
+   }
+  },
+  "description": "Ưu đãi Tết Bính Ngọ — đã kết thúc",
+  "discountPercent": {
+   "$numberInt": "15"
+  },
+  "maxDiscount": {
+   "$numberInt": "120000"
+  },
+  "minSpend": {
+   "$numberInt": "500000"
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1792300695162"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6aea9f26de6020eb35372eb1"
+  },
+  "code": "BB",
+  "description": "000",
+  "discountPercent": {
+   "$numberInt": "10"
+  },
+  "maxDiscount": {
+   "$numberInt": "50000"
+  },
+  "minSpend": {
+   "$numberInt": "200000"
+  },
+  "limitCount": {
+   "$numberInt": "500"
+  },
+  "endDate": {
+   "$date": {
+    "$numberLong": "1795971599999"
+   }
+  },
+  "active": true,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1793761062923"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1793761062923"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6aeccb37fbbbe361ee2ee7b6"
+  },
+  "code": "11TH11",
+  "description": "Giảm 15% cho đơn từ 1 triệu",
+  "discountPercent": {
+   "$numberInt": "15"
+  },
+  "maxDiscount": {
+   "$numberInt": "500000"
+  },
+  "minSpend": {
+   "$numberInt": "1000000"
+  },
+  "limitCount": {
+   "$numberInt": "500"
+  },
+  "endDate": {
+   "$date": {
+    "$numberLong": "1794502799999"
+   }
+  },
+  "active": true,
+  "expiresAt": null,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1793903415258"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1793903415258"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ }
+]

@@ -55,5 +55,4 @@ server/seed/lumea-products/report.md
 # File JSON gốc làm đầu vào cho seed/import-lumea-products.js (dữ liệu đã nạp lên MongoDB, không đưa lên git)
 /products*.json
 
-# Log chạy server ở máy
-server/*.log
+

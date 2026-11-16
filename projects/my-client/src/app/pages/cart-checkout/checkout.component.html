@@ -60,7 +60,7 @@
 
             <div *ngIf="addressService.addresses().length" class="rounded-xl border border-neutral-200 p-3 space-y-2">
               <label for="checkout-saved-address" class="block text-xs font-semibold text-neutral-700">Địa chỉ đã lưu</label>
-              <select id="checkout-saved-address" [ngModel]="selectedAddressId" (ngModelChange)="selectShippingAddress($event)"
+              <select id="checkout-saved-address" name="savedAddress" [ngModel]="selectedAddressId" (ngModelChange)="selectShippingAddress($event)"
                 class="w-full rounded-lg border border-neutral-300 bg-white p-2 text-xs text-neutral-800">
                 <option *ngFor="let address of addressService.addresses()" [value]="address._id">
                   {{ address.isDefault ? 'Mặc định · ' : '' }}{{ address.fullName }} · {{ address.phone }} · {{ address.address }}, {{ address.ward }}, {{ address.district }}, {{ address.city }}
@@ -189,7 +189,7 @@
               </div>
 
               <label class="flex items-center gap-2 text-xs text-neutral-700">
-                <input type="checkbox" [(ngModel)]="saveAddress" class="accent-[#A3152D]">
+                <input type="checkbox" name="saveAddress" [(ngModel)]="saveAddress" class="accent-[#A3152D]">
                 Lưu địa chỉ nhận hàng này vào sổ địa chỉ cho lần sau
               </label>
 

@@ -1,0 +1,722 @@
+[
+ {
+  "_id": {
+   "$oid": "6aefdf89c19c3d7f00f04997"
+  },
+  "id": {
+   "$numberInt": "1"
+  },
+  "text": "Khi bước vào một căn phòng, điều đầu tiên bạn muốn cảm nhận là gì?",
+  "options": [
+   {
+    "id": "a",
+    "label": "Sự gọn gàng, thoáng đãng, không một chi tiết thừa",
+    "tag": "minimalist"
+   },
+   {
+    "id": "b",
+    "label": "Màu sắc, hoạ tiết và nhiều câu chuyện để ngắm",
+    "tag": "bohemian"
+   },
+   {
+    "id": "c",
+    "label": "Ánh sáng tự nhiên ấm áp và mùi gỗ dễ chịu",
+    "tag": "scandinavian"
+   },
+   {
+    "id": "d",
+    "label": "Chất liệu thô mộc, kim loại và cá tính mạnh",
+    "tag": "industrial"
+   }
+  ],
+  "order": {
+   "$numberInt": "1"
+  },
+  "active": true,
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1794105225885"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794105225885"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6aefdf89c19c3d7f00f04998"
+  },
+  "id": {
+   "$numberInt": "2"
+  },
+  "text": "Bảng màu nào bạn muốn thấy mỗi ngày ở nhà?",
+  "options": [
+   {
+    "id": "a",
+    "label": "Trắng kem, be nhạt, gỗ sồi sáng",
+    "tag": "scandinavian"
+   },
+   {
+    "id": "b",
+    "label": "Đen than, xám bê tông, nâu gỉ sét",
+    "tag": "industrial"
+   },
+   {
+    "id": "c",
+    "label": "Trắng – đen – xám, đơn sắc thanh lịch",
+    "tag": "minimalist"
+   },
+   {
+    "id": "d",
+    "label": "Cam đất, xanh ngọc, vàng nghệ",
+    "tag": "bohemian"
+   }
+  ],
+  "order": {
+   "$numberInt": "2"
+  },
+  "active": true,
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1794105225887"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794105225887"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6aefdf89c19c3d7f00f04999"
+  },
+  "id": {
+   "$numberInt": "3"
+  },
+  "text": "Một buổi sáng cuối tuần lý tưởng của bạn trông như thế nào?",
+  "options": [
+   {
+    "id": "a",
+    "label": "Đi chợ phiên đồ cũ, mang về vài món lạ mắt",
+    "tag": "bohemian"
+   },
+   {
+    "id": "b",
+    "label": "Pha cà phê bên cửa sổ, nắng rọi lên bàn gỗ",
+    "tag": "scandinavian"
+   },
+   {
+    "id": "c",
+    "label": "Ngồi đọc sách trong phòng trống trải, thật yên tĩnh",
+    "tag": "minimalist"
+   },
+   {
+    "id": "d",
+    "label": "Ghé một quán cà phê kiểu nhà xưởng, tường gạch trần",
+    "tag": "industrial"
+   }
+  ],
+  "order": {
+   "$numberInt": "3"
+  },
+  "active": true,
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1794105225887"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794105225887"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6aefdf89c19c3d7f00f0499a"
+  },
+  "id": {
+   "$numberInt": "4"
+  },
+  "text": "Chọn một chất liệu bạn thích chạm vào nhất:",
+  "options": [
+   {
+    "id": "a",
+    "label": "Kim loại sơn đen, sắt rèn",
+    "tag": "industrial"
+   },
+   {
+    "id": "b",
+    "label": "Mây tre đan, len dệt tay",
+    "tag": "bohemian"
+   },
+   {
+    "id": "c",
+    "label": "Gỗ sáng màu, bề mặt mộc",
+    "tag": "scandinavian"
+   },
+   {
+    "id": "d",
+    "label": "Đá, gốm men mờ, bề mặt nhẵn lì",
+    "tag": "minimalist"
+   }
+  ],
+  "order": {
+   "$numberInt": "4"
+  },
+  "active": true,
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1794105225888"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794105225888"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6aefdf89c19c3d7f00f0499b"
+  },
+  "id": {
+   "$numberInt": "5"
+  },
+  "text": "Chiếc sofa trong mơ của bạn là:",
+  "options": [
+   {
+    "id": "a",
+    "label": "Sofa vải nỉ xám nhạt, chân gỗ, kèm chăn len",
+    "tag": "scandinavian"
+   },
+   {
+    "id": "b",
+    "label": "Sofa thấp, đường thẳng, một màu trơn",
+    "tag": "minimalist"
+   },
+   {
+    "id": "c",
+    "label": "Sofa da nâu bò sáp, khung kim loại",
+    "tag": "industrial"
+   },
+   {
+    "id": "d",
+    "label": "Sofa nhung màu nổi, phủ đầy gối hoạ tiết",
+    "tag": "bohemian"
+   }
+  ],
+  "order": {
+   "$numberInt": "5"
+  },
+  "active": true,
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1794105225888"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794105225888"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6aefdf89c19c3d7f00f0499c"
+  },
+  "id": {
+   "$numberInt": "6"
+  },
+  "text": "Bạn muốn chiếu sáng phòng khách bằng gì?",
+  "options": [
+   {
+    "id": "a",
+    "label": "Đèn thả bóng tròn, ánh vàng dịu",
+    "tag": "scandinavian"
+   },
+   {
+    "id": "b",
+    "label": "Đèn ẩn trần, ánh sáng đều, không thấy bóng đèn",
+    "tag": "minimalist"
+   },
+   {
+    "id": "c",
+    "label": "Chụp đèn mây đan và dây đèn đom đóm",
+    "tag": "bohemian"
+   },
+   {
+    "id": "d",
+    "label": "Bóng Edison dây tóc treo trên ống kim loại",
+    "tag": "industrial"
+   }
+  ],
+  "order": {
+   "$numberInt": "6"
+  },
+  "active": true,
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1794105225888"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794105225888"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6aefdf89c19c3d7f00f0499d"
+  },
+  "id": {
+   "$numberInt": "7"
+  },
+  "text": "Cây xanh trong nhà bạn sẽ là:",
+  "options": [
+   {
+    "id": "a",
+    "label": "Thật nhiều chậu, cây leo rủ khắp kệ",
+    "tag": "bohemian"
+   },
+   {
+    "id": "b",
+    "label": "Một chậu duy nhất, dáng đẹp, đặt đúng chỗ",
+    "tag": "minimalist"
+   },
+   {
+    "id": "c",
+    "label": "Xương rồng, sen đá trong chậu xi măng",
+    "tag": "industrial"
+   },
+   {
+    "id": "d",
+    "label": "Vài chậu lá xanh nhạt trong giỏ cói",
+    "tag": "scandinavian"
+   }
+  ],
+  "order": {
+   "$numberInt": "7"
+  },
+  "active": true,
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1794105225888"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794105225888"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6aefdf89c19c3d7f00f0499e"
+  },
+  "id": {
+   "$numberInt": "8"
+  },
+  "text": "Bức tường phòng khách của bạn nên:",
+  "options": [
+   {
+    "id": "a",
+    "label": "Gạch trần hoặc bê tông mài, giữ nguyên vẻ thô",
+    "tag": "industrial"
+   },
+   {
+    "id": "b",
+    "label": "Phủ kín tranh, thảm treo và đồ thủ công",
+    "tag": "bohemian"
+   },
+   {
+    "id": "c",
+    "label": "Trống trơn, hoặc chỉ một bức tranh lớn",
+    "tag": "minimalist"
+   },
+   {
+    "id": "d",
+    "label": "Sơn trắng, treo vài khung ảnh gỗ mảnh",
+    "tag": "scandinavian"
+   }
+  ],
+  "order": {
+   "$numberInt": "8"
+  },
+  "active": true,
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1794105225889"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794105225889"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6aefdf89c19c3d7f00f0499f"
+  },
+  "id": {
+   "$numberInt": "9"
+  },
+  "text": "Khi đi du lịch, bạn hay mang về món quà lưu niệm nào?",
+  "options": [
+   {
+    "id": "a",
+    "label": "Không mua gì — chỉ giữ lại ảnh và trải nghiệm",
+    "tag": "minimalist"
+   },
+   {
+    "id": "b",
+    "label": "Một chiếc cốc gốm thủ công để dùng hằng ngày",
+    "tag": "scandinavian"
+   },
+   {
+    "id": "c",
+    "label": "Khăn, thảm, đồ dệt hoạ tiết đặc trưng nơi đó",
+    "tag": "bohemian"
+   },
+   {
+    "id": "d",
+    "label": "Một món đồ cổ bằng kim loại, biển hiệu cũ",
+    "tag": "industrial"
+   }
+  ],
+  "order": {
+   "$numberInt": "9"
+  },
+  "active": true,
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1794105225889"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794105225889"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6aefdf89c19c3d7f00f049a0"
+  },
+  "id": {
+   "$numberInt": "10"
+  },
+  "text": "Góc làm việc tại nhà của bạn sẽ có:",
+  "options": [
+   {
+    "id": "a",
+    "label": "Bàn gỗ sồi, đèn bàn, một chậu cây nhỏ",
+    "tag": "scandinavian"
+   },
+   {
+    "id": "b",
+    "label": "Bàn khung sắt mặt gỗ thô, kệ ống nước",
+    "tag": "industrial"
+   },
+   {
+    "id": "c",
+    "label": "Bàn trắng trơn, dây điện giấu kín, chỉ có laptop",
+    "tag": "minimalist"
+   },
+   {
+    "id": "d",
+    "label": "Bàn cũ sơn lại, ghế mây, đầy sổ tay và ảnh dán",
+    "tag": "bohemian"
+   }
+  ],
+  "order": {
+   "$numberInt": "10"
+  },
+  "active": true,
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1794105225889"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794105225889"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6aefdf89c19c3d7f00f049a1"
+  },
+  "id": {
+   "$numberInt": "11"
+  },
+  "text": "Phòng ngủ của bạn dùng bộ chăn ga như thế nào?",
+  "options": [
+   {
+    "id": "a",
+    "label": "Nhiều lớp, nhiều màu, gối tua rua",
+    "tag": "bohemian"
+   },
+   {
+    "id": "b",
+    "label": "Linen màu yến mạch, kèm chăn len dày",
+    "tag": "scandinavian"
+   },
+   {
+    "id": "c",
+    "label": "Cotton trắng tinh, phẳng phiu",
+    "tag": "minimalist"
+   },
+   {
+    "id": "d",
+    "label": "Xám đậm hoặc xanh than, đầu giường da",
+    "tag": "industrial"
+   }
+  ],
+  "order": {
+   "$numberInt": "11"
+  },
+  "active": true,
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1794105225889"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794105225889"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6aefdf89c19c3d7f00f049a2"
+  },
+  "id": {
+   "$numberInt": "12"
+  },
+  "text": "Bạn chọn đồng hồ treo tường nào?",
+  "options": [
+   {
+    "id": "a",
+    "label": "Mặt số lớn kiểu nhà ga, khung kim loại",
+    "tag": "industrial"
+   },
+   {
+    "id": "b",
+    "label": "Không số, chỉ có hai kim mảnh",
+    "tag": "minimalist"
+   },
+   {
+    "id": "c",
+    "label": "Khung mây hoặc gỗ chạm hoa văn",
+    "tag": "bohemian"
+   },
+   {
+    "id": "d",
+    "label": "Mặt gỗ tròn, kim đen, số in nhỏ",
+    "tag": "scandinavian"
+   }
+  ],
+  "order": {
+   "$numberInt": "12"
+  },
+  "active": true,
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1794105225889"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794105225889"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6aefdf89c19c3d7f00f049a3"
+  },
+  "id": {
+   "$numberInt": "13"
+  },
+  "text": "Mùi hương bạn muốn ngửi thấy khi về nhà:",
+  "options": [
+   {
+    "id": "a",
+    "label": "Gỗ tuyết tùng và bánh quế mới nướng",
+    "tag": "scandinavian"
+   },
+   {
+    "id": "b",
+    "label": "Trầm hương, hoa nhài, tinh dầu phương Đông",
+    "tag": "bohemian"
+   },
+   {
+    "id": "c",
+    "label": "Không mùi gì — chỉ cần không khí sạch",
+    "tag": "minimalist"
+   },
+   {
+    "id": "d",
+    "label": "Da thuộc, cà phê rang và khói gỗ",
+    "tag": "industrial"
+   }
+  ],
+  "order": {
+   "$numberInt": "13"
+  },
+  "active": true,
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1794105225889"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794105225889"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6aefdf89c19c3d7f00f049a4"
+  },
+  "id": {
+   "$numberInt": "14"
+  },
+  "text": "Nếu tuỳ biến màu cho một sản phẩm in 3D, bạn sẽ chọn:",
+  "options": [
+   {
+    "id": "a",
+    "label": "Nhiều màu phối cùng lúc, càng nổi càng thích",
+    "tag": "bohemian"
+   },
+   {
+    "id": "b",
+    "label": "Xám xi măng hoặc nâu terracotta",
+    "tag": "industrial"
+   },
+   {
+    "id": "c",
+    "label": "Be, kem hoặc pastel nhẹ",
+    "tag": "scandinavian"
+   },
+   {
+    "id": "d",
+    "label": "Trắng mờ hoặc đen tuyền, bề mặt nhẵn",
+    "tag": "minimalist"
+   }
+  ],
+  "order": {
+   "$numberInt": "14"
+  },
+  "active": true,
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1794105225889"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794105225889"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6aefdf89c19c3d7f00f049a5"
+  },
+  "id": {
+   "$numberInt": "15"
+  },
+  "text": "Bạn muốn khách đến chơi nói gì về nhà mình?",
+  "options": [
+   {
+    "id": "a",
+    "label": "\"Ở đây dễ chịu quá, chẳng muốn về\"",
+    "tag": "scandinavian"
+   },
+   {
+    "id": "b",
+    "label": "\"Ngầu thật, giống studio nghệ thuật\"",
+    "tag": "industrial"
+   },
+   {
+    "id": "c",
+    "label": "\"Món nào cũng có câu chuyện, xem mãi không chán\"",
+    "tag": "bohemian"
+   },
+   {
+    "id": "d",
+    "label": "\"Gọn gàng thật, cái gì cũng đúng chỗ\"",
+    "tag": "minimalist"
+   }
+  ],
+  "order": {
+   "$numberInt": "15"
+  },
+  "active": true,
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1794105225890"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1794105225890"
+   }
+  }
+ }
+]

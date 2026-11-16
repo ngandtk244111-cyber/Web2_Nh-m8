@@ -41,8 +41,9 @@ export class ScrollRevealDirective implements AfterViewInit, OnDestroy {
           }
         }
       },
-      // 'rise' đợi thẻ lộ ra nhiều hơn mới chạy, để người xem thấy rõ lúc nó hiện lên khi cuộn xuống.
-      { threshold: this.variant === 'rise' ? 0.25 : 0.15, rootMargin: this.variant === 'rise' ? '0px 0px -80px 0px' : '0px 0px -40px 0px' }
+      // Hiện ngay khi mép trên lọt qua lề dưới (không dùng % chiều cao): section cao trên màn hình thấp
+      // không bao giờ lộ đủ % nên bị kẹt trống lúc mới vào trang. 'rise' chờ lề sâu hơn để thấy rõ lúc nó hiện.
+      { threshold: 0, rootMargin: this.variant === 'rise' ? '0px 0px -80px 0px' : '0px 0px -40px 0px' }
     );
     this.observer.observe(el);
   }

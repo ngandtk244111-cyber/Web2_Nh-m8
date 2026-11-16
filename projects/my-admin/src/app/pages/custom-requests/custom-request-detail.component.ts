@@ -1,4 +1,4 @@
-import { AfterViewChecked, Component, ElementRef, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
+import { effect, AfterViewChecked, Component, ElementRef, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -31,7 +31,7 @@ const PREVIEW_MODELS: { value: PreviewModel; label: string }[] = [
   styleUrl: './custom-request-detail.component.css',
 })
 export class CustomRequestDetailComponent implements OnInit, AfterViewChecked {
-  private requestService = inject(CustomRequestService);
+  readonly requestService = inject(CustomRequestService);
   private adminAuth = inject(AdminAuthService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -53,9 +53,15 @@ export class CustomRequestDetailComponent implements OnInit, AfterViewChecked {
   readonly request = computed(() =>
     this.requestService.requests().find(r => r.id === this.requestId || r.requestCode === this.requestId) || null);
 
+  constructor() {
+    effect(() => { const request = this.request(); if (request?.unreadStaff) this.requestService.markRead(request.id).subscribe({ error: () => {} }); });
+  }
+
   previewModel: PreviewModel = 'moon_lamp';
   messageDraft = '';
   zoomImage: string | null = null;
+  /** Link ảnh khách gửi nhưng không tải được (link hỏng / link trang web). */
+  readonly brokenImages = new Set<string>();
   private lastMessageCount = -1;
 
   ngOnInit(): void {

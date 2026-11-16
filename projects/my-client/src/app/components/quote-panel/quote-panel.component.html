@@ -1,8 +1,15 @@
 <section class="qp">
   <p *ngIf="loading && !current" class="qp__muted">Đang tải báo giá...</p>
 
+  <p *ngIf="error" class="qp__note qp__late">{{ error }} <button type="button" (click)="load()">Thử lại</button></p>
+  <div *ngIf="!loading && !current && !error && request.quotationPrice != null" class="qp__head">
+    <div><span class="qp__eyebrow">Báo giá đã gửi</span><div class="qp__total">{{ request.quotationPrice | vnd }}</div>
+      <p class="qp__muted">{{ request.title }} · {{ request.estimatedDays }} ngày</p>
+      <p class="qp__muted">Đây là báo giá cũ. Nhắn shop để nhận bảng báo giá chi tiết và đặt hàng.</p>
+    </div>
+  </div>
   <!-- Chưa có báo giá -->
-  <div *ngIf="!loading && !current" class="qp__empty">
+  <div *ngIf="!loading && !current && !error && request.quotationPrice == null" class="qp__empty">
     <app-icon name="clock" [size]="18"></app-icon>
     <span>Shop đang xem xét yêu cầu và sẽ gửi báo giá kèm mức cọc. Bạn có thể trao đổi thêm ở khung chat bên cạnh.</span>
   </div>
@@ -50,9 +57,9 @@
       <div class="qp__policy">
         <strong>Chính sách đặt cọc</strong>
         <ul>
-          <li>Cọc {{ policy?.defaultDepositRate || 50 }}% (tối thiểu {{ policy?.minimumDepositAmount || 200000 | vnd }}, không vượt tổng tiền hàng). Phí vận chuyển trả khi nhận hàng.</li>
-          <li>Thanh toán cọc trong {{ policy?.depositPaymentDeadlineHours || 24 }} giờ sau khi đặt đơn qua MoMo, ZaloPay, thẻ ATM hoặc chuyển khoản. Quá hạn chưa cọc, đơn tự huỷ.</li>
-          <li>Shop chỉ bắt đầu sản xuất khi đã nhận đủ cọc. Đơn đặt làm không thanh toán COD toàn bộ.</li>
+          <li>Chọn thanh toán khi nhận hàng (COD): chuyển khoản cọc trước {{ q.deposit?.amount | vnd }}, phần còn lại trả khi nhận hàng.</li>
+          <li>Chọn chuyển khoản, MoMo, ZaloPay hoặc thẻ ATM: thanh toán đủ giá trị đơn.</li>
+          <li>Shop chỉ bắt đầu sản xuất khi đã nhận cọc hoặc đã nhận đủ tiền.</li>
           <li>Huỷ trước khi sản xuất: hoàn 100% tiền cọc. Sau khi đã sản xuất: shop xét theo chi phí thực tế đã phát sinh.</li>
         </ul>
         <label class="qp__check">
@@ -75,35 +82,10 @@
 
     <p *ngIf="q.status === 'SENT' && isExpired" class="qp__note qp__late">Báo giá đã hết hạn. Nhắn shop ở khung chat để nhận báo giá mới.</p>
 
-    <!-- Đặt hàng sau khi chấp nhận -->
-    <div *ngIf="canCheckout" class="qp__checkout">
-      <strong class="qp__section">Thông tin nhận hàng</strong>
-      <select *ngIf="addressService.addresses().length" class="qp__input" (change)="useAddress($any($event.target).value)">
-        <option value="">— Chọn địa chỉ đã lưu —</option>
-        <option *ngFor="let a of addressService.addresses()" [value]="a._id">{{ a.label || a.fullName }} · {{ a.address }}, {{ a.district }}</option>
-      </select>
-      <div class="qp__grid">
-        <input class="qp__input" [(ngModel)]="shipping.fullName" placeholder="Họ tên người nhận">
-        <input class="qp__input" [(ngModel)]="shipping.phone" placeholder="Số điện thoại" inputmode="tel">
-        <input class="qp__input qp__span" [(ngModel)]="shipping.street" placeholder="Số nhà, đường, phường/xã">
-        <input class="qp__input" [(ngModel)]="shipping.district" placeholder="Quận / huyện">
-        <input class="qp__input" [(ngModel)]="shipping.city" placeholder="Tỉnh / thành phố">
-      </div>
-      <strong class="qp__section">Thanh toán phần còn lại khi nhận hàng</strong>
-      <div class="qp__methods">
-        <label class="qp__method" [class.qp__method--on]="balanceMethod === 'COD'">
-          <input type="radio" name="balance" value="COD" [(ngModel)]="balanceMethod"> Tiền mặt (COD)
-        </label>
-        <label class="qp__method" [class.qp__method--on]="balanceMethod === 'BANK_TRANSFER'">
-          <input type="radio" name="balance" value="BANK_TRANSFER" [(ngModel)]="balanceMethod"> Chuyển khoản
-        </label>
-      </div>
-      <input class="qp__input" [(ngModel)]="notes" maxlength="500" placeholder="Ghi chú cho shop (không bắt buộc)">
-      <button type="button" class="qp__btn qp__btn--primary" [disabled]="!shippingValid || busy" (click)="checkout()">
-        <ng-container *ngIf="busy">Đang tạo đơn...</ng-container>
-        <ng-container *ngIf="!busy">Đặt hàng · cọc {{ q.deposit?.amount | vnd }}</ng-container>
-      </button>
-    </div>
+    <!-- Đặt hàng sau khi chấp nhận: đi qua trang thanh toán chung, cọc theo báo giá -->
+    <button *ngIf="canCheckout" type="button" class="qp__btn qp__btn--primary" (click)="goToCheckout(q)">
+      Tiến hành đặt hàng →
+    </button>
 
     <a *ngIf="request.status === 'CONVERTED_TO_ORDER' && request.orderNumber" class="qp__btn qp__btn--primary qp__link"
       [routerLink]="['/orders/track']" [queryParams]="{ orderNumber: request.orderNumber }">

@@ -26,4 +26,18 @@ const chatMessageSchema = new mongoose.Schema({
   },
 });
 
+chatMessageSchema.post('save', async function (message) {
+  if (message.sender !== 'staff' || message.auto) return;
+  try {
+    const customer = await this.constructor.findOne({ sessionId: message.sessionId, sender: 'customer', userId: { $ne: null } }).sort({ createdAt: -1 }).lean();
+    if (customer?.userId) await require('./Notification').notifyUser(customer.userId, {
+      title: 'Luméa đã trả lời tin nhắn hỗ trợ', message: message.text,
+      link: '/notifications', refKey: 'support-chat:' + message._id,
+    });
+  } catch (err) { console.error('Support reply notification error', err.message); }
+});
+
+chatMessageSchema.index({ sessionId: 1, createdAt: 1 });
+chatMessageSchema.index({ userId: 1, sessionId: 1 });
+
 module.exports = mongoose.model('ChatMessage', chatMessageSchema);

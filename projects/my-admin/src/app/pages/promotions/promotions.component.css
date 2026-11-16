@@ -23,3 +23,7 @@
 .usage-bar .progress-bar {
   background: var(--color-primary);
 }
+
+.action-btn + .action-btn {
+  margin-left: 6px;
+}

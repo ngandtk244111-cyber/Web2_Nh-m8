@@ -23,7 +23,7 @@ export interface AdminNotice {
   icon: string;
 }
 
-/** Chuông thông báo trên topbar (pattern notice/ của Vita): các việc đang cần xử lý, tính từ dữ liệu thật. */
+
 @Injectable({ providedIn: 'root' })
 export class NoticeService {
   private adminAuth = inject(AdminAuthService);
@@ -38,10 +38,22 @@ export class NoticeService {
   private news = inject(NewsService);
 
   constructor() {
+    this.chat.customRequestChanged$.subscribe(event => {
+      if (!this.adminAuth.can('custom3d.view')) return;
+      this.customRequests.refresh();
+      if (event.customerMessage) this.toast.info('Tin nhắn thiết kế mới · ' + event.requestCode);
+    });
     // Đánh giá mới: tải lại danh sách để chuông cập nhật số, và báo ngay cho nhân viên đang mở admin.
     this.chat.newReview$.subscribe(r => {
       this.reviews.refresh();
       this.toast.info(`Đánh giá mới ${r.rating}★ của ${r.author} cho "${r.productName}"`);
+    });
+    // Yêu cầu bảo hành mới: cập nhật số trên chuông và báo nhân viên đang mở admin.
+    this.chat.warrantyChanged$.subscribe(() => { if (this.adminAuth.can('orders.view')) this.warranty.refresh(); });
+    this.chat.newWarrantyClaim$.subscribe(c => {
+      if (!this.adminAuth.can('orders.view')) return;
+      this.warranty.refresh();
+      this.toast.info(`Yêu cầu bảo hành mới · ${c.warrantyCode} — ${c.productName} (${c.customerName})`);
     });
     // Bình luận / tim dưới bài Tin tức do shop đăng — chỉ nhân viên nội dung mới được báo.
     this.chat.newNewsComment$.subscribe(c => {
@@ -59,7 +71,8 @@ export class NoticeService {
   loadSources(): void {
     const can = (rule: string) => this.adminAuth.can(rule);
     if (can('orders.view') || can('customers.view') || can('inventory.view')) this.orders.fetchAll().subscribe();
-    if (can('orders.view')) this.warranty.refresh();
+    if (can('orders.view')) { this.warranty.refresh(); this.chat.connect(); }
+    if (can('custom3d.view')) { this.customRequests.refresh(); this.chat.connect(); }
     if (can('customers.view')) {
       this.reviews.refresh();
       this.chat.connect();
@@ -77,20 +90,30 @@ export class NoticeService {
     const products = this.products.products().filter(p => p.productionType === 'READY_STOCK');
     const outOfStock = products.filter(p => (p.inStock ?? 0) <= 0).length;
     const list: (AdminNotice & { perm: string })[] = [
+      { perm: 'orders.view', label: 'Trả hàng / hoàn tiền', count: this.orders.orders().filter(o => o.returnRequest?.status === 'PENDING' || o.returnRequest?.status === 'APPROVED' || o.refund?.status === 'PENDING').length, link: '/returns', icon: 'bi-arrow-counterclockwise' },
       { perm: 'orders.view', label: 'Đơn COD chờ gọi xác nhận', count: this.orders.orders().filter(o => o.status === 'PENDING').length, link: '/orders', query: { status: 'PENDING' }, icon: 'bi-telephone' },
       { perm: 'orders.view', label: 'Đơn COD lớn chờ nhận cọc', count: this.orders.orders().filter(o => o.status === 'PENDING' && (o.depositAmount || 0) > 0 && !o.depositPaidAt).length, link: '/orders', query: { status: 'PENDING' }, icon: 'bi-piggy-bank' },
       { perm: 'orders.view', label: 'Khách báo đã chuyển khoản', count: this.orders.orders().filter(o => o.transferReportedAt && o.paymentStatus !== 'PAID' && o.status !== 'CANCELLED').length, link: '/orders', query: { status: 'TRANSFER' }, icon: 'bi-bank' },
-      { perm: 'customers.view', label: 'Tin nhắn chưa đọc', count: this.chat.totalUnread(), link: '/messages', icon: 'bi-chat-dots' },
+      { perm: 'customers.view|custom3d.view', label: 'Tin nhắn chưa đọc', count: this.chat.totalUnread() + (can('custom3d.view') ? this.customRequests.unreadCount() : 0), link: '/messages', icon: 'bi-chat-dots' },
       { perm: 'custom3d.view', label: 'Yêu cầu in 3D chờ báo giá', count: this.customRequests.requests().filter(r => r.status === 'PENDING_REVIEW').length, link: '/custom-requests', query: { status: 'PENDING_REVIEW' }, icon: 'bi-printer' },
-      { perm: 'orders.view', label: 'Yêu cầu bảo hành chờ xử lý', count: this.warranty.warranties().filter(w => w.status === 'CLAIMED').length, link: '/warranty', query: { status: 'CLAIMED' }, icon: 'bi-shield-exclamation' },
+      { perm: 'orders.view', label: 'Bảo hành chờ tiếp nhận', count: this.warranty.warranties().filter(w => w.status === 'CLAIMED').length, link: '/warranty', query: { status: 'CLAIMED' }, icon: 'bi-shield-exclamation' },
+      { perm: 'orders.view', label: 'Bảo hành đang xử lý', count: this.warranty.warranties().filter(w => w.status === 'PROCESSING').length, link: '/warranty', query: { status: 'PROCESSING' }, icon: 'bi-shield-check' },
       { perm: 'customers.view', label: 'Đánh giá mới chưa phản hồi', count: this.reviews.reviews().filter(r => r.status !== 'HIDDEN' && r.rating > 2 && !r.reply?.text).length, link: '/reviews', query: { filter: 'UNREPLIED' }, icon: 'bi-star' },
-      { perm: 'customers.view', label: 'Đánh giá xấu chưa phản hồi', count: this.reviews.reviews().filter(r => r.status !== 'HIDDEN' && r.rating <= 2 && !r.reply?.text).length, link: '/reviews', icon: 'bi-star-half' },
+      { perm: 'customers.view', label: 'Đánh giá xấu chưa phản hồi', count: this.reviews.reviews().filter(r => r.status !== 'HIDDEN' && r.rating <= 2 && !r.reply?.text).length, link: '/reviews', query: { filter: 'NEEDS_ACTION' }, icon: 'bi-star-half' },
       { perm: 'content.view', label: 'Bình luận Tin tức chưa trả lời', count: this.news.unrepliedCount(), link: '/news-comments', query: { filter: 'UNREPLIED' }, icon: 'bi-chat-left-text' },
       { perm: 'content.view', label: 'Bài cộng đồng bị chặn cần xem', count: this.community.posts().filter(p => p.status === 'REJECTED').length, link: '/community', query: { filter: 'REJECTED' }, icon: 'bi-camera' },
       { perm: 'inventory.view', label: 'Sản phẩm hết hoặc sắp hết hàng', count: products.filter(p => (p.inStock ?? 0) <= LOW_STOCK_THRESHOLD).length, link: '/inventory', query: { status: outOfStock ? 'OUT' : 'LOW' }, icon: 'bi-archive' },
     ];
     return list.filter(n => n.count > 0 && can(n.perm));
   });
+
+  readonly groups = computed(() => [
+    { label: 'Bảo hành', tone: 'warranty', links: ['/warranty'] },
+    { label: 'Đơn hàng & thanh toán', tone: 'orders', links: ['/orders', '/returns'] },
+    { label: 'Thiết kế & tin nhắn', tone: 'design', links: ['/custom-requests', '/messages'] },
+    { label: 'Đánh giá & nội dung', tone: 'content', links: ['/reviews', '/news-comments', '/community'] },
+    { label: 'Kho hàng', tone: 'stock', links: ['/inventory'] },
+  ].map(group => ({ ...group, items: this.notices().filter(n => group.links.includes(n.link)) })).filter(group => group.items.length));
 
   readonly total = computed(() => this.notices().reduce((sum, n) => sum + n.count, 0));
 }

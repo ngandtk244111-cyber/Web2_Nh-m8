@@ -16,4 +16,18 @@ const notificationSchema = new mongoose.Schema({
 notificationSchema.index({ userId: 1, createdAt: -1 });
 notificationSchema.index({ userId: 1, refKey: 1 });
 
+const { emitNotificationUpdated } = require('../realtime');
+notificationSchema.post('save', doc => emitNotificationUpdated(doc));
+notificationSchema.post('insertMany', docs => docs.forEach(emitNotificationUpdated));
+
+// The deterministic id makes a repeated order/quote event idempotent, including concurrent writes.
+notificationSchema.statics.notifyUser = async function (userId, data) {
+  if (!userId) return;
+  try {
+    const id = require('crypto').createHash('sha256').update(String(userId) + ':' + data.refKey).digest('hex').slice(0, 24);
+    const result = await this.findOneAndUpdate({ _id: id }, { $setOnInsert: { ...data, userId: String(userId), read: false } }, { upsert: true, new: true, includeResultMetadata: true });
+    if (!result.lastErrorObject?.updatedExisting) emitNotificationUpdated(result.value);
+  } catch (err) { if (err.code !== 11000) console.error('Customer notification error', err.message); }
+};
+
 module.exports = mongoose.model('Notification', notificationSchema);

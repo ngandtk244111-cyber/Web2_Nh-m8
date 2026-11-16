@@ -15,13 +15,7 @@ export interface AuthApiResponse {
   devOtp?: string;
 }
 
-/**
- * Tách riêng phần gọi API khỏi state đăng nhập (AuthService) — tham khảo cấu trúc
- * AuthService/AuthApiService của VitaCare-main.
- *
- * `identifier` = số điện thoại (0xxxxxxxxx) HOẶC email — server tự nhận dạng (readContact ở
- * server/routes/authRoutes.js), dùng chung cho đăng ký, đăng nhập và quên mật khẩu.
- */
+
 @Injectable({ providedIn: 'root' })
 export class AuthApiService {
   private http = inject(HttpClient);

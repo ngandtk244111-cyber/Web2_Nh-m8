@@ -6,7 +6,7 @@ import { provideQuillConfig } from 'ngx-quill/config';
 import { routes } from './app.routes';
 import { adminAuthInterceptor } from './core/interceptors/admin-auth.interceptor';
 
-/** Toolbar soạn bài (Quill) — giống app.config của Vita. */
+
 const quillToolbar = [
   ['bold', 'italic', 'underline', 'strike'],
   [{ header: [2, 3, false] }],

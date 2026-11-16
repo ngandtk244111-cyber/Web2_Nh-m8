@@ -43,7 +43,7 @@ const STATUS_VIEW: Record<AdminCoupon['status'], { label: string; cls: string }>
 
 const emptyForm = () => ({ code: '', description: '', discountPercent: 10, maxDiscount: 50000, minSpend: 200000, limitCount: 500, endDate: '' });
 
-/** Khuyến mãi & voucher — theo promotionmanage của Vita: thẻ thống kê, bảng mã, modal tạo mã. */
+
 @Component({
   selector: 'app-promotions',
   standalone: true,
@@ -70,6 +70,8 @@ export class PromotionsComponent implements OnInit {
   showModal = false;
   saving = false;
   form = emptyForm();
+  /** Mã đang mở để xem chi tiết (null = đang tạo mã mới). Mã đã tạo không sửa được, chỉ bật / tạm ngưng. */
+  viewing: AdminCoupon | null = null;
 
   readonly filtered = computed(() => {
     const q = this.search().toLowerCase().trim();
@@ -116,7 +118,24 @@ export class PromotionsComponent implements OnInit {
   }
 
   openCreate(): void {
+    this.viewing = null;
     this.form = emptyForm();
+    this.showModal = true;
+  }
+
+  /** Xem chi tiết mã (chỉ đọc). */
+  openView(c: AdminCoupon): void {
+    this.viewing = c;
+    this.form = {
+      code: c.code,
+      description: c.description || '',
+      discountPercent: c.discountPercent,
+      maxDiscount: c.maxDiscount,
+      minSpend: c.minSpend,
+      limitCount: c.limitCount,
+      // Ngày hết hạn theo giờ Việt Nam, dạng YYYY-MM-DD như ô chọn ngày.
+      endDate: c.endDate ? new Date(c.endDate).toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }) : '',
+    };
     this.showModal = true;
   }
 
@@ -135,8 +154,7 @@ export class PromotionsComponent implements OnInit {
       this.toast.warning('Phần trăm giảm phải từ 1 đến 100');
       return;
     }
-    this.saving = true;
-    this.adminData.createCoupon({
+    const data = {
       code,
       description: this.form.description.trim(),
       discountPercent: percent,
@@ -144,7 +162,9 @@ export class PromotionsComponent implements OnInit {
       minSpend: Number(this.form.minSpend) || 0,
       limitCount: Number(this.form.limitCount) || 0,
       endDate: this.form.endDate || null,
-    }).subscribe({
+    };
+    this.saving = true;
+    this.adminData.createCoupon(data).subscribe({
       next: res => {
         this.saving = false;
         this.coupons.update(list => [res.coupon, ...list]);

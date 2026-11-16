@@ -18,10 +18,6 @@ export interface ChatMessage {
   links?: { label: string; url: string }[];
 }
 
-const SESSION_KEY = 'deco3d_chat_session';
-/** Thời điểm khách xem khung chat lần cuối — tin nhân viên gửi sau mốc này tính là chưa đọc. */
-const LAST_READ_KEY = 'deco3d_chat_last_read';
-
 @Injectable({ providedIn: 'root' })
 export class SupportChatService {
   private http = inject(HttpClient);
@@ -30,10 +26,12 @@ export class SupportChatService {
   private toast = inject(ToastService);
 
   private socket: Socket | null = null;
-  private historyLoaded = false;
+  private connecting = false;
+  private lastReadAt = Date.now();
+  private pendingMessages: string[] = [];
   readonly messages = signal<ChatMessage[]>([]);
   readonly isOpen = computed(() => this.chatPanel.active() === 'support');
-  readonly sessionId: string;
+  sessionId = '';
 
   /** Có nhân viên đang mở trang quản trị (phòng "staff" của socket) — chấm xanh trên khung chat. */
   readonly staffOnline = signal(false);
@@ -48,7 +46,7 @@ export class SupportChatService {
   private staffTypingTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
-    this.sessionId = this.loadOrCreateSessionId();
+
     // Khung chat có thể được mở tự động sau khi đăng nhập (ChatPanelService) -> kết nối khi khung mở.
     // Mở khung = đã đọc hết tin.
     effect(() => {
@@ -60,46 +58,51 @@ export class SupportChatService {
     // Khách đã đăng nhập thì kết nối sẵn (chat chỉ dành cho khách đăng nhập), để vẫn nhận tin
     // nhân viên trả lời khi khung đang đóng và báo số tin chưa đọc trên nút chat.
     effect(() => {
-      if (this.authService.currentUser()) untracked(() => this.ensureConnected());
+      const userId = this.authService.currentUser()?._id;
+      untracked(() => {
+        this.socket?.disconnect(); this.socket = null;
+        this.connecting = false; this.sessionId = ''; this.pendingMessages = [];
+        this.messages.set([]); this.unreadCount.set(0);
+        if (userId) this.ensureConnected();
+      });
     });
   }
 
-  /** Chưa có mốc (máy mới / trước khi có tính năng) -> lấy mốc là bây giờ, không báo dồn tin cũ. */
-  private readLastRead(): number {
-    try {
-      const saved = Number(localStorage.getItem(LAST_READ_KEY));
-      if (saved) return saved;
-      localStorage.setItem(LAST_READ_KEY, String(Date.now()));
-    } catch { /* localStorage bị chặn: coi như đã đọc hết */ }
-    return Date.now();
-  }
+  private readLastRead(): number { return this.lastReadAt; }
 
   private markRead(): void {
     this.unreadCount.set(0);
-    try {
-      localStorage.setItem(LAST_READ_KEY, String(Date.now()));
-    } catch { /* bỏ qua: chỉ mất số chưa đọc khi tải lại trang */ }
-  }
-
-  private loadOrCreateSessionId(): string {
-    try {
-      let id = localStorage.getItem(SESSION_KEY);
-      if (!id) {
-        id = 'sess-' + Date.now() + '-' + Math.floor(Math.random() * 100000);
-        localStorage.setItem(SESSION_KEY, id);
-      }
-      return id;
-    } catch {
-      return 'sess-' + Date.now();
-    }
+    this.lastReadAt = Date.now();
+    if (this.authService.currentUser()) this.http.post(environment.apiUrl + '/chat/mine/read', {}).subscribe({ error: () => {} });
   }
 
   private ensureConnected(): void {
-    if (this.socket) return;
+    const userId = this.authService.currentUser()?._id;
+    if (this.socket || this.connecting || !userId) return;
+    this.connecting = true;
+    this.http.get<{ sessionId: string; messages: ChatMessage[]; lastReadAt: string | null }>(environment.apiUrl + '/chat/mine').subscribe({
+      next: res => {
+        if (userId !== this.authService.currentUser()?._id) return;
+        this.connecting = false;
+        this.sessionId = res.sessionId;
+        this.messages.set(res.messages);
+        this.lastReadAt = res.lastReadAt ? Date.parse(res.lastReadAt) : 0;
+        this.unreadCount.set(res.messages.filter(m => m.sender === 'staff' && !m.auto && m.createdAt && Date.parse(m.createdAt) > this.lastReadAt).length);
+        this.connectSocket();
+        if (this.isOpen()) this.markRead();
+      },
+      error: () => { if (userId === this.authService.currentUser()?._id) { this.connecting = false; this.toast.error('Không tải được lịch sử hỗ trợ. Hãy mở lại khung chat.'); } },
+    });
+  }
 
+  private connectSocket(): void {
     this.socket = io(environment.socketUrl);
     this.socket.on('connect', () => {
-      this.socket?.emit('chat:join', this.sessionId);
+      this.socket?.emit('chat:join', { sessionId: this.sessionId, userToken: this.authService.token }, (res: { success: boolean }) => {
+        if (!res.success) return;
+        const pending = this.pendingMessages.splice(0);
+        pending.forEach(text => this.sendMessage(text));
+      });
     });
     this.socket.on('disconnect', () => this.staffOnline.set(false));
     this.socket.on('chat:message', (message: ChatMessage) => {
@@ -120,7 +123,7 @@ export class SupportChatService {
       if (!online) this.setStaffTyping(false);
     });
     this.socket.on('chat:typing', ({ typing }: { typing: boolean }) => this.setStaffTyping(!!typing));
-    this.loadHistory();
+
   }
 
   /** Tự tắt ba chấm sau 6s nếu không nhận được tín hiệu dừng (mất mạng giữa chừng...). */
@@ -149,29 +152,6 @@ export class SupportChatService {
     this.socket?.emit('chat:typing', { sessionId: this.sessionId, typing: false });
   }
 
-  /** Nạp lại tin cũ (kể cả câu trả lời nhân viên gửi khi khách đã đóng trang). */
-  private loadHistory(): void {
-    if (this.historyLoaded) return;
-    this.historyLoaded = true;
-    this.http.get<{ success: boolean; messages: ChatMessage[] }>(`${environment.apiUrl}/chat/${this.sessionId}/messages`).subscribe({
-      next: (res) => {
-        if (!res.success) return;
-        // Gộp với tin vừa nhận qua socket trong lúc chờ HTTP, bỏ trùng theo _id.
-        const seen = new Set(res.messages.map(m => m._id));
-        this.messages.update(live => [...res.messages, ...live.filter(m => !m._id || !seen.has(m._id))]);
-        // Nhân viên trả lời lúc khách đã rời trang -> lần sau vào vẫn thấy số tin chưa đọc.
-        if (this.isOpen()) {
-          this.markRead();
-        } else {
-          const lastRead = this.readLastRead();
-          this.unreadCount.set(res.messages.filter(m =>
-            m.sender === 'staff' && !m.auto && m.createdAt && new Date(m.createdAt).getTime() > lastRead).length);
-        }
-      },
-      error: () => { this.historyLoaded = false; },
-    });
-  }
-
   private appendMessage(message: ChatMessage): void {
     this.messages.update(list => (message._id && list.some(m => m._id === message._id) ? list : [...list, message]));
   }
@@ -188,7 +168,8 @@ export class SupportChatService {
 
   sendMessage(text: string): void {
     if (!text.trim()) return;
-    this.ensureConnected();
+    if (!this.authService.currentUser()) { this.open(); return; }
+    if (!this.socket?.connected) { this.pendingMessages.push(text.trim()); this.ensureConnected(); return; }
     this.stopTyping();
     // Khách đã đăng nhập thì gửi kèm tên/SĐT để nhân viên biết đang nói chuyện với ai.
     const user = this.authService.currentUser();

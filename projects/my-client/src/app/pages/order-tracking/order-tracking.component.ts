@@ -68,7 +68,7 @@ export class OrderTrackingComponent implements OnInit, OnDestroy {
     public orderService: OrderService,
     private route: ActivatedRoute,
     private toastService: ToastService,
-    private authService: AuthService
+    public authService: AuthService
   ) {}
 
   ngOnDestroy(): void {

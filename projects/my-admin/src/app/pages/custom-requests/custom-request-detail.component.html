@@ -70,8 +70,16 @@
                 <img [src]="r.aiConceptImage" alt="Ảnh concept AI">
                 <figcaption>Concept AI</figcaption>
               </figure>
-              <figure *ngFor="let img of r.customerImages; let i = index" (click)="zoomImage = img">
-                <img [src]="img" [alt]="'Ảnh khách gửi ' + (i + 1)">
+              <figure *ngFor="let img of r.customerImages; let i = index" (click)="brokenImages.has(img) || (zoomImage = img)">
+                <!-- Khách có thể dán link trang web thay vì link ảnh: không tải được thì cho mở link gốc -->
+                <a *ngIf="brokenImages.has(img); else preview" class="img-fallback" [href]="img" target="_blank" rel="noopener noreferrer">
+                  <i class="bi bi-image"></i>
+                  <span>Không xem trước được</span>
+                  <b>Mở link <i class="bi bi-box-arrow-up-right"></i></b>
+                </a>
+                <ng-template #preview>
+                  <img [src]="img" [alt]="'Ảnh khách gửi ' + (i + 1)" (error)="brokenImages.add(img)">
+                </ng-template>
                 <figcaption>Ảnh khách gửi {{ i + 1 }}</figcaption>
               </figure>
             </div>
@@ -86,11 +94,11 @@
 
         <!-- Trao đổi với khách -->
         <div class="info-card">
-          <h3 class="section-title">Trao đổi với khách ({{ r.messages.length }})</h3>
+          <h3 class="section-title">Trao đổi với khách ({{ r.messages.length }}) <a class="action-btn sm" routerLink="/messages" [queryParams]="{ request: r.id }">Mở trong hộp thư</a></h3>
           <div class="thread" #thread>
             <div class="empty-state" *ngIf="r.messages.length === 0">Chưa có tin nhắn nào.</div>
             <div *ngFor="let m of r.messages" class="msg-row" [class.mine]="m.sender === 'SHOP_SPECIALIST'" [class.bot]="m.sender === 'AI_ASSISTANT'">
-              <div class="msg-author">{{ m.senderName }} · {{ m.timestamp }}</div>
+              <div class="msg-author d-flex align-items-center gap-2"><img *ngIf="requestService.messageAvatar(m, r) as avatar" [src]="avatar" alt="Ảnh đại diện" width="26" height="26" class="rounded-circle" (error)="$any($event.target).style.display = 'none'">{{ m.sender === 'CUSTOMER' ? r.customerName : m.senderName }} · {{ m.timestamp }}</div>
               <div class="bubble">{{ m.text }}</div>
               <div class="msg-attachments" *ngIf="m.attachments?.length">
                 <img *ngFor="let a of m.attachments" [src]="a" alt="Tệp đính kèm" (click)="zoomImage = a">

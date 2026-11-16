@@ -171,6 +171,11 @@ export class InventoryComponent implements OnInit {
     this.page.set(1);
   }
 
+  /** Bấm vào dòng: mở trang sản phẩm (giống bấm tên sản phẩm). */
+  openProduct(item: InventoryItem): void {
+    this.router.navigate(['/products/edit', item.id]);
+  }
+
   openAdjust(item: InventoryItem, mode: 'IN' | 'OUT' = 'IN'): void {
     this.adjusting = item;
     this.setMode(mode);

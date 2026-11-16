@@ -1,7 +1,7 @@
-import { Injectable, signal, inject } from '@angular/core';
+import { Injectable, computed, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map, tap } from 'rxjs';
-import { CustomRequest, CustomRequestStatus, DepositPolicy, Quote, QuoteInput } from '../models/custom-request.model';
+import { RequestChatMessage, CustomRequest, CustomRequestStatus, DepositPolicy, Quote, QuoteInput } from '../models/custom-request.model';
 import { CartService } from './cart.service';
 import { Product } from '../models/product.model';
 import { AdminAuthService } from './admin-auth.service';
@@ -18,6 +18,19 @@ export class CustomRequestService {
 
   private requestsSignal = signal<CustomRequest[]>([]);
   readonly requests = this.requestsSignal.asReadonly();
+  readonly unreadCount = computed(() => this.requests().reduce((sum, request) => sum + (request.unreadStaff || 0), 0));
+
+  messageAvatar(message: RequestChatMessage, request: CustomRequest): string {
+    if (message.sender !== 'CUSTOMER') return environment.clientAppUrl + (message.sender === 'AI_ASSISTANT' ? '/assets/mascot/goh-mascot.png' : '/assets/logo/lumea-mark.png');
+    const avatar = request.customerAvatar || ((message.avatar || '').includes('unsplash.com') ? '' : message.avatar || '');
+    return !avatar ? '' : /^https?:/.test(avatar) ? avatar : environment.apiUrl.replace(/\/api$/, '') + avatar;
+  }
+
+  markRead(requestId: string): Observable<CustomRequest> {
+    return this.http.patch<{ request: CustomRequest }>(BASE + '/' + requestId + '/messages/read', {}).pipe(
+      map(res => res.request), tap(request => this.requestsSignal.update(list => list.map(r => r.id === request.id ? request : r)))
+    );
+  }
 
   constructor(private cartService: CartService) {
     this.refresh();

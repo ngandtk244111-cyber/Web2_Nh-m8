@@ -119,7 +119,13 @@ function resolveQuoteDeposit(total, policy, override) {
  * Chuẩn hoá và tính tiền các hạng mục báo giá. Không tin số tiền client gửi lên: chỉ nhận
  * số lượng, đơn giá, chiết khấu rồi tự tính thành tiền / tổng.
  */
-function priceQuoteItems(rawItems, rawQuoteDiscount = 0) {
+function priceQuoteItems(rawItems, rawQuoteDiscount = 0, rawQuoteDiscountPercent = null) {
+  const percent = value => {
+    if (value === null || value === undefined || value === '') return null;
+    const number = Number(value);
+    if (!Number.isFinite(number) || number < 0 || number > 100) throw new Error('Chiết khấu phần trăm phải từ 0 đến 100');
+    return number;
+  };
   if (!Array.isArray(rawItems) || rawItems.length === 0) throw new Error('Báo giá cần ít nhất 1 hạng mục');
   if (rawItems.length > 50) throw new Error('Báo giá tối đa 50 hạng mục');
   const text = (v, max) => String(v ?? '').trim().slice(0, max);
@@ -127,12 +133,14 @@ function priceQuoteItems(rawItems, rawQuoteDiscount = 0) {
     const name = text(raw?.name, 200);
     const quantity = Number(raw?.quantity);
     const unitPrice = Number(raw?.unitPrice);
-    const discount = raw?.discount === undefined || raw?.discount === '' || raw?.discount === null ? 0 : Number(raw.discount);
+    let discount = raw?.discount === undefined || raw?.discount === '' || raw?.discount === null ? 0 : Number(raw.discount);
     const label = `Hạng mục ${index + 1}`;
     if (!name) throw new Error(`${label}: vui lòng nhập tên hạng mục`);
     if (!Number.isInteger(quantity) || quantity < 1 || quantity > 999) throw new Error(`${label}: số lượng phải từ 1 đến 999`);
     if (!isNonNegativeInt(unitPrice) || unitPrice > 2_000_000_000) throw new Error(`${label}: đơn giá phải là số nguyên không âm`);
     const gross = quantity * unitPrice;
+    const discountPercent = percent(raw?.discountPercent);
+    if (discountPercent !== null) discount = Math.round(gross * discountPercent / 100);
     if (!isNonNegativeInt(discount) || discount > gross) throw new Error(`${label}: chiết khấu không hợp lệ`);
     return {
       name,
@@ -142,18 +150,21 @@ function priceQuoteItems(rawItems, rawQuoteDiscount = 0) {
       quantity,
       unitPrice,
       discount,
+      ...(discountPercent !== null ? { discountPercent } : {}),
       lineTotal: gross - discount,
     };
   });
   const subtotal = items.reduce((s, i) => s + i.quantity * i.unitPrice, 0);
   const itemDiscountTotal = items.reduce((s, i) => s + i.discount, 0);
-  const quoteDiscount = rawQuoteDiscount === undefined || rawQuoteDiscount === '' || rawQuoteDiscount === null ? 0 : Number(rawQuoteDiscount);
+  let quoteDiscount = rawQuoteDiscount === undefined || rawQuoteDiscount === '' || rawQuoteDiscount === null ? 0 : Number(rawQuoteDiscount);
+  const quoteDiscountPercent = percent(rawQuoteDiscountPercent);
+  if (quoteDiscountPercent !== null) quoteDiscount = Math.round((subtotal - itemDiscountTotal) * quoteDiscountPercent / 100);
   if (!isNonNegativeInt(quoteDiscount) || quoteDiscount > subtotal - itemDiscountTotal) {
     throw new Error('Chiết khấu toàn báo giá không hợp lệ');
   }
   const total = subtotal - itemDiscountTotal - quoteDiscount;
   if (total <= 0) throw new Error('Tổng tiền báo giá phải lớn hơn 0');
-  return { items, subtotal, itemDiscountTotal, quoteDiscount, total };
+  return { items, subtotal, itemDiscountTotal, quoteDiscount, total, ...(quoteDiscountPercent !== null ? { quoteDiscountPercent } : {}) };
 }
 
 module.exports = {

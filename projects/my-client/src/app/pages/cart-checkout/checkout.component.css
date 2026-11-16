@@ -123,3 +123,6 @@
   border-radius: 50%;
 }
 .inv__type--on .inv__radio { border-color: #A3152D; box-shadow: inset 0 0 0 3px #fff; background: #A3152D; }
+
+.checkout-overlay { z-index: 2000; margin: 0 !important; }
+.checkout-overlay > div { max-height: calc(100dvh - 32px); overflow-y: auto; overscroll-behavior: contain; }

@@ -5,10 +5,7 @@ import { AfterViewInit, Directive, ElementRef, Input, OnDestroy } from '@angular
 /** 'rise': trồi lên chậm (~1s) kèm phóng nhẹ — dùng cho poster/banner lớn, đặt riêng từng thẻ + revealDelay. */
 export type ScrollRevealVariant = 'up' | 'left' | 'right' | 'scale' | 'stagger' | 'rise';
 
-/**
- * Thêm class reveal-* (định nghĩa trong styles.css) rồi bật .visible khi phần tử
- * lọt vào viewport — kỹ thuật IntersectionObserver tham khảo từ AuraPC-main.
- */
+
 @Directive({
   selector: '[appScrollReveal]',
   standalone: true,

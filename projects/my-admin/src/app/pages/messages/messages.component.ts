@@ -3,6 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ChatService, ChatSession } from '../../core/services/chat.service';
+import { CustomRequestService } from '../../core/services/custom-request.service';
+import { AdminAuthService } from '../../core/services/admin-auth.service';
+import { ToastService } from '../../core/services/toast.service';
+import { CustomRequest } from '../../core/models/custom-request.model';
 import { normalizePhone } from '../../shared/utils/order-labels';
 
 /** So SĐT theo 9 số cuối: "0364037150", "+84 364 037 150" là cùng một số. */
@@ -18,6 +22,19 @@ const phoneKey = (phone: string | null | undefined) => (phone || '').replace(/\D
 })
 export class MessagesComponent implements OnInit, OnDestroy {
   readonly chat = inject(ChatService);
+  readonly designs = inject(CustomRequestService);
+  readonly adminAuth = inject(AdminAuthService);
+  private toast = inject(ToastService);
+  readonly selectedRequestId = signal('');
+  readonly selectedDesign = computed(() => this.designs.requests().find(r => r.id === this.selectedRequestId()) || null);
+  readonly designSessions = computed(() => {
+    if (!this.adminAuth.can('custom3d.view')) return [];
+    const query = this.search().trim().toLowerCase();
+    return this.designs.requests().filter(r => r.messages.some(m => m.sender !== 'AI_ASSISTANT') && (!query || (r.requestCode + ' ' + r.title + ' ' + r.customerName).toLowerCase().includes(query)))
+      .sort((a, b) => (b.unreadStaff || 0) - (a.unreadStaff || 0));
+  });
+  designDraft = '';
+  designBusy = false;
   private route = inject(ActivatedRoute);
 
   /** Mở từ nút "Nhắn tin" ở trang khách hàng (?phone=...) — tự mở cuộc chat gần nhất của khách đó. */
@@ -39,7 +56,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
 
   readonly filteredSessions = computed(() => {
     const q = this.search().trim().toLowerCase();
-    const sessions = this.chat.sessions();
+    const sessions = this.adminAuth.can('customers.view') ? this.chat.sessions() : [];
     if (!q) return sessions;
     return sessions.filter(s =>
       (s.customerName || '').toLowerCase().includes(q) ||
@@ -48,9 +65,14 @@ export class MessagesComponent implements OnInit, OnDestroy {
   });
 
   constructor() {
+    effect(() => {
+      const request = this.selectedDesign();
+      if (request?.unreadStaff) this.designs.markRead(request.id).subscribe({ error: () => {} });
+    });
     // Có tin mới / khách đang gõ trong hội thoại đang mở thì cuộn xuống cuối (chờ Angular vẽ xong).
     effect(() => {
       this.chat.activeMessages();
+      this.selectedDesign();
       this.chat.activeTyping();
       setTimeout(() => {
         const el = this.chatScroll?.nativeElement;
@@ -77,8 +99,10 @@ export class MessagesComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.requestedPhone = this.route.snapshot.queryParamMap.get('phone') || '';
+    this.selectedRequestId.set(this.route.snapshot.queryParamMap.get('request') || '');
+    if (this.adminAuth.can('custom3d.view')) this.designs.refresh();
     this.chat.connect();
-    this.chat.refreshSessions();
+    if (this.adminAuth.can('customers.view')) this.chat.refreshSessions();
   }
 
   ngOnDestroy(): void {
@@ -109,9 +133,26 @@ export class MessagesComponent implements OnInit, OnDestroy {
   }
 
   open(s: ChatSession): void {
+    this.selectedRequestId.set('');
     this.noChatForPhone.set('');
     this.chat.openSession(s.sessionId);
     this.draft = '';
+  }
+
+  openDesign(request: CustomRequest): void {
+    this.chat.closeSession();
+    this.selectedRequestId.set(request.id);
+    this.designDraft = '';
+  }
+
+  sendDesign(): void {
+    const request = this.selectedDesign();
+    if (!request || !this.designDraft.trim() || this.designBusy) return;
+    this.designBusy = true;
+    this.designs.sendMessage(request.id, this.designDraft.trim(), 'SHOP_SPECIALIST').subscribe({
+      next: () => { this.designBusy = false; this.designDraft = ''; },
+      error: err => { this.designBusy = false; this.toast.apiError(err, 'Chưa gửi được tin nhắn'); },
+    });
   }
 
   useQuickReply(text: string): void {

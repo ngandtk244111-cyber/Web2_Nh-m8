@@ -3,6 +3,10 @@ const { sendError } = require('../utils/http-error');
 const Warranty = require('../models/Warranty');
 const Admin = require('../models/Admin');
 const Order = require('../models/Order');
+const ProductImage = require('../models/ProductImage');
+const multer = require('multer');
+const { IMAGE_TYPES, INVALID_TYPE_ERROR } = require('../utils/images');
+const { emitWarrantyUpdated } = require('../realtime');
 const { requirePermission } = require('../middleware/auth');
 const { createWarranty } = require('../utils/warranty');
 const { isLocked, recordFailure, normalizePhone } = require('../utils/order-access');
@@ -42,17 +46,42 @@ router.get('/admin', requirePermission('orders.view'), async (_req, res) => {
   }
 });
 
-// Admin: đóng yêu cầu bảo hành đang xử lý, phiếu quay lại còn hiệu lực.
+const OPEN_CLAIM = ['CLAIMED', 'PROCESSING'];
+const CLAIM_RESULTS = ['REPAIR', 'REPRINT', 'REPLACE', 'REJECTED'];
+
+// Admin: tiếp nhận yêu cầu (đã liên hệ khách) -> "Đang xử lý". Ghi chú hiện cho khách khi tra cứu.
+router.patch('/admin/:warrantyCode/process', requirePermission('orders.edit'), async (req, res) => {
+  try {
+    const warranty = await Warranty.findOne({ warrantyCode: req.params.warrantyCode });
+    if (!warranty) return res.status(404).json({ success: false, error: 'Không tìm thấy phiếu bảo hành' });
+    if (warranty.status !== 'CLAIMED') return res.status(400).json({ success: false, error: 'Phiếu này không có yêu cầu chờ tiếp nhận' });
+    const note = String(req.body.note || '').trim().slice(0, 500) || 'Luméa đã tiếp nhận yêu cầu và sẽ liên hệ với bạn.';
+    warranty.claimHistory.push({ note, by: 'STAFF' });
+    warranty.status = 'PROCESSING';
+    await warranty.save();
+    emitWarrantyUpdated(warranty);
+    res.json({ success: true, warranty });
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
+// Admin: đóng yêu cầu với kết quả (sửa chữa / in lại / đổi mới / từ chối). Phiếu quay lại còn hiệu lực.
 router.patch('/admin/:warrantyCode/resolve', requirePermission('orders.edit'), async (req, res) => {
   try {
     const warranty = await Warranty.findOne({ warrantyCode: req.params.warrantyCode });
     if (!warranty) return res.status(404).json({ success: false, error: 'Không tìm thấy phiếu bảo hành' });
-    if (warranty.status !== 'CLAIMED') {
+    if (!OPEN_CLAIM.includes(warranty.status)) {
       return res.status(400).json({ success: false, error: 'Phiếu này không có yêu cầu đang xử lý' });
     }
-    warranty.claimHistory.push({ note: String(req.body.note || 'Đã xử lý yêu cầu bảo hành').trim().slice(0, 500) });
+    const result = CLAIM_RESULTS.includes(req.body.result) ? req.body.result : null;
+    if (!result) return res.status(400).json({ success: false, error: 'Vui lòng chọn kết quả xử lý' });
+    const note = String(req.body.note || '').trim().slice(0, 500);
+    if (result === 'REJECTED' && !note) return res.status(400).json({ success: false, error: 'Vui lòng ghi lý do không bảo hành' });
+    warranty.claimHistory.push({ note, by: 'STAFF', result });
     warranty.status = 'ACTIVE';
     await warranty.save();
+    emitWarrantyUpdated(warranty);
     res.json({ success: true, warranty });
   } catch (err) {
     sendError(res, err);
@@ -176,14 +205,36 @@ router.get('/lookup', async (req, res) => {
   }
 });
 
-// Khách gửi yêu cầu bảo hành — phải kèm đúng SĐT mua hàng như khi tra cứu.
-router.post('/:warrantyCode/claim', async (req, res) => {
+// Ảnh kèm yêu cầu: tối đa 3 ảnh, mỗi ảnh 5MB, lưu chung kho ảnh MongoDB (ProductImage).
+const MAX_CLAIM_IMAGES = 3;
+const claimUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024, files: MAX_CLAIM_IMAGES } });
+function readClaimImages(req, res, next) {
+  claimUpload.array('images', MAX_CLAIM_IMAGES)(req, res, err => {
+    if (!err) return next();
+    const error = err.code === 'LIMIT_FILE_SIZE' ? 'Mỗi ảnh không được vượt quá 5MB'
+      : err.code === 'LIMIT_FILE_COUNT' || err.code === 'LIMIT_UNEXPECTED_FILE' ? `Gửi tối đa ${MAX_CLAIM_IMAGES} ảnh`
+      : 'Không đọc được file ảnh';
+    res.status(400).json({ success: false, error });
+  });
+}
+
+// Khách gửi yêu cầu bảo hành (kèm ảnh tình trạng sản phẩm) — phải kèm đúng SĐT mua hàng như khi tra cứu.
+router.post('/:warrantyCode/claim', readClaimImages, async (req, res) => {
   try {
     const note = String(req.body.note || '').trim().slice(0, 500);
     if (!note) return res.status(400).json({ success: false, error: 'Vui lòng mô tả vấn đề của sản phẩm' });
+    const files = req.files || [];
+    if (!files.length) return res.status(400).json({ success: false, error: 'Vui lòng gửi kèm ít nhất 1 ảnh tình trạng sản phẩm' });
+    if (files.some(f => !IMAGE_TYPES.includes(f.mimetype))) return res.status(400).json({ success: false, error: INVALID_TYPE_ERROR });
 
+    if (isLocked(req.ip)) {
+      return res.status(429).json({ success: false, error: 'Bạn đã thử quá nhiều lần, vui lòng thử lại sau 15 phút.' });
+    }
     const warranty = await findOwnedWarranty(req.params.warrantyCode, req.body.phone);
-    if (!warranty) return res.status(404).json({ success: false, error: 'Không tìm thấy phiếu bảo hành' });
+    if (!warranty) {
+      recordFailure(req.ip);
+      return res.status(404).json({ success: false, error: 'Không tìm thấy phiếu bảo hành' });
+    }
     if (warranty.status === 'ACTIVE' && warranty.expiresAt < new Date()) {
       warranty.status = 'EXPIRED';
       await warranty.save();
@@ -192,9 +243,14 @@ router.post('/:warrantyCode/claim', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Phiếu bảo hành không còn hiệu lực' });
     }
 
-    warranty.claimHistory.push({ note });
+    const images = await Promise.all(files.map(async f => {
+      const image = await ProductImage.create({ data: f.buffer, contentType: f.mimetype });
+      return `/api/products/images/${image._id}`;
+    }));
+    warranty.claimHistory.push({ note, by: 'CUSTOMER', images });
     warranty.status = 'CLAIMED';
     await warranty.save();
+    emitWarrantyUpdated(warranty, true);
 
     res.json({ success: true, warranty: publicWarranty(warranty) });
   } catch (err) {

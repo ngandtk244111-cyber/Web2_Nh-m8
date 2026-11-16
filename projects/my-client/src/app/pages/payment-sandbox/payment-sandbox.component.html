@@ -5,7 +5,7 @@
         <p class="ps__brand">Luméa · Cổng thanh toán</p>
         <h1 class="ps__method">{{ methodLabel }}</h1>
       </div>
-      <span class="ps__badge">Môi trường thử nghiệm</span>
+      <span class="ps__badge">Thanh toán thử nghiệm</span>
     </header>
 
     <div *ngIf="loading" class="ps__body ps__center">Đang tải đơn hàng...</div>
@@ -32,7 +32,7 @@
         <div class="ps__qr" aria-hidden="true">
           <span *ngFor="let on of qrCells" [class.on]="on"></span>
         </div>
-        <p>Mô phỏng quét mã bằng ứng dụng {{ methodLabel }}. Bấm <strong>Xác nhận thanh toán</strong> để hoàn tất.</p>
+        <p>Không thu tiền thật. Mô phỏng quét mã bằng ứng dụng {{ methodLabel }}. Bấm <strong>Xác nhận thanh toán</strong> để hoàn tất.</p>
       </div>
 
       <!-- Thẻ ATM: mô phỏng nhập thẻ + OTP -->

@@ -195,6 +195,7 @@ function tableRows(order) {
  * @returns {Promise<Buffer>}
  */
 function buildInvoicePdf(order) {
+  const issued = order.invoice?.requested === true && order.paymentStatus === 'PAID';
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({
       size: 'A4',
@@ -233,8 +234,8 @@ function buildInvoicePdf(order) {
     // ===== Tiêu đề =====
     const titleW = 345;
     let y = MARGIN + 12;
-    doc.font('Bold').fontSize(16).fillColor(COLOR_TITLE).text('HÓA ĐƠN GIÁ TRỊ GIA TĂNG', X0, y, { width: titleW, align: 'center' });
-    doc.font('Italic').fontSize(11).fillColor(COLOR_TITLE).text('(VAT INVOICE)', X0, y + 21, { width: titleW, align: 'center' });
+    doc.font('Bold').fontSize(16).fillColor(COLOR_TITLE).text(issued ? 'HÓA ĐƠN GIÁ TRỊ GIA TĂNG' : 'PHIẾU XÁC NHẬN ĐƠN HÀNG', X0, y, { width: titleW, align: 'center' });
+    doc.font('Italic').fontSize(11).fillColor(COLOR_TITLE).text(issued ? '(VAT INVOICE)' : '(Không xác nhận đã nhận tiền)', X0, y + 21, { width: titleW, align: 'center' });
     drawSegmentsAligned(doc, [
       { text: 'Ngày ' }, { text: '(day) ', font: 'Italic' }, { text: date.day, font: 'Bold' },
       { text: '  tháng ' }, { text: '(month) ', font: 'Italic' }, { text: date.month, font: 'Bold' },
@@ -242,11 +243,11 @@ function buildInvoicePdf(order) {
     ], X0, titleW, y + 40, 'center');
 
     const rx = X0 + titleW + 6;
-    drawSegments(doc, [
+    if (issued) drawSegments(doc, [
       { text: 'Mẫu số - Ký hiệu ', size: 8.5 }, { text: '(Serial No.)', font: 'Italic', size: 8.5 },
       { text: ': ', size: 8.5 }, { text: id.serial, font: 'Bold', size: 8.5, color: COLOR_VALUE },
     ], rx, y + 2);
-    drawSegments(doc, [
+    if (issued) drawSegments(doc, [
       { text: 'Số ', size: 8.5 }, { text: '(Invoice No.)', font: 'Italic', size: 8.5 },
       { text: ': ', size: 8.5 }, { text: id.number, font: 'Bold', size: 10, color: COLOR_SIGN },
     ], rx, y + 17);
@@ -254,7 +255,10 @@ function buildInvoicePdf(order) {
     y = MARGIN + 72;
     hLine(doc, y, X0, X1);
     y += 6;
-    drawSegments(doc, [{ text: 'Mã của Cơ quan thuế: ' }, { text: id.authorityCode, font: 'Bold', color: COLOR_VALUE }], innerX, y);
+    if (issued) drawSegments(doc, [{ text: 'Mã của Cơ quan thuế: ' }, { text: id.authorityCode, font: 'Bold', color: COLOR_VALUE }], innerX, y);
+    else doc.font('Bold').fontSize(10).fillColor(COLOR_SIGN).text(
+      order.paymentStatus === 'PAID' ? 'Đơn đã thanh toán — không yêu cầu xuất hóa đơn' : 'Chưa thanh toán — không có giá trị xác nhận đã nhận tiền', innerX, y, { width: innerW }
+    );
     y += 17;
     hLine(doc, y, X0, X1);
 
@@ -370,6 +374,8 @@ function buildInvoicePdf(order) {
     y += 2;
     hLine(doc, y, X0, X1);
 
+    let lastBottom;
+    if (issued) {
     // ===== Chữ ký =====
     ensureSpace(140);
     y += 12;
@@ -395,7 +401,14 @@ function buildInvoicePdf(order) {
 
     doc.font('Italic').fontSize(8).fillColor(COLOR_MUTED)
       .text('(Cần kiểm tra, đối chiếu khi lập, giao, nhận hóa đơn)', X0, y, { width: W, align: 'center', lineBreak: false });
-    const lastBottom = y + 16;
+    lastBottom = y + 16;
+
+    } else {
+      ensureSpace(35);
+      y += 12;
+      doc.font('Italic').fontSize(9).fillColor(COLOR_MUTED).text('Phiếu xác nhận đơn hàng, không phải hóa đơn.', X0 + PAD, y, { width: W - PAD * 2, align: 'center' });
+      lastBottom = doc.y + 16;
+    }
 
     // ===== Khung viền + chân trang mỗi trang =====
     const range = doc.bufferedPageRange();
@@ -405,7 +418,7 @@ function buildInvoicePdf(order) {
       const frameBottom = isLast ? lastBottom : contentBottom + 6;
       doc.strokeColor(COLOR_FRAME).lineWidth(1).rect(X0, MARGIN, W, frameBottom - MARGIN).stroke();
       doc.font('Bold').fontSize(7.5).fillColor(COLOR_TEXT)
-        .text('Hóa đơn điện tử được lập tự động bởi hệ thống Luméa — Interior & 3D · Hotline 1800 6928 · lumea.vn',
+        .text((issued ? 'Hóa đơn điện tử' : 'Phiếu đơn hàng') + ' được lập tự động bởi hệ thống Luméa — Interior & 3D · Hotline 1800 6928 · lumea.vn',
           X0, frameBottom + 6, { width: W, align: 'center', lineBreak: false });
       if (range.count > 1) {
         doc.font('Regular').fontSize(7.5).fillColor(COLOR_MUTED)

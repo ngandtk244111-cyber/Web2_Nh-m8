@@ -31,11 +31,9 @@
   </div>
 
   <div class="space-y-3">
-    <a
-      *ngFor="let order of filteredOrders"
-      [routerLink]="['/orders/track']"
-      [queryParams]="{ orderNumber: order.orderNumber }"
-      class="block p-4 rounded-2xl border border-neutral-200 bg-[#F6F5F2] hover:border-amber-400/50 transition">
+    <article *ngFor="let order of filteredOrders" class="relative p-4 rounded-2xl border border-neutral-200 bg-[#F6F5F2] hover:border-amber-400/50 transition">
+      <a [routerLink]="['/orders/track']" [queryParams]="{ orderNumber: order.orderNumber }"
+        [attr.aria-label]="'Xem chi tiết đơn ' + order.orderNumber" class="absolute inset-0 z-[1] rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#A3152D]"></a>
       <div class="flex items-center justify-between gap-3">
         <div>
           <div class="font-mono text-sm font-bold text-neutral-900">{{ order.orderNumber }}</div>
@@ -50,14 +48,31 @@
             *ngIf="order.status !== 'CANCELLED'"
             type="button"
             (click)="openInvoice(order.orderNumber, $event)"
-            class="block ml-auto mt-1.5 text-[11px] font-bold text-[#A3152D] hover:underline">
-            Hóa đơn PDF
+            class="relative z-[2] block ml-auto mt-1.5 text-[11px] font-bold text-[#A3152D] hover:underline">
+            {{ order.invoice?.requested && order.paymentStatus === 'PAID' ? 'Hóa đơn PDF' : 'Phiếu đơn hàng PDF' }}
           </button>
         </div>
       </div>
 
+      <div class="mt-3 border-t border-neutral-200 divide-y divide-neutral-200">
+        <a *ngFor="let item of (expandedOrders.has(order.orderNumber) ? order.items : order.items.slice(0, 2))"
+          [routerLink]="['/product', item.product.slug || item.product.id]" class="relative z-[2] flex items-center gap-3 py-3 group">
+          <img [src]="item.product.images[0] || 'assets/mascot/goh-search.png'" [alt]="item.product.name" class="w-14 h-14 shrink-0 rounded-lg border border-neutral-200 object-cover bg-white">
+          <div class="min-w-0 flex-1">
+            <p class="text-xs sm:text-sm font-semibold text-neutral-800 group-hover:text-[#A3152D] line-clamp-2">{{ item.product.name }}</p>
+            <p *ngIf="item.selectedCustomization" class="mt-1 text-[11px] text-neutral-500">{{ item.selectedCustomization.color.name }} · {{ item.selectedCustomization.size.label }}</p>
+            <span class="text-[11px] text-neutral-500">×{{ item.quantity }}</span>
+          </div>
+          <span class="shrink-0 text-xs font-semibold text-neutral-700">{{ item.totalPrice | vnd }}</span>
+        </a>
+      </div>
+      <button *ngIf="order.items.length > 2" type="button" (click)="toggleProducts(order.orderNumber)"
+        [attr.aria-expanded]="expandedOrders.has(order.orderNumber)" class="relative z-[2] block mx-auto py-1 text-xs font-semibold text-[#A3152D] hover:underline">
+        {{ expandedOrders.has(order.orderNumber) ? 'Thu gọn' : 'Xem thêm ' + (order.items.length - 2) + ' sản phẩm' }}
+      </button>
+
       <!-- Đổi trả: đơn đã giao trong 7 ngày được yêu cầu trả hàng; đã gửi thì xem ở tab Đổi trả -->
-      <div *ngIf="order.returnRequest || canRequestReturn(order)" class="flex items-center justify-end gap-2 mt-3 pt-3 border-t border-dashed border-neutral-200">
+      <div *ngIf="order.returnRequest || canRequestReturn(order)" class="relative z-[2] flex items-center justify-end gap-2 mt-3 pt-3 border-t border-dashed border-neutral-200">
         <span *ngIf="order.returnRequest" class="mr-auto text-[11px] font-bold text-[#A3152D]">
           Đổi trả: {{ returnStatusLabel(order) }}
         </span>
@@ -73,11 +88,11 @@
           Trả hàng
         </button>
       </div>
-    </a>
+    </article>
   </div>
 </div>
 
-<!-- Yêu cầu trả hàng/hoàn tiền (tham khảo VitaCare) -->
+
 <div *ngIf="returnOrder as ro" class="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/50" (click)="closeReturn()">
   <div class="w-full max-w-lg max-h-[calc(100vh-32px)] flex flex-col rounded-3xl bg-white shadow-2xl overflow-hidden" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
     <div class="flex items-center justify-between px-5 py-4 border-b border-neutral-100">

@@ -1,4 +1,6 @@
-import { Injectable, signal, inject } from '@angular/core';
+import { Injectable, NgZone, signal, inject } from '@angular/core';
+import { io } from 'socket.io-client';
+import { AuthService } from './auth.service';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map, tap } from 'rxjs';
 import { CustomRequest, DepositPolicy, Quote } from '../models/custom-request.model';
@@ -18,6 +20,15 @@ export interface QuotesResponse {
 })
 export class CustomRequestService {
   private http = inject(HttpClient);
+  private auth = inject(AuthService);
+  private zone = inject(NgZone);
+
+  watch(id: string): () => void {
+    const socket = this.zone.runOutsideAngular(() => io(environment.socketUrl));
+    socket.on('connect', () => socket.emit('custom-request:watch', { id, userToken: this.auth.token }));
+    socket.on('custom-request:updated', () => this.zone.run(() => this.refresh()));
+    return () => { socket.disconnect(); };
+  }
 
   private requestsSignal = signal<CustomRequest[]>([]);
   readonly requests = this.requestsSignal.asReadonly();
@@ -50,12 +61,10 @@ export class CustomRequestService {
     );
   }
 
-  sendMessage(requestId: string, text: string): void {
-    this.http.post<{ success: boolean; request: CustomRequest }>(`${BASE}/${requestId}/messages`, { text }).subscribe({
-      next: (res) => {
-        if (res.success) this.replace(res.request);
-      },
-    });
+  sendMessage(requestId: string, text: string): Observable<CustomRequest> {
+    return this.http.post<{ success: boolean; request: CustomRequest }>(
+      BASE + '/' + requestId + '/messages', { text }
+    ).pipe(map(res => res.request), tap(request => this.replace(request)));
   }
 
   // ---- Báo giá có phiên bản & đặt hàng (giá, tiền cọc do server tính từ báo giá trong DB) ----
@@ -80,7 +89,7 @@ export class CustomRequestService {
   }
 
   /** Tạo đơn đặt làm từ báo giá đã chấp nhận (bấm nhiều lần server vẫn chỉ tạo 1 đơn). */
-  checkout(requestId: string, body: { quoteVersion: number; shippingAddress: ShippingAddress; balanceMethod: 'COD' | 'BANK_TRANSFER'; notes?: string }): Observable<Order> {
+  checkout(requestId: string, body: { quoteVersion: number; shippingAddress: ShippingAddress; paymentMethod: string; notes?: string }): Observable<Order> {
     return this.http.post<{ success: boolean; order: Order }>(`${BASE}/${requestId}/checkout`, { ...body, agreeDepositTerms: true }).pipe(
       map(res => res.order),
       tap(() => this.refresh())

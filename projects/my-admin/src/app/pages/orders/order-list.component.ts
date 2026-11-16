@@ -42,7 +42,7 @@ function matchesFilter(o: Order, f: OrderFilter): boolean {
   }
 }
 
-/** Danh sách đơn hàng — theo ordermanage của Vita: thẻ thống kê lọc nhanh, thanh lọc, bảng bấm vào xem chi tiết. */
+
 @Component({
   selector: 'app-order-list',
   standalone: true,

@@ -71,6 +71,7 @@
           [ngClass]="{
             'bg-emerald-50 text-emerald-600 border-emerald-300': w.status === 'ACTIVE',
             'bg-amber-50 text-amber-700 border-amber-300': w.status === 'CLAIMED',
+            'bg-sky-50 text-sky-700 border-sky-300': w.status === 'PROCESSING',
             'bg-neutral-100 text-neutral-500 border-neutral-300': w.status === 'EXPIRED'
           }">
           {{ statusLabel(w.status) }}
@@ -132,8 +133,19 @@
       <ol *ngIf="w.claimHistory.length > 0" class="relative border-l-2 border-neutral-200 ml-1.5 space-y-3">
         <li *ngFor="let c of w.claimHistory" class="pl-4 relative">
           <span class="absolute -left-[7px] top-1 w-3 h-3 rounded-full bg-[#A3152D] border-2 border-white"></span>
-          <div class="text-xs text-neutral-800">{{ c.note }}</div>
-          <div class="text-[10px] text-neutral-400 mt-0.5">{{ c.createdAt | date:'dd/MM/yyyy HH:mm' }}</div>
+          <div class="text-xs text-neutral-800">
+            <span *ngIf="c.result" class="mr-1 px-2 py-0.5 rounded-full text-[10px] font-bold"
+              [ngClass]="c.result === 'REJECTED' ? 'bg-neutral-100 text-neutral-600' : 'bg-emerald-50 text-emerald-700'">{{ resultLabel(c.result) }}</span>
+            {{ c.note }}
+          </div>
+          <div *ngIf="c.images?.length" class="flex gap-2 mt-1.5">
+            <a *ngFor="let img of c.images" [href]="apiOrigin + img" target="_blank" rel="noopener">
+              <img [src]="apiOrigin + img" alt="Ảnh tình trạng sản phẩm" class="w-14 h-14 rounded-lg object-cover border border-neutral-200">
+            </a>
+          </div>
+          <div class="text-[10px] text-neutral-400 mt-0.5">
+            {{ c.createdAt | date:'dd/MM/yyyy HH:mm' }}<ng-container *ngIf="c.by"> · {{ c.by === 'CUSTOMER' ? 'Bạn' : 'Luméa' }}</ng-container>
+          </div>
         </li>
       </ol>
     </div>
@@ -148,11 +160,26 @@
         maxlength="500"
         placeholder="Mô tả vấn đề bạn gặp phải với sản phẩm..."
         class="w-full p-2.5 rounded-xl border border-neutral-300 bg-white text-neutral-900 text-sm focus:outline-none focus:border-amber-400"></textarea>
+      <div>
+        <span class="text-[11px] font-bold text-neutral-700 block mb-1.5">Ảnh tình trạng sản phẩm * <span class="font-normal text-neutral-500">(1–{{ maxClaimImages }} ảnh, chụp rõ chỗ lỗi)</span></span>
+        <div class="flex flex-wrap gap-2">
+          <div *ngFor="let img of claimImages; let i = index" class="relative">
+            <img [src]="img.preview" alt="Ảnh đã chọn" class="w-16 h-16 rounded-lg object-cover border border-neutral-200">
+            <button type="button" (click)="removeImage(i)" aria-label="Bỏ ảnh"
+              class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-neutral-800 text-white text-[11px] leading-none">×</button>
+          </div>
+          <label *ngIf="claimImages.length < maxClaimImages"
+            class="w-16 h-16 rounded-lg border border-dashed border-neutral-300 flex items-center justify-center text-neutral-500 text-[11px] text-center cursor-pointer hover:border-[#A3152D] hover:text-[#A3152D]">
+            + Thêm ảnh
+            <input type="file" accept="image/jpeg,image/png,image/webp" multiple class="hidden" (change)="addImages($event)">
+          </label>
+        </div>
+      </div>
       <div *ngIf="claimError" class="text-xs text-red-500 bg-red-50 border border-red-200 rounded-xl p-3">{{ claimError }}</div>
       <button
         type="button"
         (click)="submitClaim()"
-        [disabled]="isSubmittingClaim || !claimNote.trim()"
+        [disabled]="isSubmittingClaim || !claimNote.trim() || !claimImages.length"
         class="px-5 py-2.5 rounded-xl bg-[#A3152D] hover:bg-[#891226] disabled:opacity-50 text-white text-xs font-bold transition">
         {{ isSubmittingClaim ? 'Đang gửi...' : 'Gửi yêu cầu bảo hành' }}
       </button>
@@ -162,7 +189,10 @@
       Đã ghi nhận yêu cầu bảo hành. Đội ngũ Luméa sẽ liên hệ bạn sớm.
     </div>
     <div *ngIf="w.status === 'CLAIMED' && !claimSubmitted" class="text-center text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl p-3">
-      Yêu cầu bảo hành đang được Luméa xử lý. Bạn có thể gửi yêu cầu mới sau khi yêu cầu này hoàn tất.
+      Luméa đã nhận yêu cầu của bạn và sẽ liên hệ qua số điện thoại đặt hàng để xác nhận.
+    </div>
+    <div *ngIf="w.status === 'PROCESSING'" class="text-center text-xs text-sky-700 bg-sky-50 border border-sky-200 rounded-xl p-3">
+      Yêu cầu bảo hành đang được xử lý. Bạn có thể gửi yêu cầu mới sau khi yêu cầu này hoàn tất.
     </div>
 
     <div class="text-center">

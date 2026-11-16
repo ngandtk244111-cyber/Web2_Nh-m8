@@ -66,7 +66,7 @@
           </td>
           <td>
             <span class="status-badge" [ngClass]="stateClass(w)">{{ stateLabel(w) }}</span>
-            <span class="cell-sub note" *ngIf="state(w) === 'CLAIMED' && lastNote(w)">“{{ lastNote(w) }}”</span>
+            <span class="cell-sub note" *ngIf="(state(w) === 'CLAIMED' || state(w) === 'PROCESSING') && lastNote(w)">“{{ lastNote(w) }}”</span>
           </td>
         </tr>
       </tbody>
@@ -183,14 +183,22 @@
       <div class="empty-state py-3" *ngIf="!w.claimHistory?.length">Khách chưa gửi yêu cầu bảo hành nào.</div>
       <ul class="history" *ngIf="w.claimHistory?.length">
         <li *ngFor="let h of w.claimHistory">
-          <span class="time">{{ h.createdAt | date:'HH:mm dd/MM/yyyy' }}</span>
-          <span>{{ h.note }}</span>
+          <span class="time">
+            {{ h.createdAt | date:'HH:mm dd/MM/yyyy' }}<ng-container *ngIf="h.by"> · {{ h.by === 'CUSTOMER' ? 'Khách' : 'Luméa' }}</ng-container>
+          </span>
+          <span>
+            <span class="tag" [ngClass]="h.result === 'REJECTED' ? 'danger' : 'success'" *ngIf="h.result">{{ resultLabel(h.result) }}</span>
+            {{ h.note }}
+          </span>
+          <div class="claim-images" *ngIf="h.images?.length">
+            <a *ngFor="let img of h.images" [href]="apiOrigin + img" target="_blank" rel="noopener"><img [src]="apiOrigin + img" alt="Ảnh khách gửi"></a>
+          </div>
         </li>
       </ul>
 
       <!-- Ghi chú nội bộ -->
       <div class="divider"></div>
-      <h4 class="section-title">Ghi chú nội bộ <span class="cell-sub d-inline">(khách không thấy)</span></h4>
+      <h4 class="section-title">Ghi chú nội bộ</h4>
       <div class="empty-state py-3" *ngIf="!w.adminNotes?.length">Chưa có ghi chú.</div>
       <ul class="history notes" *ngIf="w.adminNotes?.length">
         <li *ngFor="let n of w.adminNotes">
@@ -224,7 +232,10 @@
     </div>
     <div class="modal-footer">
       <button type="button" class="btn-cancel" (click)="detail = null">Đóng</button>
-      <button type="button" class="btn-save" *ngIf="canEdit && w.status === 'CLAIMED'" (click)="openResolve(w)">
+      <button type="button" class="btn-header" *ngIf="canEdit && w.status === 'CLAIMED'" (click)="openProcess(w)">
+        <i class="bi bi-telephone"></i> Tiếp nhận
+      </button>
+      <button type="button" class="btn-save" *ngIf="canEdit && (w.status === 'CLAIMED' || w.status === 'PROCESSING')" (click)="openResolve(w)">
         <i class="bi bi-check2-circle"></i> Đóng yêu cầu
       </button>
     </div>
@@ -240,13 +251,45 @@
     </div>
     <div class="modal-body">
       <div class="notice-box warning" *ngIf="lastNote(w)">Khách báo: “{{ lastNote(w) }}”</div>
-      <label class="form-label">Kết quả xử lý <span class="req">*</span></label>
-      <textarea class="form-control" rows="3" [(ngModel)]="resolveNote" placeholder="VD: Đã đổi mạch LED mới cho khách"></textarea>
-      <div class="form-hint">Phiếu quay về trạng thái còn hiệu lực sau khi đóng yêu cầu.</div>
+      <label class="form-label">Kết quả <span class="req">*</span></label>
+      <div class="chip-tabs mb-2">
+        <button type="button" *ngFor="let r of claimResults" class="chip-tab" [class.active]="resolveResult === r.key" (click)="resolveResult = r.key">{{ r.label }}</button>
+      </div>
+      <ng-container *ngIf="resolveResult === 'REJECTED'">
+        <label class="form-label">Lý do không bảo hành <span class="req">*</span></label>
+        <select class="form-select mb-2" [ngModel]="''" (ngModelChange)="resolveNote = $event">
+          <option value="" disabled>Chọn nhanh theo chính sách…</option>
+          <option *ngFor="let reason of rejectReasons" [value]="reason">{{ reason }}</option>
+        </select>
+      </ng-container>
+      <label class="form-label">Ghi chú cho khách <span class="req" *ngIf="resolveResult === 'REJECTED'">*</span></label>
+      <textarea class="form-control" rows="3" [(ngModel)]="resolveNote" placeholder="VD: Đã in lại chân đèn mới, gửi trả khách qua GHN"></textarea>
+      <div class="form-hint">Khách thấy kết quả và ghi chú khi tra cứu. Phiếu quay về trạng thái còn hiệu lực sau khi đóng yêu cầu.</div>
     </div>
     <div class="modal-footer">
       <button type="button" class="btn-cancel" (click)="resolving = null">Huỷ</button>
-      <button type="button" class="btn-save" [disabled]="saving || !resolveNote.trim()" (click)="confirmResolve()">Xác nhận đã xử lý</button>
+      <button type="button" class="btn-save" [disabled]="saving || (resolveResult === 'REJECTED' && !resolveNote.trim())" (click)="confirmResolve()">Đóng yêu cầu</button>
+    </div>
+  </div>
+</div>
+
+<!-- Tiếp nhận yêu cầu -->
+<div class="modal-overlay" *ngIf="processing as w" (click)="processing = null">
+  <div class="modal-box sm" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">Tiếp nhận yêu cầu {{ w.warrantyCode }}</h3>
+      <button type="button" class="close-btn" (click)="processing = null">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="notice-box warning" *ngIf="lastNote(w)">Khách báo: “{{ lastNote(w) }}”</div>
+      <p class="form-hint">Gọi khách theo số <b>{{ w.customerPhone }}</b> để xác nhận tình trạng và hướng dẫn gửi sản phẩm về showroom.</p>
+      <label class="form-label">Ghi chú cho khách</label>
+      <textarea class="form-control" rows="3" [(ngModel)]="processNote"></textarea>
+      <div class="form-hint">Phiếu chuyển sang "Đang xử lý". Khách thấy ghi chú này khi tra cứu.</div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn-cancel" (click)="processing = null">Huỷ</button>
+      <button type="button" class="btn-save" [disabled]="saving" (click)="confirmProcess()">Tiếp nhận</button>
     </div>
   </div>
 </div>

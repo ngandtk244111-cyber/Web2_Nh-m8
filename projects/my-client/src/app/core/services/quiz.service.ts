@@ -1,8 +1,15 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Observable, map } from 'rxjs';
 import { DecorStyleTag, QuizQuestion, StyleResult } from '../models/quiz.model';
 import { STYLE_QUIZ_QUESTIONS, STYLE_QUIZ_RESULTS } from '../data/quiz-data';
 import { environment } from '../../../environments/environment';
+
+export interface SavedQuizState {
+  answers: Record<number, DecorStyleTag>;
+  attemptId: string | null;
+  coinClaimed: boolean;
+}
 
 @Injectable({ providedIn: 'root' })
 export class QuizService {
@@ -20,6 +27,14 @@ export class QuizService {
       },
       error: (err) => console.warn('Failed to load style quiz, using default questions', err),
     });
+  }
+
+  loadSavedResult(): Observable<SavedQuizState | null> {
+    return this.http.get<{ data: { quizResult: SavedQuizState | null } }>(environment.apiUrl + '/me/data').pipe(map(res => res.data.quizResult));
+  }
+
+  saveResult(quizResult: SavedQuizState | null): Observable<unknown> {
+    return this.http.put(environment.apiUrl + '/me/data', { quizResult });
   }
 
   computeResult(answers: Record<number, DecorStyleTag>): StyleResult {

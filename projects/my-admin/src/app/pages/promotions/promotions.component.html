@@ -53,7 +53,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let c of visible()">
+        <tr *ngFor="let c of visible()" class="clickable" (click)="openView(c)">
           <td>
             <span class="coupon-code">{{ c.code }}</span>
             <span class="cell-sub">{{ c.description || 'Không có mô tả' }}</span>
@@ -71,7 +71,8 @@
           </td>
           <td>{{ c.endDate ? (c.endDate | date:'dd/MM/yyyy') : 'Không giới hạn' }}</td>
           <td><span class="status-badge" [ngClass]="statusView[c.status].cls">{{ statusView[c.status].label }}</span></td>
-          <td class="text-right">
+          <td class="text-right" (click)="$event.stopPropagation()">
+            <button type="button" class="action-btn sm" (click)="openView(c)"><i class="bi bi-eye"></i> Xem</button>
             <button type="button" class="action-btn sm" [class.danger]="c.active" [class.success]="!c.active"
               *ngIf="adminAuth.can('marketing.edit')" (click)="toggle(c)">
               <i class="bi" [ngClass]="c.active ? 'bi-pause-circle' : 'bi-play-circle'"></i> {{ c.active ? 'Tạm ngưng' : 'Bật lại' }}
@@ -88,15 +89,19 @@
   </div>
 </div>
 
-<!-- Tạo mã -->
+<!-- Tạo mã / xem chi tiết mã -->
 <div class="modal-overlay" *ngIf="showModal" (click)="showModal = false">
   <div class="modal-box" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h3 class="modal-title">Tạo mã giảm giá</h3>
+      <h3 class="modal-title">{{ viewing ? 'Chi tiết mã giảm giá' : 'Tạo mã giảm giá' }}</h3>
       <button type="button" class="close-btn" (click)="showModal = false">&times;</button>
     </div>
     <div class="modal-body">
-      <div class="row g-3">
+      <div class="notice-box info mb-3" *ngIf="viewing">
+        <i class="bi bi-info-circle"></i> Mã đã phát cho khách nên không sửa được — chỉ bật / tạm ngưng.
+        Đã dùng {{ viewing.usedCount }} / {{ viewing.limitCount || '∞' }} lượt. Muốn ưu đãi khác, hãy tạo mã mới.
+      </div>
+      <fieldset class="row g-3" [disabled]="!!viewing">
         <div class="col-md-6">
           <label class="form-label">Mã voucher <span class="req">*</span></label>
           <input class="form-control text-uppercase" [(ngModel)]="form.code" placeholder="VD: LUMEA10" maxlength="30">
@@ -126,11 +131,11 @@
           <input type="number" min="0" class="form-control" [(ngModel)]="form.limitCount">
           <div class="form-hint">0 = không giới hạn</div>
         </div>
-      </div>
+      </fieldset>
     </div>
     <div class="modal-footer">
-      <button type="button" class="btn-cancel" (click)="showModal = false">Huỷ</button>
-      <button type="button" class="btn-save" [disabled]="saving" (click)="save()"><i class="bi bi-save"></i> Tạo mã</button>
+      <button type="button" class="btn-cancel" (click)="showModal = false">{{ viewing ? 'Đóng' : 'Huỷ' }}</button>
+      <button type="button" class="btn-save" *ngIf="!viewing" [disabled]="saving" (click)="save()"><i class="bi bi-save"></i> Tạo mã</button>
     </div>
   </div>
 </div>

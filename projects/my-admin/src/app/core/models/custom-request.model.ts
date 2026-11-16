@@ -36,6 +36,8 @@ export interface CustomRequest {
   updatedAt: string;
   title: string;
   customerName: string;
+  customerAvatar?: string;
+  unreadStaff?: number;
   customerEmail: string;
   customerPhone?: string;
   status: CustomRequestStatus;
@@ -62,6 +64,7 @@ export interface QuoteItem {
   quantity: number;
   unitPrice: number;
   discount: number;
+  discountPercent?: number | null;
   lineTotal?: number;
 }
 
@@ -74,6 +77,7 @@ export interface Quote {
   subtotal: number;
   itemDiscountTotal: number;
   quoteDiscount: number;
+  quoteDiscountPercent?: number | null;
   total: number;
   estimatedDays: number;
   note?: string;
@@ -101,6 +105,7 @@ export interface DepositPolicy {
 export interface QuoteInput {
   items: QuoteItem[];
   quoteDiscount: number;
+  quoteDiscountPercent?: number | null;
   estimatedDays: number;
   note: string;
   depositOverride: { amount: number; reason: string } | null;

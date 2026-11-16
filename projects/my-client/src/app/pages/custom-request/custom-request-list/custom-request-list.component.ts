@@ -1,4 +1,4 @@
-import { Component, OnInit, effect } from '@angular/core';
+import { Input, Component, OnInit, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { CustomRequestService } from '../../../core/services/custom-request.service';
@@ -15,6 +15,7 @@ import { VndPipe } from '../../../shared/pipes/vnd.pipe';
   styleUrl: './custom-request-list.component.css'
 })
 export class CustomRequestListComponent implements OnInit {
+  @Input() embedded = false;
   requests: CustomRequest[] = [];
 
   constructor(

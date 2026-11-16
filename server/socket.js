@@ -1,6 +1,8 @@
 const { Server } = require('socket.io');
 const ChatMessage = require('./models/ChatMessage');
 const Order = require('./models/Order');
+const CustomRequest = require('./models/CustomRequest');
+const User = require('./models/User');
 const { adminIdFromToken, userIdFromToken } = require('./middleware/auth');
 const { adminHasPermission } = require('./utils/permissions');
 const { canWatchOrder, isLocked, recordFailure } = require('./utils/order-access');
@@ -50,7 +52,9 @@ function attachSocket(httpServer, corsOrigins) {
       io.to(sessionId).emit('chat:typing', { sessionId, typing: true, from: 'staff' });
       setTimeout(async () => {
         try {
-          const message = await ChatMessage.create({
+          if (!fromStaff && (!userId || sessionId !== 'user-' + userId)) return;
+        const customer = userId ? await User.findById(userId).select('fullName phoneNumber').lean() : null;
+        const message = await ChatMessage.create({
             sessionId, sender: 'staff', text: reply.text, links: reply.links, auto: true, readByStaff: true,
           });
           io.to(sessionId).emit('chat:typing', { sessionId, typing: false, from: 'staff' });
@@ -65,6 +69,23 @@ function attachSocket(httpServer, corsOrigins) {
   }
 
   io.on('connection', (socket) => {
+    socket.on('notifications:watch', async ({ userToken } = {}, acknowledge) => {
+      try {
+        const userId = await userIdFromToken(userToken);
+        if (userId) socket.join('user:' + userId);
+        if (typeof acknowledge === 'function') acknowledge({ success: !!userId });
+      } catch (err) { console.error('notifications:watch error', err.message); }
+    });
+    socket.on('custom-request:watch', async ({ id, userToken } = {}) => {
+      try {
+        const userId = await userIdFromToken(userToken);
+        if (!userId) return;
+        const request = await CustomRequest.findOne({ id }).lean();
+        if (!request) return;
+        const user = request.userId ? null : await User.findById(userId).select('email').lean();
+        if (request.userId ? String(request.userId) === String(userId) : !!user?.email && request.customerEmail === user.email) socket.join('custom-request:' + request.id);
+      } catch (err) { console.error('custom-request:watch error', err.message); }
+    });
     // Trang Tra cứu đơn: theo dõi trực tiếp 1 mã đơn, cùng điều kiện với GET /orders/by-number/:orderNumber
     // (chủ tài khoản hoặc đúng SĐT nhận hàng) vì sự kiện cập nhật chứa thông tin giao hàng.
     socket.on('order:watch', async ({ orderNumber, userToken, phone } = {}) => {
@@ -86,18 +107,25 @@ function attachSocket(httpServer, corsOrigins) {
 
     // Khách (my-client) vào phòng của cuộc chat mình — báo cho nhân viên khách này đang online,
     // và trả lại cho khách biết hiện có nhân viên trực hay không (chấm xanh trên khung chat).
-    socket.on('chat:join', (sessionId) => {
-      if (!sessionId) return;
-      socket.join(sessionId);
-      socket.data.sessionId = sessionId;
-      io.to(STAFF_ROOM).emit('chat:presence', { sessionId, online: true });
-      socket.emit('chat:staff-status', { online: staffOnline() });
+    socket.on('chat:join', async ({ sessionId, userToken } = {}, acknowledge) => {
+      try {
+        const userId = await userIdFromToken(userToken);
+        if (!userId || sessionId !== 'user-' + userId) { if (typeof acknowledge === 'function') acknowledge({ success: false }); return; }
+        socket.join(sessionId);
+        socket.data.sessionId = sessionId;
+        socket.data.userId = userId;
+        io.to(STAFF_ROOM).emit('chat:presence', { sessionId, online: true });
+        socket.emit('chat:staff-status', { online: staffOnline() });
+        if (typeof acknowledge === 'function') acknowledge({ success: true });
+      } catch (err) { console.error('chat:join error', err.message); }
     });
 
     // Nhân viên (my-admin) vào phòng chung — chỉ khi token hợp lệ.
     socket.on('chat:staff-join', async (adminToken) => {
       const adminId = await adminIdFromToken(adminToken);
       if (!adminId) return;
+      if (await adminHasPermission(adminId, 'orders.view')) socket.join('warranty');
+      if (await adminHasPermission(adminId, 'custom3d.view')) socket.join('custom3d');
       // Nhân viên nội dung: phòng riêng nhận báo bình luận Tin tức — không vào phòng chat với khách.
       if (await adminHasPermission(adminId, 'content.view')) socket.join(CONTENT_ROOM);
       if (!(await adminHasPermission(adminId, 'customers.view'))) return;
@@ -144,7 +172,7 @@ function attachSocket(httpServer, corsOrigins) {
           text: clean,
           ...(fromStaff
             ? { sender: 'staff', staffId: adminId, readByStaff: true }
-            : { sender: 'customer', userId, customerName: customerName || null, customerPhone: customerPhone || null }),
+            : { sender: 'customer', userId, customerName: customer?.fullName || null, customerPhone: customer?.phoneNumber || null }),
         });
         io.to([sessionId, STAFF_ROOM]).emit('chat:message', message);
         if (!fromStaff) scheduleAutoReply(sessionId, clean);

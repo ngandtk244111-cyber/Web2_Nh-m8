@@ -10,7 +10,7 @@ export interface Address {
   isDefault: boolean;
 }
 
-/** Đơn vị hành chính VN — lấy từ API công khai provinces.open-api.vn (tham khảo AuraPC-main). */
+
 export interface VNLocation {
   name: string;
   code: number;

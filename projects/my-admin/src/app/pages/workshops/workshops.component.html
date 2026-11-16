@@ -55,7 +55,6 @@
           <th class="col-contact">Liên hệ</th>
           <th>Nhóm hàng nhận làm</th>
           <th class="text-center col-count">SP phụ trách</th>
-          <th class="col-last">Lần giao gần nhất</th>
           <th class="col-status">Trạng thái</th>
         </tr>
       </thead>
@@ -73,13 +72,6 @@
             <span class="spec-chip" *ngFor="let s of w.specialties">{{ specialtyNames[s] || s }}</span>
           </td>
           <td class="text-center cell-strong">{{ productCount(w) }}</td>
-          <td>
-            <ng-container *ngIf="lastReceipt(w) as r; else noReceipt">
-              {{ r.createdAt | date:'dd/MM/yyyy' }}
-              <span class="cell-sub">{{ r.productName }} × {{ r.qty }}</span>
-            </ng-container>
-            <ng-template #noReceipt><span class="cell-sub">Chưa giao lần nào</span></ng-template>
-          </td>
           <td>
             <span class="status-badge" [ngClass]="w.active !== false ? 'status-green' : 'status-gray'">{{ w.active !== false ? 'Đang hợp tác' : 'Tạm ngưng' }}</span>
           </td>

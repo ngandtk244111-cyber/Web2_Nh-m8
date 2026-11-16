@@ -59,7 +59,7 @@ export interface InvoiceRequest {
 /** Link hoá đơn PDF của đơn (mở trong trình duyệt; download=true để tải file). Thẻ <a>/tab mới không gửi
  *  header Authorization nên token đăng nhập đi kèm qua ?token=. */
 export function invoiceUrl(orderNumber: string, token?: string | null, download = false): string {
-  const params = new URLSearchParams();
+  const params = new URLSearchParams({ document: 'confirmation' });
   if (token) params.set('token', token);
   if (download) params.set('download', '1');
   const q = params.toString();

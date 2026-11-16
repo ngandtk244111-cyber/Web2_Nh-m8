@@ -1,7 +1,6 @@
 # LAM_A_MAIN.md
 
 > Bản đồ kiến trúc của **Lam-a-main** (project CHÍNH — Deco3D, nền tảng TMĐT nội thất decor nhỏ gọn & in 3D theo yêu cầu).
-> Khác với `REFERENCE_ARCHITECTURE.md` (khảo sát AuraPC-main) và `vita.md` (khảo sát VitaCare-main) — hai file đó mô tả project THAM KHẢO, còn file này mô tả chính Lam-a-main tại thời điểm viết.
 > Ngày cập nhật: 2026-09-22 (đính chính mục Auth — bản trước ghi nhầm JWT; bổ sung admin auth, ATM payment, verify giá server-side, AI chatbot dùng Gemini thật).
 
 ---
@@ -17,12 +16,12 @@
 | Routing | `provideRouter` + `loadComponent()` cho mọi route (không route nào eager ngoài `AppComponent`) |
 | Backend | Node.js, Express 5, 1 backend duy nhất (`server/`, port 4300) phục vụ cả `my-client` lẫn `my-admin` |
 | Database | MongoDB (`mongodb://127.0.0.1:27017/deco3d`) qua Mongoose 8 |
-| Auth | Số điện thoại + mật khẩu (bcrypt), **không dùng JWT/token** — server tin thẳng `userId`/`adminId` client gửi lên (tham khảo VitaCare-main). OTP chỉ dùng xác thực SĐT lúc đăng ký/quên mật khẩu (dev mode trả thẳng mã OTP, chưa gắn SMS provider thật) |
+| Auth | Số điện thoại + mật khẩu (bcrypt), **không dùng JWT/token** — server tin thẳng `userId`/`adminId` client gửi lên. OTP chỉ dùng xác thực SĐT lúc đăng ký/quên mật khẩu (dev mode trả thẳng mã OTP, chưa gắn SMS provider thật) |
 | Realtime | Socket.IO (`socket.io-client` FE, `server/socket.js` BE) — dùng cho chat hỗ trợ trực tiếp |
 | Thanh toán | MoMo + ZaloPay (sandbox), verify giao dịch qua IPN/return URL |
 | 3D | Three.js (`GLTFLoader`, `OrbitControls`) — customizer sản phẩm + phòng 3D "Shop The Room", hỗ trợ cả model thật (`.glb`) lẫn fallback procedural geometry |
 | Styling | **Plain CSS thuần** — Tailwind đã bị gỡ bỏ hoàn toàn khỏi toolchain, `styles.css` là CSS tĩnh "đóng băng" từ lần build Tailwind cuối cùng, các class Tailwind trong HTML (`bg-amber-400`, `text-neutral-900`...) vẫn hoạt động vì được định nghĩa thủ công trong `styles.css` |
-| Theme | Theme tối (đen/cam/xanh), tham khảo bảng màu + font của AuraPC-main (`--accent-orange: #FF6D2D`, `--accent-blue: #2055AF`, font Satoshi + Inter) |
+| Theme | Theme tối (đen/cam/xanh), (`--accent-orange: #FF6D2D`, `--accent-blue: #2055AF`, font Satoshi + Inter) |
 | Testing | Karma/Jasmine (scaffold mặc định, chưa viết test case cụ thể) |
 
 **Không dùng**: NgRx/Redux, SCSS/Less, Tailwind (đã gỡ), NgModule, SSR.
@@ -44,12 +43,10 @@ Lam-a-main/
 │   ├── utils/           # OTP, MoMo, ZaloPay helper
 │   └── seed/            # Script seed / import / sao lưu MongoDB
 ├── angular.json         # Định nghĩa 2 Angular project trong 1 workspace
-├── REFERENCE_ARCHITECTURE.md  # Bản đồ kiến trúc AuraPC-main (tham khảo)
-├── vita.md                    # Bản đồ kiến trúc VitaCare-main (tham khảo)
 └── LAM_A_MAIN.md               # File này
 ```
 
-- **Không có shared library** giữa `my-client` và `my-admin` — mỗi app tự có bản sao `core/services`, `core/models`, `shared/pipes`, `components/icon` riêng (trùng với tiền lệ ở cả AuraPC-main lẫn VitaCare-main: 2 app độc lập, code trùng nhau được chấp nhận thay vì tách thư viện dùng chung).
+- **Không có shared library** giữa `my-client` và `my-admin` — mỗi app tự có bản sao `core/services`, `core/models`, `shared/pipes`, `components/icon` riêng.
 - **`my-admin` từng là 1 route (`/admin`) nằm trong `my-client`**, sau đó được tách hẳn thành project Angular riêng (lý do: tách biệt rõ ràng khách hàng ↔ quản trị, tránh admin code lọt vào bundle khách hàng). Mọi liên kết chéo giữa 2 app giờ dùng `<a [href]="...AppUrl">` (link ngoài), không còn `routerLink` nội bộ được.
 - Không có SSR — thuần SPA.
 
@@ -72,8 +69,7 @@ projects/my-client/src/app/
 │   └── recently-viewed-section/
 ├── core/
 │   ├── data/quiz-data.ts          # Câu hỏi/kết quả Trắc Nghiệm Phong Cách Decor (tĩnh, không cần backend)
-│   ├── models/                    # TypeScript interface thuần, đặt tách biệt (khác AuraPC/Vita —
-│   │                                 2 project tham khảo để interface cạnh service, Lam-a-main tách riêng)
+│   ├── models/                    # TypeScript interface thuần, đặt tách biệt
 │   ├── services/                  # ~19 service, xem mục 7
 │   └── interceptors/auth.interceptor.ts   # Tự gắn Bearer token vào request tới apiUrl
 ├── shared/
@@ -89,7 +85,7 @@ projects/my-client/src/app/
 ├── environments/environment.ts    # apiUrl, socketUrl, adminAppUrl
 ```
 
-**Quy ước**: `pages/` gắn với 1 route cụ thể, `components/` dùng lại xuyên route. Naming `feature.component.ts` (không có barrel `index.ts` như AuraPC).
+**Quy ước**: `pages/` gắn với 1 route cụ thể, `components/` dùng lại xuyên route. Naming `feature.component.ts` (không dùng barrel `index.ts`).
 
 ---
 
@@ -108,7 +104,7 @@ projects/my-admin/src/app/
 ├── environments/environment.ts     # apiUrl, socketUrl, clientAppUrl
 ```
 
-- **Không có route guard / trang đăng nhập riêng cho admin** — khác AuraPC-main (có `admin-auth.guard.ts` + layout wrapper). Ai có link `localhost:4201` đều vào được thẳng dashboard. Đây là khoảng trống bảo mật đã biết, chưa được yêu cầu xử lý.
+- **Không có route guard / trang đăng nhập riêng cho admin**. Ai có link `localhost:4201` đều vào được thẳng dashboard. Đây là khoảng trống bảo mật đã biết, chưa được yêu cầu xử lý.
 - Tab "Sản Phẩm" tách 2 sub-tab riêng biệt: **Sản Phẩm Có Sẵn** (READY_STOCK) và **Sản Phẩm Tùy Biến In 3D** (PRINT_ON_DEMAND) — khớp với cách `my-client` tách `/catalog` (chỉ ready-stock) và `/customizer-3d` (chỉ customizable).
 - Nút "Thêm sản phẩm mới" hiện chỉ set cờ `showAddProductModal = true` nhưng **chưa có modal form thật** — placeholder chưa hoàn thiện.
 
@@ -145,7 +141,7 @@ Chỉ 1 route thật: `'' → AdminComponent`. Toàn bộ điều hướng nội
 - Dùng directive cũ `*ngIf`/`*ngFor` (không phải `@if`/`@for` như 2 project tham khảo).
 - State cục bộ: `signal()` trong service (là "store" thực chất) + biến class thường trong component.
 - **Pattern đọc dữ liệu bất đồng bộ**: mọi service dữ liệu (Product/Room/CustomRequest/Community/News) fetch từ backend trong `constructor()`, populate 1 `signal`. Component cần snapshot dữ liệu lúc khởi tạo (thay vì bind trực tiếp signal trong template) dùng `effect()` trong constructor để tự đồng bộ lại khi signal đổi — KHÔNG dùng `ngOnInit` đọc `signal()` một lần (vì lúc đó dữ liệu backend có thể chưa kịp về). Xem ví dụ ở `customizer-3d.component.ts`, `shop-the-room.component.ts`, `home.component.ts`.
-- Overlay toàn cục (cart-drawer, modal, toast, quick-view) đặt ở `AppComponent`, không lặp lại per-page — giống pattern AuraPC.
+- Overlay toàn cục (cart-drawer, modal, toast, quick-view) đặt ở `AppComponent`, không lặp lại per-page.
 
 ---
 
@@ -182,7 +178,7 @@ Chỉ 1 route thật: `'' → AdminComponent`. Toàn bộ điều hướng nội
 > **Đính chính (2026-09-22)**: mục này trước đây mô tả sai — ghi là dùng JWT nhưng code thật KHÔNG dùng JWT/token nào cả. Đã sửa lại theo đúng code hiện tại.
 
 **Client (`my-client`):**
-1. Đăng nhập bằng **số điện thoại + mật khẩu** (bcrypt), KHÔNG dùng JWT/token — tham khảo đúng cơ chế của VitaCare-main: backend trả thẳng object `user` (đã bỏ `password`) sau khi login/register thành công.
+1. Đăng nhập bằng **số điện thoại + mật khẩu** (bcrypt), KHÔNG dùng JWT/token — backend trả thẳng object `user` (đã bỏ `password`) sau khi login/register thành công.
 2. OTP chỉ dùng để **xác thực số điện thoại lúc đăng ký / quên mật khẩu** (`OTP_DEV_MODE=true` trả thẳng mã trong response, chưa gắn SMS thật) — không phải cơ chế đăng nhập chính.
 3. `AuthService` lưu nguyên `user` vào `localStorage['deco3d_user']`, giữ trong 1 signal `currentUser`. **Không có interceptor** (`core/interceptors/` không tồn tại) — các request cần xác thực tự gửi kèm `userId` trong body/query, server tin thẳng giá trị này (`middleware/auth.js`: `attachUserId`/`requireUserId`).
 4. Không có route guard — trang `account` tự kiểm tra `authService.currentUser()`.
@@ -212,9 +208,9 @@ server/
 ```
 
 - Pattern route: `async/await` + `try/catch`, log lỗi, trả JSON `{ success: boolean, ... }` hoặc `{ success: false, error }`.
-- **Không tách `utils/` cho business logic phức tạp** như AuraPC-main (build filter, normalize) — route tự xử lý trực tiếp, các route hiện tại đơn giản nên chưa cần tách.
+- **Không tách `utils/` cho business logic phức tạp** — route tự xử lý trực tiếp, các route hiện tại đơn giản nên chưa cần tách.
 - **`id` field**: mọi document (Product/Room/CustomRequest/CommunityPost/NewsArticle) có field `id: String` tường minh riêng biệt với `_id` của Mongo — để khớp 1:1 với interface TypeScript phía frontend (vốn dùng `id: string`) mà không cần sửa bất kỳ component nào. `_id`/`__v` vẫn tồn tại trong response nhưng bị frontend bỏ qua.
-- **Bảo mật giá**: order tạo qua `POST /api/orders` nhận thẳng `total`/`subtotal` từ client, **KHÔNG verify lại giá server-side** — khác AuraPC-main (verify giá từ DB khi thanh toán). Rủi ro cần lưu ý nếu có thanh toán thật.
+- **Bảo mật giá**: order tạo qua `POST /api/orders` nhận thẳng `total`/`subtotal` từ client, **KHÔNG verify lại giá server-side**. Rủi ro cần lưu ý nếu có thanh toán thật.
 
 ---
 
@@ -236,16 +232,16 @@ Component → service (signal cục bộ) → HttpClient → server/routes/*.js 
 ## 11. Layout & Shared Components
 
 - `AppComponent` (my-client) = layout gốc duy nhất: header + `<router-outlet>` (có class `route-fade`/`route-fade--leaving` để fade nhẹ khi chuyển route) + footer + toàn bộ overlay (cart-drawer, ai-modal, login-modal, support-chat-widget, product-quick-view, toast).
-- `AppComponent` (my-admin) = tối giản, chỉ `<router-outlet>`; toàn bộ layout (sidebar/topbar) nằm trong `AdminComponent` chứ không tách `layout/` riêng như AuraPC-main.
+- `AppComponent` (my-admin) = tối giản, chỉ `<router-outlet>`; toàn bộ layout (sidebar/topbar) nằm trong `AdminComponent`.
 - Icon: tự vẽ SVG trong `components/icon/icon.component.html` (switch theo `name`), không dùng icon-font/thư viện ngoài — mỗi icon mới phải thêm `<ng-container *ngIf="name === '...'">` thủ công.
 
 ---
 
 ## 12. CSS / Styling Pattern
 
-- **Không dùng Tailwind CLI/PostCSS nữa** — `styles.css` là ~3000+ dòng CSS tĩnh "đóng băng" từ lần build Tailwind cuối, cộng thêm 1 khối `:root` design token (spacing/radius/shadow/z-index — tham khảo cấu trúc VitaCare) và token màu/font (tham khảo AuraPC) được viết tay ở đầu file.
+- **Không dùng Tailwind CLI/PostCSS nữa** — `styles.css` là ~3000+ dòng CSS tĩnh "đóng băng" từ lần build Tailwind cuối, cộng thêm 1 khối `:root` design token (spacing/radius/shadow/z-index) và token màu/font được viết tay ở đầu file.
 - **HTML vẫn giữ nguyên class kiểu Tailwind** (`bg-amber-400`, `text-neutral-900`, `bg-[#F6F5F2]`...) — khi cần đổi theme, sửa TRỰC TIẾP giá trị trong rule đã compile của `styles.css` thay vì sửa từng file HTML, miễn là ý nghĩa ngữ nghĩa của class đó nhất quán toàn app (một class dùng cho 2 vai trò khác nhau ở 2 nơi — ví dụ `bg-neutral-900` từng vừa là nút CTA vừa là nền sidebar admin — phải tách ra class/màu riêng, không thể remap chung).
-- Theme hiện tại: nền đen (`#000000`/`#0a0a0a`/`#111111`), chữ trắng/xám, accent cam `#FF6D2D` (thay cho vàng gold cũ), accent xanh `#2055AF` cho nút phụ, font **Satoshi** (heading) + **Inter** (nội dung) — chuyển thể từ bảng màu/font của AuraPC-main.
+- Theme hiện tại: nền đen (`#000000`/`#0a0a0a`/`#111111`), chữ trắng/xám, accent cam `#FF6D2D` (thay cho vàng gold cũ), accent xanh `#2055AF` cho nút phụ, font **Satoshi** (heading) + **Inter** (nội dung).
 - Component có màu/token riêng ngoài `styles.css` (ví dụ `footer.component.css`, `style-quiz.component.css`) tự khai `:root { --ft-accent: ...; }` cục bộ, không phụ thuộc biến global.
 - Hiệu ứng: `.reveal-up/-left/-right/-scale` (scroll-reveal qua `IntersectionObserver`), `.fly-to-cart-clone` + `.cart-bump` (bay ảnh vào giỏ hàng), `.route-fade` (chuyển trang) — tất cả định nghĩa trong `styles.css`, áp dụng qua class hoặc directive `appScrollReveal`.
 
@@ -255,7 +251,7 @@ Component → service (signal cục bộ) → HttpClient → server/routes/*.js 
 
 1. **2 Angular project độc lập** (`my-client`/`my-admin`), không thư viện dùng chung, code trùng lặp có chủ đích.
 2. **Backend monolith gọn** (`server/index.js` mount route theo domain) phục vụ cả 2 FE, JWT + OTP, có interceptor tự động gắn JWT ở `my-client`.
-3. **`effect()` để đồng bộ signal bất đồng bộ vào state component** — pattern bắt buộc phải dùng cho MỌI nơi từng đọc `service.signal()` một lần lúc khởi tạo (khác AuraPC/Vita vì ở đó phần lớn dữ liệu đã có sẵn đồng bộ hoặc bind trực tiếp signal trong template).
+3. **`effect()` để đồng bộ signal bất đồng bộ vào state component** — pattern bắt buộc phải dùng cho MỌI nơi từng đọc `service.signal()` một lần lúc khởi tạo.
 4. **`id` field tường minh** trên mọi Mongoose model để khớp interface TypeScript có sẵn, tránh phải sửa hàng loạt file frontend khi thêm backend.
 5. **CSS "đóng băng"**: đổi theme = sửa giá trị trong `styles.css`, không sửa class trong HTML — nhưng phải cẩn thận class nào bị dùng đa vai trò.
 6. **Sản phẩm có sẵn ↔ tùy biến in 3D là 2 danh mục tách biệt hoàn toàn** (route, trang quản lý, computed signal riêng: `readyStockProducts` vs `customizableProducts`), không lọc chung 1 danh sách.
@@ -277,8 +273,6 @@ Component → service (signal cục bộ) → HttpClient → server/routes/*.js 
 | `server/index.js` | Mount toàn bộ route, CORS, error handler |
 | `server/middleware/auth.js` | JWT middleware (chỉ có user, không có admin) |
 | `server/seed/seed.js` | Nạp dữ liệu mẫu vào MongoDB |
-| `REFERENCE_ARCHITECTURE.md` | Bản đồ AuraPC-main (tham khảo màu/font/pattern) |
-| `vita.md` | Bản đồ VitaCare-main (tham khảo cấu trúc CSS/layout) |
 
 ---
 
@@ -287,14 +281,14 @@ Component → service (signal cục bộ) → HttpClient → server/routes/*.js 
 **Đã xong:**
 - Tách `my-client`/`my-admin` thành 2 project Angular độc lập, build/serve riêng.
 - Backend thật cho 10 domain (User, Order, Warranty, OtpCode, ChatMessage, Product, Room, CustomRequest, CommunityPost, NewsArticle) — CRUD qua MongoDB, có seed script.
-- Retheme toàn site sang theme tối/cam/xanh + font Satoshi/Inter (tham khảo AuraPC-main).
+- Retheme toàn site sang theme tối/cam/xanh + font Satoshi/Inter.
 - Tách rạch ròi "Sản phẩm có sẵn" ↔ "Tùy biến in 3D" ở cả client (catalog/customizer) và admin (2 sub-tab).
 - Hạ tầng hiệu ứng UX: toast, cart-fly animation, product quick-view, scroll-reveal, page transition.
 - Tính năng mới: Trắc Nghiệm Phong Cách Decor (`/style-quiz`).
 - 3D: customizer sản phẩm + phòng "Shop The Room" hỗ trợ model `.glb` thật lẫn procedural fallback.
 - Thanh toán MoMo/ZaloPay/ATM (qua cổng MoMo, `requestType: payWithATM`) sandbox + VietQR (ảnh QR tĩnh qua vietqr.io), tra cứu đơn hàng/bảo hành không cần đăng nhập.
-- Feature Tài khoản đầy đủ (tách shell + 4 sub-component: Hồ sơ, Đơn hàng, Sổ địa chỉ, Voucher) — hồ sơ mở rộng (giới tính/ngày sinh/avatar upload), sổ địa chỉ CRUD với cascading tỉnh/huyện/xã (API hành chính VN công khai), đơn hàng có filter theo trạng thái + tìm kiếm. Tham khảo AuraPC-main (`account-page.component.ts`, `address.service.ts`, route `/profile`/`/avatar`/`/addresses`).
-- **AI Idea Assistant dùng LLM thật** (Google Gemini free tier, `server/routes/aiRoutes.js`) thay cho keyword-matching giả trước đây — có catalog-injection (gợi ý sản phẩm READY_STOCK có thật kèm link) tham khảo pattern AruBot của AuraPC-main.
+- Feature Tài khoản đầy đủ (tách shell + 4 sub-component: Hồ sơ, Đơn hàng, Sổ địa chỉ, Voucher) — hồ sơ mở rộng (giới tính/ngày sinh/avatar upload), sổ địa chỉ CRUD với cascading tỉnh/huyện/xã (API hành chính VN công khai), đơn hàng có filter theo trạng thái + tìm kiếm.
+- **AI Idea Assistant dùng LLM thật** (Google Gemini free tier, `server/routes/aiRoutes.js`) thay cho keyword-matching giả trước đây — có catalog-injection (gợi ý sản phẩm READY_STOCK có thật kèm link).
 - **Bảo mật giá đơn hàng**: `POST /api/orders` tính lại giá từ sản phẩm thật trong DB (`server/utils/pricing.js`), không tin số tiền client gửi lên.
 - **Admin có đăng nhập** (username/password, `pages/login/` + `adminAuthGuard`), các route ghi dữ liệu admin-only đã gắn `requireAdminId`. Xem mục 8 để biết giới hạn (không phải bảo mật thật, chỉ tin id client gửi lên — quyết định có chủ đích để nhất quán với auth hiện có).
 

@@ -11,9 +11,16 @@ const warrantySchema = new mongoose.Schema({
   customerPhone: { type: String, required: true },
   purchasedAt: { type: Date, required: true },
   warrantyMonths: { type: Number, default: 12 },
-  status: { type: String, enum: ['ACTIVE', 'CLAIMED', 'EXPIRED'], default: 'ACTIVE' },
+  // CLAIMED = khách vừa gửi yêu cầu, chờ tiếp nhận; PROCESSING = shop đã tiếp nhận, đang liên hệ / xử lý.
+  status: { type: String, enum: ['ACTIVE', 'CLAIMED', 'PROCESSING', 'EXPIRED'], default: 'ACTIVE' },
   claimHistory: [{
     note: String,
+    /** Ai viết dòng này (dòng cũ trước khi có trường này để trống). */
+    by: { type: String, enum: ['CUSTOMER', 'STAFF', null], default: null },
+    /** Ảnh khách chụp tình trạng sản phẩm khi gửi yêu cầu. */
+    images: { type: [String], default: [] },
+    /** Kết quả khi shop đóng yêu cầu. */
+    result: { type: String, enum: ['REPAIR', 'REPRINT', 'REPLACE', 'REJECTED', null], default: null },
     createdAt: { type: Date, default: Date.now },
   }],
   /** Ghi chú nội bộ của nhân viên (kể cả nhật ký gia hạn) — không trả về cho khách khi tra cứu. */

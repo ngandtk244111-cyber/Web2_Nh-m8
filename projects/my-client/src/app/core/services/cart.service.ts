@@ -164,8 +164,9 @@ export class CartService {
   }
 
   private syncFromAccount(): void {
+    const owner = this.auth.currentUser()?._id;
     this.userData.load().subscribe({
-      next: data => this.applyAccountData(data),
+      next: data => { if (owner === this.auth.currentUser()?._id) this.applyAccountData(data); },
       error: err => console.warn('Failed to load cart', err),
     });
   }

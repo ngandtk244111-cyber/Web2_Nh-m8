@@ -23,7 +23,6 @@ const emptyForm = () => ({
   excerpt: '',
   contentHtml: '',
   coverImage: '',
-  videoUrl: '',
   readTime: '5 phút đọc',
   authorName: 'Luméa Editorial',
   authorRole: 'Biên tập viên Luméa',
@@ -31,7 +30,7 @@ const emptyForm = () => ({
   featured: false,
 });
 
-/** Soạn / sửa bài tin tức — theo blogdetail của Vita: cột trái nội dung, cột phải ảnh bìa & thông tin. */
+
 @Component({
   selector: 'app-article-form',
   standalone: true,
@@ -103,7 +102,6 @@ export class ArticleFormComponent implements OnInit {
       excerpt: a.excerpt || '',
       contentHtml: markdownToHtml(a.content || ''),
       coverImage: a.coverImage || '',
-      videoUrl: a.videoUrl || '',
       readTime: a.readTime || '',
       authorName: a.author?.name || '',
       authorRole: a.author?.role || '',
@@ -148,10 +146,6 @@ export class ArticleFormComponent implements OnInit {
       this.toast.warning('Vui lòng nhập tiêu đề và nội dung bài viết');
       return;
     }
-    if (f.videoUrl.trim() && !/^https?:\/\//.test(f.videoUrl.trim())) {
-      this.toast.warning('Link video phải bắt đầu bằng http:// hoặc https://');
-      return;
-    }
     const editing = this.editing;
     const payload = {
       title: f.title.trim(),
@@ -159,7 +153,6 @@ export class ArticleFormComponent implements OnInit {
       excerpt: f.excerpt.trim(),
       content,
       coverImage: f.coverImage.trim(),
-      videoUrl: f.videoUrl.trim() || undefined,
       readTime: f.readTime.trim(),
       featured: f.featured,
       tags: f.tags.split(',').map(t => t.trim()).filter(Boolean),

@@ -1,9 +1,14 @@
 const multer = require('multer');
+const mongoose = require('mongoose');
+const UserData = require('../models/UserData');
+const CustomRequest = require('../models/CustomRequest');
 const Product = require('../models/Product');
 const ProductImage = require('../models/ProductImage');
 const Order = require('../models/Order');
 const AdminConfig = require('../models/AdminConfig');
 const NewsComment = require('../models/NewsComment');
+const CommunityPost = require('../models/CommunityPost');
+const Warranty = require('../models/Warranty');
 const { validId } = require('../middleware/auth');
 
 const upload = multer({
@@ -49,14 +54,18 @@ function productImageId(url) {
 function isProductImageUsed(id) {
   const pattern = new RegExp(`${PRODUCT_IMAGE_PATH}${id}$`);
   return Promise.all([
-    Product.exists({ images: pattern }),
+    Product.exists({ $or: [{ images: pattern }, { 'reviews.images': pattern }] }),
     // Đơn cũ giữ bản sao sản phẩm, vẫn hiển thị ảnh tại thời điểm đặt hàng.
     Order.exists({ 'items.product.images': pattern }),
     // Banner dùng chung kho ảnh này khi admin tải ảnh lên ở tab Banner.
     AdminConfig.exists({ key: 'banners', 'value.imageUrl': pattern }),
     // Shop trả lời bình luận Tin tức kèm ảnh cũng lưu ở kho ảnh này.
     NewsComment.exists({ imageUrl: pattern }),
-  ]).then(([product, order, banner, comment]) => !!(product || order || banner || comment));
+    CommunityPost.exists({ imageUrl: pattern }),
+    Warranty.exists({ 'claimHistory.images': pattern }),
+    UserData.exists({ 'cart.customProduct.images': pattern }),
+    CustomRequest.exists({ $or: [{ customerImages: pattern }, { aiConceptImage: pattern }] }),
+  ]).then(references => references.some(Boolean));
 }
 
 /** Xoá các ảnh trong `urls` đã không còn sản phẩm, đơn hàng hay banner nào dùng. Lỗi dọn dẹp không làm hỏng thao tác chính. */
@@ -70,4 +79,33 @@ async function removeUnusedProductImages(urls) {
   }
 }
 
-module.exports = { IMAGE_TYPES, INVALID_TYPE_ERROR, uploadImage, sendStoredImage, removeUnusedProductImages, isProductImageUsed };
+// Video đánh giá có thể lớn hơn giới hạn document MongoDB: lưu theo chunk bằng GridFS.
+function reviewVideos() { return new mongoose.mongo.GridFSBucket(mongoose.connection.db, { bucketName: 'reviewVideos' }); }
+async function saveReviewVideo(buffer, uploadedBy, id) {
+  const bucket = reviewVideos();
+  const stream = bucket.openUploadStreamWithId(id ? new mongoose.Types.ObjectId(id) : new mongoose.Types.ObjectId(), 'review.mp4', { metadata: { uploadedBy, contentType: 'video/mp4' } });
+  await new Promise((resolve, reject) => { stream.on('finish', resolve); stream.on('error', reject); stream.end(buffer); });
+  return '/api/products/review-videos/' + stream.id;
+}
+async function sendReviewVideo(req, res) {
+  const id = validId(req.params.videoId);
+  const file = id && await mongoose.connection.db.collection('reviewVideos.files').findOne({ _id: new mongoose.Types.ObjectId(id) });
+  if (!file) return res.status(404).json({ success: false, error: 'Không tìm thấy video' });
+  let start = 0, end = file.length - 1;
+  if (req.headers.range) {
+    const match = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range);
+    if (match && (match[1] || match[2])) {
+      start = match[1] ? Number(match[1]) : Math.max(0, file.length - Number(match[2]));
+      end = match[1] && match[2] ? Math.min(Number(match[2]), end) : end;
+    }
+    if (!match || (!match[1] && !match[2]) || start > end || start >= file.length) return res.status(416).set('Content-Range', 'bytes */' + file.length).end();
+    res.status(206).set('Content-Range', 'bytes ' + start + '-' + end + '/' + file.length);
+  }
+  res.set({ 'Content-Type': 'video/mp4', 'Content-Length': String(end - start + 1), 'Accept-Ranges': 'bytes', 'Cache-Control': 'public, max-age=31536000, immutable', 'X-Content-Type-Options': 'nosniff' });
+  const stream = reviewVideos().openDownloadStream(file._id, { start, end: end + 1 });
+  stream.on('error', () => res.destroy());
+  res.on('close', () => stream.destroy());
+  stream.pipe(res);
+}
+
+module.exports = { saveReviewVideo, sendReviewVideo, IMAGE_TYPES, INVALID_TYPE_ERROR, uploadImage, sendStoredImage, removeUnusedProductImages, isProductImageUsed };

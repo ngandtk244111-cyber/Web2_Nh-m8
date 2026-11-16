@@ -62,12 +62,7 @@ const COLOR = {
   green: '#2D6A4F',
 };
 
-/**
- * Bản đồ Luméa trên Dashboard — ý tưởng từ dashboard-vn-map của my-admin-vita:
- *  - "Đơn hàng theo tỉnh": vòng tròn theo số đơn, bấm để xem doanh thu & danh sách đơn.
- *  - "Mạng lưới Luméa": showroom + xưởng/đối tác cung ứng theo địa chỉ.
- * Leaflet chạy ngoài Angular zone, chỉ quay lại zone khi người dùng bấm chọn.
- */
+
 @Component({
   selector: 'app-lumea-map',
   standalone: true,
@@ -121,14 +116,12 @@ export class LumeaMapComponent implements AfterViewInit, OnChanges, OnDestroy {
         scrollWheelZoom: false,
         // Zoom nguyên: zoom lẻ (0.25) bắt Leaflet co giãn ảnh tile → chữ và đường biên bị mờ
         zoomSnap: 1,
-        // Như my-admin-vita: không cho thu nhỏ ra cả thế giới hay kéo lạc khỏi VN
         minZoom: 5,
         maxBounds: [[4, 97], [27, 115]],
         maxBoundsViscosity: 0.8,
         attributionControl: true,
       });
       this.map.fitBounds(VN_BOUNDS);
-      // Tile OpenStreetMap chuẩn (giống my-admin-vita) — không cần API key
       L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
         maxZoom: 18,

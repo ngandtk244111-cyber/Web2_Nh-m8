@@ -15,6 +15,7 @@ const quoteItemSchema = new mongoose.Schema({
   quantity: { type: Number, required: true },
   unitPrice: { type: Number, required: true },
   discount: { type: Number, default: 0 },
+  discountPercent: { type: Number, default: null },
   lineTotal: { type: Number, required: true },
 }, { _id: false });
 
@@ -31,6 +32,7 @@ const quoteSchema = new mongoose.Schema({
   subtotal: { type: Number, required: true },
   itemDiscountTotal: { type: Number, default: 0 },
   quoteDiscount: { type: Number, default: 0 },
+  quoteDiscountPercent: { type: Number, default: null },
   total: { type: Number, required: true },
   estimatedDays: { type: Number, required: true },
   note: { type: String, default: '' },

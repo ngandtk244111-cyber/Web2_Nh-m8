@@ -92,9 +92,9 @@ router.delete('/flash-sale-reminder', requireUserId, async (req, res) => {
 });
 
 // PUT /api/notifications/:id/read
-router.put('/:id/read', async (req, res) => {
+router.put('/:id/read', attachUserId, async (req, res) => {
   try {
-    const notification = await Notification.findByIdAndUpdate(req.params.id, { read: true }, { new: true });
+    const notification = await Notification.findOneAndUpdate({ $and: [{ _id: req.params.id }, visibleQuery(req.userId)] }, { read: true }, { new: true });
     if (!notification) return res.status(404).json({ success: false, error: 'Không tìm thấy thông báo.' });
     res.json({ success: true, notification });
   } catch (err) {

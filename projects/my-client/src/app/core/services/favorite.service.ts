@@ -23,10 +23,12 @@ export class FavoriteService {
   }
 
   private syncFromAccount(): void {
+    const owner = this.auth.currentUser()?._id;
     const guestIds = this.load();
     this.idsSignal.set(new Set(guestIds));
     this.userData.load().subscribe({
       next: data => {
+        if (owner !== this.auth.currentUser()?._id) return;
         const merged = new Set([...data.favorites, ...this.idsSignal()]);
         this.idsSignal.set(merged);
         if (merged.size !== data.favorites.length) this.userData.save({ favorites: [...merged] });

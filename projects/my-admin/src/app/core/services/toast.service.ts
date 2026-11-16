@@ -8,7 +8,7 @@ export interface Toast {
   type: ToastType;
 }
 
-/** Thông báo nổi góc phải dùng chung cho mọi trang (pattern toast.service của AuraPC). */
+
 @Injectable({ providedIn: 'root' })
 export class ToastService {
   readonly toasts = signal<Toast[]>([]);

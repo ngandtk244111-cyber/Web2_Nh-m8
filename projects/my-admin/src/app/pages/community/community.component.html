@@ -32,20 +32,21 @@
   </div>
 
   <div class="post-grid">
-    <div class="post-card" *ngFor="let p of visible()" [class.is-off]="p.status === 'HIDDEN' || p.status === 'REJECTED'">
-      <div class="post-image">
-        <img [src]="p.imageUrl" [alt]="p.title" loading="lazy">
+    <div class="post-card" (click)="viewingId.set(p.id)" (keydown.enter)="$event.target === $event.currentTarget && viewingId.set(p.id)" tabindex="0" role="group" [attr.aria-label]="'Xem bài: ' + p.title" *ngFor="let p of visible()" [class.is-off]="p.status === 'HIDDEN' || p.status === 'REJECTED'">
+      <button type="button" class="post-image" [attr.aria-label]="'Xem bài: ' + p.title">
+        <span class="image-fallback"><i class="bi bi-image"></i> Ảnh không khả dụng</span>
+        <img [src]="mediaUrl(p.imageUrl)" [alt]="p.title" loading="lazy" (error)="$any($event.target).style.display = 'none'">
         <span class="tag warning pick-tag" *ngIf="p.isStaffPick"><i class="bi bi-award-fill"></i> Staff Pick</span>
-      </div>
+      </button>
       <div class="post-body">
         <div class="post-author">
-          <img class="avatar" [src]="p.author.avatar" alt="" *ngIf="p.author.avatar">
+          <img class="avatar" [src]="mediaUrl(p.author.avatar)" alt="" *ngIf="p.author.avatar">
           <div>
             <div class="cell-strong">{{ p.author.name || 'Khách hàng' }}</div>
             <div class="cell-sub">{{ (p.postedAt || p.createdAt) | date:'dd/MM/yyyy HH:mm' }}</div>
           </div>
         </div>
-        <div class="post-title">{{ p.title }}</div>
+        <button type="button" class="post-title">{{ p.title }}</button>
         <p class="post-caption" *ngIf="p.caption">{{ p.caption }}</p>
         <div class="post-meta">
           <span class="status-badge" [ngClass]="statusView(p).cls">{{ statusView(p).label }}</span>
@@ -55,7 +56,7 @@
           {{ p.status === 'REJECTED' ? 'Bộ lọc chặn: ' : 'Lý do ẩn: ' }}{{ p.moderationReason }}
         </div>
 
-        <div class="post-actions" *ngIf="canEdit || adminAuth.can('content.delete')">
+        <div class="post-actions" (click)="$event.stopPropagation()" *ngIf="canEdit || adminAuth.can('content.delete')">
           <ng-container *ngIf="canEdit">
             <button type="button" class="action-btn sm success" *ngIf="p.status === 'REJECTED' || p.status === 'HIDDEN'" [disabled]="busyId === p.id" (click)="publish(p)">
               <i class="bi bi-check2-circle"></i> {{ p.status === 'REJECTED' ? 'Duyệt bài' : 'Hiện lại' }}
@@ -82,6 +83,40 @@
   <div class="table-scrollable mt-3" *ngIf="filtered().length > pageSize">
     <app-pager [total]="filtered().length" [page]="page()" [pageSize]="pageSize" (pageChange)="page.set($event)"></app-pager>
   </div>
+</div>
+
+<div class="modal-overlay" *ngIf="viewingPost() as post" (click)="closePreview()">
+  <section class="modal-box lg post-preview" role="dialog" aria-modal="true" aria-labelledby="community-preview-title" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 id="community-preview-title" class="modal-title">Chi tiết bài đăng</h3>
+      <button type="button" class="close-btn" aria-label="Đóng bài đăng" (click)="closePreview()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="post-author">
+        <img class="avatar" [src]="mediaUrl(post.author.avatar)" alt="" *ngIf="post.author.avatar">
+        <div><strong>{{ post.author.name || 'Khách hàng' }}</strong><div class="cell-sub">{{ displayDate(post.postedAt || post.createdAt) }}</div></div>
+        <span class="status-badge" [ngClass]="statusView(post).cls">{{ statusView(post).label }}</span>
+      </div>
+      <h4 class="preview-title">{{ post.title }}</h4>
+      <p class="preview-caption" *ngIf="post.caption">{{ post.caption }}</p>
+      <div class="preview-image">
+        <span class="image-fallback"><i class="bi bi-image"></i> Ảnh không khả dụng trên server</span>
+        <img [src]="mediaUrl(post.imageUrl)" [alt]="post.title" (error)="$any($event.target).style.display = 'none'">
+      </div>
+      <p class="cell-sub" *ngIf="post.tags.length">{{ post.tags.join(' ') }}</p>
+      <p class="notice-box danger" *ngIf="post.moderationReason && post.status !== 'PUBLISHED'">{{ post.moderationReason }}</p>
+      <h4 class="preview-comments-title">Bình luận ({{ post.commentsCount }}) · {{ post.likesCount }} lượt thích</h4>
+      <div class="preview-comment" *ngFor="let comment of post.comments">
+        <img class="avatar" *ngIf="comment.authorAvatar" [src]="mediaUrl(comment.authorAvatar)" alt="">
+        <div><strong>{{ comment.authorName }}</strong><span class="cell-sub"> · {{ displayDate(comment.createdAt) }}</span><p>{{ comment.text }}</p></div>
+      </div>
+      <p class="cell-sub" *ngIf="!post.comments.length">Chưa có bình luận.</p>
+    </div>
+    <div class="modal-footer">
+      <a *ngIf="(post.status || 'PUBLISHED') === 'PUBLISHED'" class="btn-header" [href]="clientAppUrl + '/community?post=' + post.id" target="_blank" rel="noopener">Xem trên cộng đồng <i class="bi bi-box-arrow-up-right"></i></a>
+      <button type="button" class="btn-cancel" (click)="closePreview()">Đóng</button>
+    </div>
+  </section>
 </div>
 
 <!-- Ẩn bài -->

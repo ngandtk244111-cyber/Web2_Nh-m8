@@ -312,8 +312,8 @@
       <section id="pd-reviews" class="pd_container pd_section">
         <div class="pd_rv-top">
           <h2 class="pd_h2">Khách hàng nói gì về sản phẩm</h2>
-          <button *ngIf="canReview" type="button" (click)="showReviewForm = !showReviewForm" class="pd_btn pd_btn--primary pd_btn--sm">
-            {{ showReviewForm ? 'Đóng form' : 'Viết đánh giá' }}
+          <button *ngIf="canReview" type="button" (click)="openReviews()" class="pd_btn pd_btn--primary pd_btn--sm">
+            Đánh giá đơn đã mua
           </button>
           <span *ngIf="!canReview" class="pd_rv-note">Chỉ khách đã mua sản phẩm này mới có thể viết đánh giá.</span>
         </div>
@@ -342,28 +342,6 @@
           </div>
         </div>
 
-        <!-- Form viết đánh giá -->
-        <div *ngIf="showReviewForm && canReview" class="pd_review-form">
-          <h4>Chia sẻ cảm nhận của bạn</h4>
-          <div>
-            <label>Số sao</label>
-            <div class="pd_star-picker">
-              <button *ngFor="let star of [1,2,3,4,5]" type="button" (click)="newReviewRating = star" [attr.aria-label]="star + ' sao'">
-                <app-icon name="star" [size]="20" [filled]="newReviewRating >= star" [class.pd_star--active]="newReviewRating >= star"></app-icon>
-              </button>
-            </div>
-          </div>
-          <div>
-            <label>Tên của bạn</label>
-            <input type="text" [(ngModel)]="newReviewAuthor" placeholder="Nguyễn Văn A" class="pd_input">
-          </div>
-          <div>
-            <label>Nội dung đánh giá</label>
-            <textarea [(ngModel)]="newReviewComment" rows="3" placeholder="Chất lượng in 3D như thế nào, màu sắc có chuẩn không..." class="pd_input"></textarea>
-          </div>
-          <button type="button" (click)="submitReview()" class="pd_btn pd_btn--primary pd_btn--sm">Gửi đánh giá</button>
-        </div>
-
         <div class="pd_rv-filters">
           <span class="pd_rv-filters__label">Lọc theo:</span>
           <button type="button" class="pd_filter-chip" [class.pd_filter-chip--active]="reviewFilter === 'all'" (click)="setReviewFilter('all')">Tất cả</button>
@@ -374,7 +352,7 @@
         </div>
 
         <div class="pd_rv-grid">
-          <article *ngFor="let rev of pagedReviews" class="pd_rv-card">
+          <article *ngFor="let rev of pagedReviews" class="pd_rv-card" [id]="'review-' + rev.id">
             <header class="pd_rv-card__head">
               <div>
                 <span class="pd_rv-card__name">{{ rev.author }}</span>
@@ -392,10 +370,12 @@
             <div class="pd_rv-card__images" *ngIf="rev.images?.length">
               <img *ngFor="let img of rev.images" [src]="img" alt="Ảnh đánh giá" loading="lazy">
             </div>
+            <video *ngIf="rev.video" [src]="rev.video" controls preload="metadata" style="max-width:100%;max-height:240px"></video>
             <div *ngIf="rev.reply?.text" class="pd_rv-card__reply">
               <span class="pd_rv-card__reply-label">Phản hồi từ Luméa<span *ngIf="rev.reply?.date"> · {{ rev.reply?.date }}</span></span>
               <p>{{ rev.reply?.text }}</p>
             </div>
+            <button *ngIf="canEditReview(rev.id)" type="button" class="pd_rv-card__edit" (click)="editReview(rev.id)">Sửa đánh giá</button>
           </article>
         </div>
 
@@ -513,3 +493,5 @@
       </div>
 
     </div>
+
+<app-account-reviews-tab *ngIf="editingReview" [reviewItem]="editingReview" (reviewSaved)="refreshReviews()" (editorClosed)="editingReview = null"></app-account-reviews-tab>

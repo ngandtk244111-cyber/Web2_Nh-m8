@@ -15,15 +15,6 @@ const AI_PROXY_URL = process.env.AI_PROXY_URL || 'https://web2-nh-m8-2.onrender.
 // Hạn chờ TỔNG cho server Render (timeout của axios chỉ tính lúc kết nối im lặng, Render trả nhỏ giọt vẫn treo được).
 const PROXY_OPTIONS = () => ({ timeout: 60000, signal: AbortSignal.timeout(60000) });
 
-// Cơ chế theo AruBot của AuraPC-main (server/routes/chatRoutes.js):
-//   1) Nạp TOÀN BỘ catalog (nhóm theo danh mục, lấy mẫu đều, cache 10 phút) vào system prompt
-//      để AI chỉ gợi ý sản phẩm có thật.
-//   2) AI trả JSON { reply, products: [{ name, slug }] } -> server tự dò lại sản phẩm thật trong DB:
-//      slug -> tên chính xác -> tên gần đúng -> từ khoá trong tên.
-//   3) Nếu AI không gợi ý được nhưng câu hỏi rõ ràng là hỏi sản phẩm (có từ khoá loại sản phẩm / mức giá)
-//      -> lọc DB theo từ khoá + khoảng giá; vẫn trống -> lấy sản phẩm nổi bật.
-//   4) Có sản phẩm thì chuẩn hoá lại câu trả lời thành danh sách đánh số khớp với thẻ sản phẩm trên UI.
-// Khác AruBot: dùng Gemini (đã cấu hình sẵn) thay Replicate, và giữ phần Design Brief riêng của Luméa.
 
 const PRODUCT_FIELDS = 'id name slug images basePrice originalPrice';
 

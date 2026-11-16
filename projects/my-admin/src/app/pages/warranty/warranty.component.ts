@@ -1,8 +1,9 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { WarrantyService, Warranty } from '../../core/services/warranty.service';
+import { WarrantyService, Warranty, ClaimResult } from '../../core/services/warranty.service';
 import { OrderService } from '../../core/services/order.service';
 import { AdminAuthService } from '../../core/services/admin-auth.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -11,19 +12,36 @@ import { PagerComponent, pageSlice } from '../../components/pager/pager.componen
 import { exportXlsx } from '../../shared/utils/export';
 import { Order } from '../../core/models/order.model';
 import { CartItem } from '../../core/models/cart.model';
+import { environment } from '../../../environments/environment';
 
-type WarrantyState = 'ACTIVE' | 'CLAIMED' | 'EXPIRED';
+type WarrantyState = 'ACTIVE' | 'CLAIMED' | 'PROCESSING' | 'EXPIRED';
 type WarrantyFilter = 'ALL' | WarrantyState;
 
 const FILTERS: { key: WarrantyFilter; label: string; tone: string }[] = [
   { key: 'ALL', label: 'Tổng phiếu', tone: '' },
   { key: 'ACTIVE', label: 'Còn hiệu lực', tone: 'tone-success' },
-  { key: 'CLAIMED', label: 'Yêu cầu chờ xử lý', tone: 'tone-warning' },
+  { key: 'CLAIMED', label: 'Yêu cầu chờ tiếp nhận', tone: 'tone-warning' },
+  { key: 'PROCESSING', label: 'Đang xử lý', tone: 'tone-info' },
   { key: 'EXPIRED', label: 'Hết hạn', tone: 'tone-neutral' },
 ];
 
-const STATE_LABELS: Record<WarrantyState, string> = { ACTIVE: 'Còn hiệu lực', CLAIMED: 'Đang xử lý yêu cầu', EXPIRED: 'Hết hạn' };
-const STATE_CLASSES: Record<WarrantyState, string> = { ACTIVE: 'status-green', CLAIMED: 'status-yellow', EXPIRED: 'status-gray' };
+const STATE_LABELS: Record<WarrantyState, string> = { ACTIVE: 'Còn hiệu lực', CLAIMED: 'Chờ tiếp nhận', PROCESSING: 'Đang xử lý', EXPIRED: 'Hết hạn' };
+const STATE_CLASSES: Record<WarrantyState, string> = { ACTIVE: 'status-green', CLAIMED: 'status-yellow', PROCESSING: 'status-blue', EXPIRED: 'status-gray' };
+
+/** Kết quả khi đóng yêu cầu — khớp phạm vi trong Chính sách bảo hành. */
+export const CLAIM_RESULTS: { key: ClaimResult; label: string }[] = [
+  { key: 'REPAIR', label: 'Sửa chữa' },
+  { key: 'REPRINT', label: 'In lại' },
+  { key: 'REPLACE', label: 'Đổi mới' },
+  { key: 'REJECTED', label: 'Không bảo hành' },
+];
+/** Lý do không bảo hành (Chính sách bảo hành mục 2). */
+const REJECT_REASONS = [
+  'Hư hỏng do va đập, rơi vỡ',
+  'Tiếp xúc nhiệt độ cao hoặc hoá chất',
+  'Đã tự ý sửa chữa, thay đổi sản phẩm',
+  'Hư hỏng do vận chuyển — xử lý theo Chính sách đổi trả',
+];
 
 const emptyForm = () => ({ orderNumber: '', warrantyMonths: 12 });
 
@@ -43,8 +61,13 @@ export class WarrantyComponent implements OnInit {
   private router = inject(Router);
   private toast = inject(ToastService);
   private audit = inject(AuditService);
+  private destroyRef = inject(DestroyRef);
 
   readonly filters = FILTERS;
+  readonly claimResults = CLAIM_RESULTS;
+  readonly rejectReasons = REJECT_REASONS;
+  /** Ảnh khách gửi lưu dạng /api/products/images/<id> — ghép với địa chỉ server. */
+  readonly apiOrigin = environment.apiUrl.replace(/\/api$/, '');
 
   filter = signal<WarrantyFilter>('ALL');
   search = signal('');
@@ -75,7 +98,10 @@ export class WarrantyComponent implements OnInit {
 
   detail: Warranty | null = null;
   resolving: Warranty | null = null;
+  resolveResult: ClaimResult = 'REPAIR';
   resolveNote = '';
+  processing: Warranty | null = null;
+  processNote = '';
 
   // Trong popup chi tiết
   noteDraft = '';
@@ -84,8 +110,11 @@ export class WarrantyComponent implements OnInit {
   readonly extendOptions = [1, 3, 6, 12, 24];
 
   ngOnInit(): void {
-    const status = this.route.snapshot.queryParamMap.get('status') as WarrantyFilter | null;
-    if (status && FILTERS.some(f => f.key === status)) this.filter.set(status);
+    this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
+      const status = params.get('status') as WarrantyFilter;
+      this.filter.set(FILTERS.some(f => f.key === status) ? status : 'ALL');
+      this.page.set(1);
+    });
     this.warrantyService.refresh();
     // Cần danh sách đơn để tự điền phiếu theo mã đơn.
     if (this.orderService.orders().length === 0) this.orderService.fetchAll().subscribe();
@@ -97,7 +126,7 @@ export class WarrantyComponent implements OnInit {
 
   /** Phiếu ACTIVE đã qua hạn vẫn lưu ACTIVE trên server đến khi khách tra cứu — tính lại theo ngày. */
   state(w: Warranty): WarrantyState {
-    if (w.status === 'CLAIMED') return 'CLAIMED';
+    if (w.status === 'CLAIMED' || w.status === 'PROCESSING') return w.status;
     return w.status === 'EXPIRED' || new Date(w.expiresAt) < this.today ? 'EXPIRED' : 'ACTIVE';
   }
 
@@ -109,8 +138,18 @@ export class WarrantyComponent implements OnInit {
     return STATE_CLASSES[this.state(w)];
   }
 
+  /** Lần khách gửi yêu cầu gần nhất (dòng cũ chưa ghi người viết thì lấy dòng cuối). */
+  lastClaim(w: Warranty) {
+    const history = w.claimHistory || [];
+    return [...history].reverse().find(h => h.by === 'CUSTOMER') || history[history.length - 1];
+  }
+
   lastNote(w: Warranty): string {
-    return w.claimHistory?.[w.claimHistory.length - 1]?.note || '';
+    return this.lastClaim(w)?.note || '';
+  }
+
+  resultLabel(result?: ClaimResult | null): string {
+    return CLAIM_RESULTS.find(r => r.key === result)?.label || '';
   }
 
   count(f: WarrantyFilter): number {
@@ -275,24 +314,51 @@ export class WarrantyComponent implements OnInit {
     });
   }
 
+  // ---- Tiếp nhận yêu cầu ----
+  openProcess(w: Warranty): void {
+    this.detail = null;
+    this.processing = w;
+    this.processNote = 'Luméa đã tiếp nhận yêu cầu và sẽ liên hệ với bạn qua số điện thoại đặt hàng.';
+  }
+
+  confirmProcess(): void {
+    const w = this.processing;
+    if (!w) return;
+    this.saving = true;
+    this.warrantyService.process(w.warrantyCode, this.processNote.trim()).subscribe({
+      next: () => {
+        this.saving = false;
+        this.processing = null;
+        this.toast.success(`Đã tiếp nhận yêu cầu của phiếu ${w.warrantyCode}`);
+        this.audit.record('Bảo Hành', 'Tiếp nhận yêu cầu bảo hành', w.warrantyCode, 'INFO');
+      },
+      error: err => {
+        this.saving = false;
+        this.toast.apiError(err, 'Không tiếp nhận được yêu cầu');
+      },
+    });
+  }
+
   // ---- Đóng yêu cầu ----
   openResolve(w: Warranty): void {
     this.detail = null;
     this.resolving = w;
-    this.resolveNote = 'Đã xử lý yêu cầu bảo hành';
+    this.resolveResult = 'REPAIR';
+    this.resolveNote = '';
   }
 
   confirmResolve(): void {
     const w = this.resolving;
     const note = this.resolveNote.trim();
-    if (!w || !note) return;
+    if (!w || (this.resolveResult === 'REJECTED' && !note)) return;
+    const result = this.resolveResult;
     this.saving = true;
-    this.warrantyService.resolve(w.warrantyCode, note).subscribe({
+    this.warrantyService.resolve(w.warrantyCode, result, note).subscribe({
       next: () => {
         this.saving = false;
         this.resolving = null;
         this.toast.success(`Đã đóng yêu cầu của phiếu ${w.warrantyCode}`);
-        this.audit.record('Bảo Hành', 'Đóng yêu cầu bảo hành', `${w.warrantyCode}: ${note}`, 'INFO');
+        this.audit.record('Bảo Hành', 'Đóng yêu cầu bảo hành', `${w.warrantyCode}: ${this.resultLabel(result)}${note ? ' — ' + note : ''}`, 'INFO');
       },
       error: err => {
         this.saving = false;

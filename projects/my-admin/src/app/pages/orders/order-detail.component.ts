@@ -28,7 +28,7 @@ const PRODUCTION_STEPS: ProductionStepOption[] = [
   { step: 'PACKAGING', label: 'Đóng gói', title: 'Đã đóng gói, chờ bàn giao vận chuyển', percent: 95, notes: 'Đã dán tem bảo hành Luméa' },
 ];
 
-/** Chi tiết đơn hàng — theo orderdetail của Vita: bước trạng thái, danh sách sản phẩm, cột phải là khách + thanh toán + thao tác. */
+
 @Component({
   selector: 'app-order-detail',
   standalone: true,

@@ -12,4 +12,6 @@ const aiConversationSchema = new mongoose.Schema({
   conceptImage: { type: String, default: null },
 }, { timestamps: true });
 
+aiConversationSchema.index({ userId: 1, updatedAt: -1 });
+
 module.exports = mongoose.model('AiConversation', aiConversationSchema);

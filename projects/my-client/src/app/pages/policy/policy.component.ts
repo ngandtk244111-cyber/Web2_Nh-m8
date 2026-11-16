@@ -155,7 +155,9 @@ const POLICY_PAGES: Record<string, PolicyPage> = {
         heading: '3. Cách yêu cầu bảo hành',
         body: [
           'Vào mục "Tra cứu bảo hành", nhập mã bảo hành (in trên phiếu đi kèm sản phẩm) và số điện thoại đặt hàng để kiểm tra tình trạng.',
-          'Nếu bảo hành còn hiệu lực, mô tả tình trạng sản phẩm và gửi yêu cầu ngay trên trang tra cứu. Đội ngũ Luméa sẽ liên hệ để hướng dẫn sửa chữa, in lại hoặc đổi mới.',
+          'Nếu bảo hành còn hiệu lực, mô tả tình trạng sản phẩm kèm ảnh chụp chỗ lỗi và gửi yêu cầu ngay trên trang tra cứu. Đội ngũ Luméa sẽ liên hệ để hướng dẫn sửa chữa, in lại hoặc đổi mới.',
+          'Sau khi xác nhận, quý khách gửi sản phẩm về showroom Luméa hoặc mang trực tiếp đến cửa hàng. Luméa chịu phí vận chuyển hai chiều nếu lỗi thuộc phạm vi bảo hành.',
+          'Kết quả xử lý (sửa chữa, in lại, đổi mới hoặc không thuộc phạm vi bảo hành kèm lý do) được cập nhật trên trang tra cứu bảo hành.',
         ],
       },
     ],

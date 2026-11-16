@@ -44,7 +44,7 @@ interface Spot {
   occluded: boolean;
 }
 
-/** Hiệu ứng camera bay (giống AuraPC: lerp vị trí + điểm nhìn, ease in-out cubic). */
+
 interface CameraFlight {
   fromPos: THREE.Vector3;
   toPos: THREE.Vector3;

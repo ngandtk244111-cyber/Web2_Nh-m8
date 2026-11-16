@@ -113,6 +113,8 @@ export interface ProductReview {
   comment: string;
   verifiedPurchase: boolean;
   images?: string[];
+  video?: string;
+  anonymous?: boolean;
   /** Phản hồi công khai của nhân viên Luméa (soạn ở my-admin). */
   reply?: { text: string; date: string } | null;
   /** Nhân viên ghim đánh giá hay lên đầu danh sách. */

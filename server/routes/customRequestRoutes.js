@@ -6,6 +6,7 @@ const CustomRequest = require('../models/CustomRequest');
 const Quote = require('../models/Quote');
 const Order = require('../models/Order');
 const User = require('../models/User');
+const Notification = require('../models/Notification');
 const Admin = require('../models/Admin');
 const { requirePermission, requireUserId, attachUserId, adminIdFromRequest } = require('../middleware/auth');
 const { adminHasPermission } = require('../utils/permissions');
@@ -13,14 +14,23 @@ const { writeAudit } = require('../utils/audit');
 const {
   getDepositPolicy, resolveQuoteDeposit, priceQuoteItems, DEPOSIT_TERMS_VERSION,
 } = require('../utils/deposit');
-const { getReceivingBank } = require('../utils/payment-config');
+const { codNeedsPhoneConfirm } = require('../utils/cod-policy');
 const { paymentInstructions } = require('../utils/custom-order');
 const { resolveShippingFee } = require('../utils/pricing');
 const { generateOrderNumber } = require('../utils/order-number');
 
+const { emitCustomRequestUpdated } = require('../realtime');
 const router = express.Router();
+async function notifyCustomer(request, title, message, ref) {
+  try {
+    const owner = request.userId || (await User.findOne({ email: request.customerEmail, active: true }).select('_id').lean())?._id;
+    await Notification.notifyUser(owner, { title, message,
+      link: '/custom-request/' + encodeURIComponent(request.id) + '?from=account', refKey: 'design:' + request.id + ':' + ref,
+    });
+  } catch (err) { console.error('Design notification error', err.message); }
+}
+
 const DAY = 86400 * 1000;
-const HOUR = 3600 * 1000;
 
 function nowLabel() {
   const now = new Date();
@@ -60,7 +70,8 @@ async function expireStaleQuotes(customRequestId, now = new Date()) {
   );
 }
 
-function pushShopMessage(request, text) {
+/** `extra` gắn thêm dữ liệu cho tin, vd. `quote` để khách thấy bảng báo giá ngay trong khung chat. */
+function pushShopMessage(request, text, extra = {}) {
   request.messages.push({
     id: 'msg-' + Date.now() + '-' + crypto.randomBytes(2).toString('hex'),
     sender: 'SHOP_SPECIALIST',
@@ -68,6 +79,7 @@ function pushShopMessage(request, text) {
     avatar: '',
     text,
     timestamp: nowLabel(),
+    ...extra,
   });
 }
 
@@ -122,15 +134,17 @@ router.post('/', attachUserId, async (req, res) => {
     // Không cho client tự đặt giá/trạng thái/ghi chú nội bộ/liên kết báo giá khi tạo yêu cầu.
     const {
       quotationPrice: _q, estimatedDays: _e, adminNote: _n, preview3dModelType: _p, adminId: _a,
-      status: _s, userId: _u, currentQuoteVersion: _c, acceptedQuoteId: _aq, orderNumber: _o, messages: _m,
+      unreadStaff: _unread, customerAvatar: _avatar, status: _s, userId: _u, currentQuoteVersion: _c, acceptedQuoteId: _aq, orderNumber: _o, messages: _m,
       id: _id, requestCode: _rc, ...body
     } = req.body;
+    const customer = req.userId ? await User.findById(req.userId).select('avatar').lean() : null;
     let request;
     for (let attempt = 0; attempt < 5 && !request; attempt++) {
       try {
         request = await CustomRequest.create({
           ...body,
           userId: req.userId || null,
+          customerAvatar: customer?.avatar || '',
           id: 'req-' + Date.now() + '-' + crypto.randomBytes(3).toString('hex'),
           requestCode: generateRequestCode(),
           createdAt: dateStr,
@@ -141,7 +155,7 @@ router.post('/', attachUserId, async (req, res) => {
               id: 'msg-init',
               sender: 'AI_ASSISTANT',
               senderName: 'Luméa Bot',
-              avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=DecoAI',
+              avatar: '/assets/mascot/goh-mascot.png',
               text: 'Yêu cầu thiết kế riêng của bạn đã được chuyển tới kỹ thuật viên của shop. Shop sẽ xem xét tính khả thi và gửi báo giá kèm mức cọc. Đơn đặt làm cần thanh toán cọc trước khi sản xuất.',
               timestamp: dateStr,
             },
@@ -152,6 +166,7 @@ router.post('/', attachUserId, async (req, res) => {
       }
     }
     if (!request) throw new Error('Không tạo được mã yêu cầu, vui lòng thử lại');
+    emitCustomRequestUpdated(request);
     res.json({ success: true, request });
   } catch (err) {
     console.error('create custom request error', err);
@@ -160,6 +175,15 @@ router.post('/', attachUserId, async (req, res) => {
 });
 
 // Tin nhắn trong yêu cầu: chỉ nhân viên có quyền custom3d.edit hoặc chủ yêu cầu (đã đăng nhập).
+router.patch('/:id/messages/read', requirePermission('custom3d.view'), async (req, res) => {
+  try {
+    const request = await CustomRequest.findOneAndUpdate({ id: req.params.id }, { $set: { unreadStaff: 0 } }, { new: true });
+    emitCustomRequestUpdated(request);
+    if (!request) return res.status(404).json({ success: false, error: 'Không tìm thấy yêu cầu' });
+    res.json({ success: true, request });
+  } catch (err) { sendError(res, err); }
+});
+
 router.post('/:id/messages', attachUserId, async (req, res) => {
   try {
     const text = String(req.body.text || '').trim();
@@ -177,24 +201,25 @@ router.post('/:id/messages', attachUserId, async (req, res) => {
     }
     if (!request) return res.status(404).json({ success: false, error: 'Không tìm thấy yêu cầu' });
 
+    const customer = adminId ? null : await User.findById(req.userId).select('fullName avatar').lean();
     const sender = adminId ? 'SHOP_SPECIALIST' : 'CUSTOMER';
     const timestamp = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
     const newMsg = {
-      id: 'msg-' + Date.now(),
+      id: 'msg-' + crypto.randomUUID(),
       sender,
-      senderName: sender === 'CUSTOMER' ? 'Bạn (Khách hàng)' : (await adminName(adminId)) || 'Kỹ thuật viên Luméa',
-      avatar: sender === 'CUSTOMER'
-        ? 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80'
-        : 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&q=80',
+      senderName: customer ? customer.fullName || request.customerName : (await adminName(adminId)) || 'Đội ngũ Luméa',
+      avatar: customer?.avatar || '',
       text,
       timestamp,
     };
 
     const updated = await CustomRequest.findOneAndUpdate(
       { id: req.params.id },
-      { $push: { messages: newMsg }, $set: { updatedAt: timestamp } },
+      { $push: { messages: newMsg }, $set: { updatedAt: timestamp, ...(adminId ? { unreadStaff: 0 } : { customerAvatar: customer?.avatar || '' }) }, ...(!adminId ? { $inc: { unreadStaff: 1 } } : {}) },
       { new: true }
     );
+    emitCustomRequestUpdated(updated, !adminId);
+    if (adminId) await notifyCustomer(updated, 'Luméa đã phản hồi yêu cầu thiết kế', newMsg.text, 'message:' + newMsg.id);
     res.json({ success: true, request: updated });
   } catch (err) {
     sendError(res, err);
@@ -234,6 +259,8 @@ router.patch('/:id/status', requirePermission('custom3d.edit'), async (req, res)
     if (preview3dModelType !== undefined) request.preview3dModelType = preview3dModelType;
     request.updatedAt = new Date().toLocaleDateString('vi-VN');
     await request.save();
+    emitCustomRequestUpdated(request);
+    await notifyCustomer(request, 'Cập nhật yêu cầu thiết kế', request.title + ': shop vừa cập nhật yêu cầu. Mở chi tiết để xem.', 'status:' + request.status + ':' + request.updatedAt);
     res.json({ success: true, request });
   } catch (err) {
     sendError(res, err);
@@ -262,7 +289,7 @@ router.get('/:id/quotes', attachUserId, async (req, res) => {
 });
 
 function readQuoteInput(body) {
-  const priced = priceQuoteItems(body.items, body.quoteDiscount);
+  const priced = priceQuoteItems(body.items, body.quoteDiscount, body.quoteDiscountPercent);
   const estimatedDays = Number(body.estimatedDays);
   if (!Number.isInteger(estimatedDays) || estimatedDays < 1 || estimatedDays > 365) {
     throw new Error('Thời gian sản xuất dự kiến phải từ 1 đến 365 ngày');
@@ -395,8 +422,21 @@ router.post('/:id/quotes/:version/send', requirePermission('custom3d.edit'), asy
     request.updatedAt = now.toLocaleDateString('vi-VN');
     pushShopMessage(request,
       `Luméa đã gửi báo giá phiên bản ${sent.version}: tổng ${sent.total.toLocaleString('vi-VN')}đ, cọc ${deposit.amount.toLocaleString('vi-VN')}đ, ` +
-      `sản xuất khoảng ${sent.estimatedDays} ngày. Báo giá có hiệu lực tới ${sent.validUntil.toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}.`);
+      `sản xuất khoảng ${sent.estimatedDays} ngày. Báo giá có hiệu lực tới ${sent.validUntil.toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}.`,
+      {
+        // Bản chụp lúc gửi: báo giá sau này bị thay thế thì tin cũ vẫn đúng với những gì khách đã nhận.
+        quote: {
+          version: sent.version,
+          items: sent.items.map(i => ({ name: i.name, quantity: i.quantity, lineTotal: i.lineTotal })),
+          discount: sent.quoteDiscount,
+          total: sent.total,
+          depositAmount: deposit.amount,
+          estimatedDays: sent.estimatedDays,
+          validUntil: sent.validUntil,
+        },
+      });
     await request.save();
+    emitCustomRequestUpdated(request);
 
     const actor = await Admin.findById(req.adminId);
     await writeAudit(req, actor, {
@@ -404,6 +444,7 @@ router.post('/:id/quotes/:version/send', requirePermission('custom3d.edit'), asy
       detail: `${request.requestCode} v${sent.version}: ${sent.total}đ, cọc ${deposit.amount}đ${deposit.overridden ? ` (đổi mức cọc: ${deposit.overrideReason})` : ''}`,
       level: 'SUCCESS',
     });
+    await notifyCustomer(request, 'Bạn có báo giá thiết kế mới', request.title + ' · Báo giá v' + sent.version + ': ' + sent.total.toLocaleString('vi-VN') + 'đ. Xem chi tiết để phản hồi.', 'quote:' + sent.version);
     res.json({ success: true, quote: sent, request });
   } catch (err) {
     sendError(res, err);
@@ -442,6 +483,7 @@ router.post('/:id/quotes/:version/accept', requireUserId, async (req, res) => {
     request.acceptedQuoteId = quote._id;
     request.updatedAt = now.toLocaleDateString('vi-VN');
     await request.save();
+    emitCustomRequestUpdated(request);
     res.json({ success: true, quote, request });
   } catch (err) {
     sendError(res, err);
@@ -463,6 +505,7 @@ router.post('/:id/quotes/:version/reject', requireUserId, async (req, res) => {
     request.status = 'IN_DISCUSSION';
     request.updatedAt = now.toLocaleDateString('vi-VN');
     await request.save();
+    emitCustomRequestUpdated(request);
     res.json({ success: true, quote, request });
   } catch (err) {
     sendError(res, err);
@@ -471,7 +514,9 @@ router.post('/:id/quotes/:version/reject', requireUserId, async (req, res) => {
 
 // ---------------------------------------------------------------- Checkout đơn đặt làm
 
-const BALANCE_METHODS = ['COD', 'BANK_TRANSFER'];
+// Thanh toán như đơn mua hàng thường. Chọn COD thì phải chuyển cọc trước theo báo giá (giống quy tắc
+// cọc đơn COD từ 5 triệu: order.depositAmount / depositPaidAt), còn lại các cách khác trả đủ 100%.
+const ORDER_PAYMENT_METHODS = ['COD', 'BANK_TRANSFER', 'MOMO', 'ZALOPAY', 'ATM'];
 
 function readShippingAddress(raw) {
   const a = raw || {};
@@ -501,8 +546,8 @@ router.post('/:id/checkout', requireUserId, async (req, res) => {
     if (req.body.couponCode) {
       return res.status(400).json({ success: false, error: 'Đơn đặt làm theo báo giá không áp dụng mã giảm giá' });
     }
-    const balanceMethod = BALANCE_METHODS.includes(req.body.balanceMethod) ? req.body.balanceMethod : null;
-    if (!balanceMethod) return res.status(400).json({ success: false, error: 'Vui lòng chọn cách thanh toán phần còn lại (COD hoặc chuyển khoản)' });
+    const paymentMethod = ORDER_PAYMENT_METHODS.includes(req.body.paymentMethod) ? req.body.paymentMethod : null;
+    if (!paymentMethod) return res.status(400).json({ success: false, error: 'Vui lòng chọn phương thức thanh toán' });
     const { addr, error: addrError } = readShippingAddress(req.body.shippingAddress);
     if (addrError) return res.status(400).json({ success: false, error: addrError });
 
@@ -526,14 +571,9 @@ router.post('/:id/checkout', requireUserId, async (req, res) => {
       return res.status(400).json({ success: false, error: 'Báo giá đã hết hạn — vui lòng nhắn shop để nhận báo giá mới' });
     }
 
-    const bank = await getReceivingBank();
-    if (!bank) return res.status(503).json({ success: false, error: 'Shop chưa cấu hình tài khoản nhận cọc, vui lòng liên hệ Luméa' });
-
-    const goodsTotal = quote.total;
-    const depositAmount = quote.deposit.amount;
-    const shippingFee = resolveShippingFee(goodsTotal);
-    const total = goodsTotal + shippingFee;
-    const deadlineHours = Number(quote.policySnapshot?.depositPaymentDeadlineHours) || 24;
+    const shippingFee = resolveShippingFee(quote.total);
+    const total = quote.total + shippingFee;
+    const depositAmount = paymentMethod === 'COD' ? quote.deposit.amount : 0;
     const image = request.aiConceptImage || request.customerImages?.[0] || '';
 
     const items = quote.items.map((item, index) => ({
@@ -566,12 +606,13 @@ router.post('/:id/checkout', requireUserId, async (req, res) => {
           userId: req.userId,
           createdAtLabel: nowLabel(),
           status: 'PENDING',
-          phoneConfirmRequired: false,
+          phoneConfirmRequired: paymentMethod === 'COD' && await codNeedsPhoneConfirm(total, true),
           hasPrintOnDemandItems: true,
           items,
           shippingAddress: addr,
-          paymentMethod: balanceMethod,
+          paymentMethod,
           paymentStatus: 'UNPAID',
+          depositAmount,
           subtotal: quote.subtotal,
           discount: quote.itemDiscountTotal + quote.quoteDiscount,
           shippingFee,
@@ -579,27 +620,6 @@ router.post('/:id/checkout', requireUserId, async (req, res) => {
           notes: String(req.body.notes || '').trim().slice(0, 500),
           stockReserved: false,
           customRequestRef: { requestId: request.id, requestCode: request.requestCode, quoteId: quote._id, quoteVersion: quote.version },
-          depositStatus: 'UNPAID',
-          depositReceived: 0,
-          paymentPlan: {
-            type: 'DEPOSIT',
-            goodsSubtotal: quote.subtotal,
-            goodsDiscount: quote.itemDiscountTotal + quote.quoteDiscount,
-            goodsTotal,
-            depositRate: quote.deposit.rate,
-            depositMinimum: quote.deposit.minimum,
-            depositAmount,
-            depositOverridden: !!quote.deposit.overridden,
-            depositOverrideReason: quote.deposit.overrideReason || '',
-            shippingFee,
-            remainingAmount: goodsTotal - depositAmount + shippingFee,
-            balanceMethod,
-            termsVersion: quote.acceptedTermsVersion,
-            policySnapshot: quote.policySnapshot,
-            bank,
-            transferContent: `LUMEA COC ${orderNumber.replace('ORD-', '')}`,
-            deadlineAt: new Date(now.getTime() + deadlineHours * HOUR),
-          },
         });
       } catch (err) {
         if (err.code !== 11000) throw err;
@@ -616,8 +636,11 @@ router.post('/:id/checkout', requireUserId, async (req, res) => {
     request.status = 'CONVERTED_TO_ORDER';
     request.orderNumber = order.orderNumber;
     request.updatedAt = now.toLocaleDateString('vi-VN');
-    pushShopMessage(request, `Đã tạo đơn ${order.orderNumber}. Vui lòng chuyển khoản tiền cọc ${depositAmount.toLocaleString('vi-VN')}đ với nội dung "${order.paymentPlan.transferContent}" trước hạn để shop bắt đầu sản xuất.`);
+    pushShopMessage(request, depositAmount
+      ? `Đã tạo đơn ${order.orderNumber}. Vui lòng chuyển khoản tiền cọc ${depositAmount.toLocaleString('vi-VN')}đ để shop xác nhận đơn và bắt đầu sản xuất.`
+      : `Đã tạo đơn ${order.orderNumber}. Shop sẽ bắt đầu sản xuất sau khi nhận được thanh toán.`);
     await request.save();
+    emitCustomRequestUpdated(request);
 
     res.json({ success: true, existing: false, order, payment: paymentInstructions(order) });
   } catch (err) {

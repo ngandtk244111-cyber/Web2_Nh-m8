@@ -1,4 +1,5 @@
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+    <div [ngClass]="embedded ? 'rounded-3xl border border-neutral-200 bg-white p-5 sm:p-6 space-y-4' : 'max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8'">
+      <ng-container *ngIf="!embedded">
       
       <!-- Header -->
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-neutral-200 pb-6">
@@ -72,11 +73,18 @@
         </div>
       </div>
 
+      </ng-container>
+
       <!-- Requests List -->
       <div class="space-y-4">
-        <h2 class="font-serif text-xl font-bold text-amber-800">
-          Danh Sách Yêu Cầu Thiết Kế Của Bạn
-        </h2>
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 class="font-serif text-lg font-bold text-amber-800">Yêu cầu thiết kế & báo giá</h2>
+            <p *ngIf="embedded" class="mt-1 text-xs text-neutral-500">Theo dõi yêu cầu đã gửi, xem báo giá và trao đổi với Luméa.</p>
+          </div>
+          <a *ngIf="embedded" routerLink="/custom-request/new" class="rounded-xl bg-[#A3152D] px-3 py-2 text-xs font-bold text-white hover:bg-[#891226]">+ Gửi yêu cầu mới</a>
+        </div>
+        <p *ngIf="!requests.length" class="py-8 text-center text-sm text-neutral-500">Chưa có yêu cầu thiết kế để hiển thị.</p>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div 
@@ -94,12 +102,14 @@
                   <span *ngSwitchCase="'PREVIEW_READY'" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-purple-800 bg-purple-100 border border-purple-300">Đã có 3D Preview</span>
                   <span *ngSwitchCase="'APPROVED'" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-emerald-800 bg-emerald-100 border border-emerald-300">Đã duyệt thiết kế</span>
                   <span *ngSwitchCase="'CONVERTED_TO_ORDER'" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-emerald-800 bg-emerald-100 border border-emerald-300">Đã lên đơn hàng</span>
+                  <span *ngSwitchCase="'IN_DISCUSSION'" class="inline-flex px-2.5 py-1 rounded-full text-blue-800 bg-blue-50">Đang trao đổi</span>
+                  <span *ngSwitchCase="'REJECTED'" class="inline-flex px-2.5 py-1 rounded-full text-neutral-600 bg-neutral-100">Đã hủy yêu cầu</span>
                   <span *ngSwitchDefault class="inline-flex items-center px-2.5 py-1 rounded-full text-neutral-600 bg-neutral-200">Đang xử lý</span>
                 </span>
               </div>
 
               <h3 class="font-serif text-base font-bold text-amber-800 mt-2">
-                <a [routerLink]="['/custom-request', req.id]" class="hover:text-amber-400 transition">
+                <a [routerLink]="['/custom-request', req.id]" [queryParams]="embedded ? { from: 'account' } : {}" class="hover:text-amber-400 transition">
                   {{ req.title }}
                 </a>
               </h3>
@@ -107,7 +117,7 @@
               <div class="mt-2 text-xs text-neutral-700 space-y-1">
                 <div><span class="text-neutral-500">Loại:</span> {{ req.brief.productType }}</div>
                 <div><span class="text-neutral-500">Phong cách:</span> {{ req.brief.style }}</div>
-                <div *ngIf="req.quotationPrice" class="text-sm font-bold text-amber-400 pt-1">
+                <div *ngIf="req.quotationPrice != null" class="text-sm font-bold text-amber-400 pt-1">
                   Giá báo: {{ req.quotationPrice | vnd }} (Thời gian: ~{{ req.estimatedDays }} ngày)
                 </div>
               </div>
@@ -117,9 +127,9 @@
             <div class="pt-3 border-t border-neutral-200 flex items-center justify-between">
               <span class="text-[10px] text-neutral-500">{{ req.createdAt }}</span>
               <a 
-                [routerLink]="['/custom-request', req.id]"
+                [routerLink]="['/custom-request', req.id]" [queryParams]="embedded ? { from: 'account' } : {}"
                 class="px-4 py-2 rounded-xl bg-[#F0EEE8] hover:bg-[#1F1712] border border-neutral-300 text-neutral-800 font-bold text-xs transition flex items-center gap-1">
-                <span>Xem chi tiết & Trao đổi</span>
+                <span>{{ req.currentQuoteVersion || req.quotationPrice != null ? 'Xem báo giá & chi tiết' : 'Xem chi tiết & trao đổi' }}</span>
                 <app-icon name="chevron-right" [size]="14"></app-icon>
               </a>
             </div>

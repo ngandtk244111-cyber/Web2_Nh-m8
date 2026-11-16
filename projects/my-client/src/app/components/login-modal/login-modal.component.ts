@@ -18,13 +18,7 @@ const PHONE_REGEX = /^0\d{9}$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const OTP_SECONDS = 60;
 
-/**
- * Hộp thoại tài khoản — bố cục tham khảo VitaCare-main (features/accounts/auth): 3 luồng TÁCH RIÊNG
- *   - Đăng nhập: SĐT/email + mật khẩu (+ Google)
- *   - Đăng ký: SĐT/email → OTP 6 số → đặt mật khẩu
- *   - Quên mật khẩu: SĐT/email → OTP 6 số → mật khẩu mới
- * Server nhận chung 1 trường `identifier` là SĐT hoặc email (server/routes/authRoutes.js).
- */
+
 @Component({
   selector: 'app-login-modal',
   standalone: true,

@@ -54,6 +54,9 @@
   overflow: hidden;
 }
 
+/* Tooltip thời gian được phép hiện ngoài khung bài viết. */
+.cm-layout main > .cm-panel { overflow: visible; }
+
 /* ---------- Điều hướng trái ---------- */
 .cm-nav {
   width: 100%;
@@ -295,3 +298,35 @@ button.cm-action:hover {
   outline: 2px solid #A3152D;
   outline-offset: 2px;
 }
+/* Bình luận và trả lời theo cùng một luồng. */
+.cm-comments { padding: 16px 20px; }
+.cm-comment-thread + .cm-comment-thread { margin-top: 18px; }
+.cm-comment { display: flex; gap: 9px; min-width: 0; scroll-margin-top: 120px; }
+.cm-comment-avatar { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+.cm-comment-bubble { display: inline-block; max-width: 100%; background: #f0f2f5; border-radius: 16px; padding: 8px 12px; font-size: 14px; overflow-wrap: anywhere; }
+.cm-comment-name { font-size: 13px; font-weight: 700; }
+.cm-comment-bubble p { margin: 2px 0 0; white-space: pre-wrap; }
+.cm-comment-mention { color: #8c1830; font-weight: 600; }
+.cm-comment-meta { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; padding: 4px 12px; font-size: 11px; color: #777; }
+.cm-comment-meta button { font-weight: 600; }
+.cm-comment-meta button:hover { text-decoration: underline; }
+.cm-replies { margin: 8px 0 0 16px; padding-left: 25px; border-left: 1px solid #e5e7eb; }
+.cm-replies .cm-comment + .cm-comment { margin-top: 10px; }
+.cm-replies .cm-comment-avatar, .cm-reply-form .cm-comment-avatar { width: 26px; height: 26px; }
+.cm-reply-form { display: flex; align-items: center; gap: 7px; margin-top: 7px; }
+.cm-reply-input { display: flex; align-items: center; flex: 1; min-width: 0; border-radius: 18px; background: #f0f2f5; padding: 4px 10px; }
+.cm-reply-input:focus-within { outline: 1px solid #c8b4b8; }
+.cm-reply-input input { width: 100%; min-width: 0; border: 0; outline: none; background: transparent; padding: 6px 0; font-size: 13px; }
+.cm-reply-input button { display: flex; padding: 5px; color: #a3152d; }
+.cm-reply-input button:disabled { color: #aeb2b8; }
+.cm-reply-cancel { font-size: 11px; color: #777; }
+@media (max-width: 480px) {
+  .cm-comments { padding: 14px 12px; }
+  .cm-replies { margin-left: 12px; padding-left: 14px; }
+}
+
+/* Hiện ngày giờ đầy đủ khi rê chuột, dùng bàn phím hoặc chạm vào thời gian. */
+.social-time { position: relative; display: inline-block; color: #858080; font-size: 12px; cursor: help; flex-shrink: 0; }
+.social-time::after { content: attr(data-tooltip); position: absolute; top: calc(100% + 6px); left: 0; z-index: 50; width: max-content; max-width: min(280px, 65vw); padding: 8px 10px; border-radius: 7px; background: #302b29; color: #fff; box-shadow: 0 3px 12px #0002; font-size: 12px; font-weight: 400; line-height: 1.5; white-space: normal; pointer-events: none; visibility: hidden; opacity: 0; }
+.social-time:hover::after, .social-time:focus::after { visibility: visible; opacity: 1; }
+.social-time:focus-visible { outline: 1px solid #a3152d; outline-offset: 3px; }

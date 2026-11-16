@@ -26,7 +26,7 @@ function safeCell(value: string | number | null | undefined): string | number {
   return /^[=+\-@]/.test(text) ? "'" + text : text;
 }
 
-/** Xuất Excel (.xlsx) — như dashboard-export.service của Vita. */
+
 export function exportXlsx(name: string, headers: string[], rows: ExportRow[], sheetName = 'Dữ liệu'): void {
   // Đầu file ghi rõ báo cáo gì, xuất lúc nào, bao nhiêu dòng — in ra hay gửi đi vẫn biết số liệu tính đến lúc nào.
   const meta = [

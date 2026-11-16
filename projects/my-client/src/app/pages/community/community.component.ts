@@ -1,21 +1,23 @@
-import { Component, OnInit, effect } from '@angular/core';
+import { Component, DestroyRef, OnInit, effect, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ConfirmDialogService } from '../../core/services/confirm-dialog.service';
 import { CommunityService } from '../../core/services/community.service';
 import { ProductService } from '../../core/services/product.service';
 import { CartService } from '../../core/services/cart.service';
 import { AuthService } from '../../core/services/auth.service';
 import { LoginModalService } from '../../core/services/login-modal.service';
 import { ToastService } from '../../core/services/toast.service';
-import { CommunityPost, ProductTag } from '../../core/models/community.model';
+import { CommunityPost, ProductTag, PostComment } from '../../core/models/community.model';
 import { Product } from '../../core/models/product.model';
 import { AppIconComponent } from '../../components/icon/icon.component';
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
 
 type SortKey = 'popular' | 'newest';
 /** Nguồn feed ở sidebar trái (kiểu Threads): tất cả / bài đã lưu / bài đã thích. */
-type FeedMode = 'all' | 'saved' | 'liked';
+type FeedMode = 'all' | 'saved' | 'liked' | 'mine';
 
 interface TopicFilter {
   key: string;
@@ -37,7 +39,7 @@ const TOPIC_FILTERS: TopicFilter[] = [
 ];
 
 const TRENDING_COUNT = 5;
-const DEFAULT_AVATAR = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80';
+const DEFAULT_AVATAR = '/assets/logo/lumea-mark.png';
 
 const INITIAL_VISIBLE = 8;
 const LOAD_MORE_STEP = 8;
@@ -50,6 +52,8 @@ const LOAD_MORE_STEP = 8;
   styleUrl: './community.component.css'
 })
 export class CommunityComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
+  private readonly now = signal(Date.now());
   readonly topicFilters = TOPIC_FILTERS;
   readonly feedTabs: { key: SortKey; label: string }[] = [
     { key: 'popular', label: 'Dành cho bạn' },
@@ -57,6 +61,7 @@ export class CommunityComponent implements OnInit {
   ];
   readonly feedModes: { key: FeedMode; label: string; icon: string }[] = [
     { key: 'all', label: 'Trang chủ', icon: 'home' },
+    { key: 'mine', label: 'Bài viết của bạn', icon: 'user' },
     { key: 'saved', label: 'Đã lưu', icon: 'bookmark' },
     { key: 'liked', label: 'Đã thích', icon: 'heart' },
   ];
@@ -73,6 +78,11 @@ export class CommunityComponent implements OnInit {
   visibleCount = INITIAL_VISIBLE;
 
   showCreateModal = false;
+  editingPostId: string | null = null;
+  isPublishing = false;
+  replyTo: PostComment | null = null;
+  private notificationComment = '';
+  get routeCommentId(): string { return this.route.snapshot.queryParamMap.get('comment') || ''; }
   newPostTitle = '';
   newPostCaption = '';
   newPostImageUrl = '';
@@ -133,19 +143,89 @@ export class CommunityComponent implements OnInit {
     private cartService: CartService,
     public authService: AuthService,
     public loginModalService: LoginModalService,
+    private route: ActivatedRoute,
+    private confirmDialog: ConfirmDialogService,
     private toastService: ToastService
   ) {
     // posts/products nạp bất đồng bộ từ backend — effect() tự đồng bộ lại mỗi khi signal đổi.
     effect(() => {
       this.posts = this.communityService.posts();
       this.applyFilters();
+      if (this.notificationComment && this.activePost) {
+        const id = this.notificationComment;
+        setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+        this.notificationComment = '';
+      }
+    });
+    effect(() => {
+      this.authService.currentUser();
+      this.feedMode = 'all';
+      this.communityService.refresh();
     });
     effect(() => {
       this.availableProducts = this.productService.products();
     });
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    const timer = setInterval(() => this.now.set(Date.now()), 60_000);
+    this.destroyRef.onDestroy(() => clearInterval(timer));
+    this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
+      this.activePostId = params.get('post');
+      this.notificationComment = params.get('comment') || '';
+      if (this.notificationComment && this.activePost) {
+        const id = this.notificationComment;
+        setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+      }
+    });
+  }
+
+  isOwnPost(post: CommunityPost): boolean {
+    return post.userId === this.authService.currentUser()?._id;
+  }
+
+  relativeTime(value: string): string {
+    const date = new Date(value);
+    if (isNaN(date.getTime())) return value || 'Không rõ thời gian';
+    const now = this.now();
+    const minutes = Math.floor(Math.max(0, now - date.getTime()) / 60_000);
+    if (minutes < 1) return 'Vừa xong';
+    if (minutes < 60) return minutes + ' phút trước';
+    if (minutes < 1440) return Math.floor(minutes / 60) + ' giờ trước';
+    const zone = 'Asia/Ho_Chi_Minh';
+    const day = (d: Date) => d.toLocaleDateString('en-CA', { timeZone: zone });
+    const time = date.toLocaleTimeString('vi-VN', { timeZone: zone, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+    if (day(date) === day(new Date(now - 86_400_000))) return 'Hôm qua lúc ' + time;
+    const year = date.toLocaleDateString('en', { timeZone: zone, year: 'numeric' });
+    const sameYear = year === new Date(now).toLocaleDateString('en', { timeZone: zone, year: 'numeric' });
+    return date.toLocaleDateString('vi-VN', { timeZone: zone, day: 'numeric', month: 'long', ...(!sameYear ? { year: 'numeric' } as const : {}) }) + ' lúc ' + time;
+  }
+
+  postDate(value?: string): string {
+    const date = value ? new Date(value) : null;
+    return date && !isNaN(date.getTime())
+      ? date.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' }) + ' (GMT+7)'
+      : 'Bình luận cũ chưa lưu ngày giờ gốc';
+  }
+
+  editPost(post: CommunityPost, event?: Event): void {
+    event?.stopPropagation();
+    this.editingPostId = post.id;
+    this.newPostTitle = post.title;
+    this.newPostCaption = post.caption;
+    this.newPostImageUrl = post.imageUrl;
+    this.selectedTagProductId = post.productTags[0]?.productId || '';
+    this.showCreateModal = true;
+  }
+
+  async deletePost(post: CommunityPost, event?: Event): Promise<void> {
+    event?.stopPropagation();
+    if (!await this.confirmDialog.confirm({ title: 'Xóa bài viết?', message: 'Bài viết và các bình luận sẽ bị xóa.', confirmLabel: 'Xóa', danger: true })) return;
+    this.communityService.deletePost(post.id).subscribe({
+      next: () => { this.activePostId = null; this.toastService.success('Đã xóa bài viết'); },
+      error: err => this.toastService.error(err?.error?.error || 'Không xóa được bài viết'),
+    });
+  }
 
   get activePost(): CommunityPost | undefined {
     return this.activePostId ? this.posts.find(p => p.id === this.activePostId) : undefined;
@@ -160,12 +240,14 @@ export class CommunityComponent implements OnInit {
   }
 
   get currentFeedLabel(): string {
+    if (this.feedMode === 'mine') return 'Bài viết của bạn';
     if (this.feedMode === 'saved') return 'Đã lưu';
     if (this.feedMode === 'liked') return 'Đã thích';
     return this.feedTabs.find(t => t.key === this.sortBy)?.label ?? 'Cộng đồng Decor';
   }
 
   get emptyTitle(): string {
+    if (this.feedMode === 'mine') return 'Bạn chưa có bài viết phù hợp';
     if (this.feedMode === 'saved' && !this.searchQuery && this.activeFilter === 'all') return 'Bạn chưa lưu bài viết nào';
     if (this.feedMode === 'liked' && !this.searchQuery && this.activeFilter === 'all') return 'Bạn chưa thích bài viết nào';
     return 'Không tìm thấy bài viết phù hợp';
@@ -173,7 +255,7 @@ export class CommunityComponent implements OnInit {
 
   /** Bài nhiều lượt thích nhất cho khối Trending ở sidebar phải. */
   get trendingPosts(): CommunityPost[] {
-    return [...this.posts].sort((a, b) => b.likesCount - a.likesCount).slice(0, TRENDING_COUNT);
+    return this.posts.filter(p => !p.status || p.status === 'PUBLISHED').sort((a, b) => b.likesCount - a.likesCount).slice(0, TRENDING_COUNT);
   }
 
   get currentAvatar(): string {
@@ -234,6 +316,8 @@ export class CommunityComponent implements OnInit {
     const query = this.normalize(this.searchQuery.trim());
 
     let list = this.posts.filter(p => this.matchesTopic(p, filter));
+    if (this.feedMode === 'mine') list = list.filter(p => this.isOwnPost(p));
+    else list = list.filter(p => !p.status || p.status === 'PUBLISHED');
     if (this.feedMode === 'saved') list = list.filter(p => p.isSaved);
     else if (this.feedMode === 'liked') list = list.filter(p => p.isLiked);
     if (query) {
@@ -250,6 +334,8 @@ export class CommunityComponent implements OnInit {
   }
 
   setFeedMode(mode: FeedMode): void {
+    if (mode === 'mine' && !this.authService.currentUser()) { this.loginModalService.open(); return; }
+    this.communityService.refresh(mode === 'mine');
     if (this.feedMode !== mode) this.collectionSort = 'newest';
     this.feedMode = mode;
     this.activePostId = null;
@@ -286,11 +372,44 @@ export class CommunityComponent implements OnInit {
     this.communityService.toggleSave(postId);
   }
 
+  get commentThreads(): { root: PostComment; replies: PostComment[] }[] {
+    const comments = this.activePost?.comments || [];
+    const byId = new Map(comments.map(c => [c.id, c]));
+    const groups = new Map<string, { root: PostComment; replies: PostComment[] }>();
+    for (const comment of comments) {
+      let root = comment;
+      const visited = new Set([root.id]);
+      while (root.parentId && byId.has(root.parentId) && !visited.has(root.parentId)) {
+        root = byId.get(root.parentId)!;
+        visited.add(root.id);
+      }
+      if (!groups.has(root.id)) groups.set(root.id, { root, replies: [] });
+      if (comment.id !== root.id) groups.get(root.id)!.replies.push(comment);
+    }
+    return [...groups.values()];
+  }
+
+  trackComment(_index: number, comment: PostComment): string { return comment.id; }
+  trackThread(_index: number, thread: { root: PostComment }): string { return thread.root.id; }
+
+  startReply(comment: PostComment): void {
+    if (!this.authService.currentUser()) { this.loginModalService.open(); return; }
+    this.replyTo = comment;
+    setTimeout(() => {
+      const input = document.getElementById('reply-' + comment.id) as HTMLInputElement | null;
+      input?.focus({ preventScroll: true });
+      input?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+  }
+
   addComment(postId: string): void {
     const text = this.commentInputs[postId]?.trim();
     if (!text) return;
-    this.communityService.addComment(postId, text, 'Bạn');
-    this.commentInputs[postId] = '';
+    if (!this.authService.currentUser()) { this.loginModalService.open(); return; }
+    this.communityService.addComment(postId, text, this.replyTo?.id).subscribe({
+      next: () => { this.commentInputs[postId] = ''; this.replyTo = null; },
+      error: err => this.toastService.error(err?.error?.error || 'Không gửi được bình luận'),
+    });
   }
 
   openTagPopover(tag: ProductTag): void {}
@@ -301,6 +420,7 @@ export class CommunityComponent implements OnInit {
   openPost(post: CommunityPost, event?: Event): void {
     event?.stopPropagation();
     this.activePostId = post.id;
+    this.replyTo = null;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -316,16 +436,21 @@ export class CommunityComponent implements OnInit {
       this.loginModalService.open();
       return;
     }
+    this.editingPostId = null;
+    this.newPostTitle = '';
+    this.newPostCaption = '';
+    this.newPostImageUrl = '';
+    this.selectedTagProductId = '';
     this.showCreateModal = true;
   }
 
   closeCreateModal(): void {
-    this.showCreateModal = false;
+    if (!this.isPublishing) this.showCreateModal = false;
   }
 
   publishPost(): void {
     const user = this.authService.currentUser();
-    if (!user || !this.newPostTitle || !this.newPostImageUrl) return;
+    if (!user || !this.newPostTitle.trim() || !this.newPostImageUrl || this.isPublishing || this.isUploadingPostImage) return;
 
     const tags: ProductTag[] = [];
     if (this.selectedTagProductId) {
@@ -336,7 +461,8 @@ export class CommunityComponent implements OnInit {
       });
     }
 
-    this.communityService.createPost({
+    this.isPublishing = true;
+    const data = {
       userId: user._id,
       author: {
         id: user._id,
@@ -348,10 +474,15 @@ export class CommunityComponent implements OnInit {
       caption: this.newPostCaption,
       imageUrl: this.newPostImageUrl,
       tags: ['#decor', '#goccanhan', '#deco3d'],
-      productTags: tags,
-    }).subscribe({
+      productTags: this.editingPostId && this.selectedTagProductId === this.posts.find(p => p.id === this.editingPostId)?.productTags[0]?.productId
+        ? this.posts.find(p => p.id === this.editingPostId)!.productTags : tags,
+    };
+    const request = this.editingPostId ? this.communityService.updatePost(this.editingPostId, data) : this.communityService.createPost(data);
+    request.subscribe({
       next: () => {
-        this.toastService.success('Đã đăng bài lên Cộng đồng Decor!');
+        this.isPublishing = false;
+        this.toastService.success(this.editingPostId ? 'Đã lưu bài viết' : 'Đã đăng bài lên Cộng đồng Decor!');
+        this.editingPostId = null;
         this.showCreateModal = false;
         this.newPostTitle = '';
         this.newPostCaption = '';
@@ -359,7 +490,7 @@ export class CommunityComponent implements OnInit {
         this.selectedTagProductId = '';
       },
       // Bị bộ lọc chặn (vi phạm tiêu chuẩn cộng đồng) hoặc lỗi mạng: giữ nguyên modal để sửa lại.
-      error: (err) => this.toastService.error(err?.error?.error || 'Không đăng được bài, vui lòng thử lại.', 6000),
+      error: (err) => { this.isPublishing = false; this.toastService.error(err?.error?.error || 'Không lưu được bài, vui lòng thử lại.', 6000); },
     });
   }
 }

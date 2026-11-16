@@ -2,7 +2,7 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ToastService } from '../../core/services/toast.service';
 
-/** Vùng hiện toast góc phải trên (notification-toast của Vita). */
+
 @Component({
   selector: 'app-toast-host',
   standalone: true,

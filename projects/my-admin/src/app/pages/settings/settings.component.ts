@@ -22,6 +22,12 @@ const DEFAULT_SETTINGS = {
   woodPerGram: 2400,
   finishLaborFee: 45000,
   defaultLeadDays: 4,
+  // Chính sách cọc đơn in 3D theo báo giá — server đọc ở server/utils/deposit.js (normalizePolicy).
+  defaultDepositRate: 50,
+  minimumDepositAmount: 200000,
+  quoteValidityDays: 7,
+  depositPaymentDeadlineHours: 24,
+  allowDepositOverride: true,
   enableCod: true,
   /** Đơn COD dưới mức này (và không có hàng in 3D) giao luôn, không cần gọi xác nhận — server/utils/cod-policy.js. */
   codConfirmThreshold: 500000,
@@ -34,6 +40,15 @@ export type StoreSettings = typeof DEFAULT_SETTINGS;
 
 const NUMBER_FIELDS: (keyof StoreSettings)[] = [
   'plaPerGram', 'resinPerGram', 'woodPerGram', 'finishLaborFee', 'defaultLeadDays', 'codConfirmThreshold',
+  'defaultDepositRate', 'minimumDepositAmount', 'quoteValidityDays', 'depositPaymentDeadlineHours',
+];
+
+/** Giới hạn khớp với normalizePolicy phía server — ngoài khoảng thì server bỏ qua và dùng mặc định. */
+const DEPOSIT_RULES: { key: keyof StoreSettings; label: string; min: number; max: number; integer: boolean }[] = [
+  { key: 'defaultDepositRate', label: 'Tỷ lệ cọc (%)', min: 1, max: 100, integer: false },
+  { key: 'minimumDepositAmount', label: 'Tiền cọc tối thiểu', min: 0, max: 1_000_000_000, integer: true },
+  { key: 'quoteValidityDays', label: 'Hiệu lực báo giá (ngày)', min: 1, max: 60, integer: true },
+  { key: 'depositPaymentDeadlineHours', label: 'Hạn chuyển cọc (giờ)', min: 1, max: 168, integer: true },
 ];
 
 /** Cài đặt hệ thống — thông tin cửa hàng, đơn giá in 3D, cổng thanh toán (config 'settings'). */
@@ -106,6 +121,15 @@ export class SettingsComponent implements OnInit {
     const bad = NUMBER_FIELDS.find(k => !(Number(f[k]) >= 0));
     if (bad) {
       this.toast.warning('Các ô số phải là số không âm');
+      return;
+    }
+    const badDeposit = DEPOSIT_RULES.find(r => {
+      const n = Number(f[r.key]);
+      return n < r.min || n > r.max || (r.integer && !Number.isInteger(n));
+    });
+    if (badDeposit) {
+      this.tab.set('print3d');
+      this.toast.warning(`${badDeposit.label} phải từ ${badDeposit.min.toLocaleString('vi-VN')} đến ${badDeposit.max.toLocaleString('vi-VN')}`);
       return;
     }
     if (!f.enableCod && !f.enableBankQr && !f.enableMomo && !f.enableZaloPay) {

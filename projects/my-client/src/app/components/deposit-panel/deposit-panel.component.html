@@ -46,7 +46,7 @@
       </button>
     </div>
 
-    <button type="button" class="dp__toggle" (click)="showBank = !showBank">
+    <button type="button" class="dp__toggle" *ngIf="info?.payment?.bank" (click)="showBank = !showBank">
       {{ showBank ? 'Ẩn chuyển khoản ngân hàng' : 'Hoặc chuyển khoản ngân hàng (VietQR)' }}
     </button>
 

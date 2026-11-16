@@ -14,3 +14,16 @@
   display: block;
   max-width: 420px;
 }
+
+.comment-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.comment-link:hover {
+  text-decoration: underline;
+}

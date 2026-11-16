@@ -31,6 +31,16 @@ export interface RequestChatMessage {
   text: string;
   timestamp: string;
   attachments?: string[];
+  /** Có khi shop gửi báo giá: khung chat hiện bảng báo giá thay cho dòng chữ. */
+  quote?: {
+    version: number;
+    items: { name: string; quantity: number; lineTotal: number }[];
+    discount: number;
+    total: number;
+    depositAmount: number;
+    estimatedDays: number;
+    validUntil: string;
+  };
 }
 
 export interface CustomRequest {
@@ -40,6 +50,8 @@ export interface CustomRequest {
   updatedAt: string;
   title: string;
   customerName: string;
+  customerAvatar?: string;
+  unreadStaff?: number;
   customerEmail: string;
   customerPhone?: string;
   status: CustomRequestStatus;
@@ -66,6 +78,7 @@ export interface QuoteItem {
   quantity: number;
   unitPrice: number;
   discount: number;
+  discountPercent?: number | null;
   lineTotal: number;
 }
 
@@ -78,6 +91,7 @@ export interface Quote {
   subtotal: number;
   itemDiscountTotal: number;
   quoteDiscount: number;
+  quoteDiscountPercent?: number | null;
   total: number;
   estimatedDays: number;
   note?: string;

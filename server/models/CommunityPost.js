@@ -10,12 +10,13 @@ const communityPostSchema = new mongoose.Schema({
   tags: { type: [String], default: [] },
   productTags: { type: [mongoose.Schema.Types.Mixed], default: [] },
   likesCount: { type: Number, default: 0 },
+  likedBy: { type: [String], default: [] },
   commentsCount: { type: Number, default: 0 },
   comments: { type: [mongoose.Schema.Types.Mixed], default: [] },
   createdAt: { type: String, default: '' },
   // Thời điểm đăng thật (createdAt ở trên là nhãn hiển thị kiểu "Vừa xong"). Bài cũ chưa có
   // trường này thì route admin suy ra từ _id.
-  postedAt: { type: Date, default: Date.now },
+  postedAt: { type: Date },
   // Kiểm duyệt: PUBLISHED hiện công khai; HIDDEN do nhân viên ẩn; REJECTED bị bộ lọc tự động chặn
   // ngay lúc đăng vì vi phạm tiêu chuẩn cộng đồng. HIDDEN/REJECTED không hiện ở my-client.
   status: { type: String, enum: ['PUBLISHED', 'HIDDEN', 'REJECTED'], default: 'PUBLISHED' },
@@ -28,9 +29,14 @@ const communityPostSchema = new mongoose.Schema({
   toJSON: {
     transform(_doc, ret) {
       delete ret.moderatedBy;
+      delete ret.likedBy;
+      ret.postedAt = ret.postedAt || ret._id?.getTimestamp?.();
       return ret;
     },
   },
 });
+
+communityPostSchema.index({ userId: 1, _id: -1 });
+communityPostSchema.index({ status: 1, _id: -1 });
 
 module.exports = mongoose.model('CommunityPost', communityPostSchema);

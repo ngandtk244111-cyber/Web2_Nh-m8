@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit, signal, inject } from '@angular/core';
+import { effect, Component, HostListener, OnInit, signal, inject } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -9,6 +9,7 @@ import { PaymentService } from '../../core/services/payment.service';
 import { Order } from '../../core/models/order.model';
 import { CheckoutFlowService } from '../../core/services/checkout-flow.service';
 import { AddressService } from '../../core/services/address.service';
+import { ToastService } from '../../core/services/toast.service';
 import { VNLocation } from '../../core/models/address.model';
 import { AppIconComponent } from '../../components/icon/icon.component';
 import { CheckoutStepsComponent } from '../../components/checkout-steps/checkout-steps.component';
@@ -16,6 +17,10 @@ import { VndPipe } from '../../shared/pipes/vnd.pipe';
 import { MascotService } from '../../core/services/mascot.service';
 import QRCode from 'qrcode';
 import { VoucherPickerComponent } from '../../components/voucher-picker/voucher-picker.component';
+import { CustomRequestService } from '../../core/services/custom-request.service';
+import { Quote } from '../../core/models/custom-request.model';
+import { CartItem } from '../../core/models/cart.model';
+import { Product } from '../../core/models/product.model';
 
 import { DEPOSIT_THRESHOLD, depositFor } from '../../core/data/deposit-policy';
 
@@ -63,6 +68,11 @@ export class CheckoutComponent implements OnInit {
     notes: '',
   };
 
+  selectedAddressId = '';
+  saveAddress = true;
+  shippingTouched = false;
+  private addressesLoaded = false;
+  private readonly toast = inject(ToastService);
   errors: Record<string, string> = {};
   private readonly authService = inject(AuthService);
 
@@ -104,9 +114,103 @@ export class CheckoutComponent implements OnInit {
   readonly paymentMethods = PAYMENT_METHODS;
   readonly depositThreshold = DEPOSIT_THRESHOLD;
 
+  /* ---------- Đặt đơn từ báo giá in 3D (vào /checkout kèm history.state.quoteCheckout) ----------
+   * Dùng chung trang thanh toán, chỉ khác nguồn hàng (hạng mục báo giá thay cho giỏ hàng) và tiền cọc khi
+   * chọn COD (theo báo giá thay cho 30% đơn từ 5 triệu). Giá và cọc do server chốt. */
+  private readonly customRequestService = inject(CustomRequestService);
+  quoteOrder: { requestId: string; quote: Quote; lines: CartItem[] } | null = null;
+  quoteLoading = false;
+
+  get items(): CartItem[] {
+    return this.quoteOrder ? this.quoteOrder.lines : this.cartService.checkoutItems();
+  }
+
+  get itemCount(): number {
+    return this.quoteOrder ? this.items.reduce((sum, i) => sum + i.quantity, 0) : this.cartService.checkoutItemCount();
+  }
+
+  get subtotal(): number {
+    return this.quoteOrder ? this.quoteOrder.quote.subtotal : this.cartService.checkoutSubtotal();
+  }
+
+  get discount(): number {
+    const q = this.quoteOrder?.quote;
+    return q ? q.itemDiscountTotal + q.quoteDiscount : this.cartService.checkoutDiscount();
+  }
+
+  /** Cùng quy tắc phí ship với server (miễn phí từ 500.000đ tiền hàng). */
+  get shippingFee(): number {
+    const q = this.quoteOrder?.quote;
+    if (!q) return this.cartService.checkoutShippingFee();
+    return q.total >= 500000 ? 0 : 30000;
+  }
+
+  get total(): number {
+    return this.quoteOrder ? this.quoteOrder.quote.total + this.shippingFee : this.cartService.checkoutTotal();
+  }
+
+  /** Tiền cọc của báo giá — phải chuyển trước nếu chọn COD. */
+  get quoteDeposit(): number {
+    return this.quoteOrder?.quote.deposit?.amount || 0;
+  }
+
+  private loadQuoteOrder(requestId: string, version: number): void {
+    this.quoteLoading = true;
+    this.customRequestService.getQuotes(requestId).subscribe({
+      next: res => {
+        this.quoteLoading = false;
+        const quote = res.quotes.find(q => q.version === version && q.status === 'ACCEPTED');
+        if (!quote) {
+          this.toast.error('Báo giá chưa được chấp nhận hoặc đã thay đổi');
+          this.router.navigate(['/custom-request', requestId]);
+          return;
+        }
+        const request = this.customRequestService.getRequestById(requestId);
+        const image = request?.aiConceptImage || request?.customerImages?.[0] || 'assets/mascot/goh-mascot.png';
+        const lines = quote.items.map((item, index) => ({
+          id: `${requestId}-${index}`,
+          product: { name: item.name, images: [image] } as Product,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          totalPrice: item.lineTotal,
+        }));
+        this.quoteOrder = { requestId, quote, lines };
+      },
+      error: err => {
+        this.quoteLoading = false;
+        this.toast.error(err?.error?.error || 'Không tải được báo giá');
+        this.router.navigate(['/custom-request', requestId]);
+      },
+    });
+  }
+
+  /** Tạo đơn từ báo giá; các bước sau (cổng thanh toán, QR cọc) giống hệt đơn từ giỏ hàng. */
+  private placeQuoteOrder(): void {
+    const { requestId, quote } = this.quoteOrder!;
+    this.placingOrder = true;
+    this.placeOrderError = '';
+    this.mascotService.beginLoading({ immediate: true });
+    this.customRequestService.checkout(requestId, {
+      quoteVersion: quote.version,
+      paymentMethod: this.paymentMethod,
+      notes: this.shipping.notes,
+      shippingAddress: { ...this.shipping, phone: this.shipping.phone.replace(/[\s.]/g, '') },
+    }).subscribe({
+      next: order => {
+        this.saveShippingAddress(order);
+        this.handleCreatedOrder(order, () => this.flow.goToStep(4, { validate: () => true }));
+      },
+      error: err => {
+        this.placingOrder = false;
+        this.mascotService.endLoading('sad');
+        this.placeOrderError = err?.error?.error || 'Không tạo được đơn hàng, vui lòng thử lại.';
+      },
+    });
+  }
+
   /** Tiền cọc phải chuyển trước nếu chọn COD cho đơn hiện tại (0 = không cần cọc). */
   get codDeposit(): number {
-    return depositFor(this.cartService.checkoutTotal(), 'COD');
+    return this.quoteOrder ? this.quoteDeposit : depositFor(this.total, 'COD');
   }
 
   /** Đơn vừa tạo đang chờ chuyển cọc -> hộp QR hiển thị số tiền cọc thay vì cả đơn. */
@@ -133,7 +237,12 @@ export class CheckoutComponent implements OnInit {
     private mascotService: MascotService,
     private route: ActivatedRoute,
     private location: Location
-  ) {}
+  ) {
+    effect(() => {
+      this.addressService.provinces();
+      if (this.shipping.city) this.loadShippingDistricts(this.shipping.city);
+    });
+  }
 
   /**
    * Bấm Back từ cổng thanh toán: trình duyệt có thể khôi phục trang cũ từ bộ nhớ đệm (bfcache) với giao diện
@@ -242,13 +351,47 @@ export class CheckoutComponent implements OnInit {
     });
   }
 
-  onProvinceChange(): void {
-    const p = this.addressService.provinces().find(x => x.name === this.shipping.city);
+  private loadShippingDistricts(city: string): void {
+    const province = this.addressService.provinces().find(p => p.name === city);
     this.districts.set([]);
+    if (province) this.addressService.getDistricts(province.code).subscribe({
+      next: res => { if (this.shipping.city === city) this.districts.set(res.districts || []); },
+      error: () => {},
+    });
+  }
+
+  onProvinceChange(): void {
     this.shipping.district = '';
-    if (p) {
-      this.addressService.getDistricts(p.code).subscribe(res => this.districts.set(res.districts || []));
-    }
+    this.loadShippingDistricts(this.shipping.city);
+  }
+
+  selectShippingAddress(id: string): void {
+    const address = this.addressService.addresses().find(a => a._id === id);
+    const user = this.authService.currentUser();
+    this.selectedAddressId = id;
+    this.saveAddress = !address;
+    this.shipping = { ...this.shipping,
+      fullName: address?.fullName || user?.fullName || '',
+      phone: address?.phone || user?.phoneNumber || '',
+      city: address?.city || '', district: address?.district || '',
+      street: address ? [address.address, address.ward].filter(Boolean).join(', ') : '',
+    };
+    this.errors = {};
+    this.loadShippingDistricts(this.shipping.city);
+  }
+
+  private saveShippingAddress(order: Order): void {
+    if (!this.saveAddress || !this.addressesLoaded) return;
+    const shipping = order.shippingAddress;
+    const addresses = this.addressService.addresses();
+    const same = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
+    if (addresses.some(a => same(a.fullName, shipping.fullName) && same(a.phone, shipping.phone)
+      && same(a.city, shipping.city) && same(a.district, shipping.district)
+      && same([a.address, a.ward].filter(Boolean).join(', '), shipping.street))) return;
+    this.addressService.add({ label: 'Nhà riêng', fullName: shipping.fullName, phone: shipping.phone,
+      city: shipping.city, district: shipping.district, ward: '', address: shipping.street,
+      isDefault: addresses.length === 0,
+    }, () => this.toast.error('Đơn đã tạo, nhưng chưa lưu được địa chỉ. Bạn có thể thêm lại trong Sổ địa chỉ.'));
   }
 
   ngOnInit(): void {
@@ -258,15 +401,31 @@ export class CheckoutComponent implements OnInit {
       this.openSwitchFromLink(switchOrder);
       return;
     }
+    const quoteCheckout: { requestId: string; version: number } | undefined = history.state?.quoteCheckout;
+    if (quoteCheckout) {
+      this.loadQuoteOrder(quoteCheckout.requestId, quoteCheckout.version);
+      this.flow.reset();
+      this.flow.goToStep(2);
+    }
+    const user = this.authService.currentUser();
+    this.shipping.fullName = user?.fullName || '';
+    this.shipping.phone = user?.phoneNumber || '';
+    this.shipping.email = user?.email || '';
+    this.addressService.load(addresses => {
+      this.addressesLoaded = true;
+      if (this.shippingTouched) return;
+      const address = addresses.find(a => a.isDefault) || addresses[0];
+      if (address) this.selectShippingAddress(address._id);
+    });
     // Phòng trường hợp còn kẹt ở Bước 4 (khoá) từ một đơn đã đặt trước đó trong cùng phiên SPA
     // nhưng lại vào /checkout theo cách khác "Tiếp tục mua sắm" (component instance mới, createdOrder rỗng) —
     // tránh màn hình trắng vì cả 2 khối bước 2/3 lẫn modal bước 4 đều không có điều kiện để hiển thị.
-    if (this.flow.currentStep() === 4 && !this.createdOrder) {
+    if (this.flow.currentStep() === 4 && !this.createdOrder && !quoteCheckout) {
       this.flow.reset();
     }
     // Chỉ nâng lên Bước 2 nếu đang thực sự ở Bước 1 (vào lần đầu từ giỏ hàng) — nếu đã ở giữa
     // luồng (Bước 2/3 do điều hướng qua lại bằng Stepper) thì giữ nguyên, không ép về lại Bước 2.
-    if (this.cartService.checkoutItems().length > 0) {
+    if (!quoteCheckout && this.cartService.checkoutItems().length > 0) {
       this.flow.enterCheckoutPageFromCart();
     }
   }
@@ -278,7 +437,8 @@ export class CheckoutComponent implements OnInit {
   goToStep(step: 1 | 2): void {
     this.flow.goToStep(step);
     if (step === 1) {
-      this.router.navigate(['/cart']);
+      // Đơn theo báo giá không đi từ giỏ hàng: "quay lại" là về trang yêu cầu đặt làm.
+      this.router.navigate(this.quoteOrder ? ['/custom-request', this.quoteOrder.requestId] : ['/cart']);
     }
   }
 
@@ -354,7 +514,7 @@ export class CheckoutComponent implements OnInit {
   placeOrderError = '';
 
   placeOrder(): void {
-    if (this.cartService.checkoutItems().length === 0 || this.placingOrder) return;
+    if (this.items.length === 0 || this.placingOrder) return;
 
     const method = this.paymentMethods.find(m => m.id === this.paymentMethod);
     if (!method?.supported) {
@@ -365,6 +525,11 @@ export class CheckoutComponent implements OnInit {
     if (!this.validateShipping()) {
       this.goToStep(2);
       this.focusFirstError();
+      return;
+    }
+
+    if (this.quoteOrder) {
+      this.placeQuoteOrder();
       return;
     }
 
@@ -394,12 +559,8 @@ export class CheckoutComponent implements OnInit {
       } : null,
     }).subscribe({
       next: (newOrder) => {
-        this.placingOrder = false;
-        this.mascotService.endLoading('happy');
-
-
-        this.createdOrder = newOrder;
-        const finish = () => {
+        this.saveShippingAddress(newOrder);
+        this.handleCreatedOrder(newOrder, () => {
           // Đặt hàng thành công -> tiến sang Bước 4 (Hoàn tất), khoá Stepper lại.
           this.flow.goToStep(4, { validate: () => true });
           // Chỉ xoá đúng các sản phẩm vừa đặt hàng — sản phẩm chưa chọn vẫn còn trong giỏ.
@@ -407,26 +568,7 @@ export class CheckoutComponent implements OnInit {
           this.cartService.clearCheckoutSelection();
           // Mỗi mã chỉ dùng 1 lần: dùng xong thì xoá khỏi danh sách mã của khách.
           this.cartService.consumeAppliedCoupon();
-        };
-
-        // Ví / cổng online: chỉ dọn giỏ khi đã tạo được giao dịch. Cổng lỗi thì server huỷ đơn + trả mã,
-        // khách ở lại bước thanh toán với giỏ hàng và mã giảm giá như cũ để chọn phương thức khác.
-        if (this.paymentMethod === 'MOMO' || this.paymentMethod === 'ATM') {
-          this.redirectToMomo(newOrder.orderNumber, this.paymentMethod === 'ATM' ? 'atm' : 'momo', finish);
-          return;
-        }
-        if (this.paymentMethod === 'ZALOPAY') {
-          this.redirectToZaloPay(newOrder.orderNumber, finish);
-          return;
-        }
-        finish();
-        // Chuyển khoản, hoặc COD đơn lớn phải chuyển cọc trước: hiện mã QR với đúng số tiền cần chuyển.
-        if (this.paymentMethod === 'BANK_TRANSFER' || (newOrder.depositAmount || 0) > 0) {
-          this.buildDemoQr(newOrder);
-          this.showBankQrModal = true;
-        } else {
-          this.showOrderSuccess = true;
-        }
+        });
       },
       error: (err) => {
         this.placingOrder = false;
@@ -435,6 +577,32 @@ export class CheckoutComponent implements OnInit {
         this.placeOrderError = err?.error?.error || 'Không tạo được đơn hàng, vui lòng thử lại. (' + (err?.message || 'lỗi kết nối') + ')';
       },
     });
+  }
+
+  /** Sau khi tạo đơn (từ giỏ hàng hoặc từ báo giá): sang cổng online, hiện QR chuyển khoản / cọc, hoặc báo thành công. */
+  private handleCreatedOrder(newOrder: Order, finish: () => void): void {
+    this.placingOrder = false;
+    this.mascotService.endLoading('happy');
+    this.createdOrder = newOrder;
+
+    // Ví / cổng online: chỉ dọn giỏ khi đã tạo được giao dịch. Cổng lỗi thì server huỷ đơn + trả mã,
+    // khách ở lại bước thanh toán với giỏ hàng và mã giảm giá như cũ để chọn phương thức khác.
+    if (this.paymentMethod === 'MOMO' || this.paymentMethod === 'ATM') {
+      this.redirectToMomo(newOrder.orderNumber, this.paymentMethod === 'ATM' ? 'atm' : 'momo', finish);
+      return;
+    }
+    if (this.paymentMethod === 'ZALOPAY') {
+      this.redirectToZaloPay(newOrder.orderNumber, finish);
+      return;
+    }
+    finish();
+    // Chuyển khoản, hoặc COD phải chuyển cọc trước (đơn từ 5 triệu / đơn theo báo giá): hiện QR đúng số tiền cần chuyển.
+    if (this.paymentMethod === 'BANK_TRANSFER' || (newOrder.depositAmount || 0) > 0) {
+      this.buildDemoQr(newOrder);
+      this.showBankQrModal = true;
+    } else {
+      this.showOrderSuccess = true;
+    }
   }
 
   private redirectToMomo(orderNumber: string, method: 'momo' | 'atm', onReady: () => void): void {
@@ -480,7 +648,7 @@ export class CheckoutComponent implements OnInit {
    */
   private buildDemoQr(order: Order): void {
     this.bankQrDataUrl = '';
-    const amount = (order.depositAmount || order.total).toLocaleString('vi-VN') + 'đ' + (order.depositAmount ? ' (tiền cọc 30%)' : '');
+    const amount = (order.depositAmount || order.total).toLocaleString('vi-VN') + 'đ' + (order.depositAmount ? ' (tiền cọc)' : '');
     // Giữ nội dung ngắn để mã QR thưa, camera điện thoại quét dễ.
     const text = [
       'ĐỒ ÁN MÔN HỌC WEB 2 - NHÓM 8',

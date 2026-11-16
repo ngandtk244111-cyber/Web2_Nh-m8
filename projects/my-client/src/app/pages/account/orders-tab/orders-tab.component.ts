@@ -23,6 +23,11 @@ export class OrdersTabComponent implements OnInit {
   loading = false;
   searchQuery = '';
   statusTab: StatusTab = 'ALL';
+  expandedOrders = new Set<string>();
+
+  toggleProducts(orderNumber: string): void {
+    if (!this.expandedOrders.delete(orderNumber)) this.expandedOrders.add(orderNumber);
+  }
 
   readonly statusTabs: { id: StatusTab; label: string }[] = [
     { id: 'ALL', label: 'Tất cả' },

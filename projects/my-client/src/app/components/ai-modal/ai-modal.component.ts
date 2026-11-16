@@ -36,8 +36,7 @@ export class AiModalComponent implements AfterViewChecked, OnDestroy {
 
   @ViewChild('body') private bodyEl?: ElementRef<HTMLDivElement>;
 
-  /** Cuộn sau khi view cập nhật: tin khách / đang soạn -> xuống cuối; câu trả lời của Lami -> tới ĐẦU câu trả lời
-   *  (câu dài + thẻ sản phẩm vẫn đọc được từ đầu, giống AruBot của AuraPC). */
+
   private scrollTarget: 'bottom' | 'last-reply' | null = null;
 
   constructor(

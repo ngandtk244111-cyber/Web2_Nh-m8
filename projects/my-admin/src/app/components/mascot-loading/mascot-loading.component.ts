@@ -1,6 +1,6 @@
 import { Component, Input } from '@angular/core';
 
-/** Mascot Luméa chạy trên thanh loading — theo admin-mascot-loading của my-admin-vita. */
+
 @Component({
   selector: 'app-mascot-loading',
   standalone: true,

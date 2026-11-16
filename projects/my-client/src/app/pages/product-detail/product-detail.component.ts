@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, effect, signal, untracked } from '@angular/core';
+import { afterNextRender, Injector, Component, OnDestroy, OnInit, effect, signal, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -30,6 +30,8 @@ import {
   subcategoriesOf,
   subcategoryLink,
 } from '../../core/data/catalog-taxonomy';
+import { ReviewsTabComponent } from '../account/reviews-tab/reviews-tab.component';
+import { ReviewService, ReviewableItem } from '../../core/services/review.service';
 import { ProductPhotoComponent } from '../../components/product-photo/product-photo.component';
 
 type ReviewFilter = 'all' | 'with-images' | '5' | '4' | 'low';
@@ -96,41 +98,10 @@ const PRODUCT_FAQ: FaqCategory[] = [
   },
 ];
 
-/** Đánh giá mẫu hiển thị khi sản phẩm chưa có đánh giá thật nào (dữ liệu demo). */
-const SAMPLE_REVIEWS: ProductReview[] = [
-  {
-    id: 'sample-rev-1',
-    author: 'Ngọc Anh',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80',
-    rating: 5,
-    date: '12/10/2026',
-    comment: 'Sản phẩm đẹp y hình, đóng gói rất kỹ, giao nhanh hơn dự kiến. Đặt vào phòng khách nhìn sang hẳn!',
-    verifiedPurchase: true,
-  },
-  {
-    id: 'sample-rev-2',
-    author: 'Minh Quân',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80',
-    rating: 4,
-    date: '05/10/2026',
-    comment: 'Chất lượng hoàn thiện tốt, màu ngoài đời ấm hơn ảnh một chút nhưng vẫn rất ưng. Shop tư vấn nhiệt tình.',
-    verifiedPurchase: true,
-  },
-  {
-    id: 'sample-rev-3',
-    author: 'Thu Trang',
-    avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=150&q=80',
-    rating: 5,
-    date: '28/09/2026',
-    comment: 'Mua làm quà tân gia, bạn mình thích lắm. Sẽ quay lại mua thêm đồ decor ở Luméa.',
-    verifiedPurchase: true,
-  },
-];
-
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [ProductPhotoComponent, 
+  imports: [ProductPhotoComponent, ReviewsTabComponent,
     CommonModule,
     FormsModule,
     RouterLink,
@@ -160,12 +131,10 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
   selectedSizeId?: string;
   selectedFinishId?: string;
 
-  showReviewForm = false;
   /** Khách đang đăng nhập đã mua sản phẩm này chưa — chưa mua thì chỉ xem đánh giá. */
   canReview = false;
-  newReviewRating = 5;
-  newReviewAuthor = '';
-  newReviewComment = '';
+  private ownReviews: ReviewableItem[] = [];
+  editingReview: ReviewableItem | null = null;
   reviewFilter: ReviewFilter = 'all';
   reviewPage = 1;
 
@@ -174,8 +143,10 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
 
   constructor(
     private route: ActivatedRoute,
+    private injector: Injector,
     private router: Router,
     private productService: ProductService,
+    private reviewService: ReviewService,
     private cartService: CartService,
     public recentlyViewedService: RecentlyViewedService,
     public favoriteService: FavoriteService,
@@ -256,6 +227,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.flash.acquire();
+    this.route.queryParamMap.subscribe(() => { if (this.reviewsLoaded) this.focusReview(); });
     this.route.paramMap.subscribe(params => {
       const slug = params.get('slug');
       this.slug.set(slug);
@@ -496,10 +468,10 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     return opts.length ? 'Đổi ' + opts.join(', ') : 'Theo yêu cầu';
   }
 
-  /** Đánh giá hiển thị: đánh giá thật, hoặc vài đánh giá mẫu khi sản phẩm chưa có đánh giá nào. */
+  /** Đánh giá công khai của sản phẩm. */
   get displayReviews(): ProductReview[] {
     if (!this.product || !this.reviewsLoaded) return [];
-    return this.product.reviews.length ? this.product.reviews : SAMPLE_REVIEWS;
+    return this.product.reviews;
   }
 
   private loadReviews(product: Product): void {
@@ -508,17 +480,46 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
       if (this.product?.id !== product.id) return;
       this.product.reviews = reviews;
       this.reviewsLoaded = true;
+      this.focusReview();
     });
   }
 
   private checkCanReview(product: Product): void {
     this.canReview = false;
-    this.showReviewForm = false;
     const userId = this.authService.currentUser()?._id;
     if (!userId) return;
-    this.productService.canReview(product.id, userId).subscribe(ok => {
-      if (this.product?.id === product.id) this.canReview = ok;
+    this.ownReviews = [];
+    this.reviewService.myReviews(userId).subscribe(res => {
+      if (this.product?.id !== product.id) return;
+      this.canReview = res.pending.some(item => item.productId === product.id);
+      this.ownReviews = res.reviewed.filter(item => item.productId === product.id);
     });
+  }
+
+  canEditReview(id: string): boolean {
+    const review = this.ownReviews.find(item => item.review?.id === id)?.review;
+    return !!review?.createdAt && !review.editedAt && Date.now() - Date.parse(review.createdAt) <= 30 * 86400000;
+  }
+
+  editReview(id: string): void {
+    if (this.canEditReview(id)) this.editingReview = this.ownReviews.find(item => item.review?.id === id) || null;
+  }
+
+  refreshReviews(): void {
+    if (!this.product) return;
+    this.loadReviews(this.product);
+    this.checkCanReview(this.product);
+  }
+
+  private focusReview(): void {
+    const id = this.route.snapshot.queryParamMap.get('review');
+    const index = this.displayReviews.findIndex(review => review.id === id);
+    if (index < 0) return;
+    this.reviewFilter = 'all';
+    this.reviewPage = Math.floor(index / REVIEWS_PER_PAGE) + 1;
+    afterNextRender(() => {
+      document.getElementById('review-' + id)?.scrollIntoView({ behavior: 'instant', block: 'center' });
+    }, { injector: this.injector });
   }
 
   get filteredReviews(): ProductReview[] {
@@ -654,32 +655,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     this.router.navigate(['/checkout']);
   }
 
-  submitReview(): void {
-    if (!this.product || !this.newReviewAuthor || !this.newReviewComment) return;
-    const product = this.product;
-    const userId = this.authService.currentUser()?._id;
-
-    this.mascotService.beginLoading({ immediate: true });
-    this.productService.submitReview(product.id, {
-      userId,
-      author: this.newReviewAuthor,
-      rating: this.newReviewRating,
-      comment: this.newReviewComment,
-    }).subscribe({
-      next: (res) => {
-        product.reviews.unshift(res.review);
-        this.showReviewForm = false;
-        this.newReviewAuthor = '';
-        this.newReviewComment = '';
-        this.reviewPage = 1;
-        this.toastService.success('Cảm ơn bạn đã đánh giá! Luméa tặng bạn 1 voucher giảm giá.');
-        this.mascotService.endLoading('happy');
-      },
-      // Server trả lý do cụ thể khi đánh giá bị bộ lọc chặn (từ ngữ thô tục, spam...).
-      error: (err) => {
-        this.toastService.error(err?.error?.error || 'Không gửi được đánh giá, vui lòng thử lại.', 6000);
-        this.mascotService.endLoading('sad');
-      },
-    });
+  openReviews(): void {
+    this.router.navigate(['/account'], { queryParams: { tab: 'reviews' } });
   }
 }

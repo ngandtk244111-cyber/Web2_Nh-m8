@@ -1,5 +1,5 @@
 // `npm run dev` — chạy cùng lúc backend (server/, cổng 4300) và giao diện my-client (cổng 4200).
-// Tự cài thư viện cho server nếu chưa có, và tự tạo server/.env từ .env.example nếu chưa có.
+// Tự cài thư viện cho server nếu chưa có. Cấu hình đọc từ server/.env (có sẵn trong repo).
 const { spawn, spawnSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
@@ -17,8 +17,8 @@ if (!fs.existsSync(path.join(serverDir, 'node_modules'))) {
 }
 
 if (!fs.existsSync(envFile)) {
-  fs.copyFileSync(path.join(serverDir, '.env.example'), envFile);
-  console.log('[dev] Đã tạo server/.env từ .env.example.');
+  console.error('\n[dev] Thiếu file server/.env — tải lại file này từ repo rồi chạy lại `npm run dev`.\n');
+  process.exit(1);
 }
 
 const geminiKey = (fs.readFileSync(envFile, 'utf8').match(/^GEMINI_API_KEY=(.*)$/m) || [])[1];

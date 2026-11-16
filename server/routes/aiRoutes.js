@@ -296,7 +296,7 @@ router.post('/assistant', async (req, res) => {
   try {
     if (!GEMINI_API_KEY) {
       if (!AI_PROXY_URL) {
-        return res.status(503).json({ success: false, error: 'GEMINI_API_KEY chưa được cấu hình trên server (xem server/.env.example).' });
+        return res.status(503).json({ success: false, error: 'GEMINI_API_KEY chưa được cấu hình trên server (thêm vào server/.env).' });
       }
       const proxied = await axios.post(AI_PROXY_URL, req.body, PROXY_OPTIONS());
       return res.json(proxied.data);

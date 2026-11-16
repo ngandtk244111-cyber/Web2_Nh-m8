@@ -22,8 +22,7 @@ npm install          # cài thư viện cho Angular
 npm run dev          # chạy cùng lúc backend (4300) và web khách hàng (4200)
 ```
 
-Lần đầu chạy, `npm run dev` sẽ tự cài thư viện cho `server/` và tạo `server/.env` từ `server/.env.example`.
-Mở `server/.env` và điền ít nhất `MONGODB_URI` rồi chạy lại.
+Lần đầu chạy, `npm run dev` sẽ tự cài thư viện cho `server/`. File cấu hình `server/.env` có sẵn trong repo.
 
 Trang quản trị chạy riêng ở một terminal khác:
 
@@ -33,7 +32,8 @@ npx ng serve my-admin    # http://localhost:4201
 
 ## Biến môi trường (`server/.env`)
 
-File `server/.env` chứa key thật, **không đưa lên Git**. Danh sách đầy đủ và hướng dẫn lấy key có trong `server/.env.example`.
+Project chỉ dùng một file biến môi trường là `server/.env`, có sẵn trong repo và đã trỏ tới database của nhóm.
+Các key cần bảo mật (mật khẩu Gmail, Gemini API key, khoá ký token) để trống trên Git. Khi trống, web vẫn chạy: mã OTP hiện ngay trên màn hình, chatbot AI không trả lời.
 
 | Biến | Dùng cho | Bắt buộc |
 |---|---|---|
@@ -57,14 +57,14 @@ Atlas là MongoDB đặt trên cloud, cả nhóm và bản deploy cùng kết n�
 
 - **Làm việc nhóm:** sản phẩm, phòng 3D, bài viết, đơn hàng do một thành viên tạo thì máy các thành viên khác thấy ngay, không phải gửi file dữ liệu qua lại.
 - **Deploy:** backend chạy trên Render dùng chính database này, nên web online và web chạy local có cùng dữ liệu.
-- **Dễ chạy:** `server/.env.example` đã trỏ sẵn tới database của nhóm. Tải repo về, chạy `npm run dev` là có đủ dữ liệu, **không cần seed**.
+- **Dễ chạy:** file `server/.env` trong repo đã trỏ sẵn tới database này. Tải repo về chạy `npm run dev` là có đủ dữ liệu, **không cần seed**.
 
 ### Vì sao vẫn có lệnh seed
 
 Database trên cloud có lúc không kết nối được: mạng trường hoặc công ty chặn cổng MongoDB, Atlas bảo trì, cụm miễn phí bị tạm dừng... Khi đó web không có dữ liệu để hiển thị.
 Lệnh seed là **phương án dự phòng**: dựng một database ngay trên máy, không cần Internet, có cùng nội dung với web thật.
 
-Phần nội dung (sản phẩm, phòng 3D, tin tức...) khớp với web từ monggo Atlas (`server/seed/snapshot/`).
+Phần nội dung (sản phẩm, phòng 3D, tin tức...) khớp với web từ MongoDB Atlas (`server/seed/snapshot/`).
 Tài khoản, đơn hàng, bình luận dùng dữ liệu mẫu để không đưa thông tin cá nhân của thành viên lên Git.
 Sau khi nạp, `npm run seed:verify --prefix server` kiểm tra lại: số bản ghi, dữ liệu đúng schema, liên kết giữa các bảng, không trùng khoá.
 

@@ -12,9 +12,6 @@ server/node_modules
 npm-debug.log
 yarn-error.log
 
-# Backend secrets
-server/.env
-
 # IDEs and editors
 .idea/
 .project

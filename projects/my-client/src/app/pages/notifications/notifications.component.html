@@ -13,8 +13,8 @@
   <div class="space-y-3" *ngIf="notificationService.notifications().length > 0; else empty">
     <a
       *ngFor="let n of notificationService.notifications()"
-      [routerLink]="n.link || null"
-      (click)="!n.read && markAsRead(n._id, $event)"
+      [attr.href]="n.link || null"
+      (click)="notificationService.open(n, $event)"
       class="p-4 rounded-2xl border border-neutral-200 hover:border-amber-500/40 transition flex items-start gap-3"
       [ngClass]="!n.read ? 'bg-[#FFF7F2]' : 'bg-white'">
       <span class="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" [class.bg-amber-400]="!n.read"></span>

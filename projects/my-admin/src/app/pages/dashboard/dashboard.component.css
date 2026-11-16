@@ -1,4 +1,4 @@
-/* Bố cục theo home.css của Vita: biểu đồ chính + cột stat-card-mini, hàng biểu đồ tròn. */
+
 .export-dropdown {
   position: relative;
 }
@@ -33,7 +33,7 @@
   background: var(--color-primary-bg);
 }
 
-/* Ngày hôm nay ở góc phải tiêu đề (theo AuraPC). */
+
 .today-box {
   display: flex;
   flex-direction: column;

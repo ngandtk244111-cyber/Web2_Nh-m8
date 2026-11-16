@@ -12,7 +12,7 @@ import {
 } from '../../shared/utils/order-labels';
 import { buildCustomers, customerSuccessRate, successRateClass } from './customer-summary';
 
-/** Chi tiết khách hàng — theo customerdetail của Vita: thông tin liên hệ + chỉ số mua hàng, bên dưới là lịch sử đơn. */
+
 @Component({
   selector: 'app-customer-detail',
   standalone: true,

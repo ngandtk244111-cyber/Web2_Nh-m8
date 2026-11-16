@@ -96,7 +96,7 @@
           Thích<ng-container *ngIf="c.likesCount > 0"> · {{ c.likesCount }}</ng-container>
         </button>
         <button type="button" class="nc-meta__btn" (click)="toggleReply(root)">Trả lời</button>
-        <span class="nc-meta__time">{{ timeAgo(c.createdAt) }}</span>
+        <time class="social-time" tabindex="0" (click)="$event.stopPropagation()" [attr.datetime]="c.createdAt" [attr.data-tooltip]="postDate(c.createdAt)" [attr.aria-label]="postDate(c.createdAt)">{{ relativeTime(c.createdAt) }}</time>
       </div>
     </div>
   </div>

@@ -115,7 +115,10 @@ export class ReviewsComponent implements OnInit {
   }
 
   setStar(value: string): void {
-    this.starFilter.set(value === 'ALL' ? 'ALL' : Number(value));
+    const star = value === 'ALL' ? 'ALL' : Number(value);
+    this.starFilter.set(star);
+    // Thẻ "Đánh giá xấu" chỉ gồm 1–2 sao: chọn 3–5 sao mà vẫn giữ thẻ đó thì luôn ra rỗng -> chuyển sang "Tất cả".
+    if (star !== 'ALL' && star > 2 && this.filter() === 'NEEDS_ACTION') this.filter.set('ALL');
     this.page.set(1);
   }
 
@@ -182,6 +185,35 @@ export class ReviewsComponent implements OnInit {
       this.toast.info('Đã xoá phản hồi');
       this.audit.record('Đánh Giá', 'Xoá phản hồi đánh giá', `${r.author} — ${r.productName}`, 'WARNING');
     }, 'Không xoá được phản hồi');
+  }
+
+  /** Đánh giá từ 4 sao, đang hiển thị, chưa có phản hồi — sẽ được trả lời bằng mẫu cảm ơn. */
+  readonly goodUnrepliedCount = computed(() =>
+    this.reviews().filter(r => r.rating >= 4 && r.status !== 'HIDDEN' && !r.reply?.text).length);
+  autoReplying = false;
+
+  async autoReplyGood(): Promise<void> {
+    const count = this.goodUnrepliedCount();
+    if (!count || this.autoReplying) return;
+    const ok = await this.confirmDialog.confirm({
+      title: `Tự trả lời ${count} đánh giá tốt?`,
+      message: 'Các đánh giá từ 4 sao chưa có phản hồi sẽ được trả lời bằng mẫu cảm ơn của Luméa. Khách không nhận email cho lượt này. Bạn vẫn sửa được từng câu trả lời sau đó.',
+      confirmLabel: 'Trả lời tất cả',
+      icon: 'bi-reply-all',
+    });
+    if (!ok) return;
+    this.autoReplying = true;
+    this.reviewService.autoReplyGoodReviews().subscribe({
+      next: res => {
+        this.autoReplying = false;
+        this.toast.success(`Đã tự trả lời ${res.replied} đánh giá tốt`);
+        this.audit.record('Đánh Giá', 'Tự trả lời đánh giá tốt', `${res.replied} đánh giá`, 'INFO');
+      },
+      error: err => {
+        this.autoReplying = false;
+        this.toast.apiError(err, 'Không trả lời được hàng loạt');
+      },
+    });
   }
 
   togglePinned(r: AdminReview): void {

@@ -9,6 +9,8 @@ const customRequestSchema = new mongoose.Schema({
   // Chủ yêu cầu (null nếu khách gửi khi chưa đăng nhập) — GET / chỉ trả yêu cầu của đúng user này.
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   customerName: { type: String, required: true },
+  customerAvatar: { type: String, default: '' },
+  unreadStaff: { type: Number, default: 0 },
   customerEmail: { type: String, required: true },
   customerPhone: { type: String, default: '' },
   status: {
@@ -30,5 +32,9 @@ const customRequestSchema = new mongoose.Schema({
   acceptedQuoteId: { type: mongoose.Schema.Types.ObjectId, ref: 'Quote', default: null },
   orderNumber: { type: String, default: null },
 });
+
+customRequestSchema.index({ userId: 1, _id: -1 });
+customRequestSchema.index({ customerEmail: 1, userId: 1 });
+customRequestSchema.index({ status: 1, _id: -1 });
 
 module.exports = mongoose.model('CustomRequest', customRequestSchema);

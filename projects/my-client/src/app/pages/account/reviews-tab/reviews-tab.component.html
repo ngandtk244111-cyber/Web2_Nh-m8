@@ -1,4 +1,4 @@
-<div class="rv">
+<div class="rv" *ngIf="!reviewItem">
   <!-- Tiêu đề + tìm kiếm -->
   <div class="rv__head">
     <div>
@@ -64,7 +64,7 @@
       <p>{{ search() ? 'Không có đánh giá nào khớp tìm kiếm.' : 'Bạn chưa có đánh giá nào.' }}</p>
     </div>
 
-    <article *ngFor="let it of reviewedList()" class="rv__card">
+    <article *ngFor="let it of reviewedList()" class="rv__card rv__card--reviewed">
       <header class="rv__card-head">
         <span class="rv__badge rv__badge--done">Đã đánh giá</span>
         <span class="rv__meta">
@@ -83,23 +83,19 @@
           <span class="rv__stars" [attr.aria-label]="r.rating + ' sao'">
             <span *ngFor="let s of stars" [class.on]="s <= r.rating">★</span>
           </span>
-          <span class="rv__author">{{ r.author }}</span>
+          <span class="rv__author">{{ r.anonymous ? 'Người mua ẩn danh' : r.author }}</span>
           <span *ngIf="r.editedAt" class="rv__edited">· đã chỉnh sửa</span>
+          <button type="button" class="rv__view" (click)="viewReview(it)">Xem lại đánh giá <span aria-hidden="true">→</span></button>
         </div>
         <p class="rv__comment">{{ r.comment }}</p>
         <div *ngIf="r.images?.length" class="rv__photos">
           <img *ngFor="let img of r.images" [src]="img" alt="Ảnh đánh giá">
         </div>
+        <video *ngIf="r.video" [src]="r.video" controls preload="metadata" class="rv__video"></video>
         <div *ngIf="r.reply?.text" class="rv__reply">
           <strong>Phản hồi của Luméa:</strong> {{ r.reply?.text }}
         </div>
       </div>
-      <footer class="rv__card-foot rv__card-foot--end">
-        <button type="button" class="rv__btn" (click)="openReview(it)">
-          <app-icon name="pencil" [size]="13"></app-icon>
-          Xem lại đánh giá
-        </button>
-      </footer>
     </article>
   </ng-container>
 </div>
@@ -108,7 +104,7 @@
 <div *ngIf="editing as it" class="rvm" (click)="closeReview()" role="dialog" aria-modal="true" aria-label="Đánh giá đơn hàng">
   <div class="rvm__box" (click)="$event.stopPropagation()">
     <header class="rvm__head">
-      <span>{{ it.review ? 'Xem lại đánh giá' : 'Đánh giá đơn hàng' }}</span>
+      <span>{{ it.review ? 'Sửa đánh giá sản phẩm' : 'Đánh giá sản phẩm' }}</span>
       <button type="button" class="rvm__close" (click)="closeReview()" aria-label="Đóng">
         <app-icon name="x" [size]="16"></app-icon>
       </button>
@@ -120,8 +116,11 @@
         <span>{{ it.name }}</span>
       </div>
 
+      <p class="rvm__hint">{{ editable ? 'Được sửa một lần trong 30 ngày kể từ ngày đăng.' : 'Đánh giá đã chỉnh sửa hoặc đã hết hạn sửa.' }}</p>
+      <fieldset [disabled]="!editable || uploading || submitting">
       <!-- Chọn số sao -->
       <div class="rvm__rate">
+        <span class="rvm__label">Chất lượng sản phẩm</span>
         <div class="rvm__stars" (mouseleave)="hoverRating = 0">
           <button
             *ngFor="let s of stars"
@@ -135,13 +134,13 @@
       </div>
 
       <div class="rvm__text">
-        <textarea [(ngModel)]="comment" [maxlength]="maxLength" rows="4" placeholder="Chia sẻ cảm nhận về chất lượng, màu sắc, đóng gói... của sản phẩm"></textarea>
+        <textarea [(ngModel)]="comment" [maxlength]="maxLength" rows="3" placeholder="Chất liệu, màu sắc thực tế, độ hoàn thiện và trải nghiệm sử dụng sản phẩm..."></textarea>
         <span class="rvm__counter">{{ comment.length }}/{{ maxLength }}</span>
       </div>
 
       <!-- Ảnh kèm đánh giá -->
       <div>
-        <p class="rvm__label">Thêm hình ảnh <span>({{ images.length }}/{{ maxImages }})</span></p>
+        <p class="rvm__label">Hình ảnh & video <span>({{ images.length }}/{{ maxImages }} ảnh)</span></p>
         <input #reviewImages type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple class="hidden" (change)="onImagesSelected($event)">
         <div class="rvm__photos">
           <div *ngFor="let img of images; let i = index" class="rvm__photo">
@@ -157,16 +156,25 @@
             <span *ngIf="uploading" class="rvm__spin"></span>
             <ng-container *ngIf="!uploading">
               <app-icon name="plus" [size]="18"></app-icon>
-              <span>Tải ảnh</span>
+              <span>Thêm ảnh</span>
             </ng-container>
           </button>
+          <button *ngIf="!video" type="button" class="rvm__add" (click)="reviewVideo.click()">Thêm video</button>
         </div>
       </div>
+      <div class="rvm__media">
+        <p class="rvm__hint">Ảnh tối đa 5 MB/ảnh · 1 video MP4 tối đa 20 MB, 30 giây</p>
+        <input #reviewVideo type="file" accept="video/mp4" class="hidden" (change)="onVideoSelected($event)">
+        <video *ngIf="video" [src]="video" controls preload="metadata" class="rv__video"></video>
+        <button *ngIf="video" type="button" class="rv__btn rv__btn--ghost" (click)="video = ''">Xóa video</button>
+      </div>
+      <label class="rvm__label"><input type="checkbox" [(ngModel)]="anonymous"> Ẩn tên khi đăng đánh giá</label>
+      </fieldset>
     </div>
 
     <footer class="rvm__foot">
       <button type="button" class="rv__btn rv__btn--ghost" (click)="closeReview()" [disabled]="submitting">Hủy</button>
-      <button type="button" class="rv__btn" (click)="submit()" [disabled]="submitting || uploading">
+      <button type="button" class="rv__btn" *ngIf="editable" (click)="submit()" [disabled]="submitting || uploading">
         {{ submitting ? 'Đang gửi...' : (it.review ? 'Cập nhật đánh giá' : 'Gửi đánh giá') }}
       </button>
     </footer>

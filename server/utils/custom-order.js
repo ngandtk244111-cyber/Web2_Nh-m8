@@ -68,6 +68,7 @@ function isDepositExpired(order, now = new Date()) {
  * Lý do không được chuyển đơn sang sản xuất (null = được phép). Hàm thuần.
  * - Đơn đặt làm có cọc: phải xác nhận đủ cọc.
  * - Đơn thường có hàng in 3D theo quy tắc mới (paymentPolicyVersion >= 2): phải thanh toán đủ 100%.
+ * - Đơn theo báo giá trả COD: nhân viên xác nhận đã nhận cọc là được sản xuất (giống đơn COD lớn).
  */
 function productionBlockReason(order) {
   if (isDepositOrder(order)) {
@@ -79,6 +80,8 @@ function productionBlockReason(order) {
     return null;
   }
   if (order.hasPrintOnDemandItems && (order.paymentPolicyVersion || 1) >= 2) {
+    const codDepositPaid = order.orderType === 'CUSTOM_QUOTE' && order.paymentMethod === 'COD' && !!order.depositPaidAt;
+    if (codDepositPaid) return null;
     if (order.paymentStatus !== 'PAID') return 'Đơn có hàng in 3D phải được xác nhận thanh toán đủ 100% trước khi sản xuất';
     // Giao dịch từ cổng thử (sandbox) không phải tiền thật — không cho sản xuất ở môi trường production.
     if (process.env.NODE_ENV === 'production' && String(order.paymentTransactionId || '').startsWith('SANDBOX-')) {

@@ -60,7 +60,7 @@ const REQUEST_STATUS_LABELS: Record<CustomRequestStatus, string> = {
 
 const PALETTE = ['#A3152D', '#49718A', '#B16C22', '#568066', '#806D98', '#BB7882', '#9AA19C'];
 
-/** Tổng quan — theo home/ của Vita: biểu đồ doanh thu + cột số liệu, hàng biểu đồ tròn, bản đồ, đơn gần đây. */
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -272,7 +272,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   // ---------- Biểu đồ ----------
-  /** Biểu đồ đường kiểu AuraPC: doanh thu (vùng tô, trục trái) + số đơn (đường, trục phải). */
+
   private renderRevenueChart(canvas: ElementRef<HTMLCanvasElement> | undefined, bars: SalesBar[], _unit: string): void {
     if (!canvas) return;
     const existing = this.charts.get('revenue');

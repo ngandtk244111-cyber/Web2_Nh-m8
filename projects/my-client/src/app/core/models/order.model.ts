@@ -106,6 +106,7 @@ export interface RefundBank {
 }
 
 export interface Order {
+  invoice?: { requested: boolean } | null;
   id: string;
   orderNumber: string;
   createdAt: string;

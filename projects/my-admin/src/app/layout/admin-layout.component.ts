@@ -14,7 +14,7 @@ import { environment } from '../../environments/environment';
 
 const COLLAPSED_KEY = 'lumea_admin_sidebar_collapsed';
 
-/** Khung trang quản trị: sidebar nhóm menu + topbar (thông báo, tài khoản) — theo layout/ của Vita. */
+
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
@@ -140,6 +140,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   toggleNotice(event: Event): void {
     event.stopPropagation();
     this.isNoticeOpen = !this.isNoticeOpen;
+    if (this.isNoticeOpen) this.notice.loadSources();
     this.isProfileOpen = false;
   }
 

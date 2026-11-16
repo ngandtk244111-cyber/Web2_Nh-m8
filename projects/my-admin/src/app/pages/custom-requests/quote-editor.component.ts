@@ -52,6 +52,7 @@ export class QuoteEditorComponent implements OnChanges {
 
   items: QuoteItem[] = [emptyItem()];
   quoteDiscount = 0;
+  quoteDiscountPercent: number | null = null;
   estimatedDays = 7;
   note = '';
   overrideOn = false;
@@ -113,6 +114,7 @@ export class QuoteEditorComponent implements OnChanges {
   private fillFrom(q: Quote, draftVersion: number | null): void {
     this.items = q.items.map(i => ({ ...i }));
     this.quoteDiscount = q.quoteDiscount || 0;
+    this.quoteDiscountPercent = q.quoteDiscountPercent ?? null;
     this.estimatedDays = q.estimatedDays;
     this.note = q.note || '';
     const ov = q.depositOverride || (q.deposit?.overridden ? { amount: q.deposit.amount, reason: q.deposit.overrideReason || '' } : null);
@@ -137,6 +139,7 @@ export class QuoteEditorComponent implements OnChanges {
         size: b.size || '',
       }];
       this.quoteDiscount = 0;
+      this.quoteDiscountPercent = null;
       this.estimatedDays = 7;
       this.note = '';
       this.overrideOn = false;
@@ -156,12 +159,18 @@ export class QuoteEditorComponent implements OnChanges {
   removeItem(i: number): void { if (this.items.length > 1) this.items.splice(i, 1); }
 
   // ---- Xem trước (server tính lại khi lưu / gửi) ----
+  discountAmount(item: QuoteItem): number {
+    return item.discountPercent != null ? Math.round((Number(item.quantity) || 0) * (Number(item.unitPrice) || 0) * Number(item.discountPercent) / 100) : Number(item.discount) || 0;
+  }
+  get quoteDiscountAmount(): number {
+    return this.quoteDiscountPercent != null ? Math.round((this.subtotal - this.itemDiscount) * Number(this.quoteDiscountPercent) / 100) : Number(this.quoteDiscount) || 0;
+  }
   lineTotal(i: QuoteItem): number {
-    return Math.max(0, (Number(i.quantity) || 0) * (Number(i.unitPrice) || 0) - (Number(i.discount) || 0));
+    return Math.max(0, (Number(i.quantity) || 0) * (Number(i.unitPrice) || 0) - this.discountAmount(i));
   }
   get subtotal(): number { return this.items.reduce((s, i) => s + (Number(i.quantity) || 0) * (Number(i.unitPrice) || 0), 0); }
-  get itemDiscount(): number { return this.items.reduce((s, i) => s + (Number(i.discount) || 0), 0); }
-  get total(): number { return Math.max(0, this.subtotal - this.itemDiscount - (Number(this.quoteDiscount) || 0)); }
+  get itemDiscount(): number { return this.items.reduce((s, i) => s + this.discountAmount(i), 0); }
+  get total(): number { return Math.max(0, this.subtotal - this.itemDiscount - this.quoteDiscountAmount); }
 
   /** Cọc mặc định: min(tổng, làm tròn lên 1.000đ của max(tổng × %, tối thiểu)). */
   get defaultDeposit(): number {
@@ -178,9 +187,10 @@ export class QuoteEditorComponent implements OnChanges {
     return {
       items: this.items.map(i => ({
         name: i.name.trim(), material: (i.material || '').trim(), size: (i.size || '').trim(), description: (i.description || '').trim(),
-        quantity: Number(i.quantity), unitPrice: Number(i.unitPrice), discount: Number(i.discount) || 0,
+        quantity: Number(i.quantity), unitPrice: Number(i.unitPrice), discount: Number(i.discount) || 0, discountPercent: i.discountPercent ?? null,
       })),
       quoteDiscount: Number(this.quoteDiscount) || 0,
+      quoteDiscountPercent: this.quoteDiscountPercent,
       estimatedDays: Number(this.estimatedDays),
       note: this.note.trim(),
       depositOverride: this.overrideOn && this.overrideAmount ? { amount: Number(this.overrideAmount), reason: this.overrideReason.trim() } : null,

@@ -7,7 +7,7 @@ import { AdminAuthService } from '../../core/services/admin-auth.service';
 import { ProductService } from '../../core/services/product.service';
 import { ToastService } from '../../core/services/toast.service';
 import { AuditService } from '../../core/services/audit.service';
-import { WorkshopReceipt, WorkshopReceiptService } from '../../core/services/workshop-receipt.service';
+import { WorkshopReceiptService } from '../../core/services/workshop-receipt.service';
 import { SPECIALTY_KEYS, WORKSHOP_SPECIALTIES, Workshop, WorkshopSpecialty, specialtyLabels, workshopFor } from '../../core/data/workshops';
 import { Product } from '../../core/models/product.model';
 import { PagerComponent, pageSlice } from '../../components/pager/pager.component';
@@ -119,11 +119,6 @@ export class WorkshopsComponent implements OnInit {
 
   productCount(w: Workshop): number {
     return this.productsByWorkshop().get(w.id)?.length || 0;
-  }
-
-  /** Lần xưởng giao hàng gần nhất (danh sách từ server đã sắp mới nhất trước). */
-  lastReceipt(w: Workshop): WorkshopReceipt | undefined {
-    return this.receiptService.receipts().find(r => r.workshopId === w.id);
   }
 
   isPinned(p: Product, w: Workshop): boolean {

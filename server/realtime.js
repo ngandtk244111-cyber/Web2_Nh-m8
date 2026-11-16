@@ -31,4 +31,23 @@ function emitToStaff(event, payload) {
   if (io) io.to('staff').emit(event, payload);
 }
 
-module.exports = { setIO, orderRoom, emitOrderUpdated, emitToStaff, emitToContentStaff, CONTENT_ROOM };
+function emitWarrantyUpdated(warranty, isClaim = false) {
+  if (io && warranty) io.to('warranty').emit(isClaim ? 'warranty:claim' : 'warranty:updated', {
+    warrantyCode: warranty.warrantyCode, productName: warranty.productName, customerName: warranty.customerName,
+  });
+}
+
+function emitCustomRequestUpdated(request, customerMessage = false) {
+  if (!io || !request) return;
+  io.to('custom-request:' + request.id).emit('custom-request:updated', { id: request.id });
+  io.to('custom3d').emit('custom-request:changed', { id: request.id, requestCode: request.requestCode, customerMessage });
+}
+
+function emitNotificationUpdated(notification) {
+  if (!io || !notification || (notification.visibleAt && new Date(notification.visibleAt) > new Date())) return;
+  const payload = { id: String(notification._id), title: notification.title, refKey: notification.refKey };
+  if (notification.userId) io.to('user:' + notification.userId).emit('notification:new', payload);
+  else io.emit('notification:new', payload);
+}
+
+module.exports = { emitWarrantyUpdated, emitNotificationUpdated, emitCustomRequestUpdated, setIO, orderRoom, emitOrderUpdated, emitToStaff, emitToContentStaff, CONTENT_ROOM };

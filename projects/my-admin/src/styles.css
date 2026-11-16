@@ -1,9 +1,4 @@
-/**
- * Luméa Admin — design system theo my-admin-vita (styles/variables.css + color-system.css + styles.css):
- * Bootstrap 5 làm nền, CSS variables dùng chung, các khối dùng lại giữa các trang
- * (breadcrumb, page-header, stats-grid, filter-bar, bảng, status-badge, modal).
- * Giữ màu thương hiệu Luméa: đỏ #A3152D trên nền be.
- */
+
 
 /* ========== TOKENS ========== */
 :root {
@@ -199,7 +194,7 @@ a {
   flex-wrap: wrap;
 }
 
-/* Nút chính "THÊM ..." — btn-add-action của Vita */
+
 .btn-add-action {
   background: var(--color-primary);
   color: #fff;
@@ -698,7 +693,7 @@ a {
 .tag.danger { background: var(--color-danger-bg); color: var(--color-danger); }
 .tag.info { background: var(--color-info-bg); color: var(--color-info); }
 
-/* ========== DETAIL PAGES (Vita orderdetail/customerdetail) ========== */
+
 .layout-grid {
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
@@ -768,7 +763,7 @@ a {
 .notice-box.success { background: var(--color-success-bg); border-color: #A7D7BA; color: #1F5A3A; }
 .notice-box.danger { background: var(--color-danger-bg); border-color: #F3B4B2; color: #8B1E19; }
 
-/* Bước trạng thái tròn (Vita status-steps) */
+
 /*
  * 4 trạng thái nhìn khác hẳn nhau: chưa tới (viền nét đứt, mờ) · đang xử lý (cam, vòng sáng)
  * · hoàn tất (xanh, dấu tích) · dừng (đỏ, dấu X). Đường nối giữa các bước tô theo bước bên trái.

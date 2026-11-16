@@ -29,11 +29,7 @@ const PAYMENT_LABELS: Record<string, string> = {
   ATM: 'Thẻ ATM nội địa',
 };
 
-/**
- * Quản lý đổi trả (tham khảo trang Quản lý đổi trả của VitaCare):
- * danh sách đơn có yêu cầu trả hàng, chia tab theo trạng thái; nút thay đổi theo từng bước.
- * Yêu cầu được gửi từ tab "Đơn hàng" (nút "Trả hàng" ở đơn đã giao).
- */
+
 @Component({
   selector: 'app-account-returns-tab',
   standalone: true,

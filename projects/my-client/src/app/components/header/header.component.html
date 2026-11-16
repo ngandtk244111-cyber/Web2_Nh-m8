@@ -237,8 +237,8 @@
             <div class="hd_notify-dropdown__list" *ngIf="notificationService.notifications().length > 0; else notifyEmpty">
               <a
                 *ngFor="let n of notificationService.notifications()"
-                [routerLink]="n.link || null"
-                (click)="!n.read && markNotificationRead(n._id, $event); notificationsOpen = false"
+                [attr.href]="n.link || null"
+                (click)="notificationService.open(n, $event); notificationsOpen = false"
                 class="hd_notify-item"
                 [class.hd_notify-item--unread]="!n.read">
                 <span class="hd_notify-item__dot" *ngIf="!n.read"></span>

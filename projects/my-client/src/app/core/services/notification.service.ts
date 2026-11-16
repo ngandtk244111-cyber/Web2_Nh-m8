@@ -1,4 +1,7 @@
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, NgZone, computed, effect, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
+import { io } from 'socket.io-client';
+import { ChatPanelService } from './chat-panel.service';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { AppNotification } from '../models/notification.model';
@@ -17,6 +20,9 @@ export class NotificationService {
   private authService = inject(AuthService);
   private loginModal = inject(LoginModalService);
   private toast = inject(ToastService);
+  private router = inject(Router);
+  private chatPanel = inject(ChatPanelService);
+  private zone = inject(NgZone);
 
   /** true trong lúc đang gọi API đặt/hủy nhắc — để khóa nút, tránh bấm đúp. */
   readonly reminderBusy = signal(false);
@@ -29,14 +35,36 @@ export class NotificationService {
   );
 
   constructor() {
-    this.refresh();
+    effect(onCleanup => {
+      const userId = this.authService.currentUser()?._id || '';
+      this.notificationsSignal.set([]);
+      this.refresh();
+      const socket = this.zone.runOutsideAngular(() => io(environment.socketUrl));
+      socket.on('connect', () => {
+        if (userId) socket.emit('notifications:watch', { userToken: this.authService.token }, () => this.zone.run(() => this.refresh()));
+        else this.zone.run(() => this.refresh());
+      });
+      socket.on('notification:new', (notification: { title?: string; refKey?: string }) => this.zone.run(() => {
+        this.refresh();
+        if (!notification.refKey?.startsWith('flash-sale:')) this.toast.info(notification.title || 'Bạn có thông báo mới');
+      }));
+      onCleanup(() => { socket.disconnect(); });
+    });
+  }
+
+  open(notification: AppNotification, event: MouseEvent): void {
+    if (!notification.read) this.markAsRead(notification._id);
+    if (event.ctrlKey || event.metaKey || event.shiftKey || event.button !== 0) return;
+    event.preventDefault();
+    if (notification.refKey?.startsWith('support-chat:')) this.chatPanel.open('support');
+    else if (notification.link?.startsWith('/')) this.router.navigateByUrl(notification.link);
   }
 
   refresh(): void {
     const userId = this.authService.currentUser()?._id || '';
     this.http.get<{ success: boolean; notifications: AppNotification[] }>(BASE, { params: { userId } }).subscribe({
       next: (res) => {
-        if (res.success) this.notificationsSignal.set(res.notifications);
+        if (res.success && (this.authService.currentUser()?._id || '') === userId) this.notificationsSignal.set(res.notifications || []);
       },
       error: (err) => console.warn('Failed to load notifications', err),
     });

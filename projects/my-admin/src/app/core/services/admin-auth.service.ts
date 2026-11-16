@@ -91,6 +91,7 @@ export class AdminAuthService {
 
   /** rule dạng 'orders.view'. */
   can(rule: string): boolean {
+    if (rule.includes('|')) return rule.split('|').some(permission => this.can(permission));
     const [module, action] = rule.split('.');
     return !!this.permissions()?.[module]?.[action];
   }

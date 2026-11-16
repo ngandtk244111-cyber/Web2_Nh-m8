@@ -63,6 +63,10 @@ test('chặn sản xuất: đơn cọc chưa PAID, đơn in 3D (quy tắc mới)
   const pod = { orderType: 'STANDARD', hasPrintOnDemandItems: true, paymentPolicyVersion: 2, paymentStatus: 'UNPAID' };
   assert.match(productionBlockReason(pod), /100%/);
   assert.equal(productionBlockReason({ ...pod, paymentStatus: 'PAID' }), null);
+  // Đơn theo báo giá trả COD: chưa nhận cọc thì chặn, đã nhận cọc thì được sản xuất.
+  const quoteCod = { ...pod, orderType: 'CUSTOM_QUOTE', paymentMethod: 'COD', depositAmount: 500000 };
+  assert.match(productionBlockReason(quoteCod), /100%/);
+  assert.equal(productionBlockReason({ ...quoteCod, depositPaidAt: new Date() }), null);
   // Đơn cũ (trước quy tắc mới) giữ nguyên hành vi cũ.
   assert.equal(productionBlockReason({ ...pod, paymentPolicyVersion: 1 }), null);
   assert.equal(productionBlockReason({ orderType: 'STANDARD', hasPrintOnDemandItems: false, paymentStatus: 'UNPAID' }), null);

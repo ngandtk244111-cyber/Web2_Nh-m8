@@ -5,10 +5,7 @@ import flatpickr from 'flatpickr';
 import { Vietnamese } from 'flatpickr/dist/l10n/vn';
 import type { Instance as FlatpickrInstance } from 'flatpickr/dist/types/instance';
 
-/**
- * Ô chọn ngày Flatpickr thay cho `<input type="date">` (theo vc-flatpickr của Vita).
- * Dùng với `[(ngModel)]` chuỗi `yyyy-MM-dd`.
- */
+
 @Directive({
   selector: '[appDatePicker]',
   standalone: true,

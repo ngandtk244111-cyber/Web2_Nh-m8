@@ -1,10 +1,4 @@
-/**
- * Tọa độ (gần đúng, lấy trung tâm hành chính) của 63 tỉnh/thành để đặt điểm trên bản đồ,
- * kèm alias để khớp địa chỉ nhập tự do (có/không dấu, viết tắt, quận/huyện nổi bật).
- * Danh sách khớp với provinces.open-api.vn/api/p/ mà my-client dùng ở bước checkout,
- * nên mọi đơn đặt qua web đều nhận ra được tỉnh.
- * Ý tưởng tham khảo từ dashboard-vn-map của my-admin-vita, rút gọn cho nhu cầu của Luméa.
- */
+
 export interface VnProvince {
   name: string;
   lat: number;

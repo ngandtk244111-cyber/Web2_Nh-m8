@@ -4,11 +4,7 @@ import { catchError, map, of } from 'rxjs';
 import { AdminAuthService } from '../services/admin-auth.service';
 import { ToastService } from '../services/toast.service';
 
-/**
- * Chặn vào trang quản trị nếu chưa đăng nhập — tham khảo admin-auth.guard.ts của AuraPC-main
- * (functional guard + redirect '/login'). Lần đầu vào thì tải quyền từ server trước, để các
- * route con xét quyền và sidebar ẩn mục không được xem.
- */
+
 export const adminAuthGuard: CanActivateFn = () => {
   const adminAuth = inject(AdminAuthService);
   const router = inject(Router);

@@ -53,7 +53,6 @@ async function consumeVerifiedOtp(contact) {
 }
 
 function validatePasswordStrength(password) {
-  // Tối thiểu 8 ký tự, 1 chữ in hoa, 1 ký tự đặc biệt (tham khảo quy tắc mật khẩu VitaCare-main).
   if (!password || password.length < 8) return 'Mật khẩu cần tối thiểu 8 ký tự.';
   if (!/[A-Z]/.test(password)) return 'Mật khẩu cần tối thiểu 1 chữ in hoa.';
   if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) return 'Mật khẩu cần tối thiểu 1 ký tự đặc biệt.';
@@ -158,11 +157,6 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// ===================== ĐĂNG NHẬP MẠNG XÃ HỘI (Google / Facebook) =====================
-// Giống AuraPC-main: FE lấy token từ SDK của Google/Facebook, gửi lên đây để BE tự xác minh với
-// provider. Đăng nhập lần đầu = tự đăng ký luôn; nếu email trùng tài khoản đã có (đăng ký bằng
-// email/SĐT trước đó) thì liên kết vào tài khoản đó thay vì tạo tài khoản mới. Không bắt buộc
-// gắn SĐT — SĐT nhận hàng nhập ở bước đặt hàng/sổ địa chỉ như các trang TMĐT khác.
 
 /**
  * Google/Facebook trả `name` theo thứ tự phương Tây (tên trước, họ sau: "Băng Phùng Sương Lý") —

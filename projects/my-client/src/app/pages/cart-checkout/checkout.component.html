@@ -17,7 +17,7 @@
       </div>
 
       <!-- If no items staged for checkout -->
-      <div *ngIf="cartService.checkoutItems().length === 0 && !createdOrder" class="text-center py-16 bg-[#FFFFFF] rounded-3xl border border-neutral-200 p-8 space-y-4">
+      <div *ngIf="items.length === 0 && !createdOrder && !quoteLoading" class="text-center py-16 bg-[#FFFFFF] rounded-3xl border border-neutral-200 p-8 space-y-4">
         <h3 class="ck-empty__title">Chưa có sản phẩm nào để thanh toán</h3>
         <p class="ck-empty__desc">Vui lòng chọn sản phẩm ở giỏ hàng trước khi tiến hành thanh toán.</p>
         <a routerLink="/catalog" class="ck-empty__btn">
@@ -26,12 +26,12 @@
       </div>
 
       <!-- Free-shipping banner -->
-      <div *ngIf="cartService.checkoutItems().length > 0 && !showBankQrModal" class="rounded-2xl px-4 py-3 text-xs font-medium flex items-center gap-2"
-        [class.bg-emerald-50]="cartService.checkoutSubtotal() >= 500000"
-        [class.text-emerald-700]="cartService.checkoutSubtotal() >= 500000"
-        [class.bg-neutral-100]="cartService.checkoutSubtotal() < 500000"
-        [class.text-neutral-700]="cartService.checkoutSubtotal() < 500000">
-        <ng-container *ngIf="cartService.checkoutSubtotal() >= 500000; else notFreeShip">
+      <div *ngIf="items.length > 0 && !showBankQrModal" class="rounded-2xl px-4 py-3 text-xs font-medium flex items-center gap-2"
+        [class.bg-emerald-50]="shippingFee === 0"
+        [class.text-emerald-700]="shippingFee === 0"
+        [class.bg-neutral-100]="shippingFee > 0"
+        [class.text-neutral-700]="shippingFee > 0">
+        <ng-container *ngIf="shippingFee === 0; else notFreeShip">
           <app-icon name="check" [size]="14"></app-icon>
           <span>Đơn hàng của bạn đã đủ điều kiện <strong>miễn phí vận chuyển</strong>!</span>
         </ng-container>
@@ -41,21 +41,32 @@
       </div>
 
       <!-- Checkout Form & Summary Grid -->
-      <form *ngIf="cartService.checkoutItems().length > 0 && !showBankQrModal && !showOrderSuccess" novalidate (ngSubmit)="handlePrimaryAction()" class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <form *ngIf="items.length > 0 && !showBankQrModal && !showOrderSuccess" novalidate (ngSubmit)="handlePrimaryAction()" class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
         <!-- Left: Shipping Address & Payment (7 cols) — chỉ hiển thị đúng 1 khối theo bước hiện tại -->
         <div class="lg:col-span-7 space-y-6">
 
           <!-- STEP 2: Shipping Details Card -->
-          <div *ngIf="flow.currentStep() === 2" id="shipping-info" class="bg-[#FFFFFF] rounded-3xl p-6 sm:p-8 border border-neutral-200 shadow-xl space-y-4 scroll-mt-24">
+          <div *ngIf="flow.currentStep() === 2" id="shipping-info" (input)="shippingTouched = true" (change)="shippingTouched = true" class="bg-[#FFFFFF] rounded-3xl p-6 sm:p-8 border border-neutral-200 shadow-xl space-y-4 scroll-mt-24">
             <div class="flex items-center justify-between border-b border-neutral-200 pb-3">
               <h3 class="font-serif text-lg font-bold text-amber-800 flex items-center gap-2">
                 <app-icon name="truck" [size]="18" class="text-amber-400"></app-icon>
                 <span>2. Thông Tin Nhận Hàng</span>
               </h3>
               <button type="button" (click)="goToStep(1)" class="text-xs font-semibold text-neutral-600 hover:text-amber-500 flex items-center gap-1 transition">
-                ← Quay lại giỏ hàng
+                {{ quoteOrder ? '← Quay lại báo giá' : '← Quay lại giỏ hàng' }}
               </button>
+            </div>
+
+            <div *ngIf="addressService.addresses().length" class="rounded-xl border border-neutral-200 p-3 space-y-2">
+              <label for="checkout-saved-address" class="block text-xs font-semibold text-neutral-700">Địa chỉ đã lưu</label>
+              <select id="checkout-saved-address" [ngModel]="selectedAddressId" (ngModelChange)="selectShippingAddress($event)"
+                class="w-full rounded-lg border border-neutral-300 bg-white p-2 text-xs text-neutral-800">
+                <option *ngFor="let address of addressService.addresses()" [value]="address._id">
+                  {{ address.isDefault ? 'Mặc định · ' : '' }}{{ address.fullName }} · {{ address.phone }} · {{ address.address }}, {{ address.ward }}, {{ address.district }}, {{ address.city }}
+                </option>
+                <option value="">Dùng địa chỉ khác</option>
+              </select>
             </div>
 
             <div class="space-y-4">
@@ -123,7 +134,8 @@
                     [class.border-rose-500]="errors['city']"
                     [class.border-neutral-300]="!errors['city']">
                     <option value="">-- Chọn Tỉnh / Thành phố --</option>
-                    <option *ngFor="let p of addressService.provinces()" [value]="p.name">{{ p.name }}</option>
+                    <option *ngIf="shipping.city" [value]="shipping.city">{{ shipping.city }}</option>
+                    <ng-container *ngFor="let p of addressService.provinces()"><option *ngIf="p.name !== shipping.city" [value]="p.name">{{ p.name }}</option></ng-container>
                   </select>
                   <span id="checkout-city-error" *ngIf="errors['city']" class="text-xs text-rose-700 mt-1 block font-medium">
                     {{ errors['city'] }}
@@ -141,7 +153,8 @@
                     [class.border-rose-500]="errors['district']"
                     [class.border-neutral-300]="!errors['district']">
                     <option value="">-- Chọn Quận / Huyện --</option>
-                    <option *ngFor="let d of districts()" [value]="d.name">{{ d.name }}</option>
+                    <option *ngIf="shipping.district" [value]="shipping.district">{{ shipping.district }}</option>
+                    <ng-container *ngFor="let d of districts()"><option *ngIf="d.name !== shipping.district" [value]="d.name">{{ d.name }}</option></ng-container>
                   </select>
                   <span id="checkout-district-error" *ngIf="errors['district']" class="text-xs text-rose-700 mt-1 block font-medium">
                     {{ errors['district'] }}
@@ -175,8 +188,13 @@
                   class="w-full text-xs rounded-xl border border-neutral-300 p-3 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500"></textarea>
               </div>
 
-              <!-- Yêu cầu xuất hoá đơn điện tử (đơn nội thất giá trị cao thường cần hoá đơn) -->
-              <div class="inv">
+              <label class="flex items-center gap-2 text-xs text-neutral-700">
+                <input type="checkbox" [(ngModel)]="saveAddress" class="accent-[#A3152D]">
+                Lưu địa chỉ nhận hàng này vào sổ địa chỉ cho lần sau
+              </label>
+
+              <!-- Yêu cầu xuất hoá đơn điện tử (đơn nội thất giá trị cao thường cần hoá đơn) — chưa áp dụng cho đơn theo báo giá -->
+              <div *ngIf="!quoteOrder" class="inv">
                 <label class="inv__row">
                   <span class="inv__label">Yêu cầu xuất hóa đơn điện tử</span>
                   <span class="inv__switch">
@@ -258,42 +276,42 @@
             </div>
 
             <div class="space-y-3">
-              <label
-                *ngFor="let method of paymentMethods"
-                (click)="selectPaymentMethod(method)"
-                [class.border-amber-500]="paymentMethod === method.id && method.supported"
-                [class.bg-amber-50]="paymentMethod === method.id && method.supported"
-                [class.opacity-50]="!method.supported"
-                [class.cursor-not-allowed]="!method.supported"
-                [class.cursor-pointer]="method.supported"
-                class="p-4 rounded-2xl border border-neutral-200 bg-[#F3F1EC] flex items-center gap-3 transition">
-                <input type="radio" name="pay" [checked]="paymentMethod === method.id && method.supported" [disabled]="!method.supported" class="accent-amber-500 text-amber-500 flex-shrink-0">
+              <ng-container *ngFor="let method of paymentMethods">
+                <label
+                  (click)="selectPaymentMethod(method)"
+                  [class.border-amber-500]="paymentMethod === method.id && method.supported"
+                  [class.bg-amber-50]="paymentMethod === method.id && method.supported"
+                  [class.opacity-50]="!method.supported"
+                  [class.cursor-not-allowed]="!method.supported"
+                  [class.cursor-pointer]="method.supported"
+                  class="p-4 rounded-2xl border border-neutral-200 bg-[#F3F1EC] flex items-center gap-3 transition">
+                  <input type="radio" name="pay" [checked]="paymentMethod === method.id && method.supported" [disabled]="!method.supported" class="accent-amber-500 text-amber-500 flex-shrink-0">
 
-                <div
-                  class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden"
-                  [style.background]="method.image ? 'transparent' : (method.badge ? method.badge.bg : '#F9F1F2')"
-                  [style.color]="method.badge ? method.badge.color : '#A3152D'">
-                  <img *ngIf="method.image" [src]="method.image" [alt]="method.label" class="w-full h-full object-cover">
-                  <span *ngIf="!method.image && method.badge" class="font-black text-sm">{{ method.badge.text }}</span>
-                  <app-icon *ngIf="!method.image && !method.badge" [name]="method.icon" [size]="18"></app-icon>
-                </div>
-
-                <div class="min-w-0 flex-1">
-                  <div class="text-xs font-bold text-neutral-800 flex items-center flex-wrap gap-1.5">
-                    <span>{{ method.label }}</span>
-                    <span *ngIf="!method.supported" class="px-1.5 py-0.5 rounded-full bg-neutral-200 text-neutral-500 text-[9px] font-bold uppercase tracking-wide">Chưa hỗ trợ</span>
+                  <div
+                    class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden"
+                    [style.background]="method.image ? 'transparent' : (method.badge ? method.badge.bg : '#F9F1F2')"
+                    [style.color]="method.badge ? method.badge.color : '#A3152D'">
+                    <img *ngIf="method.image" [src]="method.image" [alt]="method.label" class="w-full h-full object-cover">
+                    <span *ngIf="!method.image && method.badge" class="font-black text-sm">{{ method.badge.text }}</span>
+                    <app-icon *ngIf="!method.image && !method.badge" [name]="method.icon" [size]="18"></app-icon>
                   </div>
-                  <p class="text-[11px] text-neutral-600 mt-0.5">{{ method.description }}</p>
-                </div>
-              </label>
-            </div>
 
-            <!-- Quy định cọc: đơn COD từ 5 triệu chuyển trước 30% -->
-            <div *ngIf="paymentMethod === 'COD' && codDeposit > 0" class="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-xl p-3 leading-relaxed">
-              <strong>Đơn từ {{ depositThreshold | vnd }} cần đặt cọc 30%.</strong>
-              Sau khi đặt hàng, bạn chuyển khoản trước <strong>{{ codDeposit | vnd }}</strong>;
-              phần còn lại <strong>{{ cartService.checkoutTotal() - codDeposit | vnd }}</strong> thanh toán khi nhận hàng.
-              Luméa xác nhận đơn sau khi nhận được tiền cọc.
+                  <div class="min-w-0 flex-1">
+                    <div class="text-xs font-bold text-neutral-800 flex items-center flex-wrap gap-1.5">
+                      <span>{{ method.label }}</span>
+                      <span *ngIf="!method.supported" class="px-1.5 py-0.5 rounded-full bg-neutral-200 text-neutral-500 text-[9px] font-bold uppercase tracking-wide">Chưa hỗ trợ</span>
+                    </div>
+                    <p class="text-[11px] text-neutral-600 mt-0.5">{{ method.description }}</p>
+                  </div>
+                </label>
+                <!-- Ngay dưới lựa chọn COD — quy định cọc: đơn từ 5 triệu cọc 30%, đơn in 3D theo báo giá cọc theo báo giá -->
+                <div *ngIf="method.id === 'COD' && paymentMethod === 'COD' && codDeposit > 0" class="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-xl p-3 leading-relaxed">
+                  <strong>{{ quoteOrder ? 'Đơn đặt làm in 3D cần đặt cọc theo báo giá.' : 'Đơn từ ' + (depositThreshold | vnd) + ' cần đặt cọc 30%.' }}</strong>
+                  Sau khi đặt hàng, bạn chuyển khoản trước <strong>{{ codDeposit | vnd }}</strong>;
+                  phần còn lại <strong>{{ total - codDeposit | vnd }}</strong> thanh toán khi nhận hàng.
+                  Luméa xác nhận đơn sau khi nhận được tiền cọc.
+                </div>
+              </ng-container>
             </div>
 
             <div *ngIf="placeOrderError" class="text-xs text-red-500 bg-red-50 border border-red-200 rounded-xl p-3">
@@ -310,11 +328,11 @@
           <div class="bg-[#FFFFFF] rounded-3xl p-6 border border-neutral-200 shadow-xl space-y-3">
             <div class="border-b border-neutral-200 pb-3 flex items-center justify-between">
               <h3 class="font-serif text-lg font-bold text-amber-800">Danh Sách Sản Phẩm</h3>
-              <span class="text-xs text-neutral-600">{{ cartService.checkoutItemCount() }} món</span>
+              <span class="text-xs text-neutral-600">{{ itemCount }} món</span>
             </div>
 
             <div class="space-y-3 max-h-72 overflow-y-auto pr-1 divide-y divide-neutral-100">
-              <div *ngFor="let item of cartService.checkoutItems()" class="pt-3 flex gap-3 items-center">
+              <div *ngFor="let item of items" class="pt-3 flex gap-3 items-center">
                 <img [src]="item.product.images[0]" [alt]="item.product.name" class="w-14 h-14 rounded-xl object-cover border border-neutral-200 flex-shrink-0">
                 <div class="min-w-0 flex-1">
                   <h4 class="text-xs font-bold text-neutral-800 truncate">{{ item.product.name }}</h4>
@@ -329,7 +347,7 @@
               </div>
             </div>
 
-            <p class="text-[10px] text-neutral-500 pt-1">
+            <p *ngIf="!quoteOrder" class="text-[10px] text-neutral-500 pt-1">
               Muốn thay đổi số lượng hoặc sản phẩm? <a routerLink="/catalog" class="text-amber-500 font-semibold hover:underline">Quay lại giỏ hàng</a>.
             </p>
           </div>
@@ -339,29 +357,29 @@
             <h3 class="font-serif text-lg font-bold text-amber-800 border-b border-neutral-200 pb-3">Chi Tiết Thanh Toán</h3>
 
             <!-- Áp voucher ngay tại bước thanh toán (cùng danh sách với giỏ hàng) -->
-            <app-voucher-picker [subtotal]="cartService.checkoutSubtotal()"></app-voucher-picker>
+            <app-voucher-picker *ngIf="!quoteOrder" [subtotal]="subtotal"></app-voucher-picker>
 
             <div class="space-y-2 text-xs text-neutral-600">
               <div class="flex justify-between">
                 <span>Tạm tính</span>
-                <span class="font-medium text-neutral-800">{{ cartService.checkoutSubtotal() | vnd }}</span>
+                <span class="font-medium text-neutral-800">{{ subtotal | vnd }}</span>
               </div>
 
-              <div *ngIf="cartService.checkoutDiscount() > 0" class="flex justify-between text-amber-500">
-                <span>Giảm giá voucher</span>
-                <span>-{{ cartService.checkoutDiscount() | vnd }}</span>
+              <div *ngIf="discount > 0" class="flex justify-between text-amber-500">
+                <span>{{ quoteOrder ? 'Chiết khấu báo giá' : 'Giảm giá voucher' }}</span>
+                <span>-{{ discount | vnd }}</span>
               </div>
 
               <div class="flex justify-between">
                 <span>Phí vận chuyển</span>
                 <span class="font-medium text-neutral-800">
-                  {{ cartService.checkoutShippingFee() === 0 ? 'Miễn phí' : (cartService.checkoutShippingFee() | vnd) }}
+                  {{ shippingFee === 0 ? 'Miễn phí' : (shippingFee | vnd) }}
                 </span>
               </div>
 
               <div class="pt-3 border-t border-neutral-200 flex justify-between items-baseline text-sm font-bold text-neutral-900">
                 <span>Thành tiền</span>
-                <span class="text-2xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-amber-400 to-amber-500">{{ cartService.checkoutTotal() | vnd }}</span>
+                <span class="text-2xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-amber-400 to-amber-500">{{ total | vnd }}</span>
               </div>
             </div>
 
@@ -372,7 +390,7 @@
               class="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 disabled:opacity-60 text-white font-extrabold text-sm shadow-[0_4px_25px_rgba(205, 129, 142,0.35)] transition flex items-center justify-center gap-2">
               <app-icon [name]="flow.currentStep() === 2 ? 'chevron-right' : 'check'" [size]="18"></app-icon>
               <span *ngIf="flow.currentStep() === 2">Tiếp Tục Đến Thanh Toán</span>
-              <span *ngIf="flow.currentStep() === 3">{{ placingOrder ? 'Đang xử lý...' : 'Xác Nhận & Đặt Hàng (' + (cartService.checkoutTotal() | vnd) + ')' }}</span>
+              <span *ngIf="flow.currentStep() === 3">{{ placingOrder ? 'Đang xử lý...' : 'Xác Nhận & Đặt Hàng (' + (total | vnd) + ')' }}</span>
             </button>
 
             <p class="text-[10px] text-center text-neutral-500 leading-relaxed">
@@ -385,14 +403,14 @@
       </form>
 
       <!-- VIETQR PAYMENT MODAL (Triggered when BANK_TRANSFER order is created) -->
-      <div *ngIf="showBankQrModal && createdOrder" class="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4" (click)="navigateToTracking()">
+      <div *ngIf="showBankQrModal && createdOrder" class="checkout-overlay fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4" aria-label="Thông báo thanh toán" (cancel)="$event.preventDefault(); navigateToTracking()" (click)="navigateToTracking()">
         <div class="w-full max-w-2xl bg-[#FFFFFF] rounded-3xl p-6 sm:p-8 border border-amber-500/30 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
 
           <div class="flex items-start justify-between border-b border-neutral-200 pb-4">
             <div class="space-y-1">
               <h2 class="font-serif text-xl sm:text-2xl font-bold text-amber-800">{{ createdOrder.depositAmount ? 'Chuyển Khoản Tiền Cọc' : 'Quét Mã Để Thanh Toán' }}</h2>
               <p *ngIf="createdOrder.depositAmount" class="text-xs text-neutral-600">
-                Đơn COD từ {{ depositThreshold | vnd }}: cọc trước 30%, còn lại <strong>{{ createdOrder.total - createdOrder.depositAmount | vnd }}</strong> trả khi nhận hàng.
+                {{ createdOrder.orderType === 'CUSTOM_QUOTE' ? 'Đơn đặt làm in 3D: cọc theo báo giá' : 'Đơn COD từ ' + (depositThreshold | vnd) + ': cọc trước 30%' }}, còn lại <strong>{{ createdOrder.total - createdOrder.depositAmount | vnd }}</strong> trả khi nhận hàng.
               </p>
               <p class="text-xs text-neutral-600">
                 Mã đơn hàng: <strong class="text-amber-500 font-mono">{{ createdOrder.orderNumber }}</strong>
@@ -400,7 +418,7 @@
               <a [href]="invoiceLink(createdOrder.orderNumber)" target="_blank" rel="noopener"
                 class="inline-flex items-center gap-1.5 mt-1 text-xs font-bold text-[#A3152D] hover:underline">
                 <app-icon name="bookmark" [size]="13"></app-icon>
-                Tải hóa đơn PDF
+                {{ createdOrder.invoice?.requested && createdOrder.paymentStatus === 'PAID' ? 'Tải hóa đơn PDF' : 'Tải phiếu đơn hàng PDF' }}
               </a>
             </div>
             <button type="button" (click)="navigateToTracking()" class="p-2 rounded-full hover:bg-neutral-100 text-neutral-500 transition" aria-label="Đóng">
@@ -485,7 +503,7 @@
 
       <!-- ORDER SUCCESS MODAL (Triggered when COD order is created) -->
       <!-- ĐỔI PHƯƠNG THỨC THANH TOÁN cho đơn vừa đặt (chưa trả tiền) -->
-      <div *ngIf="switchOpen && createdOrder" class="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4" (click)="closeSwitch()">
+      <div *ngIf="switchOpen && createdOrder" class="checkout-overlay fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4" aria-label="Thông báo thanh toán" (cancel)="$event.preventDefault(); closeSwitch()" (click)="closeSwitch()">
         <div class="w-full max-w-lg bg-[#FFFFFF] rounded-3xl p-6 sm:p-7 border border-neutral-200 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
           <div class="flex items-start justify-between gap-3">
             <div>
@@ -529,7 +547,7 @@
         </div>
       </div>
 
-      <div *ngIf="showOrderSuccess && createdOrder" class="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4" (click)="closeOrderSuccess()">
+      <div *ngIf="showOrderSuccess && createdOrder" class="checkout-overlay fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4" aria-label="Thông báo thanh toán" (cancel)="$event.preventDefault(); closeOrderSuccess()" (click)="closeOrderSuccess()">
         <div class="w-full max-w-md bg-[#FFFFFF] rounded-3xl p-6 sm:p-8 border border-neutral-200 shadow-2xl text-center space-y-4 relative" (click)="$event.stopPropagation()">
           <button type="button" (click)="closeOrderSuccess()" class="absolute top-4 right-4 p-2 rounded-full hover:bg-neutral-100 text-neutral-500 transition" aria-label="Đóng">
             <app-icon name="x" [size]="18"></app-icon>
@@ -553,7 +571,7 @@
           <a [href]="invoiceLink(createdOrder.orderNumber)" target="_blank" rel="noopener"
             class="w-full inline-flex items-center justify-center gap-2 py-3 rounded-2xl bg-[#A3152D] hover:bg-[#891226] text-white font-extrabold text-xs shadow-md transition">
             <app-icon name="bookmark" [size]="15"></app-icon>
-            Tải hóa đơn PDF
+            {{ createdOrder.invoice?.requested && createdOrder.paymentStatus === 'PAID' ? 'Tải hóa đơn PDF' : 'Tải phiếu đơn hàng PDF' }}
           </a>
 
           <div class="flex flex-col sm:flex-row gap-3 pt-1">

@@ -9,8 +9,8 @@
       <p class="page-subtitle">Trả lời khách nhắn qua khung chat trên cửa hàng — tin mới hiện ngay, không cần tải lại</p>
     </div>
     <div class="header-actions">
-      <span class="tag" [class.danger]="chat.totalUnread() > 0">{{ chat.totalUnread() }} tin chưa đọc</span>
-      <button type="button" class="btn-header" (click)="chat.refreshSessions()"><i class="bi bi-arrow-clockwise"></i> Tải lại</button>
+      <span class="tag" [class.danger]="chat.totalUnread() + designs.unreadCount() > 0">{{ chat.totalUnread() + (adminAuth.can('custom3d.view') ? designs.unreadCount() : 0) }} tin chưa đọc</span>
+      <button type="button" class="btn-header" (click)="adminAuth.can('customers.view') && chat.refreshSessions(); adminAuth.can('custom3d.view') && designs.refresh()"><i class="bi bi-arrow-clockwise"></i> Tải lại</button>
     </div>
   </div>
 
@@ -23,7 +23,7 @@
 
   <div class="chat-shell">
     <!-- Danh sách cuộc chat -->
-    <aside class="session-pane" [class.mobile-hidden]="chat.activeSessionId()">
+    <aside class="session-pane" [class.mobile-hidden]="chat.activeSessionId() || selectedDesign()">
       <div class="session-search">
         <div class="search-wrapper w-100">
           <input type="text" class="search-input" placeholder="Tìm tên, SĐT, nội dung..."
@@ -32,7 +32,19 @@
         </div>
       </div>
       <div class="session-list">
-        <div class="empty-state" *ngIf="filteredSessions().length === 0">
+        <ng-container *ngIf="designSessions().length">
+          <div class="p-2 small fw-bold text-secondary">TRAO ĐỔI THIẾT KẾ 3D</div>
+          <button type="button" *ngFor="let request of designSessions()" class="session-item" [class.active]="selectedRequestId() === request.id" [class.unread]="request.unreadStaff" (click)="openDesign(request)">
+            <span class="avatar known">3D</span>
+            <span class="session-body">
+              <span class="session-top"><span class="session-name">{{ request.customerName }} · {{ request.requestCode }}</span><span *ngIf="request.unreadStaff" class="unread-badge">{{ request.unreadStaff }}</span></span>
+              <span class="session-last">{{ request.title }}</span>
+              <span class="session-last">{{ request.messages[request.messages.length - 1].text }}</span>
+            </span>
+          </button>
+          <div class="p-2 small fw-bold text-secondary">HỖ TRỢ KHÁCH HÀNG</div>
+        </ng-container>
+        <div class="empty-state" *ngIf="filteredSessions().length === 0 && designSessions().length === 0">
           <i class="bi bi-chat-square"></i>
           {{ chat.sessions().length === 0 ? 'Chưa có khách nào nhắn tin.' : 'Không tìm thấy cuộc chat phù hợp.' }}
         </div>
@@ -60,7 +72,28 @@
     </aside>
 
     <!-- Hội thoại -->
-    <section class="thread-pane" [class.mobile-hidden]="!chat.activeSessionId()">
+    <section class="thread-pane" [class.mobile-hidden]="!chat.activeSessionId() && !selectedDesign()">
+      <ng-container *ngIf="selectedDesign() as request; else supportThread">
+        <div class="thread-head">
+          <button type="button" class="icon-btn back-btn" (click)="selectedRequestId.set('')"><i class="bi bi-chevron-left"></i></button>
+          <div class="thread-title"><div class="name">{{ request.customerName }} · {{ request.requestCode }}</div><div class="meta">{{ request.title }}</div></div>
+          <a class="action-btn sm" [routerLink]="['/custom-requests', request.id]">Xem thiết kế & báo giá</a>
+        </div>
+        <div class="thread-body" #chatScroll>
+          <div *ngFor="let message of request.messages" class="msg-row" [class.mine]="message.sender === 'SHOP_SPECIALIST'">
+            <div class="msg-time d-flex align-items-center gap-2">
+              <img *ngIf="designs.messageAvatar(message, request) as avatar" [src]="avatar" alt="Ảnh đại diện" width="26" height="26" class="rounded-circle" (error)="$any($event.target).style.display = 'none'">
+              {{ message.sender === 'CUSTOMER' ? request.customerName : message.senderName }}
+            </div>
+            <div class="bubble">{{ message.text }}</div><div class="msg-time">{{ message.timestamp }}</div>
+          </div>
+        </div>
+        <div class="thread-foot" *ngIf="adminAuth.can('custom3d.edit')">
+          <form class="composer" (ngSubmit)="sendDesign()"><textarea class="form-control" rows="2" name="designDraft" [(ngModel)]="designDraft" placeholder="Trao đổi về thiết kế với khách..."></textarea>
+            <button type="submit" class="btn-save" [disabled]="designBusy || !designDraft.trim()">Gửi</button></form>
+        </div>
+      </ng-container>
+      <ng-template #supportThread>
       <ng-container *ngIf="chat.activeSession() as session; else noChat">
         <div class="thread-head">
           <button type="button" class="icon-btn back-btn" (click)="chat.closeSession()" title="Quay lại danh sách">
@@ -109,6 +142,7 @@
         </div>
       </ng-container>
 
+      </ng-template>
       <ng-template #noChat>
         <div class="no-chat">
           <i class="bi bi-chat-dots"></i>

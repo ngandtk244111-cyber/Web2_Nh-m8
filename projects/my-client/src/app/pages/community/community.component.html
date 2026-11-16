@@ -76,6 +76,9 @@
             </div>
           </div>
 
+          <nav class="lg:hidden flex gap-2 overflow-x-auto mb-3" aria-label="Bài viết cộng đồng">
+            <button *ngFor="let m of feedModes" type="button" (click)="setFeedMode(m.key)" class="cm-chip whitespace-nowrap" [class.cm-chip--active]="feedMode === m.key">{{ m.label }}</button>
+          </nav>
           <div class="cm-panel">
 
             <!-- ---------- FEED ---------- -->
@@ -131,7 +134,7 @@
                       <app-icon name="chevron-right" [size]="12" class="text-neutral-400 flex-shrink-0"></app-icon>
                       <span class="text-[15px] font-semibold text-neutral-900 truncate">{{ post.author.badge }}</span>
                     </ng-container>
-                    <span class="text-[14px] text-neutral-400 flex-shrink-0">{{ post.createdAt }}</span>
+                    <time class="social-time" tabindex="0" (click)="$event.stopPropagation()" [attr.datetime]="post.postedAt || post.createdAt" [attr.data-tooltip]="postDate(post.postedAt || post.createdAt)" [attr.aria-label]="postDate(post.postedAt || post.createdAt)">{{ relativeTime(post.postedAt || post.createdAt) }}</time>
                     <button
                       type="button"
                       (click)="toggleSave(post.id, $event)"
@@ -144,6 +147,11 @@
                     </button>
                   </div>
 
+                  <div *ngIf="isOwnPost(post)" class="flex items-center gap-3 mt-2 text-xs text-neutral-500">
+                    <span *ngIf="post.status && post.status !== 'PUBLISHED'">{{ post.status === 'HIDDEN' ? 'Đã ẩn' : 'Chưa được duyệt' }}</span>
+                    <button type="button" (click)="editPost(post, $event)" class="hover:text-amber-700">Sửa bài</button>
+                    <button type="button" (click)="deletePost(post, $event)" class="hover:text-rose-600">Xóa</button>
+                  </div>
                   <p class="cm-text">
                     <span class="font-semibold">{{ post.title }}</span>
                     <ng-container *ngIf="post.caption"><br>{{ post.caption }}</ng-container>
@@ -154,7 +162,7 @@
                   </div>
 
                   <div *ngIf="post.imageUrl" class="cm-media mt-3">
-                    <img [src]="post.imageUrl" [alt]="post.title" loading="lazy" (error)="$any($event.target).style.visibility = 'hidden'">
+                    <img [src]="post.imageUrl" [alt]="post.title" loading="lazy" (error)="$any($event.target).alt = 'Không tải được ảnh bài viết'">
                     <span *ngIf="post.productTags.length" class="cm-media__badge">
                       <app-icon name="tag" [size]="12"></app-icon> {{ post.productTags.length }} sản phẩm
                     </span>
@@ -205,7 +213,7 @@
                         {{ post.author.badge }}
                       </span>
                     </div>
-                    <div class="text-[13px] text-neutral-400">{{ post.author.handle }} · {{ post.createdAt }}</div>
+                    <div class="text-[13px] text-neutral-400"><span *ngIf="post.author.handle">{{ post.author.handle }} · </span><time class="social-time" tabindex="0" (click)="$event.stopPropagation()" [attr.datetime]="post.postedAt || post.createdAt" [attr.data-tooltip]="postDate(post.postedAt || post.createdAt)" [attr.aria-label]="postDate(post.postedAt || post.createdAt)">{{ relativeTime(post.postedAt || post.createdAt) }}</time></div>
                   </div>
                   <button
                     type="button"
@@ -218,6 +226,11 @@
                   </button>
                 </div>
 
+                  <div *ngIf="isOwnPost(post)" class="flex items-center gap-3 mt-2 text-xs text-neutral-500">
+                    <span *ngIf="post.status && post.status !== 'PUBLISHED'">{{ post.status === 'HIDDEN' ? 'Đã ẩn' : 'Chưa được duyệt' }}</span>
+                    <button type="button" (click)="editPost(post, $event)" class="hover:text-amber-700">Sửa bài</button>
+                    <button type="button" (click)="deletePost(post, $event)" class="hover:text-rose-600">Xóa</button>
+                  </div>
                 <p class="cm-text mt-3">
                   <span class="font-semibold">{{ post.title }}</span>
                   <ng-container *ngIf="post.caption"><br>{{ post.caption }}</ng-container>
@@ -228,7 +241,7 @@
 
                 <!-- Ảnh + chấm gắn thẻ sản phẩm -->
                 <div class="cm-media cm-media--detail mt-3">
-                  <img [src]="post.imageUrl" [alt]="post.title" (error)="$any($event.target).style.visibility = 'hidden'">
+                  <img [src]="post.imageUrl" [alt]="post.title" (error)="$any($event.target).alt = 'Không tải được ảnh bài viết'">
                   <ng-container *ngFor="let tag of post.productTags">
                     <div class="absolute -translate-x-1/2 -translate-y-1/2 z-10" [style.left.%]="tag.xPercent" [style.top.%]="tag.yPercent">
                       <div class="relative group/tag">
@@ -281,7 +294,7 @@
               </article>
 
               <!-- Ô trả lời -->
-              <div class="flex items-center gap-3 px-5 sm:px-6 py-4 border-b border-neutral-100">
+              <div *ngIf="!replyTo" class="flex items-center gap-3 px-5 sm:px-6 py-4 border-b border-neutral-100">
                 <img [src]="currentAvatar" alt="" class="w-9 h-9 rounded-full object-cover border border-neutral-200 flex-shrink-0">
                 <input
                   type="text"
@@ -304,16 +317,43 @@
                 <span class="text-[13px] text-neutral-400">{{ post.commentsCount }}</span>
               </div>
 
-              <div *ngFor="let c of post.comments" class="cm-post">
-                <img [src]="c.authorAvatar" [alt]="c.authorName" class="cm-avatar">
-                <div class="min-w-0 flex-1">
-                  <div class="flex items-center gap-1.5">
-                    <span class="text-[15px] font-semibold text-neutral-900 truncate">{{ c.authorName }}</span>
-                    <span class="text-[14px] text-neutral-400 flex-shrink-0">{{ c.createdAt }}</span>
+              <div class="cm-comments">
+                <div *ngFor="let thread of commentThreads; trackBy: trackThread" class="cm-comment-thread">
+                  <ng-container *ngTemplateOutlet="commentItem; context: { $implicit: thread.root }"></ng-container>
+                  <div *ngIf="thread.replies.length" class="cm-replies">
+                    <ng-container *ngFor="let reply of thread.replies; trackBy: trackComment">
+                      <ng-container *ngTemplateOutlet="commentItem; context: { $implicit: reply }"></ng-container>
+                    </ng-container>
                   </div>
-                  <p class="cm-text">{{ c.text }}</p>
                 </div>
               </div>
+
+              <ng-template #commentItem let-c>
+                <div [id]="c.id" class="cm-comment" [class.bg-amber-50]="routeCommentId === c.id">
+                  <img [src]="c.authorAvatar" [alt]="c.authorName" class="cm-comment-avatar">
+                  <div class="min-w-0 flex-1">
+                    <div class="cm-comment-bubble">
+                      <span class="cm-comment-name">{{ c.authorName }}</span>
+                      <p><span *ngIf="c.replyTo" class="cm-comment-mention">{{ c.replyTo }} </span>{{ c.text }}</p>
+                    </div>
+                    <div class="cm-comment-meta">
+                      <time class="social-time" tabindex="0" (click)="$event.stopPropagation()" [attr.datetime]="c.createdAt" [attr.data-tooltip]="postDate(c.createdAt)" [attr.aria-label]="postDate(c.createdAt)">{{ relativeTime(c.createdAt) }}</time>
+                      <button type="button" (click)="startReply(c)">Trả lời</button>
+                    </div>
+                    <form *ngIf="replyTo?.id === c.id" (ngSubmit)="addComment(post.id)" class="cm-reply-form">
+                      <img [src]="currentAvatar" alt="" class="cm-comment-avatar">
+                      <div class="cm-reply-input">
+                        <input [id]="'reply-' + c.id" name="reply" [(ngModel)]="commentInputs[post.id]"
+                          [placeholder]="'Trả lời ' + c.authorName + '...'" [attr.aria-label]="'Trả lời ' + c.authorName" maxlength="1000">
+                        <button type="submit" [disabled]="!(commentInputs[post.id] || '').trim()" aria-label="Gửi câu trả lời" title="Gửi">
+                          <app-icon name="send" [size]="18"></app-icon>
+                        </button>
+                      </div>
+                      <button type="button" (click)="replyTo = null" class="cm-reply-cancel">Hủy</button>
+                    </form>
+                  </div>
+                </div>
+              </ng-template>
 
               <p *ngIf="post.comments.length === 0" class="text-sm text-neutral-400 text-center py-10">
                 Chưa có câu trả lời nào. Hãy là người đầu tiên!
@@ -384,7 +424,7 @@
 
           <div class="flex items-center justify-between px-5 py-4 border-b border-neutral-100">
             <button (click)="closeCreateModal()" class="text-[15px] text-neutral-600 hover:text-neutral-900">Hủy</button>
-            <h3 class="text-[15px] font-bold text-neutral-900">Bài viết mới</h3>
+            <h3 class="text-[15px] font-bold text-neutral-900">{{ editingPostId ? 'Sửa bài viết' : 'Bài viết mới' }}</h3>
             <span class="w-8"></span>
           </div>
 
@@ -452,9 +492,9 @@
           <div class="px-5 pb-5 flex justify-end">
             <button
               (click)="publishPost()"
-              [disabled]="!newPostTitle || !newPostImageUrl"
+              [disabled]="!newPostTitle.trim() || !newPostImageUrl || isUploadingPostImage || isPublishing"
               class="px-5 py-2.5 rounded-full bg-neutral-900 hover:bg-amber-600 disabled:opacity-40 text-white text-[14px] font-semibold transition">
-              Đăng
+              {{ isPublishing ? 'Đang lưu...' : editingPostId ? 'Lưu thay đổi' : 'Đăng' }}
             </button>
           </div>
         </div>

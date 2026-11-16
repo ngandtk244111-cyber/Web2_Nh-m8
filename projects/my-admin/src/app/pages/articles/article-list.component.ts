@@ -2,7 +2,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { NewsService } from '../../core/services/news.service';
+import { NewsService, unrepliedRoots } from '../../core/services/news.service';
 import { AdminAuthService } from '../../core/services/admin-auth.service';
 import { ToastService } from '../../core/services/toast.service';
 import { AuditService } from '../../core/services/audit.service';
@@ -11,7 +11,7 @@ import { ARTICLE_CATEGORIES, ArticleCategory, NewsArticle } from '../../core/mod
 import { PagerComponent, pageSlice } from '../../components/pager/pager.component';
 import { environment } from '../../../environments/environment';
 
-/** Danh sách tin tức — theo blogmanage của Vita: thẻ thống kê, lọc chuyên mục, bảng bài viết. */
+
 @Component({
   selector: 'app-article-list',
   standalone: true,
@@ -50,8 +50,24 @@ export class ArticleListComponent implements OnInit {
 
   readonly visible = computed(() => pageSlice(this.filtered(), this.page(), this.pageSize));
 
+  /** Số ý kiến của khách (không tính trả lời) và số chưa được shop trả lời, theo từng bài. */
+  readonly commentStats = computed(() => {
+    const comments = this.newsService.comments();
+    const unreplied = new Set(unrepliedRoots(comments).map(c => c.id));
+    const stats = new Map<string, { total: number; unreplied: number }>();
+    for (const c of comments) {
+      if (c.parentId || c.isStaff) continue;
+      const s = stats.get(c.articleId) || { total: 0, unreplied: 0 };
+      s.total++;
+      if (unreplied.has(c.id)) s.unreplied++;
+      stats.set(c.articleId, s);
+    }
+    return stats;
+  });
+
   ngOnInit(): void {
     this.newsService.refresh();
+    this.newsService.refreshComments();
   }
 
   categoryCount(c: ArticleCategory): number {

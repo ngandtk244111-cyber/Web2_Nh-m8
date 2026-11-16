@@ -77,3 +77,18 @@ test('cấu hình cọc sai kiểu / ngoài khoảng thì dùng mặc định', 
   const q = normalizePolicy({ defaultDepositRate: 30, minimumDepositAmount: 100000, quoteValidityDays: 10, depositPaymentDeadlineHours: 48, allowDepositOverride: false });
   assert.deepEqual(q, { defaultDepositRate: 30, minimumDepositAmount: 100000, quoteValidityDays: 10, depositPaymentDeadlineHours: 48, allowDepositOverride: false });
 });
+
+test('chiết khấu %: tính từ giá server, cộng dồn đúng và chặn tỷ lệ sai', () => {
+  const item = { name: 'Thiết kế', quantity: 2, unitPrice: 500000, discount: 999999, discountPercent: 10 };
+  const quote = priceQuoteItems([item], 999999, 5);
+  assert.equal(quote.items[0].discount, 100000);
+  assert.equal(quote.quoteDiscount, 45000);
+  assert.equal(quote.total, 855000);
+  assert.equal(quote.quoteDiscountPercent, 5);
+  assert.equal(priceQuoteItems([{ ...item, unitPrice: 12345, discountPercent: 2.5 }]).items[0].discount, 617);
+  for (const value of [-1, 101, 'bad', Infinity]) {
+    assert.throws(() => priceQuoteItems([{ ...item, discountPercent: value }]));
+    assert.throws(() => priceQuoteItems([{ ...item, discountPercent: 0 }], 0, value));
+  }
+  assert.throws(() => priceQuoteItems([{ ...item, discountPercent: 100 }]));
+});

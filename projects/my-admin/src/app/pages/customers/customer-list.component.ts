@@ -18,7 +18,7 @@ const FILTERS: { key: CustomerFilter; label: string; tone: string }[] = [
   { key: 'ACCOUNT', label: 'Có tài khoản', tone: 'tone-neutral' },
 ];
 
-/** Danh sách khách hàng — theo customermanage của Vita, dữ liệu gom từ đơn hàng thật. */
+
 @Component({
   selector: 'app-customer-list',
   standalone: true,

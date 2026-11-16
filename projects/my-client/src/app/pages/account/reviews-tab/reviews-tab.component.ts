@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
+import { EventEmitter, Input, Output, Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -16,10 +16,7 @@ const MAX_IMAGES = 5;
 const MAX_LENGTH = 500;
 const RATING_LABELS = ['', 'Rất tệ', 'Tệ', 'Bình thường', 'Tốt', 'Rất tốt'];
 
-/**
- * Quản lý đánh giá (tham khảo trang Quản lý đánh giá của VitaCare, bỏ phần thưởng xu):
- * "Chưa đánh giá" = món trong đơn đã giao chưa có đánh giá; "Đã đánh giá" = xem lại / sửa đánh giá.
- */
+
 @Component({
   selector: 'app-account-reviews-tab',
   standalone: true,
@@ -28,6 +25,9 @@ const RATING_LABELS = ['', 'Rất tệ', 'Tệ', 'Bình thường', 'Tốt', 'R�
   styleUrl: './reviews-tab.component.css',
 })
 export class ReviewsTabComponent implements OnInit {
+  @Input() reviewItem: ReviewableItem | null = null;
+  @Output() reviewSaved = new EventEmitter<void>();
+  @Output() editorClosed = new EventEmitter<void>();
   private readonly auth = inject(AuthService);
   private readonly toast = inject(ToastService);
   private readonly reviewService = inject(ReviewService);
@@ -55,11 +55,18 @@ export class ReviewsTabComponent implements OnInit {
   hoverRating = 0;
   comment = '';
   images: string[] = [];
+  video = '';
+  anonymous = false;
+  get editable(): boolean {
+    const review = this.editing?.review;
+    return !review || (!review.editedAt && !!review.createdAt && Date.now() - Date.parse(review.createdAt) <= 30 * 86400000);
+  }
   uploading = false;
   submitting = false;
 
   ngOnInit(): void {
-    this.load();
+    if (this.reviewItem) this.openReview(this.reviewItem);
+    else this.load();
   }
 
   load(): void {
@@ -99,18 +106,25 @@ export class ReviewsTabComponent implements OnInit {
     this.cartService.addToCart(product, 1);
   }
 
+  viewReview(item: ReviewableItem): void {
+    this.router.navigate(['/product', item.slug || item.productId], { queryParams: { review: item.review?.id }, fragment: 'review-' + item.review?.id });
+  }
+
   openReview(item: ReviewableItem): void {
     this.editing = item;
     this.rating = item.review?.rating || 5;
     this.hoverRating = 0;
     this.comment = item.review?.comment || '';
     this.images = [...(item.review?.images || [])];
+    this.video = item.review?.video || '';
+    this.anonymous = !!item.review?.anonymous;
   }
 
   @HostListener('document:keydown.escape')
   closeReview(): void {
-    if (this.submitting) return;
+    if (this.submitting || this.uploading) return;
     this.editing = null;
+    this.editorClosed.emit();
   }
 
   onImagesSelected(event: Event): void {
@@ -121,6 +135,7 @@ export class ReviewsTabComponent implements OnInit {
   }
 
   private addImages(files: File[]): void {
+    if (!this.editable || this.uploading) return;
     const userId = this.auth.currentUser()?._id;
     if (!userId || !files.length) return;
     const room = MAX_IMAGES - this.images.length;
@@ -148,6 +163,23 @@ export class ReviewsTabComponent implements OnInit {
     });
   }
 
+  onVideoSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    const userId = this.auth.currentUser()?._id;
+    if (!file || !userId || !this.editable || this.uploading) return;
+    if (file.type !== 'video/mp4' || file.size > 20 * 1024 * 1024) {
+      this.toast.error('Chỉ nhận video MP4 tối đa 20 MB, 30 giây');
+      return;
+    }
+    this.uploading = true;
+    this.reviewService.uploadImages(userId, [], file).subscribe({
+      next: res => { this.video = this.auth.getAvatarUrl(res.video) || res.video; this.uploading = false; },
+      error: err => { this.uploading = false; this.toast.error(err?.error?.error || 'Không tải được video'); },
+    });
+  }
+
   removeImage(i: number): void {
     this.images = this.images.filter((_, idx) => idx !== i);
   }
@@ -155,7 +187,7 @@ export class ReviewsTabComponent implements OnInit {
   submit(): void {
     const item = this.editing;
     const user = this.auth.currentUser();
-    if (!item || !user) return;
+    if (!item || !user || !this.editable || this.submitting || this.uploading) return;
     const comment = this.comment.trim();
     if (!comment) {
       this.toast.error('Vui lòng nhập nội dung đánh giá');
@@ -166,8 +198,10 @@ export class ReviewsTabComponent implements OnInit {
       this.submitting = false;
       this.editing = null;
       this.toast.success(message);
-      this.load();
+      if (!this.reviewItem) this.load();
       this.productService.refresh();
+      this.reviewSaved.emit();
+      this.editorClosed.emit();
     };
     const fail = (err: { error?: { error?: string } }) => {
       this.submitting = false;
@@ -176,14 +210,14 @@ export class ReviewsTabComponent implements OnInit {
 
     if (item.review) {
       this.reviewService.update(item.productId, item.review.id, {
-        userId: user._id, rating: this.rating, comment, images: this.images,
+        userId: user._id, rating: this.rating, comment, images: this.images, video: this.video, anonymous: this.anonymous,
       }).subscribe({ next: () => done('Đã cập nhật đánh giá'), error: fail });
     } else {
       this.reviewService.submit(item.productId, {
         userId: user._id,
         orderNumber: item.orderNumber,
-        author: user.fullName || 'Khách hàng Luméa',
-        avatar: this.auth.getAvatarUrl(user.avatar) || undefined,
+        anonymous: this.anonymous,
+        video: this.video,
         rating: this.rating,
         comment,
         images: this.images,

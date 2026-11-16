@@ -7,12 +7,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/**
- * Layout design tokens — cấu trúc/khung giao diện tham khảo từ VitaCare-main
- * (spacing scale, radius scale, shadow scale, transition, z-index, breakpoint, container).
- * Theme: be kraft kiểu MUJI + đỏ logo MUJI làm accent. Nền trang là be (--bg-primary), card/modal
- * vẫn trắng (--bg-card) để nổi bật trên nền be. Header/Footer là ngoại lệ CỐ Ý giữ nền đen.
- */
+
 :root {
   /* Colors — theme be kraft MUJI, accent đỏ MUJI */
   --bg-primary: #FAF9F6;
@@ -185,7 +180,7 @@ html {
   animation: pulse-ring 2s cubic-bezier(0.45, 0, 0.55, 1) infinite;
 }
 
-/* ===== Fly-to-cart effect (tham khảo kỹ thuật clone+animate của AuraPC-main) ===== */
+
 .fly-to-cart-clone {
   position: fixed;
   z-index: 9999;

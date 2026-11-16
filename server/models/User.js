@@ -1,8 +1,5 @@
 const mongoose = require('mongoose');
 
-// Sổ địa chỉ giao hàng — subdocument nhúng thẳng trong User (tham khảo AuraPC-main:
-// server/routes/authRoutes.js phần "ADDRESS BOOK"), không tách collection riêng vì
-// địa chỉ luôn thuộc về đúng 1 user, không cần query độc lập.
 const addressSchema = new mongoose.Schema({
   label: { type: String, default: 'Nhà riêng' },
   fullName: { type: String, required: true },
@@ -19,8 +16,6 @@ const userSchema = new mongoose.Schema({
   // default: null cho 3 field phoneNumber/googleId/facebookId — sparse index vẫn đánh index giá trị
   // null lưu tường minh, nên chỉ cho tồn tại đúng 1 user thiếu field đó (lỗi E11000 khi đăng ký).
   phoneNumber: { type: String, unique: true, sparse: true },
-  // Băm bằng bcrypt — không lưu plain text. Đăng nhập bằng SĐT + mật khẩu (tham khảo VitaCare-main),
-  // không còn OTP-login/JWT. Tài khoản Google/Facebook không có password.
   password: { type: String, default: null },
   googleId: { type: String, unique: true, sparse: true },
   facebookId: { type: String, unique: true, sparse: true },

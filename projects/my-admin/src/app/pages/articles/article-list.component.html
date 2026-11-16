@@ -57,6 +57,7 @@
           <th>Tác giả</th>
           <th>Ngày đăng</th>
           <th class="text-right">Lượt xem</th>
+          <th class="text-right">Bình luận</th>
           <th class="text-right">Thao tác</th>
         </tr>
       </thead>
@@ -70,7 +71,6 @@
                 <span class="cell-strong article-title">{{ a.title }}</span>
                 <span class="cell-sub">
                   <span class="tag warning" *ngIf="a.featured"><i class="bi bi-star-fill"></i> Nổi bật</span>
-                  <span *ngIf="a.videoUrl"> <i class="bi bi-play-btn"></i> Có video</span>
                   {{ a.readTime }}
                 </span>
               </div>
@@ -83,6 +83,15 @@
           </td>
           <td>{{ a.publishedAt | date:'dd/MM/yyyy' }}</td>
           <td class="text-right">{{ (a.viewsCount || 0) | number }}</td>
+          <td class="text-right" (click)="$event.stopPropagation()">
+            <ng-container *ngIf="commentStats().get(a.id) as s; else noComments">
+              <a class="comment-link" routerLink="/news-comments" [queryParams]="{ article: a.id, filter: 'ALL' }" title="Xem bình luận của bài này">
+                <i class="bi bi-chat-left-text"></i> {{ s.total }}
+              </a>
+              <span class="cell-sub text-danger" *ngIf="s.unreplied">{{ s.unreplied }} chưa trả lời</span>
+            </ng-container>
+            <ng-template #noComments><span class="text-muted">0</span></ng-template>
+          </td>
           <td (click)="$event.stopPropagation()">
             <div class="row-actions">
               <button type="button" class="icon-btn" [title]="a.featured ? 'Bỏ nổi bật' : 'Đặt nổi bật'" *ngIf="adminAuth.can('content.edit')" (click)="toggleFeatured(a)">

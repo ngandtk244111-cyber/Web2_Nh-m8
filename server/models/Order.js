@@ -252,8 +252,19 @@ orderSchema.index({ depositStatus: 1, 'paymentPlan.deadlineAt': 1 });
 // đều được đẩy tới trang Tra cứu đơn đang mở mã đơn đó — không phải thêm lệnh emit ở từng route.
 const { emitOrderUpdated } = require('../realtime');
 
-orderSchema.post('save', function (doc) {
+async function notifyOrderStatus(order) {
+  const labels = { CONFIRMED: 'Đơn hàng đang chuẩn bị giao', IN_PRODUCTION: 'Đơn đặt làm đang được sản xuất', SHIPPED: 'Đơn hàng đang được giao', DELIVERED: 'Đơn hàng đã giao thành công', CANCELLED: 'Đơn hàng đã được hủy', RETURNED: 'Đơn hàng đã hoàn về shop' };
+  const title = labels[order?.status];
+  if (!title || !order.userId) return;
+  await require('./Notification').notifyUser(order.userId, { title,
+    message: 'Đơn ' + order.orderNumber + ': ' + title.toLowerCase() + '.',
+    link: '/orders/track?orderNumber=' + encodeURIComponent(order.orderNumber), refKey: 'order:' + order.orderNumber + ':' + order.status,
+  });
+}
+
+orderSchema.post('save', async function (doc) {
   emitOrderUpdated(doc);
+  await notifyOrderStatus(doc);
 });
 
 orderSchema.post('findOneAndUpdate', async function (doc) {
@@ -262,6 +273,7 @@ orderSchema.post('findOneAndUpdate', async function (doc) {
     // Hook nhận bản trước khi sửa nếu route không truyền { new: true } — đọc lại bản mới nhất.
     const fresh = await this.model.findOne({ orderNumber: doc.orderNumber });
     emitOrderUpdated(fresh || doc);
+    await notifyOrderStatus(fresh || doc);
   } catch (err) {
     console.error('order realtime emit error', err);
   }

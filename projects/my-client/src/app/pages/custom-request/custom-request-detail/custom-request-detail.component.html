@@ -3,7 +3,7 @@
       <!-- Back navigation & Title Header -->
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-neutral-200 pb-6">
         <div>
-          <a routerLink="/custom-request" class="text-xs font-semibold text-neutral-600 hover:text-amber-400 flex items-center gap-1 mb-2 transition">
+          <a [routerLink]="fromAccount ? '/account' : '/custom-request'" [queryParams]="fromAccount ? { tab: 'custom-requests' } : {}" class="text-xs font-semibold text-neutral-600 hover:text-amber-400 flex items-center gap-1 mb-2 transition">
             ← Danh sách yêu cầu
           </a>
           <div class="flex items-center gap-3">
@@ -15,7 +15,7 @@
             </span>
           </div>
           <p class="text-xs text-neutral-600 mt-1">
-            Khách hàng: <strong class="text-neutral-800">{{ request.customerName }}</strong> • Khởi tạo lúc: {{ request.createdAt }}
+            Người yêu cầu: <strong class="text-neutral-800">{{ request.customerName }}</strong> • Khởi tạo lúc: {{ request.createdAt }}
           </p>
         </div>
 
@@ -144,7 +144,7 @@
           </div>
 
           <!-- Báo giá có phiên bản: xem, chấp nhận (đồng ý chính sách cọc), đặt hàng -->
-          <app-quote-panel [request]="request" (requestChanged)="request = $event"></app-quote-panel>
+          <app-quote-panel id="request-quote" class="block scroll-mt-28" [request]="request" (requestChanged)="request = $event"></app-quote-panel>
 
           <!-- Design Brief Card -->
           <div class="bg-[#FFFFFF] rounded-3xl p-6 border border-neutral-200 shadow-xl space-y-4">
@@ -194,11 +194,23 @@
                   alt="AI Concept" 
                   class="w-24 h-24 rounded-xl object-cover border border-neutral-300">
                 
-                <img 
-                  *ngFor="let img of request.customerImages" 
-                  [src]="img" 
-                  alt="Reference" 
-                  class="w-24 h-24 rounded-xl object-cover border border-neutral-300">
+                <ng-container *ngFor="let img of request.customerImages">
+                  <!-- Link dán vào có thể là trang web / link hỏng: không tải được thì cho mở link gốc -->
+                  <a
+                    *ngIf="brokenImages.has(img); else preview"
+                    [href]="img" target="_blank" rel="noopener noreferrer"
+                    class="w-24 h-24 rounded-xl border border-dashed border-neutral-300 bg-neutral-50 flex flex-col items-center justify-center gap-1 text-center text-[11px] leading-tight text-neutral-500 no-underline hover:border-neutral-400">
+                    <span>Không xem trước được</span>
+                    <b class="font-semibold text-[#A3152D]">Mở link ↗</b>
+                  </a>
+                  <ng-template #preview>
+                    <img
+                      [src]="img"
+                      alt="Ảnh tham khảo"
+                      (error)="brokenImages.add(img)"
+                      class="w-24 h-24 rounded-xl object-cover border border-neutral-300">
+                  </ng-template>
+                </ng-container>
               </div>
             </div>
           </div>
@@ -208,6 +220,7 @@
         <!-- Right Column: Live Chat Timeline with Shop Specialist (5 cols) -->
         <div class="lg:col-span-5 bg-[#FFFFFF] rounded-3xl p-6 border border-neutral-200 shadow-xl flex flex-col h-[600px]">
           
+          <a href="#request-quote" class="mb-3 text-xs font-bold text-[#A3152D] hover:underline">Xem bảng báo giá →</a>
           <!-- Chat Header -->
           <div class="border-b border-neutral-200 pb-3 flex items-center justify-between">
             <div class="flex items-center gap-2.5">
@@ -217,7 +230,7 @@
               <div>
                 <h4 class="font-bold text-xs sm:text-sm text-neutral-900">Trao Đổi Kỹ Thuật Với Shop</h4>
                 <p class="text-[10px] text-emerald-400 flex items-center gap-1">
-                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Kỹ sư Luméa đang trực tuyến
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Đội ngũ Luméa hỗ trợ thiết kế
                 </p>
               </div>
             </div>
@@ -231,18 +244,45 @@
               [class.items-end]="msg.sender === 'CUSTOMER'">
               
               <div class="flex items-start gap-2 max-w-[88%]" [class.flex-row-reverse]="msg.sender === 'CUSTOMER'">
-                <img [src]="msg.avatar" [alt]="msg.senderName" referrerpolicy="no-referrer" class="w-6 h-6 rounded-full object-cover flex-shrink-0 mt-0.5 border border-neutral-300">
+                <img *ngIf="messageAvatar(msg) as avatar; else avatarInitial" [src]="avatar" alt="Ảnh đại diện" class="w-7 h-7 rounded-full object-contain bg-white shrink-0 mt-0.5 border border-neutral-200" (error)="$any($event.target).src = 'assets/mascot/goh-mascot.png'">
+                <ng-template #avatarInitial><span class="w-7 h-7 shrink-0 rounded-full bg-rose-100 text-[#A3152D] flex items-center justify-center text-xs font-bold">{{ request.customerName.charAt(0) }}</span></ng-template>
                 
                 <div>
                   <div class="text-[9px] text-neutral-500 mb-0.5" [class.text-right]="msg.sender === 'CUSTOMER'">
-                    {{ msg.senderName }}
+                    {{ msg.sender === 'CUSTOMER' ? (auth.currentUser()?.fullName || request.customerName) : msg.sender === 'AI_ASSISTANT' ? 'Lami' : msg.senderName }}
                   </div>
-                  <div 
-                    [class]="msg.sender === 'CUSTOMER' 
+                  <!-- Tin báo giá: hiện bảng thay cho dòng chữ -->
+                  <div *ngIf="msg.quote as q; else textBubble" class="bg-white border border-neutral-200 rounded-2xl rounded-tl-sm px-3.5 py-3 text-xs text-neutral-800 min-w-[240px]">
+                    <div class="font-bold text-[#A3152D] mb-2">Báo giá phiên bản {{ q.version }}</div>
+                    <table class="w-full">
+                      <tr *ngFor="let item of q.items" class="border-b border-neutral-100">
+                        <td class="py-1 pr-2">{{ item.name }} <span class="text-neutral-500">× {{ item.quantity }}</span></td>
+                        <td class="py-1 text-right whitespace-nowrap">{{ item.lineTotal | vnd }}</td>
+                      </tr>
+                      <tr *ngIf="q.discount">
+                        <td class="py-1 text-neutral-500">Chiết khấu</td>
+                        <td class="py-1 text-right whitespace-nowrap">−{{ q.discount | vnd }}</td>
+                      </tr>
+                      <tr class="font-bold">
+                        <td class="pt-1.5">Tổng</td>
+                        <td class="pt-1.5 text-right whitespace-nowrap">{{ q.total | vnd }}</td>
+                      </tr>
+                      <tr>
+                        <td class="text-neutral-500">Cọc trước</td>
+                        <td class="text-right whitespace-nowrap">{{ q.depositAmount | vnd }}</td>
+                      </tr>
+                    </table>
+                    <p class="text-neutral-500 mt-2">Sản xuất khoảng {{ q.estimatedDays }} ngày · hiệu lực tới {{ q.validUntil | date:'dd/MM/yyyy' }}</p>
+                    <a href="#request-quote" class="inline-block mt-2 font-semibold text-[#A3152D] no-underline hover:underline">Xem &amp; phản hồi báo giá →</a>
+                  </div>
+                  <ng-template #textBubble>
+                  <div
+                    [class]="msg.sender === 'CUSTOMER'
                       ? 'bg-gradient-to-r from-amber-400 to-amber-600 text-white font-semibold rounded-2xl rounded-tr-sm px-3.5 py-2 text-xs shadow-md' 
                       : 'bg-[#F6F5F2] border border-neutral-200 text-neutral-800 rounded-2xl rounded-tl-sm px-3.5 py-2 text-xs'">
                     {{ msg.text }}
                   </div>
+                  </ng-template>
                   <span class="text-[9px] text-neutral-500 mt-0.5 block" [class.text-right]="msg.sender === 'CUSTOMER'">
                     {{ msg.timestamp }}
                   </span>
@@ -263,7 +303,7 @@
                 class="flex-1 text-xs rounded-xl border border-neutral-300 px-3 py-2.5 bg-[#F6F5F2] text-neutral-900 focus:outline-none focus:border-amber-500">
               <button 
                 type="submit" 
-                [disabled]="!chatInput.trim()" 
+                [disabled]="sending || !chatInput.trim()"
                 class="p-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-300 hover:to-amber-500 disabled:opacity-50 text-white font-bold transition">
                 <app-icon name="send" [size]="14"></app-icon>
               </button>

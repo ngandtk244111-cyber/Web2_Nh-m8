@@ -17,9 +17,11 @@ export interface AdminReview {
   comment: string;
   verifiedPurchase: boolean;
   images?: string[];
+  video?: string;
   status: 'VISIBLE' | 'HIDDEN';
   hiddenReason?: string;
-  reply?: { text: string; date: string } | null;
+  /** auto = shop tự trả lời đánh giá từ 4 sao bằng mẫu cảm ơn. */
+  reply?: { text: string; date: string; auto?: boolean } | null;
   pinned?: boolean;
   productId: string;
   productName: string;
@@ -41,22 +43,34 @@ export class ReviewService {
   private reviewsSignal = signal<AdminReview[]>([]);
   readonly reviews = this.reviewsSignal.asReadonly();
 
+  private normalize(review: AdminReview): AdminReview {
+    const url = (value?: string) => !value ? '' : /^(https?:|data:)/.test(value) ? value : environment.apiUrl.replace(/\/api$/, '') + value;
+    return { ...review, avatar: url(review.avatar), images: review.images?.map(url), video: url(review.video), productImage: url(review.productImage) };
+  }
+
   refresh(): void {
     this.http.get<{ success: boolean; reviews: AdminReview[] }>(`${BASE}/reviews/admin`, {
       params: { adminId: this.adminAuth.adminId },
     }).subscribe({
       next: (res) => {
-        if (res.success) this.reviewsSignal.set(res.reviews);
+        if (res.success) this.reviewsSignal.set(res.reviews.map(r => this.normalize(r)));
       },
       error: (err) => console.warn('Failed to load reviews', err),
     });
+  }
+
+  /** Trả lời một lượt mọi đánh giá từ 4 sao chưa có phản hồi (server dùng mẫu cảm ơn). */
+  autoReplyGoodReviews(): Observable<{ success: boolean; replied: number }> {
+    return this.http.post<{ success: boolean; replied: number }>(`${BASE}/reviews/admin/auto-reply`, {}).pipe(
+      tap(() => this.refresh())
+    );
   }
 
   update(review: AdminReview, changes: { status?: 'VISIBLE' | 'HIDDEN'; hiddenReason?: string; reply?: string; pinned?: boolean }): Observable<AdminReview> {
     return this.http.patch<{ success: boolean; review: AdminReview }>(`${BASE}/${review.productId}/reviews/${review.id}`, {
       ...changes, adminId: this.adminAuth.adminId,
     }).pipe(
-      map(res => res.review),
+      map(res => this.normalize(res.review)),
       tap(updated => this.reviewsSignal.update(list => list.map(r => r.id === review.id && r.productId === review.productId ? updated : r)))
     );
   }

@@ -4,6 +4,7 @@ const Order = require('../models/Order');
 const Product = require('../models/Product');
 const Admin = require('../models/Admin');
 const CustomRequest = require('../models/CustomRequest');
+const Quote = require('../models/Quote');
 const PaymentTransaction = require('../models/PaymentTransaction');
 const {
   attachUserId, requireUserId, requirePermission, userIdFromRequest, userIdFromToken, adminIdFromRequest, validId,
@@ -71,11 +72,11 @@ async function emailInvoice(order) {
     await getMailTransporter().sendMail({
       from: process.env.MAIL_FROM || `"Luméa" <${process.env.SMTP_USER}>`,
       to: order.invoice.email,
-      subject: `Hoá đơn điện tử đơn hàng ${order.orderNumber} — Luméa`,
+      subject: `Xác nhận đơn hàng ${order.orderNumber} — Luméa`,
       html: `<p>Xin chào ${order.shippingAddress?.fullName || 'quý khách'},</p>
-        <p>Luméa gửi kèm hoá đơn điện tử cho đơn hàng <strong>${order.orderNumber}</strong>.</p>
+        <p>Luméa gửi kèm phiếu xác nhận cho đơn hàng <strong>${order.orderNumber}</strong>.</p>
         <p>Cảm ơn quý khách đã mua sắm tại Luméa!</p>`,
-      attachments: [{ filename: `HoaDon_${order.orderNumber}.pdf`, content: pdf }],
+      attachments: [{ filename: `PhieuDonHang_${order.orderNumber}.pdf`, content: pdf }],
     });
     await Order.updateOne({ orderNumber: order.orderNumber }, { $set: { 'invoice.sentAt': new Date() } });
   } catch (err) {
@@ -249,8 +250,10 @@ router.get('/:orderNumber/invoice', async (req, res) => {
     if (order.userId && String(order.userId) !== String(viewerId || '')) {
       return res.status(403).json({ success: false, error: 'Bạn không có quyền xem hoá đơn này' });
     }
+    const issued = order.invoice?.requested === true && order.paymentStatus === 'PAID';
+    if (!issued && req.query.document !== 'confirmation') return res.status(409).json({ success: false, error: 'Hóa đơn chỉ có khi đã yêu cầu xuất hóa đơn và thanh toán được xác nhận.' });
     const pdf = await buildInvoicePdf(order);
-    const filename = `HoaDon_${order.orderNumber}.pdf`;
+    const filename = `${issued ? 'HoaDon' : 'PhieuDonHang'}_${order.orderNumber}.pdf`;
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `${req.query.download ? 'attachment' : 'inline'}; filename="${filename}"`);
     res.send(pdf);
@@ -390,10 +393,11 @@ router.patch('/:orderNumber/payment-method', attachUserId, async (req, res) => {
     if (order.userId && String(order.userId) !== String(req.userId || '')) {
       return res.status(403).json({ success: false, error: 'Bạn không có quyền đổi đơn hàng này' });
     }
-    if (order.orderType === 'CUSTOM_QUOTE') {
+    if (isDepositOrder(order)) {
       return res.status(400).json({ success: false, error: 'Đơn đặt làm theo báo giá thanh toán cọc bằng chuyển khoản, không đổi phương thức được' });
     }
-    if (paymentMethod === 'COD' && order.hasPrintOnDemandItems && (order.paymentPolicyVersion || 1) >= 2) {
+    const isQuoteOrder = order.orderType === 'CUSTOM_QUOTE';
+    if (!isQuoteOrder && paymentMethod === 'COD' && order.hasPrintOnDemandItems && (order.paymentPolicyVersion || 1) >= 2) {
       return res.status(400).json({ success: false, error: 'Đơn có hàng in 3D theo yêu cầu cần thanh toán trước 100%, không hỗ trợ COD' });
     }
     if (order.paymentStatus === 'PAID') return res.status(400).json({ success: false, error: 'Đơn đã thanh toán, không thể đổi phương thức' });
@@ -403,7 +407,11 @@ router.patch('/:orderNumber/payment-method', attachUserId, async (req, res) => {
     if (order.paymentMethod !== paymentMethod) {
       order.paymentMethod = paymentMethod;
       // Đổi sang / khỏi COD thì tính lại tiền cọc bắt buộc (chưa nhận cọc mới đổi).
-      if (!order.depositPaidAt) order.depositAmount = depositFor(order.total, paymentMethod);
+      if (!order.depositPaidAt) {
+        order.depositAmount = isQuoteOrder
+          ? (paymentMethod === 'COD' ? (await Quote.findById(order.customRequestRef?.quoteId, { deposit: 1 }).lean())?.deposit?.amount || 0 : 0)
+          : depositFor(order.total, paymentMethod);
+      }
       order.paymentStatus = 'UNPAID';
       order.transferReportedAt = null;
       order.paymentTransactionId = '';
@@ -900,6 +908,7 @@ router.post('/:orderNumber/deposit/report', requireUserId, async (req, res) => {
     if (order.status === 'CANCELLED') return res.status(400).json({ success: false, error: 'Đơn đã huỷ (quá hạn cọc hoặc do yêu cầu huỷ)' });
     if (order.depositStatus === 'VERIFYING') return res.status(409).json({ success: false, error: 'Bạn đã báo chuyển khoản, shop đang đối soát. Vui lòng chờ kết quả.' });
     if (order.depositStatus !== 'UNPAID') return res.status(400).json({ success: false, error: 'Đơn không còn chờ thanh toán cọc' });
+    if (!order.paymentPlan?.bank) return res.status(400).json({ success: false, error: 'Đơn này thanh toán cọc qua MoMo, ZaloPay hoặc thẻ ATM' });
 
     const now = new Date();
     const claimed = await Order.findOneAndUpdate(

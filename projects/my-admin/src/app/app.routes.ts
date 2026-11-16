@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 import { adminAuthGuard, permissionGuard } from './core/guards/admin-auth.guard';
 
-/** Mỗi chức năng là 1 route riêng trong layout (như app.routes của Vita); data.perm khớp quyền server. */
+
 export const routes: Routes = [
   {
     path: 'login',
@@ -84,7 +84,7 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/customers/customer-detail.component').then(m => m.CustomerDetailComponent),
       },
       {
-        path: 'messages', data: { title: 'Tin nhắn hỗ trợ', perm: 'customers.view' },
+        path: 'messages', data: { title: 'Tin nhắn hỗ trợ', perm: 'customers.view|custom3d.view' },
         loadComponent: () => import('./pages/messages/messages.component').then(m => m.MessagesComponent),
       },
       {

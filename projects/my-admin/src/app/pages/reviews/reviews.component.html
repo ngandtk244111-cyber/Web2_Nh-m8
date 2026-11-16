@@ -6,7 +6,12 @@
   <div class="page-header">
     <div>
       <h1 class="page-title">Đánh giá sản phẩm</h1>
-      <p class="page-subtitle">Đánh giá đăng ngay không cần duyệt — phản hồi khách chưa hài lòng, ghim đánh giá hay, ẩn nội dung vi phạm</p>
+      <p class="page-subtitle">Đánh giá đăng ngay không cần duyệt — đánh giá từ 4 sao được tự trả lời cảm ơn, nhân viên tập trung phản hồi khách chưa hài lòng</p>
+    </div>
+    <div class="header-actions" *ngIf="canEdit && goodUnrepliedCount() > 0">
+      <button type="button" class="btn-add-action" [disabled]="autoReplying" (click)="autoReplyGood()">
+        <i class="bi bi-reply-all"></i> {{ autoReplying ? 'Đang trả lời…' : 'Tự trả lời ' + goodUnrepliedCount() + ' đánh giá tốt' }}
+      </button>
     </div>
   </div>
 
@@ -54,6 +59,7 @@
           </div>
 
           <p class="review-comment">{{ r.comment || '(Không có nội dung)' }}</p>
+          <video *ngIf="r.video" [src]="r.video" controls preload="metadata" style="max-width: 280px; max-height: 200px; display: block; margin: 8px 0;"></video>
           <div class="review-images" *ngIf="r.images?.length">
             <a *ngFor="let img of r.images" [href]="img" target="_blank" rel="noopener"><img [src]="img" alt="Ảnh đánh giá" class="thumb"></a>
           </div>
@@ -63,7 +69,10 @@
           </div>
 
           <div class="reply" *ngIf="r.reply?.text && replyingId !== key(r)">
-            <div class="reply-title"><i class="bi bi-reply"></i> Luméa phản hồi · {{ r.reply?.date }}</div>
+            <div class="reply-title">
+              <i class="bi bi-reply"></i> Luméa phản hồi · {{ r.reply?.date }}
+              <span class="tag info" *ngIf="r.reply?.auto">Tự động</span>
+            </div>
             <div>{{ r.reply?.text }}</div>
           </div>
 

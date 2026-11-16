@@ -295,3 +295,9 @@
 .nc-more:hover {
   background: #F7F7F7;
 }
+
+/* Hiện ngày giờ đầy đủ khi rê chuột, dùng bàn phím hoặc chạm vào thời gian. */
+.social-time { position: relative; display: inline-block; color: #858080; font-size: 12px; cursor: help; flex-shrink: 0; }
+.social-time::after { content: attr(data-tooltip); position: absolute; top: calc(100% + 6px); left: 0; z-index: 50; width: max-content; max-width: min(280px, 65vw); padding: 8px 10px; border-radius: 7px; background: #302b29; color: #fff; box-shadow: 0 3px 12px #0002; font-size: 12px; font-weight: 400; line-height: 1.5; white-space: normal; pointer-events: none; visibility: hidden; opacity: 0; }
+.social-time:hover::after, .social-time:focus::after { visibility: visible; opacity: 1; }
+.social-time:focus-visible { outline: 1px solid #a3152d; outline-offset: 3px; }

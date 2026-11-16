@@ -1,4 +1,4 @@
-/* Hộp xác nhận theo modal "Xác nhận xóa" của Vita (ordermanage.html). */
+
 :host .modal-overlay {
   z-index: 2000;
 }

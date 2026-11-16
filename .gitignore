@@ -51,3 +51,9 @@ server/uploads/
 # Kết quả sinh ra từ seed/import-lumea-products.js (dữ liệu dùng chung nằm trên MongoDB)
 server/seed/lumea-products/products.normalized.json
 server/seed/lumea-products/report.md
+
+# File JSON gốc làm đầu vào cho seed/import-lumea-products.js (dữ liệu đã nạp lên MongoDB, không đưa lên git)
+/products*.json
+
+# Log chạy server ở máy
+server/*.log

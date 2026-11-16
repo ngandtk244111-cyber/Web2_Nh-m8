@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -57,6 +57,24 @@ export class CommunityComponent implements OnInit {
   ];
 
   readonly posts = this.communityService.posts;
+  readonly viewingId = signal<string | null>(null);
+  readonly viewingPost = computed(() => this.posts().find(p => p.id === this.viewingId()));
+
+  @HostListener('document:keydown.escape')
+  closePreview(): void { this.viewingId.set(null); }
+
+  mediaUrl(url?: string): string {
+    if (!url) return '';
+    if (url.startsWith('/assets/')) return this.clientAppUrl + url;
+    const uploadPath = url.match(/^(?:https?:\/\/[^/]+)?(\/uploads\/.*)$/)?.[1];
+    if (!uploadPath && /^https?:\/\//.test(url)) return url;
+    return environment.apiUrl.replace(/\/api$/, '') + (uploadPath || (url.startsWith('/') ? url : '/' + url));
+  }
+
+  displayDate(value?: string): string {
+    const date = value ? new Date(value) : null;
+    return date && !isNaN(date.getTime()) ? date.toLocaleString('vi-VN') : value || '';
+  }
   // Mặc định xem tất cả: tab "Đăng hôm nay" thường trống, trông như trang không có bài nào.
   filter = signal<CommunityFilter>('ALL');
   search = signal('');

@@ -1,22 +1,20 @@
 const express = require('express');
 const { sendError } = require('../utils/http-error');
 const CommunityPost = require('../models/CommunityPost');
+const ProductImage = require('../models/ProductImage');
+const UserData = require('../models/UserData');
+const { IMAGE_TYPES, INVALID_TYPE_ERROR, uploadImage } = require('../utils/images');
+const User = require('../models/User');
+const { randomUUID } = require('crypto');
 const Notification = require('../models/Notification');
 const { awardVoucher } = require('../utils/vouchers');
 const { checkContent } = require('../utils/moderation');
-const { requirePermission, attachUserId } = require('../middleware/auth');
+const { requirePermission, attachUserId, validId } = require('../middleware/auth');
 
 const router = express.Router();
 
-// Ảnh bài đăng tải lên từ máy (thay cho dán URL) — lưu ở server/uploads/community, phục vụ qua /uploads/...
-const path = require('path');
-const fs = require('fs');
-const multer = require('multer');
+// Ảnh cộng đồng dùng chung kho ảnh MongoDB, không phụ thuộc ổ đĩa của backend.
 const { requireUserId } = require('../middleware/auth');
-const uploadDir = path.join(__dirname, '../uploads/community');
-fs.mkdirSync(uploadDir, { recursive: true });
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
-const IMAGE_EXT = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp', 'image/gif': '.gif' };
 
 const MODERATION_STATUSES = ['PUBLISHED', 'HIDDEN', 'REJECTED'];
 
@@ -26,13 +24,32 @@ const PUBLIC_FILTER = { status: { $nin: ['HIDDEN', 'REJECTED'] } };
 
 async function notifyAuthor(post, title, message) {
   if (!post.userId) return;
-  await Notification.create({ userId: String(post.userId), title, message, link: '/community' });
+  await Notification.create({ userId: String(post.userId), title, message, link: '/community?post=' + encodeURIComponent(post.id) });
 }
 
-router.get('/', async (_req, res) => {
+router.get('/', attachUserId, async (req, res) => {
   try {
-    const posts = await CommunityPost.find(PUBLIC_FILTER).sort({ _id: -1 });
-    res.json({ success: true, posts });
+    const posts = await CommunityPost.find(req.query.mine === 'true' && req.userId ? { userId: req.userId } : PUBLIC_FILTER).sort({ _id: -1 });
+    const ids = [...new Set(posts.flatMap(p => [p.userId || p.author?.id, ...p.comments.map(c => c.userId)]).filter(id => validId(String(id))).map(String))];
+    const users = await User.find({ _id: { $in: ids } }).select('fullName avatar').lean();
+    const profiles = new Map(users.map(u => [String(u._id), u]));
+    const data = req.userId ? await UserData.findOne({ user: req.userId }).select('communitySaved').lean() : null;
+    const saved = new Set(data?.communitySaved || []);
+    const withProfile = (id, author) => {
+      const user = profiles.get(String(id));
+      return user ? { ...author, name: user.fullName || 'Thành viên', avatar: user.avatar || '', handle: '' } : author;
+    };
+    res.json({ success: true, posts: posts.map(p => {
+      const post = p.toJSON();
+      post.isLiked = (p.likedBy || []).includes(req.userId);
+      post.isSaved = saved.has(p.id);
+      post.author = withProfile(p.userId || p.author?.id, post.author);
+      post.comments = post.comments.map(c => {
+        const user = profiles.get(String(c.userId));
+        return user ? { ...c, authorName: user.fullName || 'Thành viên', authorAvatar: user.avatar || '' } : c;
+      });
+      return post;
+    }) });
   } catch (err) {
     sendError(res, err);
   }
@@ -41,7 +58,7 @@ router.get('/', async (_req, res) => {
 // Admin — mọi bài kể cả bị ẩn/bị chặn, kèm postedAt thật để lọc "đăng hôm nay".
 router.get('/admin', requirePermission('content.view'), async (_req, res) => {
   try {
-    const posts = await CommunityPost.find().sort({ _id: -1 }).lean();
+    const posts = await CommunityPost.find().select('-likedBy').sort({ _id: -1 }).lean();
     res.json({
       success: true,
       posts: posts.map(p => ({ ...p, status: p.status || 'PUBLISHED', postedAt: p.postedAt || p._id.getTimestamp() })),
@@ -94,37 +111,37 @@ router.delete('/:id', requirePermission('content.delete'), async (req, res) => {
   }
 });
 
-router.post('/upload-image', requireUserId, upload.single('image'), async (req, res) => {
+router.post('/upload-image', requireUserId, uploadImage('image'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ success: false, error: 'Thiếu file ảnh' });
-    const ext = IMAGE_EXT[req.file.mimetype || ''];
-    if (!ext) return res.status(400).json({ success: false, error: 'Chỉ nhận ảnh JPG, PNG, WEBP hoặc GIF' });
-    const filename = `post-${req.userId}-${Date.now()}${ext}`;
-    fs.writeFileSync(path.join(uploadDir, filename), req.file.buffer);
-    res.json({ success: true, url: `/uploads/community/${filename}` });
+    if (!IMAGE_TYPES.includes(req.file.mimetype)) return res.status(400).json({ success: false, error: INVALID_TYPE_ERROR });
+    const image = await ProductImage.create({ data: req.file.buffer, contentType: req.file.mimetype, uploadedBy: req.userId });
+    res.json({ success: true, url: `/api/products/images/${image._id}` });
   } catch (err) {
     console.error('community upload error', err);
     sendError(res, err);
   }
 });
 
-router.post('/', attachUserId, async (req, res) => {
+router.post('/', requireUserId, async (req, res) => {
   try {
     // Không cho client tự đặt các trường kiểm duyệt / số liệu.
     const { userId: _u, status: _s, moderationReason: _r, moderatedBy: _b, moderatedAt: _a, isStaffPick: _p, postedAt: _t, ...body } = req.body;
     const { userId } = req;
+    const user = await User.findById(userId).lean();
 
 
     const violation = checkContent(body.title, body.caption, ...(Array.isArray(body.tags) ? body.tags : []));
 
     const post = await CommunityPost.create({
       ...body,
-      userId: userId || null,
-      id: 'post-' + Date.now(),
+      userId,
+      author: { id: userId, name: user.fullName || 'Thành viên', avatar: user.avatar || '', handle: '' },
+      id: 'post-' + randomUUID(),
       likesCount: 0,
       commentsCount: 0,
       comments: [],
-      createdAt: 'Vừa xong',
+      createdAt: new Date().toISOString(),
       postedAt: new Date(),
       ...(violation ? {
         status: 'REJECTED',
@@ -161,34 +178,67 @@ router.post('/', attachUserId, async (req, res) => {
   }
 });
 
-// isLiked là trạng thái cục bộ theo trình duyệt (app không có đăng nhập bắt buộc để xem cộng
-// đồng) — client tự quyết định gọi like hay unlike dựa trên localStorage, server chỉ giữ đếm.
-router.post('/:id/like', async (req, res) => {
+// Khách chỉ sửa/xóa bài của chính mình; quyền kiểm duyệt vẫn thuộc admin.
+router.patch('/:id', requireUserId, async (req, res) => {
   try {
-    const post = await CommunityPost.findOneAndUpdate({ id: req.params.id }, { $inc: { likesCount: 1 } }, { new: true });
-    if (!post) return res.status(404).json({ success: false, error: 'Không tìm thấy bài viết' });
+    const title = String(req.body.title || '').trim();
+    const caption = String(req.body.caption || '').trim();
+    const imageUrl = String(req.body.imageUrl || '').trim();
+    if (!title || !imageUrl) return res.status(400).json({ success: false, error: 'Vui lòng nhập tiêu đề và ảnh bài viết' });
+    const violation = checkContent(title, caption);
+    if (violation) return res.status(422).json({ success: false, error: violation.reason });
+    const post = await CommunityPost.findOneAndUpdate(
+      { id: req.params.id, userId: req.userId },
+      { $set: { title, caption, imageUrl, productTags: Array.isArray(req.body.productTags) ? req.body.productTags : [] } },
+      { new: true, runValidators: true }
+    );
+    if (!post) return res.status(404).json({ success: false, error: 'Không tìm thấy bài viết của bạn' });
     res.json({ success: true, post });
-  } catch (err) {
-    sendError(res, err);
-  }
+  } catch (err) { sendError(res, err); }
 });
 
-router.post('/:id/unlike', async (req, res) => {
+router.delete('/:id/mine', requireUserId, async (req, res) => {
   try {
-    // Không trừ xuống dưới 0 (unlike gọi lặp / gọi khi chưa like).
-    const post = await CommunityPost.findOneAndUpdate({ id: req.params.id, likesCount: { $gt: 0 } }, { $inc: { likesCount: -1 } }, { new: true })
-      || await CommunityPost.findOne({ id: req.params.id });
-    if (!post) return res.status(404).json({ success: false, error: 'Không tìm thấy bài viết' });
-    res.json({ success: true, post });
-  } catch (err) {
-    sendError(res, err);
-  }
+    const result = await CommunityPost.deleteOne({ id: req.params.id, userId: req.userId });
+    if (!result.deletedCount) return res.status(404).json({ success: false, error: 'Không tìm thấy bài viết của bạn' });
+    res.json({ success: true });
+  } catch (err) { sendError(res, err); }
 });
 
-router.post('/:id/comments', async (req, res) => {
+router.post('/:id/save', requireUserId, async (req, res) => {
+  try {
+    if (!await CommunityPost.exists({ id: req.params.id, $or: [PUBLIC_FILTER, { userId: req.userId }] })) return res.status(404).json({ success: false, error: 'Không tìm thấy bài viết' });
+    const isSaved = req.body.saved === true;
+    await UserData.findOneAndUpdate({ user: req.userId }, { [isSaved ? '$addToSet' : '$pull']: { communitySaved: req.params.id } }, { upsert: true, setDefaultsOnInsert: true });
+    res.json({ success: true, isSaved });
+  } catch (err) { sendError(res, err); }
+});
+
+for (const action of ['like', 'unlike']) router.post('/:id/' + action, requireUserId, async (req, res) => {
+  try {
+    const like = action === 'like';
+    const post = await CommunityPost.findOneAndUpdate(
+      { id: req.params.id, ...PUBLIC_FILTER, likedBy: like ? { $ne: req.userId } : req.userId },
+      [{ $set: {
+        likesCount: { $max: [0, { $add: [{ $ifNull: ['$likesCount', 0] }, like ? 1 : -1] }] },
+        likedBy: { [like ? '$setUnion' : '$setDifference']: [{ $ifNull: ['$likedBy', []] }, [req.userId]] },
+      } }], { new: true }
+    ) || await CommunityPost.findOne({ id: req.params.id, ...PUBLIC_FILTER });
+    if (!post) return res.status(404).json({ success: false, error: 'Không tìm thấy bài viết' });
+    res.json({ success: true, post: { ...post.toJSON(), isLiked: (post.likedBy || []).includes(req.userId) } });
+  } catch (err) { sendError(res, err); }
+});
+
+router.post('/:id/comments', requireUserId, async (req, res) => {
   try {
     const text = String(req.body.text || '').trim();
-    const authorName = String(req.body.authorName || '').trim() || 'Bạn';
+    const user = await User.findById(req.userId).lean();
+    const authorName = user.fullName || 'Thành viên';
+    const parentPost = await CommunityPost.findOne({ id: req.params.id, ...PUBLIC_FILTER });
+    if (!parentPost) return res.status(404).json({ success: false, error: 'Không tìm thấy bài viết' });
+    const parentId = String(req.body.parentId || '');
+    const parent = parentId ? parentPost.comments.find(c => c.id === parentId) : null;
+    if (parentId && !parent) return res.status(400).json({ success: false, error: 'Bình luận được trả lời không còn tồn tại' });
     if (!text) return res.status(400).json({ success: false, error: 'Nội dung bình luận trống' });
     if (text.length > 1000) return res.status(400).json({ success: false, error: 'Bình luận tối đa 1000 ký tự' });
     const violation = checkContent(authorName, text);
@@ -196,11 +246,14 @@ router.post('/:id/comments', async (req, res) => {
       return res.status(422).json({ success: false, error: `Bình luận vi phạm tiêu chuẩn cộng đồng: ${violation.reason.toLowerCase()}.` });
     }
     const newComment = {
-      id: 'c-' + Date.now(),
+      id: 'c-' + randomUUID(),
+      userId: req.userId,
+      parentId: parentId || null,
+      replyTo: parent?.authorName || null,
       authorName,
-      authorAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
+      authorAvatar: user.avatar || '',
       text,
-      createdAt: 'Vừa xong',
+      createdAt: new Date().toISOString(),
     };
 
     const post = await CommunityPost.findOneAndUpdate(
@@ -209,6 +262,15 @@ router.post('/:id/comments', async (req, res) => {
       { new: true }
     );
     if (!post) return res.status(404).json({ success: false, error: 'Không tìm thấy bài viết' });
+    const recipients = new Set([String(parentPost.userId || ''), String(parent?.userId || '')]);
+    recipients.delete('');
+    recipients.delete(String(req.userId));
+    await Promise.all([...recipients].map(userId => Notification.notifyUser(userId, {
+      title: parent && String(parent.userId) === userId ? 'Có người trả lời bình luận của bạn' : 'Bài viết của bạn có bình luận mới',
+      message: authorName + ': ' + text.slice(0, 160),
+      link: '/community?post=' + encodeURIComponent(parentPost.id) + '&comment=' + encodeURIComponent(newComment.id),
+      refKey: 'community-comment:' + newComment.id,
+    })));
     res.json({ success: true, post });
   } catch (err) {
     sendError(res, err);

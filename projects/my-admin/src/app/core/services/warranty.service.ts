@@ -9,16 +9,19 @@ export interface Warranty {
   customerName: string;
   customerPhone: string;
   warrantyMonths: number;
-  status: 'ACTIVE' | 'CLAIMED' | 'EXPIRED';
+  /** CLAIMED = khách vừa gửi yêu cầu, chờ tiếp nhận; PROCESSING = shop đã tiếp nhận, đang xử lý. */
+  status: 'ACTIVE' | 'CLAIMED' | 'PROCESSING' | 'EXPIRED';
   purchasedAt: string;
   /** Virtual của server/models/Warranty.js: purchasedAt + warrantyMonths. */
   expiresAt: string;
   createdAt?: string;
-  /** Lần lượt: ghi chú khách gửi yêu cầu, ghi chú nhân viên đóng yêu cầu... */
-  claimHistory?: { note: string; createdAt: string }[];
+  /** Lần lượt: khách gửi yêu cầu (kèm ảnh), shop tiếp nhận, shop đóng yêu cầu (kèm kết quả)... */
+  claimHistory?: { note: string; createdAt: string; by?: 'CUSTOMER' | 'STAFF' | null; images?: string[]; result?: ClaimResult | null }[];
   /** Ghi chú nội bộ của nhân viên + nhật ký gia hạn — khách không thấy. */
   adminNotes?: { note: string; author?: string; createdAt: string }[];
 }
+
+export type ClaimResult = 'REPAIR' | 'REPRINT' | 'REPLACE' | 'REJECTED';
 
 /** Phiếu bảo hành — dùng chung cho trang Bảo hành và chuông thông báo. */
 @Injectable({ providedIn: 'root' })
@@ -41,8 +44,13 @@ export class WarrantyService {
     );
   }
 
-  resolve(code: string, note: string): Observable<Warranty> {
-    return this.replaceWith(code, this.adminData.resolveWarrantyClaim(code, note));
+  /** Tiếp nhận yêu cầu (đã liên hệ khách) -> Đang xử lý. */
+  process(code: string, note: string): Observable<Warranty> {
+    return this.replaceWith(code, this.adminData.processWarrantyClaim(code, note));
+  }
+
+  resolve(code: string, result: ClaimResult, note: string): Observable<Warranty> {
+    return this.replaceWith(code, this.adminData.resolveWarrantyClaim(code, result, note));
   }
 
   addNote(code: string, note: string): Observable<Warranty> {

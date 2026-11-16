@@ -38,7 +38,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     key: 'customers', label: 'Khách hàng', icon: 'bi-people',
     items: [
       { path: 'customers', label: 'Danh sách khách hàng', icon: 'bi-people', perm: 'customers.view' },
-      { path: 'messages', label: 'Tin nhắn hỗ trợ', icon: 'bi-chat-dots', perm: 'customers.view' },
+      { path: 'messages', label: 'Tin nhắn hỗ trợ', icon: 'bi-chat-dots', perm: 'customers.view|custom3d.view' },
       { path: 'reviews', label: 'Đánh giá', icon: 'bi-star', perm: 'customers.view' },
     ],
   },

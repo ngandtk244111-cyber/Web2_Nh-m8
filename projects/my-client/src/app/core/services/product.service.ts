@@ -395,7 +395,10 @@ export class ProductService {
   /** Danh sách sản phẩm không kèm nội dung đánh giá, trang chi tiết tải riêng qua đây. */
   fetchReviews(slug: string): Observable<ProductReview[]> {
     return this.http.get<{ success: boolean; product: Product }>(`${BASE}/slug/${encodeURIComponent(slug)}`).pipe(
-      map(res => res.product?.reviews ?? []),
+      map(res => (res.product?.reviews ?? []).map(review => ({ ...review,
+        images: review.images?.map(url => /^https?:/.test(url) ? url : environment.apiUrl.replace(/\/api$/, '') + url),
+        video: review.video ? (/^https?:/.test(review.video) ? review.video : environment.apiUrl.replace(/\/api$/, '') + review.video) : '',
+      }))),
       catchError(() => of([]))
     );
   }
@@ -409,16 +412,4 @@ export class ProductService {
     );
   }
 
-  submitReview(productId: string, payload: {
-    userId?: string;
-    author: string;
-    rating: number;
-    comment: string;
-    images?: string[];
-  }): Observable<{ success: boolean; product: Product; review: Product['reviews'][number] }> {
-    return this.http.post<{ success: boolean; product: Product; review: Product['reviews'][number] }>(
-      `${BASE}/${productId}/reviews`,
-      payload
-    );
-  }
 }

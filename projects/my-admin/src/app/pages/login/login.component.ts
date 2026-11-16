@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AdminAuthService } from '../../core/services/admin-auth.service';
 
-/** Đăng nhập nhân viên — bố cục 2 cột như login/ của Vita (minh hoạ trái, thẻ đăng nhập phải). */
+
 @Component({
   selector: 'app-login',
   standalone: true,

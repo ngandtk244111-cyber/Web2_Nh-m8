@@ -69,10 +69,15 @@ export class ChatService {
 
   /** Khách vừa gửi đánh giá mới (server phát 'review:new' tới phòng staff). */
   readonly newReview$ = new Subject<{ productName: string; author: string; rating: number }>();
+  /** Khách vừa gửi yêu cầu bảo hành ('warranty:claim'). */
+  readonly warrantyChanged$ = new Subject<void>();
+  readonly newWarrantyClaim$ = new Subject<{ warrantyCode: string; productName: string; customerName: string }>();
   /** Bạn đọc vừa bình luận bài Tin tức ('news-comment:new'). */
   readonly newNewsComment$ = new Subject<{ articleId: string; articleTitle: string; author: string; text: string }>();
   /** Bạn đọc vừa tim câu trả lời của shop dưới bài Tin tức ('news-comment:liked'). */
   readonly newsCommentLiked$ = new Subject<{ articleTitle: string; likesCount: number }>();
+
+  readonly customRequestChanged$ = new Subject<{ id: string; requestCode: string; customerMessage: boolean }>();
 
   connect(): void {
     if (this.socket) return;
@@ -82,8 +87,11 @@ export class ChatService {
       this.onlineSignal.set(new Set());
       this.typingSignal.set(new Set());
     });
+    this.socket.on('warranty:updated', () => this.warrantyChanged$.next());
+    this.socket.on('custom-request:changed', event => this.customRequestChanged$.next(event));
     this.socket.on('chat:message', (message: ChatMessage) => this.onMessage(message));
     this.socket.on('review:new', (review: { productName: string; author: string; rating: number }) => this.newReview$.next(review));
+    this.socket.on('warranty:claim', (claim: { warrantyCode: string; productName: string; customerName: string }) => this.newWarrantyClaim$.next(claim));
     this.socket.on('news-comment:new', (c: { articleId: string; articleTitle: string; author: string; text: string }) => this.newNewsComment$.next(c));
     this.socket.on('news-comment:liked', (l: { articleTitle: string; likesCount: number }) => this.newsCommentLiked$.next(l));
     this.socket.on('chat:presence-list', ({ sessionIds }: { sessionIds: string[] }) => this.onlineSignal.set(new Set(sessionIds)));

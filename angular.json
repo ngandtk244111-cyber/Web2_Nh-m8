@@ -204,6 +204,16 @@
                 "output": "assets/mascot"
               },
               {
+                "glob": "shop-the-room-hero.jpg",
+                "input": "projects/my-client/src/assets/home",
+                "output": "assets/home"
+              },
+              {
+                "glob": "*.jpg",
+                "input": "projects/my-client/src/assets/rooms",
+                "output": "assets/rooms"
+              },
+              {
                 "glob": "**/*",
                 "input": "projects/my-client/src/assets/products",
                 "output": "assets/products"

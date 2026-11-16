@@ -81,8 +81,11 @@ export interface Order {
   phoneConfirmedAt?: string | null;
   /** Các lần gọi xác nhận không liên lạc được khách. */
   failedCallsAt?: string[];
-  /** Đơn COD từ 5 triệu: tiền cọc 30% khách chuyển trước; depositPaidAt = lúc nhân viên xác nhận đã nhận. */
+  /** Tiền cọc khách chuyển trước khi chọn COD: đơn từ 5 triệu cọc 30%, đơn in 3D theo báo giá cọc theo báo giá;
+   *  depositPaidAt = lúc nhân viên xác nhận đã nhận. */
   depositAmount?: number;
+  /** CUSTOM_QUOTE = đơn đặt làm in 3D tạo từ báo giá. */
+  orderType?: 'STANDARD' | 'CUSTOM_QUOTE';
   depositPaidAt?: string | null;
   /** false = đơn COD nhỏ dưới ngưỡng trong Cài đặt, giao không cần gọi. Đơn cũ không có trường này = phải gọi. */
   phoneConfirmRequired?: boolean;

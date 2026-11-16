@@ -90,6 +90,9 @@ export class NewsCommentsComponent implements OnInit {
   ngOnInit(): void {
     const f = this.route.snapshot.queryParamMap.get('filter') as CommentFilter | null;
     if (f === 'UNREPLIED' || f === 'REPLIED' || f === 'ALL') this.filter.set(f);
+    // Mở từ cột "Bình luận" ở danh sách Tin tức: lọc sẵn đúng bài đó.
+    const article = this.route.snapshot.queryParamMap.get('article');
+    if (article) this.articleFilter.set(article);
     this.news.refreshComments();
   }
 

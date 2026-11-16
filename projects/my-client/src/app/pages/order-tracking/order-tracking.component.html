@@ -1,5 +1,9 @@
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
       
+      <a *ngIf="openedFromLink" [routerLink]="authService.currentUser() ? ['/account'] : ['/orders/track']"
+        [queryParams]="authService.currentUser() ? { tab: 'orders' } : {}"
+        class="inline-flex items-center gap-1.5 text-xs font-semibold text-[#A3152D] hover:underline">← Quay lại</a>
+
       <!-- Page Title -->
       <div class="text-center space-y-2">
         <h1 class="font-serif text-3xl font-extrabold text-amber-800">
@@ -104,7 +108,7 @@
           <div *ngIf="canCancel || canViewInvoice" class="flex justify-end gap-2">
             <button *ngIf="canViewInvoice" type="button" class="ot-invoice-btn" (click)="openInvoice()">
               <app-icon name="copy" [size]="14"></app-icon>
-              Hóa đơn PDF
+              {{ currentOrder.invoice?.requested && currentOrder.paymentStatus === 'PAID' ? 'Hóa đơn PDF' : 'Phiếu đơn hàng PDF' }}
             </button>
             <button *ngIf="canCancel" type="button" class="ot-cancel-btn" (click)="openCancel()">Huỷ đơn hàng</button>
           </div>
@@ -198,10 +202,12 @@
 
           <div class="divide-y divide-neutral-800">
             <div *ngFor="let item of currentOrder.items" class="py-3 flex gap-4 items-center">
-              <img [src]="item.product.images[0]" [alt]="item.product.name" class="w-16 h-16 rounded-xl object-cover border border-neutral-200 bg-[#F6F5F2] flex-shrink-0">
+              <a [routerLink]="['/product', item.product.slug || item.product.id]" [attr.aria-label]="item.product.name" class="shrink-0">
+                <img [src]="item.product.images[0]" [alt]="item.product.name" class="w-16 h-16 rounded-xl object-cover border border-neutral-200 bg-[#F6F5F2]">
+              </a>
               
               <div class="min-w-0 flex-1">
-                <h4 class="text-xs sm:text-sm font-bold text-neutral-800">{{ item.product.name }}</h4>
+                <h4 class="text-xs sm:text-sm font-bold text-neutral-800"><a [routerLink]="['/product', item.product.slug || item.product.id]" class="hover:text-[#A3152D] hover:underline">{{ item.product.name }}</a></h4>
                 
                 <div *ngIf="item.selectedCustomization" class="text-[11px] text-neutral-600 mt-1 space-x-2">
                   <span class="inline-flex items-center gap-1 bg-[#F6F5F2] px-2 py-0.5 rounded border border-neutral-200">

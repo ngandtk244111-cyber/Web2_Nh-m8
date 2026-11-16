@@ -14,9 +14,17 @@ export interface Warranty {
   customerPhone: string;
   purchasedAt: string;
   warrantyMonths: number;
-  status: 'ACTIVE' | 'CLAIMED' | 'EXPIRED';
+  /** CLAIMED = đã gửi yêu cầu, chờ shop tiếp nhận; PROCESSING = shop đã tiếp nhận, đang xử lý. */
+  status: 'ACTIVE' | 'CLAIMED' | 'PROCESSING' | 'EXPIRED';
   expiresAt: string;
-  claimHistory: { note: string; createdAt: string }[];
+  claimHistory: {
+    note: string;
+    createdAt: string;
+    by?: 'CUSTOMER' | 'STAFF' | null;
+    /** Ảnh khách gửi, dạng /api/products/images/<id>. */
+    images?: string[];
+    result?: 'REPAIR' | 'REPRINT' | 'REPLACE' | 'REJECTED' | null;
+  }[];
 }
 
 interface WarrantyApiResponse {
@@ -39,7 +47,12 @@ export class WarrantyService {
     );
   }
 
-  submitClaim(warrantyCode: string, phone: string, note: string): Observable<WarrantyApiResponse> {
-    return this.http.post<WarrantyApiResponse>(`${this.baseUrl}/${encodeURIComponent(warrantyCode)}/claim`, { phone, note });
+  /** Gửi yêu cầu kèm ảnh tình trạng sản phẩm (multipart, tối đa 3 ảnh). */
+  submitClaim(warrantyCode: string, phone: string, note: string, images: File[]): Observable<WarrantyApiResponse> {
+    const body = new FormData();
+    body.append('phone', phone);
+    body.append('note', note);
+    images.forEach(file => body.append('images', file));
+    return this.http.post<WarrantyApiResponse>(`${this.baseUrl}/${encodeURIComponent(warrantyCode)}/claim`, body);
   }
 }

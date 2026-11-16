@@ -70,8 +70,12 @@ export class AdminDataService {
     return this.http.post<{ success: boolean; warranty: any; warranties?: any[] }>(WARRANTY, data);
   }
 
-  resolveWarrantyClaim(code: string, note: string): Observable<{ success: boolean; warranty: any }> {
-    return this.http.patch<{ success: boolean; warranty: any }>(`${WARRANTY}/admin/${encodeURIComponent(code)}/resolve`, { note });
+  processWarrantyClaim(code: string, note: string): Observable<{ success: boolean; warranty: any }> {
+    return this.http.patch<{ success: boolean; warranty: any }>(`${WARRANTY}/admin/${encodeURIComponent(code)}/process`, { note });
+  }
+
+  resolveWarrantyClaim(code: string, result: string, note: string): Observable<{ success: boolean; warranty: any }> {
+    return this.http.patch<{ success: boolean; warranty: any }>(`${WARRANTY}/admin/${encodeURIComponent(code)}/resolve`, { result, note });
   }
 
   addWarrantyNote(code: string, note: string): Observable<{ success: boolean; warranty: any }> {

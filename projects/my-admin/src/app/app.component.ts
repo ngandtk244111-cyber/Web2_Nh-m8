@@ -14,7 +14,7 @@ export class AppComponent implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
 
-  /** Tiêu đề tab trình duyệt theo route (data.title) — như titleByRoute của Vita. */
+
   ngOnInit(): void {
     this.router.events.pipe(filter(e => e instanceof NavigationEnd)).subscribe(() => {
       let r = this.route.snapshot;

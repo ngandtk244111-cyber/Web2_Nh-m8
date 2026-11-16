@@ -37,7 +37,7 @@ function matchesFilter(p: Product, f: ProductFilter): boolean {
   }
 }
 
-/** Danh sách sản phẩm — theo productmanage của Vita: thẻ thống kê lọc nhanh, lọc danh mục, bảng + thao tác từng dòng. */
+
 @Component({
   selector: 'app-product-list',
   standalone: true,

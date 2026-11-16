@@ -10,39 +10,97 @@ const User = require('../models/User');
 const { isEmailConfigured, getMailTransporter } = require('../utils/otp');
 const { emitToStaff } = require('../realtime');
 const { requirePermission, attachUserId } = require('../middleware/auth');
-const { IMAGE_TYPES, INVALID_TYPE_ERROR, uploadImage, sendStoredImage, removeUnusedProductImages } = require('../utils/images');
+const { IMAGE_TYPES, INVALID_TYPE_ERROR, uploadImage, sendStoredImage, removeUnusedProductImages, saveReviewVideo, sendReviewVideo } = require('../utils/images');
 
 const router = express.Router();
 
-// Ảnh kèm đánh giá (tối đa 5 ảnh) — lưu ở server/uploads/reviews, phục vụ qua /uploads/...
+// Ảnh đánh giá lưu ProductImage; video lưu GridFS để không phụ thuộc ổ đĩa backend.
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
 const { requireUserId } = require('../middleware/auth');
 const reviewUploadDir = path.join(__dirname, '../uploads/reviews');
-fs.mkdirSync(reviewUploadDir, { recursive: true });
-const reviewUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024, files: 5 } });
+const reviewUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024, files: 6 } });
 const IMAGE_EXT = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp', 'image/gif': '.gif' };
 const MAX_REVIEW_IMAGES = 5;
 const MAX_REVIEW_LENGTH = 500;
 
-router.post('/review-images', reviewUpload.array('images', MAX_REVIEW_IMAGES), requireUserId, async (req, res) => {
-  try {
-    const files = req.files || [];
-    if (!files.length) return res.status(400).json({ success: false, error: 'Thiếu file ảnh' });
-    if (files.some(f => !IMAGE_EXT[f.mimetype])) {
-      return res.status(400).json({ success: false, error: 'Chỉ nhận ảnh JPG, PNG, WEBP hoặc GIF' });
+// Validate duration from MP4 movie/track metadata; fragmented clips are not supported.
+function videoDuration(buffer, start = 0, end = buffer.length) {
+  let duration = 0;
+  for (let offset = start; offset + 8 <= end;) {
+    const size = buffer.readUInt32BE(offset);
+    const type = buffer.toString('ascii', offset + 4, offset + 8);
+    if (size < 8 || offset + size > end || type === 'moof') throw new Error('Video MP4 không hợp lệ');
+    if (['moov', 'trak', 'mdia'].includes(type)) duration = Math.max(duration, videoDuration(buffer, offset + 8, offset + size));
+    if (type === 'mvhd' || type === 'mdhd') {
+      const version = buffer[offset + 8];
+      const pos = offset + (version === 1 ? 28 : 20);
+      if (version > 1 || pos + (version === 1 ? 12 : 8) > offset + size) throw new Error('Video MP4 không hợp lệ');
+      const scale = buffer.readUInt32BE(pos);
+      const ticks = version === 1 ? Number(buffer.readBigUInt64BE(pos + 4)) : buffer.readUInt32BE(pos + 4);
+      if (!scale) throw new Error('Video thiếu thời lượng');
+      duration = Math.max(duration, ticks / scale);
     }
-    const urls = files.map((f, i) => {
-      const filename = `review-${req.userId}-${Date.now()}-${i}${IMAGE_EXT[f.mimetype]}`;
-      fs.writeFileSync(path.join(reviewUploadDir, filename), f.buffer);
-      return `/uploads/reviews/${filename}`;
-    });
-    res.json({ success: true, urls });
-  } catch (err) {
-    console.error('review upload error', err);
-    sendError(res, err);
+    offset += size;
   }
+  return duration;
+}
+
+async function reviewMedia(body, userId, previous = {}) {
+  const images = body.images ?? [];
+  const video = body.video || '';
+  if (!Array.isArray(images) || images.length > MAX_REVIEW_IMAGES || typeof video !== 'string') throw Object.assign(new Error('Tối đa 5 ảnh và 1 video'), { status: 400 });
+  const local = url => new URL(url, 'http://localhost').pathname;
+  const owned = async (url, isVideo) => {
+    if (typeof url !== 'string') return false;
+    let pathname;
+    try { pathname = local(url); } catch { return false; }
+    const imageId = pathname.match(/^\/api\/products\/images\/([a-f0-9]{24})$/)?.[1];
+    if (!isVideo && imageId) return !!await ProductImage.exists({ _id: imageId, uploadedBy: userId, contentType: { $in: IMAGE_TYPES } });
+    const videoId = pathname.match(/^\/api\/products\/review-videos\/([a-f0-9]{24})$/)?.[1];
+    if (isVideo && videoId) return !!await require('mongoose').connection.db.collection('reviewVideos.files').findOne({ _id: new (require('mongoose').Types.ObjectId)(videoId), 'metadata.uploadedBy': userId });
+    // Giữ khả năng chỉnh sửa đánh giá cũ trong lúc chuyển file lên MongoDB.
+    return pathname.startsWith('/uploads/reviews/review-' + userId + '-') && /\.mp4$/i.test(pathname) === isVideo && fs.existsSync(path.join(reviewUploadDir, path.basename(pathname)));
+  };
+  for (const image of images) if (typeof image !== 'string' || (!(previous.images || []).includes(image) && !await owned(image, false))) throw Object.assign(new Error('Ảnh đánh giá không hợp lệ'), { status: 400 });
+  if (video && video !== previous.video && !await owned(video, true)) throw Object.assign(new Error('Video đánh giá không hợp lệ'), { status: 400 });
+  return { images: images.map(url => (previous.images || []).includes(url) ? url : local(url)), video: video ? local(video) : '' };
+}
+
+router.get('/review-videos/:videoId', async (req, res) => {
+  try { await sendReviewVideo(req, res); } catch (err) { sendError(res, err); }
+});
+
+router.post('/review-images', requireUserId, (req, res) => {
+  reviewUpload.fields([{ name: 'images', maxCount: MAX_REVIEW_IMAGES }, { name: 'video', maxCount: 1 }])(req, res, async err => {
+    if (err) return res.status(400).json({ success: false, error: 'Tối đa 5 ảnh (5 MB/ảnh) và 1 video MP4 (20 MB, 30 giây)' });
+    try {
+      const images = req.files?.images || [];
+      const video = req.files?.video?.[0];
+      if (!images.length && !video) throw new Error('Thiếu ảnh/video');
+      if (images.some(f => !IMAGE_EXT[f.mimetype] || f.size > 5 * 1024 * 1024)) throw new Error('Ảnh JPG, PNG, WEBP hoặc GIF tối đa 5 MB/ảnh');
+      const imageSignature = f => {
+        const b = f.buffer;
+        return (f.mimetype === 'image/jpeg' && b[0] === 255 && b[1] === 216 && b[2] === 255)
+          || (f.mimetype === 'image/png' && b.subarray(0, 8).equals(Buffer.from([137,80,78,71,13,10,26,10])))
+          || (f.mimetype === 'image/gif' && /^GIF8[79]a$/.test(b.toString('ascii', 0, 6)))
+          || (f.mimetype === 'image/webp' && b.toString('ascii', 0, 4) === 'RIFF' && b.toString('ascii', 8, 12) === 'WEBP');
+      };
+      if (images.some(f => !imageSignature(f))) throw new Error('Nội dung ảnh không đúng định dạng');
+      if (video) {
+        const seconds = videoDuration(video.buffer);
+        if (video.mimetype !== 'video/mp4' || video.buffer.toString('ascii', 4, 8) !== 'ftyp' || !(seconds > 0 && seconds <= 30)) throw new Error('Video phải là MP4, tối đa 20 MB và 30 giây');
+      }
+      const urls = await Promise.all(images.map(async file => {
+        const image = await ProductImage.create({ data: file.buffer, contentType: file.mimetype, uploadedBy: req.userId });
+        return '/api/products/images/' + image._id;
+      }));
+      res.json({ success: true, urls, video: video ? await saveReviewVideo(video.buffer, req.userId) : '' });
+    } catch (err) {
+      res.status(400).json({ success: false, error: err.message });
+    }
+  });
 });
 
 /**
@@ -53,7 +111,7 @@ router.post('/review-images', reviewUpload.array('images', MAX_REVIEW_IMAGES), r
 router.get('/my-reviews', requireUserId, async (req, res) => {
   try {
     const userId = req.userId;
-    const orders = await Order.find({ userId, status: 'DELIVERED' }).sort({ deliveredAt: -1, _id: -1 }).lean();
+    const orders = await Order.find({ userId }).sort({ deliveredAt: -1, _id: -1 }).lean();
     const ids = [...new Set(orders.flatMap(o => (o.items || []).map(i => i.product?.id).filter(Boolean)))];
     const products = await Product.find({ id: { $in: ids } }, { id: 1, name: 1, slug: 1, images: 1, reviews: 1 }).lean();
     const byId = new Map(products.map(p => [p.id, p]));
@@ -62,9 +120,11 @@ router.get('/my-reviews', requireUserId, async (req, res) => {
     const pending = [];
     const reviewed = [];
     for (const order of orders) {
+      const seen = new Set();
       for (const item of order.items || []) {
         const pid = item.product?.id;
-        if (!pid) continue;
+        if (!pid || seen.has(pid)) continue;
+        seen.add(pid);
         const product = byId.get(pid);
         const mine = (product?.reviews || []).filter(r => String(r.userId || '') === String(userId));
         let review = mine.find(r => r.orderNumber === order.orderNumber);
@@ -84,7 +144,7 @@ router.get('/my-reviews', requireUserId, async (req, res) => {
           totalPrice: item.totalPrice,
         };
         if (review) reviewed.push({ ...entry, review });
-        else pending.push(entry);
+        else if (order.status === 'DELIVERED') pending.push(entry);
       }
     }
     res.json({ success: true, pending, reviewed });
@@ -109,6 +169,7 @@ function toPublicProduct(product) {
   const obj = typeof product.toJSON === 'function' ? product.toJSON() : product;
   const reviews = (obj.reviews || [])
     .filter(r => r.status !== 'HIDDEN')
+    .map(({ userId, orderNumber, ...r }) => r.anonymous ? { ...r, author: 'Người mua ẩn danh', avatar: '' } : r)
     .sort((a, b) => Number(!!b.pinned) - Number(!!a.pinned));
   return { ...obj, reviews };
 }
@@ -152,6 +213,51 @@ router.get('/reviews/admin', requirePermission('customers.view'), async (_req, r
     // id đánh giá có dạng "rev-<timestamp>" nên sắp theo id là sắp theo thời gian gửi.
     reviews.sort((a, b) => String(b.id).localeCompare(String(a.id), undefined, { numeric: true }));
     res.json({ success: true, reviews });
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
+// ---------------------------------------------------------------- Tự trả lời đánh giá tốt
+// Đánh giá từ 4 sao được shop trả lời bằng mẫu cảm ơn (đổi mẫu theo đánh giá cho đỡ lặp).
+// Đánh giá 1–3 sao vẫn để nhân viên trả lời tay. reply.auto = true để admin biết đây là trả lời tự động.
+const AUTO_REPLY_MIN_RATING = 4;
+const AUTO_REPLY_TEMPLATES = [
+  'Cảm ơn bạn đã tin chọn {product}! Luméa rất vui vì sản phẩm làm bạn hài lòng.',
+  'Cảm ơn bạn đã dành thời gian đánh giá {product}. Mong {product} sẽ đồng hành cùng không gian sống của bạn thật lâu!',
+  'Luméa cảm ơn bạn rất nhiều! Hẹn gặp lại bạn ở những món đồ tiếp theo nhé.',
+  'Cảm ơn đánh giá tuyệt vời của bạn! Đội ngũ Luméa sẽ tiếp tục cố gắng để mang đến sản phẩm chất lượng hơn nữa.',
+];
+
+/** Đánh giá tốt, đang hiển thị, chưa có phản hồi. */
+const needsAutoReply = (review) => review.rating >= AUTO_REPLY_MIN_RATING && review.status !== 'HIDDEN' && !review.reply?.text;
+
+function autoReplyFor(review, productName) {
+  const seed = [...String(review.id)].reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
+  const text = AUTO_REPLY_TEMPLATES[seed % AUTO_REPLY_TEMPLATES.length].replaceAll('{product}', productName);
+  return { text, date: new Date().toLocaleDateString('vi-VN'), auto: true };
+}
+
+// Admin — trả lời một lượt mọi đánh giá tốt chưa phản hồi (dùng cho đánh giá cũ). Không gửi thông báo
+// cho khách để tránh dồn hàng nghìn email cùng lúc.
+router.post('/reviews/admin/auto-reply', requirePermission('customers.edit'), async (_req, res) => {
+  try {
+    const products = await Product.find({ reviews: { $elemMatch: { rating: { $gte: AUTO_REPLY_MIN_RATING } } } }, { id: 1, name: 1, reviews: 1 });
+    let replied = 0;
+    for (const product of products) {
+      let changed = false;
+      for (const review of product.reviews) {
+        if (!needsAutoReply(review)) continue;
+        review.reply = autoReplyFor(review, product.name);
+        changed = true;
+        replied++;
+      }
+      if (changed) {
+        product.markModified('reviews');
+        await product.save();
+      }
+    }
+    res.json({ success: true, replied });
   } catch (err) {
     sendError(res, err);
   }
@@ -308,7 +414,7 @@ router.put('/:id', requirePermission('products.edit'), async (req, res) => {
 /** Khách đã mua sản phẩm khi có đơn (chưa huỷ) chứa đúng sản phẩm này. */
 function hasPurchased(userId, productId) {
   return userId
-    ? Order.exists({ userId, status: { $nin: ['CANCELLED', 'RETURNED'] }, 'items.product.id': productId }).then(Boolean)
+    ? Order.exists({ userId, status: 'DELIVERED', 'items.product.id': productId }).then(Boolean)
     : Promise.resolve(false);
 }
 
@@ -322,11 +428,16 @@ router.get('/:id/can-review', attachUserId, async (req, res) => {
 });
 
 // Gửi đánh giá thật, lưu vào Product.reviews. Chỉ khách đã mua sản phẩm mới được đánh giá.
-router.post('/:id/reviews', attachUserId, async (req, res) => {
+router.post('/:id/reviews', requireUserId, async (req, res) => {
   try {
-    const { author, comment, avatar } = req.body;
-    const images = (Array.isArray(req.body.images) ? req.body.images : []).filter(x => typeof x === 'string').slice(0, MAX_REVIEW_IMAGES);
-    const orderNumber = req.body.orderNumber ? String(req.body.orderNumber) : null;
+    const { comment } = req.body;
+    const user = await User.findById(req.userId).select('fullName avatar').lean();
+    const author = user?.fullName || 'Khách hàng Luméa';
+    const avatar = user?.avatar || '';
+    const anonymous = req.body.anonymous === true;
+    const { images, video } = await reviewMedia(req.body, req.userId);
+    const orderNumber = String(req.body.orderNumber || '');
+    if (!orderNumber) return res.status(400).json({ success: false, error: 'Vui lòng đánh giá từ đơn đã giao trong Hồ sơ > Đánh giá' });
     const userId = req.userId;
     if (String(comment || '').length > MAX_REVIEW_LENGTH) {
       return res.status(400).json({ success: false, error: `Nội dung đánh giá tối đa ${MAX_REVIEW_LENGTH} ký tự` });
@@ -352,36 +463,32 @@ router.post('/:id/reviews', attachUserId, async (req, res) => {
     const product = await Product.findOne({ id: req.params.id });
     if (!product) return res.status(404).json({ success: false, error: 'Không tìm thấy sản phẩm' });
 
-    const verifiedPurchase = await hasPurchased(userId, product.id);
-    if (!verifiedPurchase) {
-      return res.status(403).json({ success: false, error: 'Chỉ khách đã mua sản phẩm này mới có thể đánh giá.' });
-    }
-    // Đánh giá từ trang "Đánh giá" của tài khoản: đúng đơn đã giao của khách, mỗi món trong 1 đơn chỉ 1 lần.
-    if (orderNumber) {
-      const order = await Order.exists({ orderNumber, userId, status: 'DELIVERED', 'items.product.id': product.id });
-      if (!order) return res.status(403).json({ success: false, error: 'Chỉ đánh giá được sản phẩm trong đơn đã giao của bạn.' });
-      if ((product.reviews || []).some(r => String(r.userId || '') === String(userId) && r.orderNumber === orderNumber)) {
-        return res.status(409).json({ success: false, error: 'Bạn đã đánh giá sản phẩm này trong đơn hàng này rồi.' });
-      }
-    }
+    const order = await Order.exists({ orderNumber, userId, status: 'DELIVERED', 'items.product.id': product.id });
+    if (!order) return res.status(403).json({ success: false, error: 'Chỉ đánh giá được sản phẩm trong đơn đã giao của bạn' });
 
     const review = {
-      id: 'rev-' + Date.now(),
+      id: 'rev-' + require('crypto').randomUUID(),
       userId: userId || null,
       author,
-      avatar: (typeof avatar === 'string' && avatar) || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
+      avatar,
+      anonymous,
+      video,
       rating,
       date: new Date().toLocaleDateString('vi-VN'),
       createdAt: new Date().toISOString(),
       comment,
-      verifiedPurchase,
+      verifiedPurchase: true,
       images,
       orderNumber,
       status: 'VISIBLE',
     };
+    if (needsAutoReply(review)) review.reply = autoReplyFor(review, product.name);
 
-    product.reviews.unshift(review);
-    await product.save();
+    const added = await Product.updateOne({
+      _id: product._id,
+      reviews: { $not: { $elemMatch: { userId, orderNumber } } },
+    }, { $push: { reviews: { $each: [review], $position: 0 } } });
+    if (!added.modifiedCount) return res.status(409).json({ success: false, error: 'Bạn đã đánh giá sản phẩm này trong đơn hàng này rồi' });
     // Báo ngay cho nhân viên đang mở my-admin (chuông thông báo + toast).
     emitToStaff('review:new', { productName: product.name, author, rating });
 
@@ -396,8 +503,9 @@ router.post('/:id/reviews', attachUserId, async (req, res) => {
       });
     }
 
-    res.json({ success: true, product: toPublicProduct(product), review });
+    res.json({ success: true, review });
   } catch (err) {
+    if (err.status === 400) return res.status(400).json({ success: false, error: err.message });
     console.error('submit review error', err);
     sendError(res, err);
   }
@@ -408,7 +516,7 @@ router.put('/:id/reviews/:reviewId', requireUserId, async (req, res) => {
   try {
     const rating = Number(req.body.rating);
     const comment = String(req.body.comment || '');
-    const images = (Array.isArray(req.body.images) ? req.body.images : []).filter(x => typeof x === 'string').slice(0, MAX_REVIEW_IMAGES);
+    const anonymous = req.body.anonymous === true;
     if (!comment.trim()) return res.status(400).json({ success: false, error: 'Vui lòng nhập nội dung đánh giá' });
     if (comment.length > MAX_REVIEW_LENGTH) {
       return res.status(400).json({ success: false, error: `Nội dung đánh giá tối đa ${MAX_REVIEW_LENGTH} ký tự` });
@@ -431,12 +539,25 @@ router.put('/:id/reviews/:reviewId', requireUserId, async (req, res) => {
     if (String(product.reviews[idx].userId || '') !== String(req.userId)) {
       return res.status(403).json({ success: false, error: 'Bạn chỉ sửa được đánh giá của chính mình.' });
     }
-    const review = { ...product.reviews[idx], rating, comment, images, editedAt: new Date().toISOString() };
-    product.reviews.set(idx, review);
-    product.markModified('reviews');
-    await product.save();
+    const previous = product.reviews[idx];
+    const cutoff = new Date(Date.now() - 30 * 86400000).toISOString();
+    if (previous.editedAt || !previous.createdAt || previous.createdAt < cutoff) return res.status(409).json({ success: false, error: 'Chỉ được sửa một lần trong 30 ngày kể từ ngày đăng' });
+    const { images, video } = await reviewMedia(req.body, req.userId, previous);
+    const editedAt = new Date().toISOString();
+    // Trả lời tự động đi theo số sao: hạ xuống dưới 4 sao thì gỡ lời cảm ơn để nhân viên trả lời tay,
+    // nâng lên từ 4 sao mà chưa có phản hồi thì tự trả lời. Phản hồi nhân viên viết tay giữ nguyên.
+    let reply = previous.reply || null;
+    if (reply?.auto && rating < AUTO_REPLY_MIN_RATING) reply = null;
+    if (needsAutoReply({ ...previous, rating, reply })) reply = autoReplyFor(previous, product.name);
+    const result = await Product.updateOne({
+      _id: product._id,
+      reviews: { $elemMatch: { id: previous.id, userId: req.userId, createdAt: { $gte: cutoff }, editedAt: { $exists: false } } },
+    }, { $set: { 'reviews.$.rating': rating, 'reviews.$.comment': comment, 'reviews.$.images': images, 'reviews.$.video': video, 'reviews.$.anonymous': anonymous, 'reviews.$.editedAt': editedAt, 'reviews.$.reply': reply } });
+    if (!result.modifiedCount) return res.status(409).json({ success: false, error: 'Đánh giá đã được sửa hoặc đã hết hạn' });
+    const review = { ...previous, rating, comment, images, video, anonymous, editedAt, reply };
     res.json({ success: true, review });
   } catch (err) {
+    if (err.status === 400) return res.status(400).json({ success: false, error: err.message });
     console.error('update review error', err);
     sendError(res, err);
   }

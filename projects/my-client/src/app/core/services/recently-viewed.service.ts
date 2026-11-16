@@ -24,9 +24,11 @@ export class RecentlyViewedService {
   }
 
   private syncFromAccount(): void {
+    const owner = this.auth.currentUser()?._id;
     this.idsSignal.set(this.loadIds());
     this.userData.load().subscribe({
       next: data => {
+        if (owner !== this.auth.currentUser()?._id) return;
         const merged = [...new Set([...this.idsSignal(), ...data.recentlyViewed])].slice(0, this.maxItems);
         this.idsSignal.set(merged);
         if (merged.join() !== data.recentlyViewed.join()) this.userData.save({ recentlyViewed: merged });

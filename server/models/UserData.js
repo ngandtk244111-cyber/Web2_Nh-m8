@@ -18,6 +18,9 @@ const userDataSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
   cart: { type: [cartItemSchema], default: [] },
   favorites: { type: [String], default: [] },
+  communitySaved: { type: [String], default: [] },
+  chatLastReadAt: { type: Date, default: null },
+  quizResult: { type: mongoose.Schema.Types.Mixed, default: null },
   recentlyViewed: { type: [String], default: [] },
   savedCoupons: { type: [mongoose.Schema.Types.Mixed], default: [] },
 }, { timestamps: true });

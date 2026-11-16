@@ -62,19 +62,28 @@
 
         <!-- Thông báo -->
         <div class="header-dropdown">
-          <button type="button" class="notice-btn" (click)="toggleNotice($event)" title="Việc cần xử lý">
+          <button type="button" class="notice-btn" (click)="toggleNotice($event)" title="Thông báo" [attr.aria-expanded]="isNoticeOpen" aria-controls="admin-notices">
             <i class="bi bi-bell"></i>
             <span class="notice-count" *ngIf="notice.total() > 0">{{ notice.total() > 99 ? '99+' : notice.total() }}</span>
           </button>
-          <div class="dropdown-panel notice-panel" *ngIf="isNoticeOpen" (click)="$event.stopPropagation()">
-            <div class="panel-head">Việc cần xử lý</div>
-            <button type="button" class="notice-item" *ngFor="let n of notice.notices()" (click)="openNotice(n.link, n.query)">
-              <span class="notice-icon"><i class="bi" [ngClass]="n.icon"></i></span>
-              <span class="notice-label">{{ n.label }}</span>
-              <span class="notice-num">{{ n.count }}</span>
-            </button>
-            <div class="panel-empty" *ngIf="notice.notices().length === 0">
-              <i class="bi bi-check2-circle"></i> Không có việc nào đang chờ
+          <div id="admin-notices" class="dropdown-panel notice-panel" *ngIf="isNoticeOpen" (click)="$event.stopPropagation()">
+            <div class="notice-head">
+              <div><strong>Thông báo</strong><p>{{ notice.notices().length }} mục cần theo dõi</p></div>
+              <button type="button" class="notice-close" (click)="isNoticeOpen = false" aria-label="Đóng thông báo"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <div class="notice-list">
+              <section *ngFor="let group of notice.groups()" class="notice-group" [ngClass]="'notice-group--' + group.tone">
+                <h3>{{ group.label }}</h3>
+                <button type="button" class="notice-item" *ngFor="let n of group.items" (click)="openNotice(n.link, n.query)">
+                  <span class="notice-icon"><i class="bi" [ngClass]="n.icon"></i></span>
+                  <span class="notice-label">{{ n.label }}</span>
+                  <span class="notice-num">{{ n.count }}</span>
+                  <i class="bi bi-chevron-right notice-arrow" aria-hidden="true"></i>
+                </button>
+              </section>
+              <div class="panel-empty" *ngIf="notice.notices().length === 0">
+                <i class="bi bi-check2-circle"></i> Không có việc nào đang chờ
+              </div>
             </div>
           </div>
         </div>

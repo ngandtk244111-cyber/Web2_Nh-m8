@@ -24,8 +24,7 @@ export class AddressService {
     return this.authService.currentUser()?._id || null;
   }
 
-  /** Danh mục Tỉnh/Thành — tham khảo AuraPC-main: dùng API hành chính VN công khai,
-   *  không cần tự duy trì bộ dữ liệu tỉnh/huyện/xã. */
+
   loadProvinces(): void {
     if (this.provinces().length > 0) return;
     this.http.get<VNLocation[]>('https://provinces.open-api.vn/api/p/').subscribe({
@@ -42,26 +41,31 @@ export class AddressService {
     return this.http.get<VNLocation>(`https://provinces.open-api.vn/api/d/${districtCode}?depth=2`);
   }
 
-  load(): void {
+  load(onLoaded?: (addresses: Address[]) => void): void {
     const userId = this.userId;
     if (!userId) { this.addresses.set([]); return; }
 
     this.http.get<AddressResponse>(BASE, { params: { userId } }).subscribe({
       next: (res) => {
-        if (res.success) this.addresses.set(res.addresses || []);
+        if (res.success) {
+          this.addresses.set(res.addresses || []);
+          onLoaded?.(this.addresses());
+        }
       },
       error: (err) => console.warn('Load addresses error', err),
     });
   }
 
-  add(data: Omit<Address, '_id'>): void {
+  add(data: Omit<Address, '_id'>, onError?: () => void): void {
     const userId = this.userId;
     if (!userId) return;
 
     this.http.post<AddressResponse>(BASE, { userId, ...data }).subscribe({
       next: (res) => {
         if (res.success) this.addresses.set(res.addresses || []);
+        else onError?.();
       },
+      error: () => onError?.(),
     });
   }
 

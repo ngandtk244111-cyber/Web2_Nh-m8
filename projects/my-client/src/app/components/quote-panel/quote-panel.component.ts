@@ -5,7 +5,6 @@ import { Router, RouterLink } from '@angular/router';
 import { CustomRequest, DepositPolicy, Quote } from '../../core/models/custom-request.model';
 import { CustomRequestService } from '../../core/services/custom-request.service';
 import { AuthService } from '../../core/services/auth.service';
-import { AddressService } from '../../core/services/address.service';
 import { ToastService } from '../../core/services/toast.service';
 import { AppIconComponent } from '../icon/icon.component';
 import { VndPipe } from '../../shared/pipes/vnd.pipe';
@@ -20,7 +19,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 /**
  * Báo giá đặt làm phía khách: xem báo giá có phiên bản (hạng mục, chiết khấu, tiền cọc, hạn hiệu lực),
- * chấp nhận (bắt buộc đồng ý chính sách cọc) / từ chối, rồi đặt hàng ngay trong trang.
+ * chấp nhận (bắt buộc đồng ý chính sách cọc) / từ chối. Đặt hàng đi qua trang thanh toán chung (/checkout).
  * Giá và tiền cọc do server tính từ báo giá — trang chỉ hiển thị, không gửi số tiền lên.
  */
 @Component({
@@ -36,60 +35,38 @@ export class QuotePanelComponent implements OnChanges {
 
   private readonly service = inject(CustomRequestService);
   private readonly authService = inject(AuthService);
-  readonly addressService = inject(AddressService);
   private readonly toast = inject(ToastService);
   private readonly router = inject(Router);
 
   quotes: Quote[] = [];
   policy: DepositPolicy | null = null;
   loading = false;
+  error = '';
   agree = false;
   busy = false;
   showReject = false;
   rejectReason = '';
   showOld = false;
 
-  shipping = { fullName: '', phone: '', email: '', street: '', district: '', city: '', notes: '' };
-  balanceMethod: 'COD' | 'BANK_TRANSFER' = 'COD';
-  notes = '';
   private loadedKey = '';
 
   ngOnChanges(): void {
     const key = `${this.request?.id}|${this.request?.status}|${this.request?.currentQuoteVersion}`;
     if (key === this.loadedKey) return;
     this.loadedKey = key;
-    this.prefillShipping();
     this.load();
   }
 
-  private load(): void {
+  load(): void {
     this.loading = true;
+    this.error = '';
     this.service.getQuotes(this.request.id).subscribe({
       next: res => {
         this.loading = false;
         this.quotes = res.quotes || [];
         this.policy = res.policy;
       },
-      error: () => (this.loading = false),
-    });
-  }
-
-  private prefillShipping(): void {
-    if (this.shipping.fullName) return;
-    const user = this.authService.currentUser() as { fullName?: string; phone?: string; email?: string } | null;
-    this.shipping.fullName = this.request.customerName || user?.fullName || '';
-    this.shipping.phone = this.request.customerPhone || user?.phone || '';
-    this.shipping.email = this.request.customerEmail || user?.email || '';
-    const saved = this.addressService.addresses();
-    const def = saved.find(a => a.isDefault) || saved[0];
-    if (def) this.useAddress(def._id);
-  }
-
-  useAddress(id: string): void {
-    const a = this.addressService.addresses().find(x => x._id === id);
-    if (!a) return;
-    Object.assign(this.shipping, {
-      fullName: a.fullName, phone: a.phone, street: [a.address, a.ward].filter(Boolean).join(', '), district: a.district, city: a.city,
+      error: () => { this.loading = false; this.error = 'Không tải được báo giá. Vui lòng thử lại.'; },
     });
   }
 
@@ -116,7 +93,7 @@ export class QuotePanelComponent implements OnChanges {
   }
 
   get canCheckout(): boolean {
-    return this.current?.status === 'ACCEPTED' && this.request.status === 'APPROVED' && !this.isExpired;
+    return this.current?.status === 'ACCEPTED' && (this.request.status === 'APPROVED' || this.request.status === 'PREVIEW_READY') && !this.isExpired;
   }
 
   statusLabel(q: Quote): string {
@@ -131,8 +108,9 @@ export class QuotePanelComponent implements OnChanges {
     this.service.acceptQuote(this.request.id, q.version).subscribe({
       next: r => {
         this.busy = false;
-        this.toast.success('Đã chấp nhận báo giá. Vui lòng điền thông tin nhận hàng để đặt đơn.');
+        this.toast.success('Đã chấp nhận báo giá. Vui lòng hoàn tất thông tin nhận hàng và thanh toán cọc.');
         this.requestChanged.emit(r);
+        this.goToCheckout(q);
       },
       error: err => {
         this.busy = false;
@@ -140,6 +118,11 @@ export class QuotePanelComponent implements OnChanges {
         this.load();
       },
     });
+  }
+
+  /** Mang báo giá sang trang thanh toán chung (/checkout) như hàng trong giỏ — truyền qua state, URL giữ nguyên. */
+  goToCheckout(q: Quote): void {
+    this.router.navigate(['/checkout'], { state: { quoteCheckout: { requestId: this.request.id, version: q.version } } });
   }
 
   reject(): void {
@@ -156,33 +139,6 @@ export class QuotePanelComponent implements OnChanges {
       error: err => {
         this.busy = false;
         this.toast.error(err?.error?.error || 'Không gửi được phản hồi');
-      },
-    });
-  }
-
-  get shippingValid(): boolean {
-    const s = this.shipping;
-    return !!s.fullName.trim() && /^(0|\+84)\d{9,10}$/.test(s.phone.replace(/[\s.]/g, '')) && !!s.street.trim() && !!s.district.trim() && !!s.city.trim();
-  }
-
-  checkout(): void {
-    const q = this.current;
-    if (!q || !this.canCheckout || !this.shippingValid || this.busy) return;
-    this.busy = true;
-    this.service.checkout(this.request.id, {
-      quoteVersion: q.version,
-      balanceMethod: this.balanceMethod,
-      notes: this.notes.trim(),
-      shippingAddress: { ...this.shipping, phone: this.shipping.phone.replace(/[\s.]/g, '') },
-    }).subscribe({
-      next: order => {
-        this.busy = false;
-        this.toast.success(`Đã tạo đơn ${order.orderNumber}. Vui lòng thanh toán cọc để shop bắt đầu sản xuất.`);
-        this.router.navigate(['/orders/track'], { queryParams: { orderNumber: order.orderNumber } });
-      },
-      error: err => {
-        this.busy = false;
-        this.toast.error(err?.error?.error || 'Không đặt được đơn, vui lòng thử lại');
       },
     });
   }

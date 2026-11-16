@@ -6,7 +6,7 @@ const { createZaloPayOrder, verifyZaloPayCallbackMac, verifyZaloPayRedirectCheck
 const { releaseCodesForOrder } = require('../utils/vouchers');
 const { requireUserId } = require('../middleware/auth');
 const {
-  settleDepositExpiry, depositGatewayCheck, startGatewayDeposit, confirmGatewayDeposit, failGatewayDeposit,
+  settleDepositExpiry, depositGatewayCheck, startGatewayDeposit, confirmGatewayDeposit, failGatewayDeposit, isDepositOrder,
 } = require('../utils/custom-order');
 const PaymentTransaction = require('../models/PaymentTransaction');
 
@@ -69,7 +69,7 @@ router.post('/momo/create', async (req, res) => {
 
     const order = await Order.findOne({ orderNumber });
     if (!order) return res.status(404).json({ success: false, error: 'Không tìm thấy đơn hàng' });
-    if (order.orderType === 'CUSTOM_QUOTE') {
+    if (isDepositOrder(order)) {
       return res.status(400).json({ success: false, error: 'Đơn đặt làm theo báo giá thanh toán cọc bằng chuyển khoản tại trang đơn hàng' });
     }
 
@@ -185,7 +185,7 @@ router.post('/zalopay/create', async (req, res) => {
     const { orderNumber } = req.body;
     const order = await Order.findOne({ orderNumber });
     if (!order) return res.status(404).json({ success: false, error: 'Không tìm thấy đơn hàng' });
-    if (order.orderType === 'CUSTOM_QUOTE') {
+    if (isDepositOrder(order)) {
       return res.status(400).json({ success: false, error: 'Đơn đặt làm theo báo giá thanh toán cọc bằng chuyển khoản tại trang đơn hàng' });
     }
 
@@ -280,7 +280,7 @@ router.post('/sandbox/confirm', async (req, res) => {
     }
     const order = await Order.findOne({ orderNumber });
     if (!order) return res.status(404).json({ success: false, error: 'Không tìm thấy đơn hàng' });
-    if (!ONLINE_METHODS.includes(order.paymentMethod) || order.orderType === 'CUSTOM_QUOTE') {
+    if (!ONLINE_METHODS.includes(order.paymentMethod) || isDepositOrder(order)) {
       return res.status(400).json({ success: false, error: 'Đơn này không thanh toán online' });
     }
     // Huỷ giao dịch ở cổng (như khách bấm huỷ trên MoMo/ZaloPay thật): đơn giữ nguyên, chưa thanh toán —

@@ -2,6 +2,8 @@ const express = require('express');
 const { sendError } = require('../utils/http-error');
 const Product = require('../models/Product');
 const UserData = require('../models/UserData');
+const CommunityPost = require('../models/CommunityPost');
+const NewsComment = require('../models/NewsComment');
 const { requireUserId } = require('../middleware/auth');
 
 const router = express.Router();
@@ -51,6 +53,9 @@ router.get('/', requireUserId, async (req, res) => {
       data: {
         cart: await toCartItems(data?.cart || []),
         favorites: data?.favorites || [],
+        communitySaved: data?.communitySaved || [],
+        chatLastReadAt: data?.chatLastReadAt || null,
+        quizResult: data?.quizResult || null,
         recentlyViewed: data?.recentlyViewed || [],
         savedCoupons: data?.savedCoupons || [],
       },
@@ -60,11 +65,32 @@ router.get('/', requireUserId, async (req, res) => {
   }
 });
 
+// Nhập trạng thái cũ từ trình duyệt một lần; không cộng lại các lượt thích đã được đếm trước đây.
+router.post('/import-social', requireUserId, async (req, res) => {
+  try {
+    const liked = cleanIds(req.body.communityLiked, 2000), news = cleanIds(req.body.newsLiked, 2000);
+    await Promise.all([
+      CommunityPost.updateMany({ id: { $in: liked } }, { $addToSet: { likedBy: req.userId } }),
+      NewsComment.updateMany({ id: { $in: news } }, { $addToSet: { likedBy: req.userId } }),
+      UserData.findOneAndUpdate({ user: req.userId }, { $addToSet: { communitySaved: { $each: cleanIds(req.body.communitySaved, 2000) } } }, { upsert: true, setDefaultsOnInsert: true }),
+    ]);
+    res.json({ success: true });
+  } catch (err) { sendError(res, err); }
+});
+
 // Ghi đè đúng các phần client gửi lên, phần khác giữ nguyên.
 router.put('/', requireUserId, async (req, res) => {
   try {
     const { cart, favorites, recentlyViewed, savedCoupons } = req.body;
     const update = {};
+    if (req.body.quizResult !== undefined) {
+      const state = req.body.quizResult;
+      update.quizResult = state === null ? null : {
+        answers: Object.fromEntries(Object.entries(state.answers || {}).filter(([id, tag]) => /^\d+$/.test(id) && ['minimalist', 'scandinavian', 'industrial', 'bohemian'].includes(tag)).slice(0, 100)),
+        attemptId: typeof state.attemptId === 'string' ? state.attemptId.slice(0, 100) : null,
+        coinClaimed: state.coinClaimed === true,
+      };
+    }
     if (Array.isArray(cart)) update.cart = cart.slice(0, LIMITS.cart).map(toStoredCartItem);
     if (favorites) update.favorites = cleanIds(favorites, LIMITS.favorites);
     if (recentlyViewed) update.recentlyViewed = cleanIds(recentlyViewed, LIMITS.recentlyViewed);

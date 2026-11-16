@@ -7,6 +7,9 @@ export interface ProductTag {
 
 export interface PostComment {
   id: string;
+  userId?: string;
+  parentId?: string;
+  replyTo?: string;
   authorName: string;
   authorAvatar: string;
   text: string;
@@ -14,6 +17,10 @@ export interface PostComment {
 }
 
 export interface CommunityPost {
+  userId?: string;
+  postedAt?: string;
+  status?: string;
+  moderationReason?: string;
   id: string;
   author: {
     id: string;

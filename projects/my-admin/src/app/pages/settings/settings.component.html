@@ -85,6 +85,36 @@
             <input type="number" min="0" class="form-control" name="defaultLeadDays" [(ngModel)]="form.defaultLeadDays">
           </div>
         </div>
+
+        <h3 class="section-title mt-4">Đặt cọc đơn in 3D theo báo giá</h3>
+        <div class="row g-3">
+          <div class="col-md-3">
+            <label class="form-label" for="defaultDepositRate">Tỷ lệ cọc mặc định (%)</label>
+            <input id="defaultDepositRate" type="number" min="1" max="100" class="form-control" name="defaultDepositRate" [(ngModel)]="form.defaultDepositRate">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label" for="minimumDepositAmount">Tiền cọc tối thiểu (đ)</label>
+            <input id="minimumDepositAmount" type="number" min="0" step="10000" class="form-control" name="minimumDepositAmount" [(ngModel)]="form.minimumDepositAmount">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label" for="quoteValidityDays">Báo giá có hiệu lực (ngày)</label>
+            <input id="quoteValidityDays" type="number" min="1" max="60" class="form-control" name="quoteValidityDays" [(ngModel)]="form.quoteValidityDays">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label" for="depositPaymentDeadlineHours">Hạn chuyển cọc (giờ)</label>
+            <input id="depositPaymentDeadlineHours" type="number" min="1" max="168" class="form-control" name="depositPaymentDeadlineHours" [(ngModel)]="form.depositPaymentDeadlineHours">
+          </div>
+          <div class="col-12">
+            <label class="form-check">
+              <input type="checkbox" class="form-check-input" name="allowDepositOverride" [(ngModel)]="form.allowDepositOverride">
+              <span class="form-check-label">Cho phép nhân viên đổi mức cọc riêng từng báo giá (phải ghi lý do)</span>
+            </label>
+            <div class="form-hint">
+              Tiền cọc = tổng báo giá × tỷ lệ, không thấp hơn mức tối thiểu, làm tròn lên 1.000đ và không vượt tổng báo giá.
+              Khách quá hạn chuyển cọc thì đơn tự huỷ. Chỉ áp dụng cho báo giá gửi sau khi lưu.
+            </div>
+          </div>
+        </div>
       </ng-container>
 
       <!-- Thanh toán -->

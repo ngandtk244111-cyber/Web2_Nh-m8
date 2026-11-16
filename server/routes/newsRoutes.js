@@ -4,7 +4,7 @@ const NewsArticle = require('../models/NewsArticle');
 const NewsComment = require('../models/NewsComment');
 const User = require('../models/User');
 const Notification = require('../models/Notification');
-const { requirePermission, requireUserId } = require('../middleware/auth');
+const { requirePermission, requireUserId, attachUserId } = require('../middleware/auth');
 const { emitToContentStaff } = require('../realtime');
 const { isEmailConfigured, getMailTransporter } = require('../utils/otp');
 
@@ -49,7 +49,7 @@ async function notifyCommentReply(parent, article, reply) {
 // Khai báo trước '/:id/comments' để 'admin' không bị hiểu là id bài viết.
 router.get('/admin/comments', requirePermission('content.view'), async (_req, res) => {
   try {
-    const comments = await NewsComment.find().sort({ createdAt: -1 }).limit(1000).lean();
+    const comments = await NewsComment.find().select('-likedBy').sort({ createdAt: -1 }).limit(1000).lean();
     const articles = await NewsArticle.find({ id: { $in: [...new Set(comments.map(c => c.articleId))] } }, { id: 1, title: 1, slug: 1 }).lean();
     const byId = new Map(articles.map(a => [a.id, a]));
     res.json({
@@ -118,10 +118,10 @@ router.get('/slug/:slug', async (req, res) => {
 // ---------- Ý kiến bạn đọc ----------
 
 // Trả về toàn bộ ý kiến (cả trả lời) của 1 bài — client tự dựng cây 1 cấp theo parentId.
-router.get('/:id/comments', async (req, res) => {
+router.get('/:id/comments', attachUserId, async (req, res) => {
   try {
     const comments = await NewsComment.find({ articleId: req.params.id }).sort({ createdAt: -1 });
-    res.json({ success: true, comments });
+    res.json({ success: true, comments: comments.map(c => { const obj = c.toObject(); const likedBy = obj.likedBy || []; delete obj.likedBy; return { ...obj, isLiked: likedBy.includes(req.userId) }; }) });
   } catch (err) {
     sendError(res, err);
   }
@@ -167,25 +167,29 @@ router.post('/:id/comments', requireUserId, async (req, res) => {
   }
 });
 
-// Trạng thái đã thích là cục bộ theo trình duyệt (giống like bài Cộng đồng) — server chỉ giữ đếm.
-router.post('/comments/:commentId/:action', async (req, res) => {
+// Lượt thích theo tài khoản; thao tác lặp không làm tăng/giảm số đếm nhiều lần.
+router.post('/comments/:commentId/:action', requireUserId, async (req, res) => {
   try {
     if (!['like', 'unlike'].includes(req.params.action)) {
       return res.status(404).json({ success: false, error: 'Không hỗ trợ thao tác này' });
     }
     const delta = req.params.action === 'like' ? 1 : -1;
-    const comment = await NewsComment.findOneAndUpdate(
-      { id: req.params.commentId, ...(delta < 0 ? { likesCount: { $gt: 0 } } : {}) },
-      { $inc: { likesCount: delta } },
-      { new: true }
+    const changed = await NewsComment.findOneAndUpdate(
+      { id: req.params.commentId, likedBy: delta > 0 ? { $ne: req.userId } : req.userId },
+      [{ $set: {
+        likesCount: { $max: [0, { $add: [{ $ifNull: ['$likesCount', 0] }, delta] }] },
+        likedBy: { [delta > 0 ? '$setUnion' : '$setDifference']: [{ $ifNull: ['$likedBy', []] }, [req.userId]] },
+      } }], { new: true }
     );
+    const comment = changed || await NewsComment.findOne({ id: req.params.commentId });
     if (!comment) return res.status(404).json({ success: false, error: 'Không tìm thấy ý kiến' });
     // Khách tim câu trả lời của shop -> báo nhân viên.
-    if (delta > 0 && comment.isStaff) {
+    if (changed && delta > 0 && comment.isStaff) {
       const article = await NewsArticle.findOne({ id: comment.articleId }, { title: 1 }).lean();
       emitToContentStaff('news-comment:liked', { articleTitle: article?.title || '', likesCount: comment.likesCount });
     }
-    res.json({ success: true, comment });
+    const obj = comment.toObject(); delete obj.likedBy;
+    res.json({ success: true, comment: { ...obj, isLiked: (comment.likedBy || []).includes(req.userId) } });
   } catch (err) {
     sendError(res, err);
   }

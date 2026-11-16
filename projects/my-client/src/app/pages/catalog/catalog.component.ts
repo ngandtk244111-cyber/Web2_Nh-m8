@@ -101,6 +101,7 @@ export class CatalogComponent implements OnInit {
 
   showMore(): void {
     this.visibleCount += this.PAGE_SIZE;
+    this.syncParams();
   }
 
   constructor(
@@ -113,7 +114,7 @@ export class CatalogComponent implements OnInit {
     // tránh trường hợp mở thẳng /catalog lúc sản phẩm chưa tải xong sẽ hiện "0 sản phẩm".
     effect(() => {
       this.productService.products();
-      untracked(() => this.applyFilters());
+      untracked(() => this.applyFilters(false));
     });
   }
 
@@ -122,7 +123,7 @@ export class CatalogComponent implements OnInit {
     this.route.queryParams.subscribe(params => {
       this.clearSelections();
       this.readParams(params);
-      this.applyFilters();
+      this.applyFilters(false);
 
       // Chỉ phản ứng mascot khi đây là một lượt tìm kiếm thật (có query text từ URL).
       if (params['q']) {
@@ -167,6 +168,15 @@ export class CatalogComponent implements OnInit {
     this.printOnDemandOnly = flag('print') || params['productionType'] === 'PRINT_ON_DEMAND';
     this.readyStockOnly = params['productionType'] === 'READY_STOCK';
     this.searchQuery = params['q'] || '';
+    this.selectedPriceRange = PRICE_RANGES.find(p => p.key === params['price'])?.key || null;
+    list('color').forEach(k => COLOR_OPTIONS.includes(k as ProductColor) && this.selectedColors.add(k as ProductColor));
+    list('size').forEach(k => SIZE_OPTIONS.includes(k as SizeCategory) && this.selectedSizes.add(k as SizeCategory));
+    list('material').forEach(k => this.materialGroups.some(m => m.key === k) && this.selectedMaterialGroups.add(k));
+    list('customization').forEach(k => CUSTOMIZATION_OPTIONS.some(c => c.key === k) && this.selectedCustomizations.add(k as CustomizationTag));
+    this.sortBy = ['bestseller', 'newest', 'price-asc', 'price-desc', 'rating'].includes(params['sort']) ? params['sort'] : 'bestseller';
+    this.viewMode = params['view'] === 'list' ? 'list' : 'grid';
+    const count = Number(params['count']);
+    this.visibleCount = Number.isSafeInteger(count) && count >= this.PAGE_SIZE ? count : this.PAGE_SIZE;
   }
 
   private clearSelections(): void {
@@ -187,7 +197,7 @@ export class CatalogComponent implements OnInit {
     this.searchQuery = '';
   }
 
-  applyFilters(): void {
+  applyFilters(syncUrl = true): void {
     const filters: ProductFilters = {
       ...createEmptyFilters(),
       departments: [...this.selectedDepartments],
@@ -208,7 +218,31 @@ export class CatalogComponent implements OnInit {
     };
     this.filteredProducts = this.productService.filterProducts(filters);
     // Đổi bộ lọc / sắp xếp thì quay lại trang đầu của danh sách.
-    this.visibleCount = this.PAGE_SIZE;
+    if (syncUrl) {
+      this.visibleCount = this.PAGE_SIZE;
+      this.syncParams();
+    }
+  }
+
+  private syncParams(): void {
+    const values = (set: Set<string>) => [...set].join(',') || undefined;
+    this.router.navigate([], {
+      relativeTo: this.route,
+      replaceUrl: true,
+      queryParams: {
+        dept: values(this.selectedDepartments), cat: values(this.selectedSubcategories),
+        space: values(this.selectedSpaces), style: values(this.selectedStyles),
+        color: values(this.selectedColors), material: values(this.selectedMaterialGroups),
+        size: values(this.selectedSizes), customization: values(this.selectedCustomizations),
+        price: this.selectedPriceRange || undefined, q: this.searchQuery || undefined,
+        has3d: this.has3DOnly ? '1' : undefined, custom: this.customizableOnly ? '1' : undefined,
+        sale: this.onSaleOnly ? '1' : undefined,
+        productionType: this.printOnDemandOnly ? 'PRINT_ON_DEMAND' : this.readyStockOnly ? 'READY_STOCK' : undefined,
+        sort: this.sortBy === 'bestseller' ? undefined : this.sortBy,
+        view: this.viewMode === 'list' ? 'list' : undefined,
+        count: this.visibleCount > this.PAGE_SIZE ? this.visibleCount : undefined,
+      },
+    });
   }
 
   // ---------- Tiêu đề trang theo ngữ cảnh ----------
@@ -435,6 +469,7 @@ export class CatalogComponent implements OnInit {
 
   setViewMode(mode: ViewMode): void {
     this.viewMode = mode;
+    this.syncParams();
   }
 
   openMobileFilters(): void {
@@ -448,7 +483,6 @@ export class CatalogComponent implements OnInit {
   resetFilters(): void {
     this.clearSelections();
     this.sortBy = 'bestseller';
-    this.router.navigate([], { relativeTo: this.route, queryParams: {} });
     this.applyFilters();
   }
 }

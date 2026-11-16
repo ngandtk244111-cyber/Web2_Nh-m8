@@ -4,14 +4,6 @@ const SHIPPING_FEE = 30000;
 const FREE_SHIPPING_THRESHOLD = 500000;
 const MAX_QUANTITY_PER_ITEM = 99;
 
-// Tính lại unitPrice từ sản phẩm THẬT trong DB + lựa chọn tùy biến của khách — không tin bất kỳ
-// priceDelta/unitPrice nào client gửi lên (khớp công thức calculateUnitPrice() ở cart.service.ts
-// phía FE, nhưng tự tra lại từng option theo id/hex trong product.customization thay vì tin
-// thẳng client, để chống sửa giá qua DevTools — tham khảo pattern verify giá server-side của
-// AuraPC-main paymentRoutes.js).
-// Khung Flash Sale cố định 8:00-22:00 mỗi ngày (giờ Việt Nam, UTC+7) — khớp FlashSaleService ở FE.
-// product.flashSaleSlot là chỉ số ngày tương đối (0/1/2 = hôm nay/ngày mai/ngày kia). Giá khuyến mãi
-// (basePrice) chỉ hiệu lực khi khung đang diễn ra; chưa tới giờ hoặc đã hết thì tính giá gốc.
 const FLASH_START_HOUR = 8;
 const FLASH_END_HOUR = 22;
 const VN_OFFSET_MS = 7 * 60 * 60 * 1000;

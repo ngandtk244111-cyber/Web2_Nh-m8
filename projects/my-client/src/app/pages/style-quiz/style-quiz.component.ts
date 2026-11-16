@@ -1,7 +1,7 @@
-import { Component, effect } from '@angular/core';
+import { Component, effect, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { QuizService } from '../../core/services/quiz.service';
+import { QuizService, SavedQuizState } from '../../core/services/quiz.service';
 import { VoucherService } from '../../core/services/voucher.service';
 import { AuthService } from '../../core/services/auth.service';
 import { LoginModalService } from '../../core/services/login-modal.service';
@@ -26,12 +26,6 @@ export const STYLE_LABELS: Record<DecorStyleTag, string> = {
   industrial: 'Công nghiệp',
   bohemian: 'Bohemian',
 };
-
-interface SavedQuizState {
-  answers: Record<number, DecorStyleTag>;
-  attemptId: string | null;
-  coinClaimed: boolean;
-}
 
 interface SuggestedCategory {
   category: string;
@@ -79,10 +73,9 @@ export class StyleQuizComponent {
     private cartService: CartService,
     private chatPanel: ChatPanelService
   ) {
-    this.restoreResult();
-    // Làm xong khi chưa đăng nhập → đăng nhập (ngay trên trang này) xong thì hiện kết quả luôn.
     effect(() => {
-      if (this.authService.currentUser() && this.screen === 'locked') this.showResult();
+      this.authService.currentUser();
+      untracked(() => this.restoreResult());
     });
   }
 
@@ -207,31 +200,42 @@ export class StyleQuizComponent {
 
   private saveResult(): void {
     const state: SavedQuizState = { answers: this.answers, attemptId: this.attemptId, coinClaimed: this.coinClaimed };
+    if (this.authService.currentUser()) {
+      this.quizService.saveResult(state).subscribe({ error: () => this.toastService.error('Chưa lưu được kết quả trắc nghiệm, vui lòng thử lại') });
+      return;
+    }
     try {
       sessionStorage.setItem(RESULT_STORAGE_KEY, JSON.stringify(state));
     } catch { /* trình duyệt chặn storage → chỉ mất tính năng nhớ kết quả */ }
   }
 
   private restoreResult(): void {
-    try {
-      const raw = sessionStorage.getItem(RESULT_STORAGE_KEY);
-      if (!raw) return;
-      const state = JSON.parse(raw) as SavedQuizState;
+    const owner = this.authService.currentUser()?._id;
+    let guest: SavedQuizState | null = null;
+    try { guest = JSON.parse(sessionStorage.getItem(RESULT_STORAGE_KEY) || 'null'); } catch { /* bản nháp không hợp lệ */ }
+    const apply = (state: SavedQuizState | null) => {
       if (!state?.answers || !Object.keys(state.answers).length) return;
       this.answers = state.answers;
       this.attemptId = state.attemptId;
       this.coinClaimed = !!state.coinClaimed;
-      if (this.authService.currentUser()) this.showResult();
-      else this.screen = 'locked';
-    } catch {
-      sessionStorage.removeItem(RESULT_STORAGE_KEY);
-    }
+      if (this.authService.currentUser()) this.showResult(); else this.screen = 'locked';
+    };
+    if (!owner) { this.screen = 'intro'; apply(guest); return; }
+    this.quizService.loadSavedResult().subscribe({
+      next: state => {
+        if (owner !== this.authService.currentUser()?._id || this.screen === 'quiz') return;
+        this.screen = 'intro';
+        apply(state || guest);
+        if (!state && guest) this.quizService.saveResult(guest).subscribe({ next: () => sessionStorage.removeItem(RESULT_STORAGE_KEY), error: () => {} });
+        else if (state) sessionStorage.removeItem(RESULT_STORAGE_KEY);
+      },
+      error: () => this.toastService.error('Không tải được kết quả trắc nghiệm đã lưu'),
+    });
   }
 
   private clearSavedResult(): void {
-    try {
-      sessionStorage.removeItem(RESULT_STORAGE_KEY);
-    } catch { /* bỏ qua */ }
+    if (this.authService.currentUser()) this.quizService.saveResult(null).subscribe({ error: () => {} });
+    try { sessionStorage.removeItem(RESULT_STORAGE_KEY); } catch { /* trình duyệt chặn storage */ }
   }
 
   private resetCoinState(): void {

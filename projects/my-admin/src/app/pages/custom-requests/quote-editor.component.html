@@ -47,8 +47,13 @@
       </div>
       <div class="qe-item__grid qe-item__grid--nums">
         <label><span>SL</span><input type="number" min="1" class="form-control" [(ngModel)]="it.quantity"></label>
-        <label><span>Đơn giá (đ)</span><input type="number" min="0" step="1000" class="form-control" [(ngModel)]="it.unitPrice"></label>
-        <label><span>Chiết khấu (đ)</span><input type="number" min="0" step="1000" class="form-control" [(ngModel)]="it.discount"></label>
+        <label><span>Đơn giá (đ)</span><input type="number" min="0" step="1000" class="form-control" placeholder="0" [ngModel]="it.unitPrice || null" (ngModelChange)="it.unitPrice = $event ?? 0"></label>
+        <label><span>Chiết khấu</span>
+          <select class="form-select form-select-sm" [ngModel]="it.discountPercent == null ? 'amount' : 'percent'" (ngModelChange)="it.discountPercent = $event === 'percent' ? 0 : null; it.discount = 0"><option value="amount">Số tiền (đ)</option><option value="percent">Phần trăm (%)</option></select>
+          <!-- 0 hiển thị ô trống (placeholder) để gõ số mới không bị dính số 0 đằng trước, vd "010" -->
+          <input *ngIf="it.discountPercent == null" type="number" min="0" step="1000" class="form-control" placeholder="0" [ngModel]="it.discount || null" (ngModelChange)="it.discount = $event ?? 0">
+          <input *ngIf="it.discountPercent != null" type="number" min="0" max="100" step="0.1" class="form-control" placeholder="0" [ngModel]="it.discountPercent || null" (ngModelChange)="it.discountPercent = $event ?? 0">
+        </label>
       </div>
       <input class="form-control" [(ngModel)]="it.description" placeholder="Mô tả (không bắt buộc)" maxlength="1000">
       <div class="qe-item__total">Thành tiền: <b>{{ lineTotal(it) | vnd }}</b></div>
@@ -56,7 +61,11 @@
     <button type="button" class="action-btn w-100 justify-content-center" (click)="addItem()"><i class="bi bi-plus"></i> Thêm hạng mục</button>
 
     <div class="qe-item__grid mt-2">
-      <label><span class="form-label">Chiết khấu toàn báo giá (đ)</span><input type="number" min="0" step="1000" class="form-control" [(ngModel)]="quoteDiscount"></label>
+      <label><span class="form-label">Chiết khấu toàn báo giá</span>
+        <select class="form-select form-select-sm" [ngModel]="quoteDiscountPercent == null ? 'amount' : 'percent'" (ngModelChange)="quoteDiscountPercent = $event === 'percent' ? 0 : null; quoteDiscount = 0"><option value="amount">Số tiền (đ)</option><option value="percent">Phần trăm (%)</option></select>
+        <input *ngIf="quoteDiscountPercent == null" type="number" min="0" step="1000" class="form-control" placeholder="0" [ngModel]="quoteDiscount || null" (ngModelChange)="quoteDiscount = $event ?? 0">
+        <input *ngIf="quoteDiscountPercent != null" type="number" min="0" max="100" step="0.1" class="form-control" placeholder="0" [ngModel]="quoteDiscountPercent || null" (ngModelChange)="quoteDiscountPercent = $event ?? 0">
+      </label>
       <label><span class="form-label">Số ngày sản xuất *</span><input type="number" min="1" max="365" class="form-control" [(ngModel)]="estimatedDays"></label>
     </div>
     <label class="d-block mt-2"><span class="form-label">Ghi chú cho khách</span>
@@ -65,7 +74,7 @@
 
     <div class="qe-summary">
       <div><span>Tạm tính</span><span>{{ subtotal | vnd }}</span></div>
-      <div *ngIf="itemDiscount + quoteDiscount > 0"><span>Chiết khấu</span><span>−{{ itemDiscount + (quoteDiscount || 0) | vnd }}</span></div>
+      <div *ngIf="itemDiscount + quoteDiscountAmount > 0"><span>Chiết khấu</span><span>−{{ itemDiscount + quoteDiscountAmount | vnd }}</span></div>
       <div class="qe-summary__total"><span>Tổng tiền hàng</span><span>{{ total | vnd }}</span></div>
       <div><span>Cọc mặc định ({{ policy?.defaultDepositRate }}%, tối thiểu {{ policy?.minimumDepositAmount | vnd }})</span><span>{{ defaultDeposit | vnd }}</span></div>
     </div>

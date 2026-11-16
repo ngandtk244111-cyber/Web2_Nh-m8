@@ -60,7 +60,7 @@ function formFrom(p: Product): ProductForm {
   };
 }
 
-/** Trang thêm / sửa sản phẩm — trang riêng thay cho modal cũ (như orderdetail/customerdetail của Vita). */
+
 @Component({
   selector: 'app-product-form',
   standalone: true,

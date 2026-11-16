@@ -14,7 +14,10 @@ const newsCommentSchema = new mongoose.Schema({
   // Ảnh đính kèm (shop trả lời kèm ảnh) — URL kho ảnh /api/products/images/:id.
   imageUrl: { type: String, default: '' },
   likesCount: { type: Number, default: 0 },
+  likedBy: { type: [String], default: [] },
   createdAt: { type: Date, default: Date.now },
 });
+
+newsCommentSchema.index({ articleId: 1, createdAt: -1 });
 
 module.exports = mongoose.model('NewsComment', newsCommentSchema);

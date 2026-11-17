@@ -22,7 +22,7 @@ npm install          # cài thư viện cho Angular
 npm run dev          # chạy cùng lúc backend (4300) và web khách hàng (4200)
 ```
 
-Lần đầu chạy, `npm run dev` sẽ tự cài thư viện cho `server/`. File cấu hình `server/.env` có sẵn trong repo.
+Trước khi chạy, thay file `server/.env` bằng bản nhóm gửi kèm bài nộp. Lần đầu chạy, `npm run dev` sẽ tự cài thư viện cho `server/`.
 
 Trang quản trị chạy riêng ở một terminal khác:
 
@@ -32,8 +32,7 @@ npx ng serve my-admin    # http://localhost:4201
 
 ## Biến môi trường (`server/.env`)
 
-Project chỉ dùng một file biến môi trường là `server/.env`, có sẵn trong repo và đã trỏ tới database của nhóm.
-Các key cần bảo mật (mật khẩu Gmail, Gemini API key, khoá ký token) để trống trên Git. Khi trống, web vẫn chạy: mã OTP hiện ngay trên màn hình, chatbot AI không trả lời.
+Project chỉ dùng một file biến môi trường là `server/.env`. Bản trên Git chỉ có tên biến, các giá trị bí mật để trống. Bản đầy đủ (trỏ tới database của nhóm) nhóm gửi riêng kèm bài nộp.
 
 | Biến | Dùng cho | Bắt buộc |
 |---|---|---|
@@ -57,7 +56,7 @@ Atlas là MongoDB đặt trên cloud, cả nhóm và bản deploy cùng kết n�
 
 - **Làm việc nhóm:** sản phẩm, phòng 3D, bài viết, đơn hàng do một thành viên tạo thì máy các thành viên khác thấy ngay, không phải gửi file dữ liệu qua lại.
 - **Deploy:** backend chạy trên Render dùng chính database này, nên web online và web chạy local có cùng dữ liệu.
-- **Dễ chạy:** file `server/.env` trong repo đã trỏ sẵn tới database này. Tải repo về chạy `npm run dev` là có đủ dữ liệu, **không cần seed**.
+- **Dễ chạy:** file `server/.env` nhóm gửi kèm đã trỏ sẵn tới database này. Đặt file vào rồi chạy `npm run dev` là có đủ dữ liệu, **không cần seed**.
 
 ### Vì sao vẫn có lệnh seed
 
@@ -86,15 +85,7 @@ Cần MongoDB cài trên máy.
 - Nạp phần nội dung từ bản chụp web thật trong `server/seed/snapshot/`: 1471 sản phẩm, phòng 3D, tin tức, video, mã giảm giá, câu hỏi trắc nghiệm, cấu hình danh mục và phân quyền.
 - Thêm dữ liệu mẫu: tài khoản demo, đơn hàng, bảo hành, bài cộng đồng, bình luận, thông báo...
 
-
-Tài khoản sau khi nạp:
-
-| Trang | Tài khoản | Mật khẩu |
-|---|---|---|
-| Quản trị (4201) | `admin` | `admin123` |
-| Khách hàng (4200) | `thaomy.nguyen@gmail.com` | `Lumea@123` |
-
-Đổi tài khoản quản trị bằng `ADMIN_DEFAULT_USERNAME` / `ADMIN_DEFAULT_PASSWORD` trong `.env`. **Đổi mật khẩu trước khi deploy thật.**
+Tài khoản khách đăng nhập thử sau khi chạy seed: `khachhang1@test.com` / `123456789`.
 
 ## Build và kiểm thử
 

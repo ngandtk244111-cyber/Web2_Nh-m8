@@ -24,6 +24,14 @@ const addr = (label, fullName, phone, city, district, ward, address, isDefault =
 // key: khóa nội bộ để các file mock khác tham chiếu (orders, comments...).
 const USERS = [
   {
+    // Tài khoản đăng nhập thử sau khi chạy seed.
+    key: 'khachhang1', phoneNumber: null, fullName: 'Khách Hàng Thử', email: 'khachhang1@test.com',
+    password: '123456789', gender: '', dateOfBirth: '', avatar: '', createdDaysAgo: 30, lastLoginDaysAgo: 0,
+    addresses: [
+      addr('Nhà riêng', 'Khách Hàng Thử', '0901234567', 'TP. Hồ Chí Minh', 'Quận 1', 'Phường Bến Nghé', '1 Lê Duẩn', true),
+    ],
+  },
+  {
     key: 'thaomy', phoneNumber: '0938112201', fullName: 'Nguyễn Thảo My', email: 'thaomy.nguyen@gmail.com',
     gender: 'female', dateOfBirth: '1999-03-14', avatar: AVATAR.f1, createdDaysAgo: 450, lastLoginDaysAgo: 0,
     addresses: [

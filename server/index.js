@@ -16,6 +16,7 @@ app.set('trust proxy', 1);
 // maxAge: trình duyệt nhớ kết quả preflight 10 phút, không phải hỏi lại trước mỗi request có token.
 app.use(cors({ origin: corsOrigins, maxAge: 600 }));
 app.use(express.json());
+app.use(require('./middleware/sanitize').sanitizeBody);
 // Avatar cũ chưa chuyển sang MongoDB (seed/migrate-storage.js). Ảnh mới lưu trong DB, không qua thư mục này.
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 

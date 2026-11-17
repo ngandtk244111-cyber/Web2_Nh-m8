@@ -67,10 +67,20 @@ async function issueOtp(contact) {
 }
 
 // Đánh dấu OTP đã dùng nếu đúng + còn hạn — dùng chung cho đăng ký và quên mật khẩu.
+// Nhập sai quá MAX_OTP_ATTEMPTS lần thì mã hết hiệu lực, phải xin mã mới (chặn dò 6 chữ số).
+const MAX_OTP_ATTEMPTS = 5;
 async function checkOtp(contact, otp) {
-  const otpDoc = await OtpCode.findOne({ [contact.field]: contact.value, code: otp, consumed: false })
+  const code = String(otp ?? '').trim();
+  if (!/^\d{6}$/.test(code)) return false;
+  const otpDoc = await OtpCode.findOne({ [contact.field]: contact.value, consumed: false, expiresAt: { $gt: new Date() } })
     .sort({ createdAt: -1 });
-  if (!otpDoc || otpDoc.expiresAt < new Date()) return false;
+  if (!otpDoc) return false;
+  if (otpDoc.code !== code) {
+    otpDoc.failedAttempts = (otpDoc.failedAttempts || 0) + 1;
+    if (otpDoc.failedAttempts >= MAX_OTP_ATTEMPTS) otpDoc.expiresAt = new Date();
+    await otpDoc.save();
+    return false;
+  }
   otpDoc.consumed = true;
   await otpDoc.save();
   return true;

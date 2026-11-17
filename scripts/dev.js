@@ -1,5 +1,5 @@
 // `npm run dev` — chạy cùng lúc backend (server/, cổng 4300) và giao diện my-client (cổng 4200).
-// Tự cài thư viện cho server nếu chưa có. Cấu hình đọc từ server/.env (có sẵn trong repo).
+// Tự cài thư viện cho server nếu chưa có. Cấu hình đọc từ server/.env (bản trên Git để trống, nhóm gửi bản đầy đủ).
 const { spawn, spawnSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
@@ -17,7 +17,13 @@ if (!fs.existsSync(path.join(serverDir, 'node_modules'))) {
 }
 
 if (!fs.existsSync(envFile)) {
-  console.error('\n[dev] Thiếu file server/.env — tải lại file này từ repo rồi chạy lại `npm run dev`.\n');
+  console.error('\n[dev] Thiếu file server/.env — đặt file .env nhóm gửi vào thư mục server/ rồi chạy lại `npm run dev`.\n');
+  process.exit(1);
+}
+
+const mongoUri = (fs.readFileSync(envFile, 'utf8').match(/^MONGODB_URI=(.*)$/m) || [])[1];
+if (!mongoUri || !mongoUri.trim()) {
+  console.error('\n[dev] MONGODB_URI đang trống trong server/.env — thay file này bằng bản .env nhóm gửi rồi chạy lại `npm run dev`.\n');
   process.exit(1);
 }
 

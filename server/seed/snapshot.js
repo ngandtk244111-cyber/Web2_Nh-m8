@@ -1,15 +1,8 @@
-// Bản chụp NỘI DUNG web (sản phẩm, phòng 3D, tin tức...) để dựng lại web khi không kết nối được Atlas.
-// Không chứa tài khoản hay dữ liệu cá nhân: tài khoản, đơn hàng, bình luận... lấy từ dữ liệu mẫu của seed-all.
+// Bản chụp nội dung web (sản phẩm, phòng 3D, tin tức...) để dựng lại DB local khi không vào được Atlas.
 //
-//   node seed/snapshot.js export    chụp nội dung từ DB đang cấu hình (Atlas) -> seed/snapshot/*.json
-//   node seed/snapshot.js restore   ghi đè nội dung trong DB đang cấu hình bằng bản chụp
-//                                   + tạo tài khoản quản trị mặc định nếu chưa có
-//
-// Dữ liệu web thay đổi nhiều (thêm sản phẩm, sửa phòng 3D...) thì chạy `npm run snapshot:export`
-// rồi commit lại thư mục seed/snapshot/. export chỉ đọc, không ghi gì lên DB.
-//
-// restore XOÁ SẠCH các collection nội dung rồi ghi lại từ bản chụp, nên chỉ chạy trên DB local.
-// Muốn chạy trên DB khác localhost thì thêm --force.
+//   node seed/snapshot.js export    đọc DB đang cấu hình -> seed/snapshot/*.json (chỉ đọc)
+//   node seed/snapshot.js restore   xoá các collection nội dung rồi nạp lại từ bản chụp,
+//                                   tạo tài khoản admin nếu chưa có. Chỉ chạy trên localhost, trừ khi thêm --force.
 require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
 const fs = require('fs');
 const path = require('path');

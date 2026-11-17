@@ -52,9 +52,7 @@ function attachSocket(httpServer, corsOrigins) {
       io.to(sessionId).emit('chat:typing', { sessionId, typing: true, from: 'staff' });
       setTimeout(async () => {
         try {
-          if (!fromStaff && (!userId || sessionId !== 'user-' + userId)) return;
-        const customer = userId ? await User.findById(userId).select('fullName phoneNumber').lean() : null;
-        const message = await ChatMessage.create({
+          const message = await ChatMessage.create({
             sessionId, sender: 'staff', text: reply.text, links: reply.links, auto: true, readByStaff: true,
           });
           io.to(sessionId).emit('chat:typing', { sessionId, typing: false, from: 'staff' });
@@ -167,6 +165,9 @@ function attachSocket(httpServer, corsOrigins) {
         const fromStaff = !!adminId;
         if (fromStaff && !(await adminHasPermission(adminId, 'customers.edit'))) return;
         const userId = !fromStaff && userToken ? await userIdFromToken(userToken) : null;
+        // Khách chỉ được nhắn vào phiên chat của chính mình; tên/SĐT lấy từ tài khoản, không tin dữ liệu client gửi.
+        if (!fromStaff && (!userId || sessionId !== 'user-' + userId)) return;
+        const customer = fromStaff ? null : await User.findById(userId).select('fullName phoneNumber').lean();
         const message = await ChatMessage.create({
           sessionId,
           text: clean,

@@ -132,12 +132,7 @@ export class CatalogComponent implements OnInit {
     });
   }
 
-  /**
-   * Query params hỗ trợ:
-   *   dept, cat, space, style (có thể nhiều giá trị, ngăn bằng dấu phẩy), q,
-   *   has3d=1, custom=1, sale=1, print=1,
-   *   và các link cũ: category=<ProductCategory>, customizableOnly=true, productionType=READY_STOCK|PRINT_ON_DEMAND.
-   */
+  /** Query params hỗ trợ: dept, cat, space, style (có thể nhiều giá trị, ngăn bằng dấu phẩy), q, has3d=1, custom=1, sale=1, print=1, và các link */
   private readParams(params: Params): void {
     const list = (key: string): string[] => (params[key] ? String(params[key]).split(',').filter(Boolean) : []);
     const flag = (key: string): boolean => params[key] === '1' || params[key] === 'true';

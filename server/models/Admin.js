@@ -1,8 +1,6 @@
 const mongoose = require('mongoose');
 
-// Tài khoản quản trị my-admin — tách collection riêng với User (khách hàng) vì admin không có
-// các field liên quan mua sắm (addresses...). Đăng nhập bằng username + password (bcrypt),
-// các request sau dùng token do server ký — xem middleware/auth.js.
+// Tài khoản quản trị my-admin
 const adminSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
   password: { type: String, required: true },

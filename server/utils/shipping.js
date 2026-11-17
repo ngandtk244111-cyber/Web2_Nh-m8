@@ -1,7 +1,4 @@
-// Đơn vị vận chuyển & gợi ý hãng theo đơn hàng (đồ nội thất cồng kềnh vs đồ decor nhỏ, nội thành vs
-// liên tỉnh). Chưa gọi API thật của hãng nào (cần tài khoản/token riêng): nhân viên tạo đơn trên
-// hệ thống của hãng rồi nhập mã vận đơn vào my-admin. SHIPPING_DEV_MODE=true thì được bỏ trống mã
-// vận đơn — server tự sinh mã giả lập để test, giống cơ chế OTP_DEV_MODE.
+// Đơn vị vận chuyển & gợi ý hãng theo đơn hàng (đồ nội thất cồng kềnh vs đồ decor nhỏ, nội thành vs liên tỉnh)
 
 // Showroom/kho ở TP.HCM — đơn trong thành phố mới dùng được xe tải nội thành & đội giao của shop.
 const SHOP_CITY_KEYWORDS = ['hồ chí minh', 'ho chi minh', 'hcm', 'sài gòn', 'sai gon'];

@@ -2,7 +2,6 @@
   display: block;
 }
 
-/* ===== Thanh điều hướng chính sách ===== */
 .pl-bar {
   position: relative;
   z-index: 30;
@@ -74,7 +73,6 @@
   outline-offset: 2px;
 }
 
-/* ===== Panel menu tổng (thả xuống dưới thanh) ===== */
 .pl-panel {
   position: absolute;
   left: 0;

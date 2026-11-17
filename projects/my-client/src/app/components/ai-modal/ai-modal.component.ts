@@ -104,8 +104,6 @@ export class AiModalComponent implements AfterViewChecked, OnDestroy {
     else this.sendUserMessage();
   }
 
-  // ===== Thao tác trên tin nhắn =====
-
   /** Tin AI có câu trả lời thật (không phải lời chào mặc định) và là tin cuối -> cho Thử lại. */
   canRegenerate(msg: AiChatMessage, isLast: boolean): boolean {
     return isLast && msg.sender === 'AI' && msg.id !== 'ai-init' && !this.aiService.isBusy();
@@ -146,8 +144,6 @@ export class AiModalComponent implements AfterViewChecked, OnDestroy {
       this.submitEdit(msg);
     }
   }
-
-  // ===== Lịch sử hội thoại =====
 
   toggleHistory(): void {
     const next = !this.showHistory();

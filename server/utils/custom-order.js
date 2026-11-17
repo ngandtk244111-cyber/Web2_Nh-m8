@@ -1,13 +1,4 @@
-// Luồng tiền cọc của đơn đặt làm theo báo giá (orderType CUSTOM_QUOTE) và quy tắc chặn sản xuất.
-//
-// Trạng thái cọc (order.depositStatus):
-//   UNPAID     — chưa đủ cọc, không có giao dịch chờ đối soát (đang tính hạn trả cọc)
-//   VERIFYING  — có giao dịch khách báo đang chờ nhân viên đối soát (tạm dừng xét hết hạn, SLA 48h)
-//   PAID       — tổng tiền đã XÁC NHẬN >= tiền cọc -> được phép sản xuất
-//   REFUND_PENDING / PARTIALLY_REFUNDED / REFUNDED — sau khi huỷ, theo luồng hoàn tiền
-// Tổng đã nhận (order.depositReceived) luôn tính lại từ sổ PaymentTransaction (status CONFIRMED).
-//
-// Các hàm compute* / *Reason là hàm thuần (unit test được); hàm còn lại đọc/ghi DB.
+// Luồng tiền cọc của đơn đặt làm theo báo giá (orderType CUSTOM_QUOTE) và quy tắc chặn sản xuất
 
 const Order = require('../models/Order');
 const PaymentTransaction = require('../models/PaymentTransaction');
@@ -21,11 +12,7 @@ const REFUND_STATES = ['REFUND_PENDING', 'PARTIALLY_REFUNDED', 'REFUNDED'];
 
 const isDepositOrder = (order) => order?.orderType === 'CUSTOM_QUOTE' && order?.paymentPlan?.type === 'DEPOSIT';
 
-/**
- * Trạng thái cọc mới sau khi sổ giao dịch thay đổi (hàm thuần).
- * input: { plan, depositStatus, received, pendingReportedAts: Date[], now }
- * trả về các field cần $set lên order.
- */
+/** Trạng thái cọc mới sau khi sổ giao dịch thay đổi (hàm thuần) */
 function computeDepositState({ plan, depositStatus, received, pendingReportedAts = [], now = new Date() }) {
   const set = { depositReceived: received };
   if (REFUND_STATES.includes(depositStatus)) return set; // đã vào luồng hoàn tiền: chỉ cập nhật số tiền
@@ -64,12 +51,7 @@ function isDepositExpired(order, now = new Date()) {
     && new Date(order.paymentPlan.deadlineAt).getTime() <= now.getTime();
 }
 
-/**
- * Lý do không được chuyển đơn sang sản xuất (null = được phép). Hàm thuần.
- * - Đơn đặt làm có cọc: phải xác nhận đủ cọc.
- * - Đơn thường có hàng in 3D theo quy tắc mới (paymentPolicyVersion >= 2): phải thanh toán đủ 100%.
- * - Đơn theo báo giá trả COD: nhân viên xác nhận đã nhận cọc là được sản xuất (giống đơn COD lớn).
- */
+/** Lý do không được chuyển đơn sang sản xuất (null = được phép) */
 function productionBlockReason(order) {
   if (isDepositOrder(order)) {
     if (order.depositStatus !== 'PAID') {
@@ -123,11 +105,7 @@ async function refreshDepositState(orderNumber, now = new Date()) {
   return updated || Order.findOne({ orderNumber });
 }
 
-/**
- * Xử lý đơn cọc quá hạn: chưa nhận đồng nào -> tự huỷ; đã nhận một phần -> KHÔNG huỷ, đánh dấu
- * expiredWithFunds để nhân viên xử lý thủ công / hoàn tiền. Đang đối soát (VERIFYING) không bị đụng tới.
- * Trả về đơn sau xử lý (hoặc chính đơn đó nếu không hết hạn).
- */
+/** Xử lý đơn cọc quá hạn: chưa nhận đồng nào -> tự huỷ */
 async function settleDepositExpiry(order, now = new Date()) {
   if (!isDepositExpired(order, now)) return order;
   const base = {
@@ -226,12 +204,7 @@ function startGatewayDeposit({ order, gateway, gatewayRef, amount, userId, sandb
   });
 }
 
-/**
- * Cổng báo giao dịch THÀNH CÔNG (đã kiểm chữ ký ở route): tự động xác nhận khoản cọc, không cần nhân viên.
- * Idempotent: IPN và trang quay về cùng gọi vẫn chỉ cộng 1 lần (điều kiện INITIATED + unique bankTxnRef).
- * Số tiền phải khớp đúng số server đã yêu cầu cổng thu.
- * Trả về { order, txn, confirmed } hoặc null nếu gatewayRef không phải lượt trả cọc.
- */
+/** Cổng báo giao dịch THÀNH CÔNG (đã kiểm chữ ký ở route) */
 async function confirmGatewayDeposit({ gatewayRef, amount, providerTxnId, sandbox = false }) {
   const txn = await PaymentTransaction.findOne({ gatewayRef });
   if (!txn) return null;

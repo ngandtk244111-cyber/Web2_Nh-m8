@@ -31,7 +31,6 @@
       </div>
     </div>
 
-    <!-- Đường xé vé -->
     <span class="fs_tear" aria-hidden="true"></span>
 
     <div class="fs_offer">
@@ -41,7 +40,6 @@
     </div>
   </a>
 
-  <!-- 2. FLASH SALE panel -->
   <div class="dd_panel">
     <div class="dd_dealrow">
       <div class="dd_dealhead">
@@ -54,7 +52,6 @@
 
     <div class="dd_whitebox">
 
-      <!-- 3. TAB NGÀY -->
       <div class="dd_tabs">
         <button
           type="button"
@@ -67,7 +64,6 @@
         </button>
       </div>
 
-      <!-- 4. COUNTDOWN REALTIME -->
       <div class="dd_countdown-row">
         <span class="dd_countdown-label">{{ countdown().ended ? 'Đã kết thúc' : countdown().label }}</span>
         <div class="dd_countdown-boxes" *ngIf="!countdown().ended">
@@ -79,7 +75,6 @@
         </div>
       </div>
 
-      <!-- 5. PRODUCT CAROUSEL (data-driven) -->
       <div class="dd_products-wrap">
         <button type="button" class="dd_nav dd_nav--prev" (click)="scrollPrev()" aria-label="Trước">
           <app-icon name="chevron-left" [size]="16"></app-icon>

@@ -491,9 +491,7 @@ router.patch('/:orderNumber/cancel', requireUserId, async (req, res) => {
   }
 });
 
-// Khách bấm "Tôi đã chuyển khoản" ở trang checkout: chỉ GHI NHẬN là khách báo đã chuyển, không tự
-// đánh dấu PAID — trước đây khách bấm là thành "Đã thanh toán" dù tiền chưa về. Nhân viên đối soát
-// sao kê rồi xác nhận ở my-admin (PATCH /payment-status).
+// Khách bấm "Tôi đã chuyển khoản" ở trang checkout
 router.patch('/:orderNumber/confirm-payment', async (req, res) => {
   try {
     const existing = await Order.findOne({ orderNumber: req.params.orderNumber });

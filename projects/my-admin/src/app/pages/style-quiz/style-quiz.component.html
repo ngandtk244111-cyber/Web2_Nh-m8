@@ -35,7 +35,6 @@
     <button type="button" class="chip-tab" [class.active]="tab === 'results'" (click)="tab = 'results'">Kết quả 4 phong cách</button>
   </div>
 
-  <!-- ============ CÂU HỎI ============ -->
   <ng-container *ngIf="tab === 'questions'">
     <div class="balance">
       <span class="balance-label">Số lựa chọn dẫn tới mỗi phong cách (câu đang hiện):</span>
@@ -91,7 +90,6 @@
     </div>
   </ng-container>
 
-  <!-- ============ KẾT QUẢ ============ -->
   <div class="result-grid" *ngIf="tab === 'results'">
     <div class="result-card" *ngFor="let r of results()">
       <img class="result-img" [src]="r.image" [alt]="r.title">
@@ -109,7 +107,6 @@
   </div>
 </div>
 
-<!-- Thêm / sửa câu hỏi -->
 <div class="modal-overlay" *ngIf="showModal" (click)="showModal = false">
   <div class="modal-box lg" (click)="$event.stopPropagation()">
     <div class="modal-header">
@@ -150,7 +147,6 @@
   </div>
 </div>
 
-<!-- Sửa kết quả -->
 <div class="modal-overlay" *ngIf="resultEditing" (click)="resultEditing = null">
   <div class="modal-box lg" (click)="$event.stopPropagation()">
     <div class="modal-header">

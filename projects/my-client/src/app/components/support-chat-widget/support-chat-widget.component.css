@@ -1,4 +1,3 @@
-/* ===== Nút mở chat ===== */
 .scw_fab {
   position: fixed; right: 20px; bottom: 20px; z-index: 40;
   width: 56px; height: 56px; border-radius: 999px; border: 0; cursor: pointer;
@@ -30,7 +29,6 @@
   .scw_fab--unread { animation: none; }
 }
 
-/* ===== Khung chat ===== */
 .scw {
   position: fixed; right: 20px; bottom: 20px; z-index: 40;
   width: min(380px, calc(100vw - 32px)); height: min(520px, calc(100vh - 40px));
@@ -104,7 +102,6 @@
 .scw_send:hover:not(:disabled) { background: #891226; }
 .scw_send:disabled { opacity: 0.45; cursor: default; }
 
-/* ===== Trợ lý tự động: nhãn, câu hỏi nhanh, nút dẫn trang ===== */
 .scw_auto { display: block; margin-bottom: 3px; font-size: 10.5px; font-weight: 700; letter-spacing: 0.02em; color: #A3152D; }
 .scw_quick { margin-top: 12px; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
 .scw_links { align-self: flex-start; max-width: 90%; display: flex; flex-wrap: wrap; gap: 6px; margin: -2px 0 4px; }

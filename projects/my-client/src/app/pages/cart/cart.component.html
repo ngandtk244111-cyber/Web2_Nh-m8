@@ -1,9 +1,7 @@
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
 
-  <!-- Step navigation -->
   <app-checkout-steps></app-checkout-steps>
 
-  <!-- Header -->
   <div class="border-b border-neutral-200 pb-6">
     <a routerLink="/catalog" class="text-xs font-semibold text-neutral-600 hover:text-amber-600 flex items-center gap-1 mb-2 transition">
       ← Tiếp tục mua sắm
@@ -11,7 +9,6 @@
     <h1 class="font-serif text-3xl font-extrabold text-amber-800">Giỏ Hàng</h1>
   </div>
 
-  <!-- Empty state -->
   <div *ngIf="cartService.items().length === 0" class="text-center py-20 bg-white rounded-3xl border border-neutral-200 space-y-4">
     <div class="w-20 h-20 mx-auto rounded-3xl bg-neutral-100 border border-amber-500/20 flex items-center justify-center text-amber-500">
       <app-icon name="cart" [size]="36"></app-icon>
@@ -29,10 +26,8 @@
   <!-- Grid: item list (left) + summary (right) -->
   <div *ngIf="cartService.items().length > 0" class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
-    <!-- Left: Item list -->
     <div class="lg:col-span-8 bg-white rounded-3xl border border-neutral-200 shadow-xl overflow-hidden">
 
-      <!-- Free shipping banner -->
       <div class="bg-neutral-100 px-6 py-2.5 border-b border-neutral-200 text-xs text-neutral-700 flex items-center justify-between">
         <span *ngIf="selectedSubtotal() >= 500000" class="font-medium text-emerald-600 flex items-center gap-1.5">
           <app-icon name="check" [size]="14"></app-icon> Đơn hàng đã đủ điều kiện <strong>Freeship</strong>!
@@ -42,7 +37,6 @@
         </span>
       </div>
 
-      <!-- Select-all header row -->
       <div class="cd_row cd_row--head">
         <label class="cd_select-all">
           <input type="checkbox" [checked]="isAllSelected()" (change)="toggleSelectAll($any($event.target).checked)">
@@ -52,7 +46,6 @@
         <span class="cd_col-label cd_col-label--qty">Số lượng</span>
       </div>
 
-      <!-- Items list -->
       <div class="px-6 divide-y divide-neutral-200">
         <div class="cd_row py-4" *ngFor="let item of cartService.items()">
 
@@ -96,7 +89,6 @@
       </div>
     </div>
 
-    <!-- Right: Summary -->
     <div class="lg:col-span-4 bg-white rounded-3xl border border-neutral-200 shadow-xl p-6 space-y-5 lg:sticky lg:top-24">
 
       <h3 class="font-serif text-lg font-bold text-amber-800 border-b border-neutral-200 pb-3">Tóm Tắt Đơn Hàng</h3>
@@ -104,7 +96,6 @@
       <!-- Voucher: chọn / nhập mã (dùng chung với trang Thanh toán) -->
       <app-voucher-picker [subtotal]="selectedSubtotal()"></app-voucher-picker>
 
-      <!-- Breakdown -->
       <div class="space-y-1.5 text-xs text-neutral-600 pt-1">
         <div class="flex justify-between">
           <span>Tạm tính ({{ selectedQuantityCount() }} sản phẩm)</span>

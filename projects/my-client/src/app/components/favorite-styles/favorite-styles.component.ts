@@ -12,11 +12,7 @@ interface StyleTile {
   slug: string;
 }
 
-/**
- * Luméa bán trực tiếp (không phải sàn đa thương hiệu) nên không có dữ liệu "brand" thật.
- * "Thương Hiệu Ưa Thích" ở đây là các dòng phong cách (style) riêng của Luméa — dữ liệu
- * style + số lượng sản phẩm đều lấy thật từ ProductService, không hard-code brand giả.
- */
+/** Luméa bán trực tiếp (không phải sàn đa thương hiệu) nên không có dữ liệu "brand" thật */
 /** Ảnh không gian đại diện cho từng dòng phong cách (ảnh lifestyle, không phải ảnh từng sản phẩm). */
 const u = (id: string) => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=900&q=80`;
 

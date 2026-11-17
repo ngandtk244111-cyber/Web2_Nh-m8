@@ -85,7 +85,6 @@
   </div>
 </div>
 
-<!-- Thêm / sửa xưởng -->
 <div class="modal-overlay" *ngIf="showModal" (click)="showModal = false">
   <div class="modal-box" (click)="$event.stopPropagation()">
     <div class="modal-header">
@@ -176,7 +175,6 @@
         <div class="span-2" *ngIf="w.note"><span class="cell-sub">Ghi chú</span>{{ w.note }}</div>
       </div>
 
-      <!-- Liên hệ nhanh với xưởng -->
       <div class="ws-contact-actions">
         <a *ngIf="w.phone" class="btn-header" [href]="telLink(w)"><i class="bi bi-telephone"></i> Gọi {{ w.phone }}</a>
         <a *ngIf="w.phone" class="btn-header" [href]="zaloLink(w)" target="_blank" rel="noopener"><i class="bi bi-chat-dots"></i> Nhắn Zalo</a>
@@ -232,14 +230,12 @@
         <div class="empty-state" *ngIf="!detailReceipts().length">Xưởng chưa giao lần nào. Nhập hàng ở trang Tồn kho → "Nhập" → "Từ xưởng".</div>
       </ng-container>
 
-      <!-- Hợp đồng ký với xưởng -->
       <ng-container *ngIf="detailTab() === 'contracts'">
         <p class="small text-muted-2 mb-2">Lưu hợp đồng, phụ lục, bảng giá đã ký với xưởng (PDF hoặc ảnh scan) để đối chiếu quyền lợi hai bên khi nhập hàng.</p>
         <app-attachment-picker [attachments]="w.contracts || []" (attachmentsChange)="saveContracts(w, $event)"
           [disabled]="!canEdit || saving()" [max]="10" label="Tải lên hợp đồng / phụ lục (PDF)"></app-attachment-picker>
       </ng-container>
 
-      <!-- Nhật ký trao đổi với xưởng -->
       <ng-container *ngIf="detailTab() === 'contacts'">
         <div class="ws-contact-form" *ngIf="canEdit">
           <div class="chip-tabs mb-2">

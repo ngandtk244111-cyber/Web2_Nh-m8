@@ -1,10 +1,6 @@
 import { AfterViewInit, Directive, ElementRef, Input, NgZone, OnDestroy } from '@angular/core';
 
-/**
- * Parallax nhẹ theo cuộn trang: ghi độ lệch (px) vào biến CSS --py của phần tử,
- * CSS của component tự quyết định dùng --py thế nào (transform, background-position...).
- * Chạy ngoài Angular zone + requestAnimationFrame để không kích hoạt change detection mỗi lần cuộn.
- */
+/** Parallax nhẹ theo cuộn trang */
 @Directive({
   selector: '[appParallax]',
   standalone: true,

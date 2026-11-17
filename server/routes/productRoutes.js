@@ -103,11 +103,7 @@ router.post('/review-images', requireUserId, (req, res) => {
   });
 });
 
-/**
- * Trang "Đánh giá" trong tài khoản: mỗi món trong đơn ĐÃ GIAO là 1 dòng — chưa có đánh giá thì vào
- * "Chưa đánh giá", có rồi thì vào "Đã đánh giá" (kèm nội dung để xem lại / sửa).
- * Đánh giá mới lưu orderNumber; đánh giá cũ (trước khi có orderNumber) được gán cho 1 đơn chứa sản phẩm đó.
- */
+/** Trang "Đánh giá" trong tài khoản */
 router.get('/my-reviews', requireUserId, async (req, res) => {
   try {
     const userId = req.userId;
@@ -218,9 +214,7 @@ router.get('/reviews/admin', requirePermission('customers.view'), async (_req, r
   }
 });
 
-// ---------------------------------------------------------------- Tự trả lời đánh giá tốt
-// Đánh giá từ 4 sao được shop trả lời bằng mẫu cảm ơn (đổi mẫu theo đánh giá cho đỡ lặp).
-// Đánh giá 1–3 sao vẫn để nhân viên trả lời tay. reply.auto = true để admin biết đây là trả lời tự động.
+// Tự trả lời đánh giá tốt Đánh giá từ 4 sao được shop trả lời bằng mẫu cảm ơn (đổi mẫu theo đánh giá cho đỡ lặp)
 const AUTO_REPLY_MIN_RATING = 4;
 const AUTO_REPLY_TEMPLATES = [
   'Cảm ơn bạn đã tin chọn {product}! Luméa rất vui vì sản phẩm làm bạn hài lòng.',

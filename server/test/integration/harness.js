@@ -1,14 +1,4 @@
-// Hạ tầng integration test: kiểm tra database đích AN TOÀN, xoá sạch DB test, seed tài khoản,
-// khởi động server thật trên cổng riêng và gọi API bằng HTTP (fetch có sẵn trong Node).
-//
-// AN TOÀN DỮ LIỆU — test chỉ chạy khi TẤT CẢ điều kiện sau đúng:
-//  1. URI lấy từ MONGODB_URI_TEST (mặc định: MongoDB Docker local mongodb://127.0.0.1:27018/lumea_test).
-//  2. Tên database bắt đầu bằng "lumea_test".
-//  3. Host thuộc danh sách cho phép: localhost / 127.0.0.1 / ::1, hoặc host khai báo trong TEST_DB_ALLOWED_HOSTS.
-//  4. Không trùng host + database với MONGODB_URI trong server/.env, và database không phải "deco3d".
-//  5. Database đang rỗng HOẶC đã có collection đánh dấu __lumea_test_marker (do harness tạo) — DB thật
-//     có dữ liệu mà không có dấu này thì từ chối.
-// Không in URI ra log (có thể chứa mật khẩu).
+// Hạ tầng integration test: kiểm tra database đích AN TOÀN, xoá sạch DB test, seed tài khoản, khởi động server thật trên cổng riêng và gọi
 
 const fs = require('fs');
 const path = require('path');

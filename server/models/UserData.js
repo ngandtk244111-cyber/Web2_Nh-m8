@@ -1,8 +1,6 @@
 const mongoose = require('mongoose');
 
-// Dữ liệu cá nhân trước đây chỉ nằm trên trình duyệt: giỏ hàng, yêu thích, đã xem, mã đã lưu.
-// Mỗi tài khoản 1 document, đổi thiết bị vẫn còn. Giỏ hàng chỉ giữ productId, thông tin sản phẩm
-// lấy mới từ Product mỗi lần đọc nên không bị cũ (xem routes/userDataRoutes.js).
+// Dữ liệu cá nhân trước đây chỉ nằm trên trình duyệt
 const cartItemSchema = new mongoose.Schema({
   id: { type: String, required: true },
   productId: { type: String, required: true },

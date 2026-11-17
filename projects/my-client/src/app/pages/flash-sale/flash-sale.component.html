@@ -1,6 +1,5 @@
 <div class="fs">
 
-  <!-- ============ A. CAMPAIGN HERO ============ -->
   <section class="fs-container fs-hero-wrap">
     <div class="fs-hero">
       <div class="fs-hero__content">
@@ -36,7 +35,6 @@
     </div>
   </section>
 
-  <!-- ============ B. COUNTDOWN / SALE STATUS ============ -->
   <section class="fs-container fs-status-wrap" appScrollReveal="up">
     <div class="fs-status" *ngIf="heroState() as hs" [class.fs-status--next]="hs.kind === 'next'">
       <div class="fs-status__text">
@@ -62,7 +60,6 @@
     </div>
   </section>
 
-  <!-- ============ C. TAB TRẠNG THÁI + DANH MỤC DEAL ============ -->
   <section class="fs-container fs-nav" appScrollReveal="up">
     <div class="fs-tabs" role="tablist" aria-label="Lọc theo trạng thái deal">
       <button
@@ -88,7 +85,6 @@
     </div>
   </section>
 
-  <!-- ============ D. FLASH SALE PRODUCT SHOWCASE ============ -->
   <section id="fs-deals" class="fs-container fs-section" appScrollReveal="up">
     <header class="fs-heading">
       <h2 class="fs-heading__title">Deal Xịn Quá Xinh</h2>
@@ -109,7 +105,6 @@
     </ng-template>
   </section>
 
-  <!-- ============ E. SHOP THE ROOM ============ -->
   <section class="fs-container fs-section" appScrollReveal="up">
     <header class="fs-heading">
       <p class="fs-eyebrow fs-eyebrow--dark">Shop the room</p>
@@ -135,7 +130,6 @@
     </div>
   </section>
 
-  <!-- ============ F. ALMOST SOLD OUT ============ -->
   <section class="fs-soldout" *ngIf="almostSoldOut().length > 0" appScrollReveal="up">
     <div class="fs-container">
       <header class="fs-heading fs-heading--row">
@@ -153,7 +147,6 @@
     </div>
   </section>
 
-  <!-- ============ G. FEATURED DEAL ============ -->
   <section class="fs-container fs-section" *ngIf="featured() as f" appScrollReveal="up">
     <article class="fs-featured">
       <a [routerLink]="['/product', f.product.slug]" class="fs-featured__media" [attr.aria-label]="'Xem chi tiết ' + f.product.name">
@@ -193,7 +186,6 @@
     </article>
   </section>
 
-  <!-- ============ H. NEXT FLASH SALE ============ -->
   <section class="fs-container fs-section" *ngIf="nextSlots().length > 0" appScrollReveal="up">
     <header class="fs-heading">
       <h2 class="fs-heading__title">Sắp Diễn Ra</h2>
@@ -223,7 +215,6 @@
     </div>
   </section>
 
-  <!-- ============ I. KHÁM PHÁ THÊM ============ -->
   <section class="fs-container fs-section" appScrollReveal="up">
     <header class="fs-heading">
       <p class="fs-eyebrow fs-eyebrow--dark">Khám phá thêm</p>
@@ -243,7 +234,6 @@
     </div>
   </section>
 
-  <!-- ============ J. FINAL CTA ============ -->
   <section class="fs-container fs-final" appScrollReveal="up">
     <h2 class="fs-final__title">Đừng bỏ lỡ deal tiếp theo</h2>
     <p class="fs-final__sub">Những món decor nhỏ, thay đổi cả góc phòng.</p>
@@ -253,7 +243,6 @@
 
 </div>
 
-<!-- ============ THẺ DEAL DÙNG CHUNG (lưới chính + carousel sắp hết) ============ -->
 <ng-template #dealCard let-d let-wide="wide">
   <article
     class="fs-card"

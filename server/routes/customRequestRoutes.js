@@ -226,10 +226,7 @@ router.post('/:id/messages', attachUserId, async (req, res) => {
   }
 });
 
-// Khách KHÔNG tự đổi trạng thái yêu cầu nữa: chấp nhận báo giá đi qua POST /:id/quotes/:version/accept,
-// tạo đơn đi qua POST /:id/checkout (server tự chuyển trạng thái). Nhân viên đổi các trạng thái xử lý
-// thông thường; các trạng thái gắn với báo giá / đơn hàng (QUOTED, APPROVED, CONVERTED_TO_ORDER) chỉ
-// do luồng báo giá đặt.
+// Khách KHÔNG tự đổi trạng thái yêu cầu nữa
 const ADMIN_SETTABLE_STATUSES = ['PENDING_REVIEW', 'IN_DISCUSSION', 'PREVIEW_READY', 'REJECTED'];
 
 router.patch('/:id/status', requirePermission('custom3d.edit'), async (req, res) => {

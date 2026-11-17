@@ -30,13 +30,11 @@
 
   <div *ngIf="!loading" class="rt__list">
     <article *ngFor="let o of list()" class="rt__order">
-      <!-- Thanh trạng thái -->
       <div class="rt__bar" [ngClass]="'rt__bar--' + o.returnRequest!.status">
         <span class="rt__bar-status">{{ statusLabels[o.returnRequest!.status] }}</span>
         <span class="rt__bar-meta">{{ formatDate(o.returnRequest!.requestedAt) }} <i>|</i> {{ o.orderNumber }}</span>
       </div>
 
-      <!-- Sản phẩm -->
       <div class="rt__items" (click)="openDetail(o)">
         <div *ngFor="let it of visibleItems(o)" class="rt__item">
           <img [src]="image(it)" [alt]="it.product.name" class="rt__img">
@@ -51,7 +49,6 @@
         </div>
       </div>
 
-      <!-- Xem thêm + tổng tiền -->
       <div class="rt__summary">
         <button *ngIf="hasMore(o)" type="button" class="rt__more" (click)="toggleExpand(o)">
           {{ isExpanded(o) ? 'Thu gọn' : 'Xem thêm' }}
@@ -60,7 +57,6 @@
         <span class="rt__total">Tổng tiền ({{ totalQuantity(o) }} sản phẩm): <strong>{{ o.total | vnd }}</strong></span>
       </div>
 
-      <!-- Nút theo trạng thái -->
       <div class="rt__actions">
         <span class="rt__reason">Lý do: {{ o.returnRequest!.reason }}</span>
         <button type="button" class="rt__btn rt__btn--ghost" (click)="openDetail(o)">Xem chi tiết</button>
@@ -72,7 +68,6 @@
   </div>
 </div>
 
-<!-- Chi tiết yêu cầu đổi trả -->
 <div *ngIf="detail as d" class="rt-modal" (click)="detail = null">
   <div class="rt-modal__box" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-label="Chi tiết đổi trả">
     <header class="rt-modal__head">
@@ -90,7 +85,6 @@
         <div><span>Số tiền hoàn dự kiến:</span><strong class="rt-detail__money">{{ d.returnRequest!.refundAmount | vnd }}</strong></div>
       </div>
 
-      <!-- Tiến trình -->
       <ol class="rt-steps">
         <li class="rt-steps__item rt-steps__item--done">
           <b>Gửi yêu cầu</b><small>{{ formatDateTime(d.returnRequest!.requestedAt) }}</small>

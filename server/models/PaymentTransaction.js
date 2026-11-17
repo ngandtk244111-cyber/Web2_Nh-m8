@@ -1,9 +1,6 @@
 const mongoose = require('mongoose');
 
-// Sổ giao dịch thanh toán chuyển khoản cần đối soát thủ công (hiện dùng cho tiền cọc đơn đặt làm).
-// Không sửa / xoá dòng đã có: khách báo chuyển -> REPORTED; nhân viên đối soát sao kê -> CONFIRMED
-// (kèm số tiền thực nhận + mã giao dịch ngân hàng) hoặc REJECTED (bắt buộc lý do).
-// Tổng tiền đã nhận của 1 đơn luôn tính lại từ các dòng CONFIRMED, không cộng dồn tay.
+// Sổ giao dịch thanh toán chuyển khoản cần đối soát thủ công (hiện dùng cho tiền cọc đơn đặt làm)
 
 const paymentTransactionSchema = new mongoose.Schema({
   orderNumber: { type: String, required: true, index: true },

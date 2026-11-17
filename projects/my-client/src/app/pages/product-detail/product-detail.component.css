@@ -27,7 +27,6 @@
   }
 }
 
-/* ============ Main grid ============ */
 .pd_main {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -43,7 +42,6 @@
   }
 }
 
-/* ============ Carousel (phần trên) ============ */
 .pd_carousel {
   position: relative;
   overflow: hidden;
@@ -152,7 +150,6 @@
   }
 }
 
-/* ============ Gallery lưới (phần dưới) ============ */
 .pd_gallery {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -211,7 +208,6 @@
   color: #ffffff;
 }
 
-/* ============ Accordion ============ */
 .pd_accordion {
   margin-top: 20px;
 }
@@ -298,7 +294,6 @@
   color: var(--pd-text);
 }
 
-/* ============ Buy box ============ */
 .pd_buybox {
   display: flex;
   flex-direction: column;
@@ -789,7 +784,6 @@
   white-space: pre-line;
 }
 
-/* ============ Sections ============ */
 .pd_section {
   margin-top: 72px;
 }
@@ -1491,7 +1485,6 @@
   border-color: var(--pd-text);
 }
 
-/* ============ Responsive tweaks ============ */
 @media (max-width: 640px) {
   .pd_title {
     font-size: 26px;
@@ -1510,7 +1503,6 @@
   }
 }
 
-/* ============ Nút AR dưới khu vực ảnh (mở phòng xem 3D ở tab mới) ============ */
 .pd_ar {
   display: flex;
   align-items: center;
@@ -1569,7 +1561,6 @@
   filter: grayscale(0.4);
 }
 
-/* ============ Vì sao bạn sẽ thích (bản gọn) ============ */
 .pd_why__grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

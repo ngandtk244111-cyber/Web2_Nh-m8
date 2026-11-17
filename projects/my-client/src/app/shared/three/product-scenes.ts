@@ -15,12 +15,7 @@ export interface ProductSceneContext {
   showAccessories: boolean;
 }
 
-/**
- * Thư mục chứa model .glb thật cho từng threeModelType (đặt tại
- * projects/my-client/src/assets/models/<modelType>.glb). Nếu file chưa tồn tại,
- * ProductSceneManager tự fallback về hình khối dựng bằng code như trước — không cần
- * sửa code gì thêm khi thêm file model thật vào sau này.
- */
+/** Thư mục chứa model .glb thật cho từng threeModelType (đặt tại projects/my-client/src/assets/models/<modelType>.glb) */
 const REAL_MODEL_BASE_PATH = 'assets/models';
 
 /**

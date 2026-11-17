@@ -73,9 +73,7 @@ function resolveShippingFee(subtotal) {
   return subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
 }
 
-// Đối chiếu items của đơn hàng với sản phẩm THẬT trong DB, trả về items đã tính lại giá +
-// subtotal thật. Ném lỗi (message tiếng Việt, hiển thị được thẳng cho khách) nếu sản phẩm không
-// tồn tại hoặc lựa chọn tùy biến không khớp option nào trong DB.
+// Đối chiếu items của đơn hàng với sản phẩm THẬT trong DB, trả về items đã tính lại giá + subtotal thật
 async function verifyAndPriceOrderItems(items, Product) {
   const productIds = items.map(i => i.product?.id).filter(Boolean);
   const dbProducts = await Product.find({ id: { $in: productIds } }).lean();

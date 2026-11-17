@@ -41,12 +41,7 @@ export type HeroPicks = 'has3d' | 'print' | 'ready' | 'top' | 'sale';
 
 export const AUTOPLAY_INTERVAL_MS = 4500;
 
-/**
- * State dùng chung giữa AnnouncementTickerComponent (trong header, mọi trang) và
- * HeroBannerComponent (trang chủ) — 1 timer duy nhất điều khiển "item đang active" để
- * ticker và hero banner luôn đồng bộ với nhau (bấm ticker đổi banner, banner tự chuyển
- * theo thời gian thì ticker cũng highlight đúng item).
- */
+/** State dùng chung giữa AnnouncementTickerComponent (trong header, mọi trang) và HeroBannerComponent (trang chủ) */
 @Injectable({ providedIn: 'root' })
 export class HeroTickerService {
   private bannerService = inject(BannerService);

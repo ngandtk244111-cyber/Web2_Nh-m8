@@ -145,17 +145,9 @@ export interface Product {
   features: string[];
   reviews: ProductReview[];
   customization?: CustomizationConfig;
-  /**
-   * Vừa là "có 3D hay không" (has3D = !!threeModelType) vừa là khoá để ThreeViewer tự tìm file
-   * assets/models/<threeModelType>.glb thật — có thì load thật, chưa có thì fallback dựng bằng
-   * code (xem product-scenes.ts). Không cần field model3D riêng vì cơ chế này đã tồn tại sẵn.
-   */
+  /** Vừa là "có 3D hay không" (has3D = !!threeModelType) vừa là khoá để ThreeViewer tự tìm file assets/models/<threeModelType>.glb thật */
   threeModelType?: 'moon_lamp' | 'geometric_vase' | 'desk_organizer' | 'cube_stool' | 'wall_shelf' | 'abstract_sculpture';
-  /**
-   * File mô hình 3D thật (GLB/GLTF) của riêng sản phẩm — đường dẫn trong assets (vd
-   * "assets/models/products/glam-velvet-sofa.glb") hoặc URL tuyệt đối. Ưu tiên hơn threeModelType;
-   * nếu file có KHR_materials_variants thì các phiên bản màu/chất liệu được lấy thẳng từ file.
-   */
+  /** File mô hình 3D thật (GLB/GLTF) của riêng sản phẩm */
   modelUrl?: string | null;
   /** Thời gian sản xuất dự kiến — chỉ có ý nghĩa với PRINT_ON_DEMAND. */
   productionTime?: string;

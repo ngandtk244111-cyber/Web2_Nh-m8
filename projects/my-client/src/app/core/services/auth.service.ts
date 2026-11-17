@@ -24,11 +24,7 @@ export interface LoggedUser {
   updatedAt: string;
 }
 
-/**
- * Sau khi login/register thành công, server trả object user (trừ password) và token do server ký.
- * Client lưu cả hai vào localStorage. authInterceptor gắn token vào mọi request, server xác định
- * khách từ token. `userId` một số service còn gửi kèm chỉ để lọc phía client, server không tin giá trị đó.
- */
+/** Sau khi login/register thành công, server trả object user (trừ password) và token do server ký */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private authApi = inject(AuthApiService);

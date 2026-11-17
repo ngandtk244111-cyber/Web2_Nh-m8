@@ -159,12 +159,7 @@ export class RoomViewerComponent implements OnInit, AfterViewInit, OnChanges, On
     this.applyHotspotWorldPositions();
   }
 
-  /**
-   * Hotspot cho phòng glb_scene được khai báo bằng toạ độ GỐC của file .glb (dễ lấy bằng công
-   * cụ click-to-get-position bên dưới). Hàm này quy đổi sang toạ độ world thật của scene trước
-   * khi đưa cho HotspotManager chiếu lên màn hình — phải gọi lại sau khi model .glb tải xong
-   * (wrapper canh giữa/scale chỉ tồn tại lúc đó), nên được gọi cả ở đây lẫn trong buildScene().
-   */
+  /** Hotspot cho phòng glb_scene được khai báo bằng toạ độ GỐC của file .glb (dễ lấy bằng công cụ click-to-get-position bên dưới) */
   private applyHotspotWorldPositions(): void {
     if (!this.room) return;
     const worldHotspots: RoomHotspot[] = this.room.hotspots.map(h => {
@@ -230,9 +225,7 @@ export class RoomViewerComponent implements OnInit, AfterViewInit, OnChanges, On
       const lookAt = this.room?.cameraLookAt || [0, 0.6, 0];
       const isWalkthrough = !!this.room?.walkthroughMode;
       const isFreeExplore = !!this.room?.freeExploreMode;
-      // Walkthrough = đứng yên một chỗ, chỉ xoay đầu nhìn quanh: tâm xoay đặt ngay trước mắt camera
-      // (WALK_PIVOT), nên kéo chuột chỉ đổi hướng nhìn chứ không đẩy camera đi vòng quanh phòng.
-      // Xoay ngang tự do 360°; dọc chỉ cho cúi xuống ~40° / ngước lên ~25° quanh đường chân trời.
+      // Walkthrough = đứng yên một chỗ, chỉ xoay đầu nhìn quanh
       const target = isWalkthrough ? this.walkthroughPivot() : new THREE.Vector3(lookAt[0], lookAt[1], lookAt[2]);
       const offset = new THREE.Vector3(initCam.x, initCam.y, initCam.z).sub(target);
       const spherical = new THREE.Spherical().setFromVector3(offset);
@@ -252,9 +245,7 @@ export class RoomViewerComponent implements OnInit, AfterViewInit, OnChanges, On
         cameraFov: initCam.fov || 46,
         cameraInitialPos: new THREE.Vector3(initCam.x, initCam.y, initCam.z),
         controlsTarget: target,
-        // Walkthrough: khoá bán kính orbit sát với khoảng cách camera ban đầu (chỉ nhích nhẹ để
-        // zoom), để người dùng chỉ xoay quanh đúng góc nội thất đã canh sẵn thay vì bay ra xa
-        // thấy hết tường/không gian trống xung quanh.
+        // Walkthrough: khoá bán kính orbit sát với khoảng cách camera ban đầu (chỉ nhích nhẹ để zoom), để người dùng chỉ xoay quanh đúng góc nội thất
         controlsMinDistance: isWalkthrough ? WALK_PIVOT : (isFreeExplore ? 0.05 : 2.0),
         controlsMaxDistance: isWalkthrough ? WALK_PIVOT : (isFreeExplore ? 100 : 6.5),
         // Khoá góc nghiêng dọc: chỉ cho xoay ngang quanh phòng, không ngước lên trần / cúi xuống sàn.

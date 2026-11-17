@@ -22,7 +22,6 @@
   margin: 0 auto;
 }
 
-/* ===== Hero ===== */
 .xu-hero {
   position: relative;
   overflow: hidden;
@@ -144,7 +143,6 @@
   color: rgba(255, 255, 255, 0.72);
 }
 
-/* ===== Khung chung ===== */
 .xu-main {
   position: relative;
   z-index: 2;
@@ -203,7 +201,6 @@
   background: var(--xu-wine);
 }
 
-/* ===== Điểm danh ===== */
 .xu-checkin {
   padding: 0 28px 24px;
   text-align: center;
@@ -333,7 +330,6 @@
   color: var(--xu-muted);
 }
 
-/* ===== Tóm tắt hôm nay ===== */
 .xu-summary {
   padding: 24px;
   display: flex;
@@ -380,7 +376,6 @@
   white-space: nowrap;
 }
 
-/* ===== Section ===== */
 .xu-section {
   margin-top: 48px;
 }
@@ -394,7 +389,6 @@
   color: var(--xu-wine);
 }
 
-/* ===== Banner trò chơi ===== */
 .xu-banners {
   position: relative;
   overflow: hidden;
@@ -501,7 +495,6 @@
   background: #fff;
 }
 
-/* ===== Minh họa CSS cho trò chơi (dùng lại ở banner, icon tròn, thẻ trò chơi) ===== */
 .xu-art {
   --s: inherit;
   position: relative;
@@ -578,7 +571,6 @@
   to { transform: rotate(360deg); }
 }
 
-/* ===== Hàng icon tròn ===== */
 .xu-shortcuts {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
@@ -647,7 +639,6 @@
   text-transform: uppercase;
 }
 
-/* ===== Thẻ trò chơi ===== */
 .xu-games {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -726,7 +717,6 @@
   margin-top: auto;
 }
 
-/* ===== Lịch sử ===== */
 .xu-history {
   background: #fff;
   border: 1px solid var(--xu-line);
@@ -795,7 +785,6 @@
   cursor: pointer;
 }
 
-/* ===== Gợi ý cho bạn ===== */
 .xu-feed__title {
   margin: 0;
   padding: 16px 0;
@@ -853,7 +842,6 @@
   gap: 28px 20px;
 }
 
-/* ===== Viên tiến độ nổi ===== */
 .xu-progress-pill {
   position: fixed;
   left: 50%;
@@ -893,7 +881,6 @@
   color: var(--xu-gold);
 }
 
-/* ===== Modal trò chơi ===== */
 .xu-modal {
   position: fixed;
   inset: 0;
@@ -946,7 +933,6 @@
   padding: 26px 22px;
 }
 
-/* ===== Hiệu ứng nhận xu ===== */
 .xu-pop {
   position: fixed;
   inset: 0;
@@ -1024,7 +1010,6 @@
   from { opacity: 0; transform: translate(-50%, 16px); }
 }
 
-/* ===== Responsive ===== */
 @media (max-width: 1023px) {
   .xu-top-grid {
     grid-template-columns: 1fr;
@@ -1248,7 +1233,6 @@
   color: #93877E;
 }
 
-/* ===== Voucher của bạn ===== */
 .vc-head {
   display: flex;
   align-items: baseline;

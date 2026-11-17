@@ -1,4 +1,3 @@
-<!-- Floating trigger button -->
 <button
   *ngIf="!chatService.isOpen()"
   (click)="toggle()"
@@ -13,7 +12,6 @@
   </span>
 </button>
 
-<!-- Chat panel -->
 <section *ngIf="chatService.isOpen()" class="scw" role="dialog" aria-label="Chat hỗ trợ trực tuyến Luméa">
 
   <header class="scw_head">
@@ -57,7 +55,6 @@
       </div>
     </ng-container>
 
-    <!-- Nhân viên đang gõ -->
     <div *ngIf="chatService.staffTyping()" class="scw_msg scw_typing" aria-label="Nhân viên đang soạn tin">
       <span></span><span></span><span></span>
     </div>

@@ -35,7 +35,6 @@
     </div>
 
     <aside class="map-panel">
-      <!-- ORDERS: xếp hạng tỉnh -->
       <ng-container *ngIf="mode === 'orders' && !selectedStat">
         <div class="panel-label">Tỉnh/thành nhiều đơn nhất</div>
         <div class="panel-list">
@@ -51,7 +50,6 @@
         <p *ngIf="unmatchedOrders" class="panel-foot">{{ unmatchedOrders }} đơn chưa xác định được tỉnh/thành từ địa chỉ.</p>
       </ng-container>
 
-      <!-- ORDERS: chi tiết 1 tỉnh -->
       <ng-container *ngIf="mode === 'orders' && selectedStat as s">
         <div class="panel-detail-head">
           <div>
@@ -80,7 +78,6 @@
         </div>
       </ng-container>
 
-      <!-- NETWORK: danh sách điểm -->
       <ng-container *ngIf="mode === 'network' && !selectedSite">
         <div class="panel-label">{{ sites.length }} địa điểm</div>
         <div class="panel-list">
@@ -95,7 +92,6 @@
         </div>
       </ng-container>
 
-      <!-- NETWORK: chi tiết 1 điểm -->
       <ng-container *ngIf="mode === 'network' && selectedSite as site">
         <div class="site-detail">
           <button type="button" class="link-btn" (click)="selectSite(null)"><i class="bi bi-chevron-left"></i> Danh sách địa điểm</button>

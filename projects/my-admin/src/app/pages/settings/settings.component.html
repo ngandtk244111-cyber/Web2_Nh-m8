@@ -28,7 +28,6 @@
     </div>
 
     <fieldset class="info-card" [disabled]="!canEdit" (input)="markDirty()" (change)="markDirty()">
-      <!-- Cửa hàng -->
       <ng-container *ngIf="tab() === 'general'">
         <h3 class="section-title">Thông tin thương hiệu & showroom</h3>
         <div class="row g-3">
@@ -60,7 +59,6 @@
         </div>
       </ng-container>
 
-      <!-- In 3D -->
       <ng-container *ngIf="tab() === 'print3d'">
         <h3 class="section-title">Bảng giá vật liệu in 3D (tính báo giá)</h3>
         <div class="row g-3">
@@ -117,7 +115,6 @@
         </div>
       </ng-container>
 
-      <!-- Thanh toán -->
       <ng-container *ngIf="tab() === 'payment'">
         <h3 class="section-title">Cổng thanh toán hỗ trợ</h3>
         <div class="pay-grid">

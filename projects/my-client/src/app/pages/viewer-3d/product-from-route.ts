@@ -4,11 +4,7 @@ import { ActivatedRoute } from '@angular/router';
 import { map } from 'rxjs';
 import { ProductService } from '../../core/services/product.service';
 
-/**
- * Sản phẩm theo :id trên URL cho các phòng xem 3D. Dựa trên signal danh sách sản phẩm nên mở trực tiếp
- * bằng link / F5 vẫn chạy: chờ danh sách tải xong rồi mới kết luận "không tìm thấy".
- * Gọi trong injection context (field initializer của component).
- */
+/** Sản phẩm theo :id trên URL cho các phòng xem 3D */
 export function productFromRoute() {
   const route = inject(ActivatedRoute);
   const productService = inject(ProductService);

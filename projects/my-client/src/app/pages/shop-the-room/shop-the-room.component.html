@@ -1,11 +1,9 @@
 <div class="sr">
-  <!-- Mảng hồng trang trí hai bên -->
   <span class="sr__blob sr__blob--l" aria-hidden="true"></span>
   <span class="sr__blob sr__blob--r" aria-hidden="true"></span>
 
   <div class="sr__wrap" *ngIf="currentRoom">
 
-    <!-- ===== HERO: phòng đang chọn ===== -->
     <section #hero class="sr-hero">
       <div class="sr-hero__text">
         <span class="sr-hero__chip">
@@ -45,7 +43,6 @@
       <img src="assets/mascot/goh-search.png" alt="" class="sr-hero__mascot" aria-hidden="true">
     </section>
 
-    <!-- ===== Lọc theo loại phòng ===== -->
     <div class="sr-filter">
       <div #chips class="sr-filter__chips">
         <button type="button" class="sr-chip" [class.sr-chip--on]="filter === 'all'" (click)="filter = 'all'">
@@ -68,7 +65,6 @@
       </div>
     </div>
 
-    <!-- ===== Lưới phòng ===== -->
     <div class="sr-grid">
       <article
         *ngFor="let r of filteredRooms"
@@ -96,7 +92,6 @@
       </article>
     </div>
 
-    <!-- ===== Dải cam kết ===== -->
     <div class="sr-ribbon">
       <span><app-icon name="home" [size]="20"></app-icon>Khám phá {{ rooms.length }} không gian sống cùng LUMÉA</span>
       <span><app-icon name="sparkles" [size]="20"></app-icon>Thiết kế hiện đại – Trải nghiệm chân thực</span>

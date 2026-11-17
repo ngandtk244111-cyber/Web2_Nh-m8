@@ -28,7 +28,6 @@
     radial-gradient(ellipse at 50% 55%, transparent 55%, rgba(92, 52, 32, 0.12) 100%);
 }
 
-/* ===== Màn chờ ===== */
 .r3__intro {
   position: absolute;
   inset: 0;
@@ -66,7 +65,6 @@
 @keyframes r3Loading { 0% { transform: translateX(-100%); } 100% { transform: translateX(250%); } }
 @keyframes r3Breath { 0%, 100% { transform: scale(1); opacity: 0.85; } 50% { transform: scale(1.06); opacity: 1; } }
 
-/* ===== Thanh trên ===== */
 .r3__bar {
   position: absolute;
   top: 0;
@@ -111,7 +109,6 @@
   color: #2b1d17;
 }
 
-/* ===== Thẻ thông tin phòng ===== */
 .r3__card {
   position: absolute;
   left: 24px;
@@ -297,7 +294,6 @@
 .r3__item-go { flex-shrink: 0; color: #b9a99c; }
 .r3__item:hover .r3__item-go { color: var(--r3-accent); }
 
-/* ===== Chấm sáng trên món đồ (nút kích thước 0: left/top = đúng điểm 3D) ===== */
 .r3__spot {
   position: absolute;
   z-index: 10;
@@ -369,7 +365,6 @@
 }
 .r3__spot:hover .r3__spot-label { opacity: 1; transform: translateY(-50%) translateX(0); }
 
-/* ===== Bảng thông tin sản phẩm ===== */
 .r3__panel {
   position: absolute;
   z-index: 20;
@@ -490,7 +485,6 @@
 }
 .r3__panel-steps button:hover { border-color: #A3152D; color: #A3152D; }
 
-/* ===== Ngăn "Mua trọn bộ phòng" (giao diện giữ nguyên như ở trang Shop The Room) ===== */
 .r3__drawer {
   position: absolute;
   z-index: 25;
@@ -525,7 +519,6 @@
 .r3__buy { border: 0; cursor: pointer; }
 .r3__buy--on { background: #7E0F22; }
 
-/* ===== Dưới cùng ===== */
 .r3__foot {
   position: absolute;
   left: 0;
@@ -566,7 +559,6 @@
 }
 .r3__buy:hover { transform: translateY(-2px); }
 
-/* ===== Không tìm thấy phòng ===== */
 .r3__msg {
   position: absolute;
   inset: 0;
@@ -592,7 +584,6 @@
   text-decoration: none;
 }
 
-/* ===== Màn hình nhỏ ===== */
 /* Màn vừa: bỏ dòng gợi ý để không đè lên dãy nút đổi phòng */
 @media (max-width: 1600px) {
   .r3__hint { display: none; }

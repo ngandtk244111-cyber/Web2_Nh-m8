@@ -1,6 +1,5 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-  <!-- Breadcrumb -->
   <nav class="cg_crumb" aria-label="Breadcrumb">
     <a routerLink="/">Trang chủ</a>
     <app-icon name="chevron-right" [size]="12"></app-icon>
@@ -57,7 +56,6 @@
     </ng-template>
   </nav>
 
-  <!-- Mobile: nút mở bộ lọc -->
   <button
     type="button"
     (click)="openMobileFilters()"
@@ -68,12 +66,10 @@
 
   <div class="cg_layout">
 
-    <!-- ============ SIDEBAR (desktop) ============ -->
     <aside class="cg_sidebar hidden lg:block">
       <ng-container *ngTemplateOutlet="sidebarContent"></ng-container>
     </aside>
 
-    <!-- ============ MAIN CONTENT ============ -->
     <div class="cg_main min-w-0">
 
       <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-5">
@@ -84,7 +80,6 @@
         <span class="cg_count">{{ filteredProducts.length }} sản phẩm</span>
       </div>
 
-      <!-- Search + Sorting + View toggle -->
       <div class="cg_toolbar bg-white rounded-2xl p-3 border border-neutral-200 shadow-soft flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between mb-4">
         <div class="relative flex-1 max-w-xs">
           <input
@@ -115,7 +110,6 @@
         </div>
       </div>
 
-      <!-- Bộ lọc đang áp dụng -->
       <div *ngIf="activeChips.length > 0" class="cg_chips">
         <button *ngFor="let chip of activeChips" type="button" class="cg_chip" (click)="chip.remove()" [attr.aria-label]="'Bỏ lọc ' + chip.label">
           <span>{{ chip.label }}</span>
@@ -124,7 +118,6 @@
         <button type="button" class="cg_chip cg_chip--clear" (click)="resetFilters()">Xóa tất cả</button>
       </div>
 
-      <!-- Results -->
       <div
         *ngIf="filteredProducts.length > 0"
         class="grid gap-5"
@@ -137,12 +130,10 @@
         </div>
       </div>
 
-      <!-- Xem thêm -->
       <div *ngIf="remainingCount > 0" class="cg_load-more">
         <button type="button" class="cg_empty__btn cg_empty__btn--ghost" (click)="showMore()">Xem thêm</button>
       </div>
 
-      <!-- Empty State -->
       <div *ngIf="filteredProducts.length === 0" class="cg_empty">
         <app-icon name="search" [size]="22"></app-icon>
         <p class="cg_empty__title">Chưa có sản phẩm phù hợp</p>
@@ -170,7 +161,6 @@
   </div>
 </div>
 
-<!-- Mobile filter drawer -->
 <div class="cg_overlay lg:hidden" *ngIf="mobileFiltersOpen" (click)="closeMobileFilters()"></div>
 <aside class="cg_drawer lg:hidden" [class.cg_drawer--open]="mobileFiltersOpen">
   <div class="cg_drawer__head">
@@ -189,14 +179,12 @@
   </div>
 </aside>
 
-<!-- ============ SIDEBAR CONTENT (dùng chung desktop + mobile drawer) ============ -->
 <ng-template #sidebarContent>
   <div class="cg_sidebar__title">
     <app-icon name="sliders" [size]="15"></app-icon>
     <span>Bộ lọc</span>
   </div>
 
-  <!-- DANH MỤC (nhóm lớn) -->
   <div class="cg_group">
     <button type="button" class="cg_group__head" (click)="toggleGroup('department')">
       <span>Danh Mục</span>
@@ -231,7 +219,6 @@
     </div>
   </div>
 
-  <!-- KHÔNG GIAN -->
   <div class="cg_group">
     <button type="button" class="cg_group__head" (click)="toggleGroup('space')">
       <span>Không Gian</span>
@@ -245,7 +232,6 @@
     </div>
   </div>
 
-  <!-- GIÁ BÁN -->
   <div class="cg_group">
     <button type="button" class="cg_group__head" (click)="toggleGroup('price')">
       <span>Giá</span>
@@ -289,7 +275,6 @@
     </div>
   </div>
 
-  <!-- MÀU SẮC -->
   <div class="cg_group">
     <button type="button" class="cg_group__head" (click)="toggleGroup('color')">
       <span>Màu Sắc</span>
@@ -307,7 +292,6 @@
     </div>
   </div>
 
-  <!-- CHẤT LIỆU -->
   <div class="cg_group">
     <button type="button" class="cg_group__head" (click)="toggleGroup('material')">
       <span>Chất Liệu</span>
@@ -325,7 +309,6 @@
     </div>
   </div>
 
-  <!-- PHONG CÁCH -->
   <div class="cg_group">
     <button type="button" class="cg_group__head" (click)="toggleGroup('style')">
       <span>Phong Cách</span>
@@ -343,7 +326,6 @@
     </div>
   </div>
 
-  <!-- KÍCH THƯỚC -->
   <div class="cg_group">
     <button type="button" class="cg_group__head" (click)="toggleGroup('size')">
       <span>Kích Thước</span>

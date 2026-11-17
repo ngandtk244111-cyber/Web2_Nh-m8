@@ -114,9 +114,7 @@ export class CheckoutComponent implements OnInit {
   readonly paymentMethods = PAYMENT_METHODS;
   readonly depositThreshold = DEPOSIT_THRESHOLD;
 
-  /* ---------- Đặt đơn từ báo giá in 3D (vào /checkout kèm history.state.quoteCheckout) ----------
-   * Dùng chung trang thanh toán, chỉ khác nguồn hàng (hạng mục báo giá thay cho giỏ hàng) và tiền cọc khi
-   * chọn COD (theo báo giá thay cho 30% đơn từ 5 triệu). Giá và cọc do server chốt. */
+  /** Đặt đơn từ báo giá in 3D (vào /checkout kèm history.state.quoteCheckout) Dùng chung trang thanh toán, chỉ khác nguồn hàng */
   private readonly customRequestService = inject(CustomRequestService);
   quoteOrder: { requestId: string; quote: Quote; lines: CartItem[] } | null = null;
   quoteLoading = false;
@@ -417,9 +415,7 @@ export class CheckoutComponent implements OnInit {
       const address = addresses.find(a => a.isDefault) || addresses[0];
       if (address) this.selectShippingAddress(address._id);
     });
-    // Phòng trường hợp còn kẹt ở Bước 4 (khoá) từ một đơn đã đặt trước đó trong cùng phiên SPA
-    // nhưng lại vào /checkout theo cách khác "Tiếp tục mua sắm" (component instance mới, createdOrder rỗng) —
-    // tránh màn hình trắng vì cả 2 khối bước 2/3 lẫn modal bước 4 đều không có điều kiện để hiển thị.
+    // Phòng trường hợp còn kẹt ở Bước 4 (khoá) từ một đơn đã đặt trước đó trong cùng phiên SPA nhưng lại vào /checkout theo cách khác "Tiếp tục
     if (this.flow.currentStep() === 4 && !this.createdOrder && !quoteCheckout) {
       this.flow.reset();
     }
@@ -442,11 +438,7 @@ export class CheckoutComponent implements OnInit {
     }
   }
 
-  /**
-   * Nút hành động chính đổi chức năng theo bước hiện tại:
-   * Bước 2 -> validate thông tin nhận hàng rồi tiến sang Bước 3.
-   * Bước 3 -> đặt hàng thật sự.
-   */
+  /** Nút hành động chính đổi chức năng theo bước hiện tại */
   handlePrimaryAction(): void {
     if (this.flow.currentStep() === 2) {
       const ok = this.flow.goToStep(3, { validate: () => this.validateShipping() });

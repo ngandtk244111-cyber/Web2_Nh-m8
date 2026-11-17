@@ -1,7 +1,6 @@
 <div class="qe">
   <div class="empty-state py-2" *ngIf="loading && !quotes.length"><span class="spinner-border spinner-border-sm"></span> Đang tải báo giá…</div>
 
-  <!-- Báo giá đang hiệu lực -->
   <div class="qe-current" *ngIf="latestSent as q">
     <div class="qe-current__head">
       <div>
@@ -23,7 +22,6 @@
     Khách đã đặt đơn <a [routerLink]="['/orders', request.orderNumber]"><b>{{ request.orderNumber }}</b></a> từ báo giá này. Theo dõi tiền cọc ở trang đơn hàng.
   </div>
 
-  <!-- Nút mở form -->
   <ng-container *ngIf="canEdit && !locked && !editing">
     <p class="form-hint mb-2" *ngIf="!latestSent">Chưa có báo giá. Tạo báo giá theo hạng mục — hệ thống tự tính tiền cọc theo chính sách.</p>
     <button type="button" class="btn-save w-100 justify-content-center" (click)="startNew()">
@@ -32,7 +30,6 @@
     </button>
   </ng-container>
 
-  <!-- Form soạn -->
   <div class="qe-form" *ngIf="editing && canEdit && !locked">
     <div class="qe-form__title">{{ draftVersion ? 'Bản nháp phiên bản ' + draftVersion : 'Phiên bản mới' }}</div>
 
@@ -96,7 +93,6 @@
     </div>
   </div>
 
-  <!-- Lịch sử phiên bản -->
   <details class="qe-history" *ngIf="quotes.length > 1 || (quotes.length === 1 && !latestSent)">
     <summary>Các phiên bản ({{ quotes.length }})</summary>
     <table class="admin-table mt-2">

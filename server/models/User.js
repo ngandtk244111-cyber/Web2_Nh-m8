@@ -12,9 +12,7 @@ const addressSchema = new mongoose.Schema({
 });
 
 const userSchema = new mongoose.Schema({
-  // unique + sparse: tài khoản email/Google/Facebook có thể không có SĐT (và ngược lại). KHÔNG đặt
-  // default: null cho 3 field phoneNumber/googleId/facebookId — sparse index vẫn đánh index giá trị
-  // null lưu tường minh, nên chỉ cho tồn tại đúng 1 user thiếu field đó (lỗi E11000 khi đăng ký).
+  // unique + sparse: tài khoản email/Google/Facebook có thể không có SĐT (và ngược lại)
   phoneNumber: { type: String, unique: true, sparse: true },
   password: { type: String, default: null },
   googleId: { type: String, unique: true, sparse: true },
@@ -41,9 +39,7 @@ const userSchema = new mongoose.Schema({
 
 const LOGIN_ID_FIELDS = ['phoneNumber', 'googleId', 'facebookId'];
 
-// Dữ liệu cũ (tạo khi schema còn default: null) có thể đang lưu null tường minh ở các field trên,
-// chiếm mất "suất null" duy nhất của sparse unique index -> gỡ field đó đi. Idempotent, gọi mỗi
-// lần server khởi động (xem index.js), không cần chạy migration tay trên từng database.
+// Dữ liệu cũ
 userSchema.statics.unsetNullLoginIds = async function unsetNullLoginIds() {
   for (const field of LOGIN_ID_FIELDS) {
     await this.updateMany({ [field]: { $type: 'null' } }, { $unset: { [field]: 1 } });

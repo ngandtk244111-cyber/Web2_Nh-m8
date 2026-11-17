@@ -16,11 +16,7 @@ const METHOD_LABELS: Record<SandboxMethod, string> = {
   zalopay: 'ZaloPay',
 };
 
-/**
- * Cổng thanh toán thử (chỉ bật khi chạy dev): server chuyển khách tới đây khi cổng MoMo/ZaloPay
- * sandbox từ chối giao dịch, để vẫn đi hết luồng thanh toán -> trang kết quả -> hoá đơn.
- * Không thu tiền thật; bấm xác nhận thì server đánh dấu đơn "Đã thanh toán".
- */
+/** Cổng thanh toán thử (chỉ bật khi chạy dev) */
 @Component({
   selector: 'app-payment-sandbox',
   standalone: true,

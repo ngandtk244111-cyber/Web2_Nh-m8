@@ -50,9 +50,7 @@ export class CartService {
   private itemsSignal = signal<CartItem[]>(this.loadCart());
   private isCartOpenSignal = signal<boolean>(false);
   private appliedCouponSignal = signal<Coupon | null>(null);
-  // Danh sách id sản phẩm được chọn để mang sang Checkout — null nghĩa là dùng toàn bộ giỏ hàng.
-  // Chỉ dùng để LỌC hiển thị ở Checkout, không xoá sản phẩm chưa chọn khỏi giỏ.
-  // Lưu tạm ở sessionStorage để không mất lựa chọn nếu người dùng reload trang Checkout.
+  // Danh sách id sản phẩm được chọn để mang sang Checkout
   private checkoutSelectionSignal = signal<string[] | null>(this.loadCheckoutSelection());
 
   readonly items = this.itemsSignal.asReadonly();
@@ -388,11 +386,7 @@ export class CartService {
     });
   }
 
-  /**
-   * Nhập tay mã giảm giá: tra mã công khai (GET /api/coupons/:code). Tìm thấy thì lưu vào danh sách mã
-   * của khách để lần sau chọn lại, nhưng KHÔNG tự áp dụng — khách tự chọn trong danh sách.
-   * Voucher cá nhân (đã có sẵn trong danh sách) được nhận ra qua `ownVouchers`.
-   */
+  /** Nhập tay mã giảm giá: tra mã công khai (GET /api/coupons/:code) */
   addCouponCode(code: string, ownVouchers: Coupon[] = []): Observable<{ success: boolean; message: string; coupon?: Coupon }> {
     const cleanCode = code.trim().toUpperCase();
     const own = ownVouchers.find(v => v.code === cleanCode);

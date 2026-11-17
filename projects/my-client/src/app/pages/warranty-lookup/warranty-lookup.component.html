@@ -10,7 +10,6 @@
     </p>
   </div>
 
-  <!-- Form tra cứu -->
   <form *ngIf="!warranty" (ngSubmit)="search()" class="bg-[#FFFFFF] p-6 rounded-2xl border border-neutral-200 shadow-xl space-y-4">
     <div>
       <label for="wl-code" class="text-xs font-bold text-neutral-700 block mb-1">Mã bảo hành</label>
@@ -51,11 +50,9 @@
     </p>
   </form>
 
-  <!-- Kết quả: phiếu bảo hành -->
   <div *ngIf="warranty as w" class="space-y-5">
 
     <div class="bg-[#FFFFFF] rounded-2xl border border-neutral-200 shadow-xl overflow-hidden">
-      <!-- Đầu phiếu -->
       <div class="flex items-start justify-between gap-3 px-6 pt-6 pb-4 border-b border-dashed border-neutral-200">
         <div class="flex items-center gap-3 min-w-0">
           <span class="w-11 h-11 shrink-0 rounded-xl bg-[#FDECEF] text-[#A3152D] flex items-center justify-center">
@@ -78,7 +75,6 @@
         </span>
       </div>
 
-      <!-- Sản phẩm -->
       <div class="flex items-center gap-4 px-6 py-4">
         <img
           *ngIf="w.productImage"
@@ -95,7 +91,6 @@
         </div>
       </div>
 
-      <!-- Thời hạn -->
       <div class="px-6 pb-6 space-y-3">
         <div class="grid grid-cols-3 gap-2 text-center">
           <div class="rounded-xl bg-[#F6F5F2] border border-neutral-200 p-2.5">
@@ -126,7 +121,6 @@
       </div>
     </div>
 
-    <!-- Lịch sử yêu cầu -->
     <div class="bg-[#FFFFFF] p-6 rounded-2xl border border-neutral-200 shadow-xl space-y-3">
       <h4 class="text-xs font-extrabold uppercase text-neutral-700">Lịch sử yêu cầu bảo hành</h4>
       <p *ngIf="w.claimHistory.length === 0" class="text-xs text-neutral-500">Chưa có yêu cầu bảo hành nào cho sản phẩm này.</p>
@@ -150,7 +144,6 @@
       </ol>
     </div>
 
-    <!-- Gửi yêu cầu bảo hành -->
     <div *ngIf="w.status === 'ACTIVE'" class="bg-[#FFFFFF] p-6 rounded-2xl border border-neutral-200 shadow-xl space-y-3">
       <label for="wl-claim" class="text-xs font-extrabold uppercase text-neutral-700 block">Gửi yêu cầu bảo hành</label>
       <textarea

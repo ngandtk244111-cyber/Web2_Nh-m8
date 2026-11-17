@@ -6,11 +6,7 @@ import { ResourceManager, createConfiguredGLTFLoader } from './resource-manager'
  * để khớp với tầm camera đang dùng cho các phòng dựng bằng code (bàn ~2-3 đơn vị). */
 const GLB_ROOM_TARGET_SIZE = 6;
 
-/**
- * Ánh sáng phòng .glb — 1 chỗ cho cả trang phòng 3D (room-3d) lẫn khung xem phòng (room-viewer).
- * Ít ánh sáng "phẳng" (môi trường + bán cầu), nắng chính mạnh hơn -> có mặt sáng / mặt tối / bóng,
- * phòng rõ khối, không bị trắng bệt.
- */
+/** Ánh sáng phòng .glb — 1 chỗ cho cả trang phòng 3D (room-3d) lẫn khung xem phòng (room-viewer) */
 export const ROOM_LIGHTING = {
   exposure: 0.8,
   envMapIntensity: 0.5,
@@ -26,24 +22,14 @@ export class RoomSceneManager {
   private readonly gltfLoader = createConfiguredGLTFLoader();
   private loadToken = 0;
 
-  /**
-   * gltf.scene gốc (model .glb thật) — KHÔNG phải wrapper bọc ngoài. Object3D.worldToLocal /
-   * localToWorld tự cộng dồn toàn bộ chuỗi transform từ nó lên tới root (bao gồm cả scale của
-   * wrapper LẪN phần dịch chuyển canh giữa gắn trực tiếp lên chính object này), nên phải dùng
-   * đúng object này chứ không phải wrapper — dùng nhầm wrapper sẽ thiếu mất phần dịch chuyển
-   * canh giữa và gây lệch toạ độ (đặc biệt lệch nhiều theo trục có box.min lớn, ví dụ trục Y).
-   */
+  /** gltf.scene gốc (model .glb thật) */
   private glbObject: THREE.Object3D | null = null;
 
   getOccluders(): THREE.Object3D[] {
     return this.occluders;
   }
 
-  /**
-   * Quy đổi 1 điểm toạ độ GỐC (đọc trực tiếp từ file .glb, ví dụ lấy từ công cụ
-   * click-to-get-position) sang toạ độ world thật trong scene hiện tại.
-   * Với phòng dựng bằng code (không có model thật), toạ độ local = world nên trả về nguyên vẹn.
-   */
+  /** Quy đổi 1 điểm toạ độ GỐC (đọc trực tiếp từ file .glb, ví dụ lấy từ công cụ click-to-get-position) sang toạ độ world thật trong scene hiện */
   rawToWorldPosition(raw: [number, number, number]): THREE.Vector3 {
     const point = new THREE.Vector3(raw[0], raw[1], raw[2]);
     if (!this.glbObject) return point;
@@ -112,11 +98,7 @@ export class RoomSceneManager {
     onReady?.();
   }
 
-  /**
-   * Model .glb tải từ ngoài (Sketchfab...) thường không cùng gốc toạ độ/scale với
-   * setup camera hiện tại. Hàm này tự canh giữa theo tâm bounding box và scale lại
-   * theo chiều lớn nhất để luôn vừa khung nhìn, bất kể đơn vị gốc của file là gì.
-   */
+  /** Model .glb tải từ ngoài (Sketchfab...) thường không cùng gốc toạ độ/scale với setup camera hiện tại */
   private centerAndNormalize(
     object: THREE.Object3D,
     focusBounds?: { min: [number, number, number]; max: [number, number, number] }

@@ -1,6 +1,4 @@
-// Kiểm duyệt tự động bài đăng Cộng đồng trước khi hiển thị công khai.
-// Danh sách đơn giản theo từ khoá — đủ chặn spam/quảng cáo/ngôn từ thô tục phổ biến; bài bị chặn
-// vẫn được lưu (status REJECTED) để nhân viên xem lại trong my-admin và mở lại nếu chặn nhầm.
+// Kiểm duyệt tự động bài đăng Cộng đồng trước khi hiển thị công khai
 
 const RULES = [
   {

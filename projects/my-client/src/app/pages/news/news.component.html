@@ -1,4 +1,3 @@
-    <!-- ================= TRANG CHI TIẾT BÀI VIẾT (bố cục bài báo: cột đọc + cột "Xem nhiều") ================= -->
     <div *ngIf="selectedArticle as art" class="na">
 
       <nav class="na-crumb" aria-label="Breadcrumb">
@@ -9,7 +8,6 @@
       </nav>
 
       <div class="na-layout">
-        <!-- Cột chính -->
         <article class="na-main">
           <a routerLink="/news" class="na-cat">{{ art.category }}</a>
           <h1 class="na-title">{{ art.title }}</h1>
@@ -40,7 +38,6 @@
             </ul>
           </ng-container>
 
-          <!-- Sản phẩm nhắc tới trong bài -->
           <ng-container *ngIf="taggedProducts.length > 0">
             <h2 class="na-bar">Sản phẩm trong bài viết</h2>
 
@@ -72,7 +69,6 @@
             </ul>
           </aside>
 
-          <!-- Thanh thao tác cuối bài -->
           <div class="na-actions">
             <a routerLink="/news" class="na-actions__btn">
               <app-icon name="chevron-left" [size]="14"></app-icon> Trở lại Tin tức
@@ -82,17 +78,14 @@
             </button>
           </div>
 
-          <!-- Ý kiến bạn đọc -->
           <app-news-comments [articleId]="art.id"></app-news-comments>
 
-          <!-- Tags -->
           <div *ngIf="art.tags.length" class="na-tags">
             <span class="na-tags__label">Tags:</span>
             <a routerLink="/news" class="na-tag">{{ art.category }}</a>
             <span *ngFor="let t of art.tags" class="na-tag">{{ t }}</span>
           </div>
 
-          <!-- Cùng chuyên mục -->
           <section *ngIf="sameCategoryArticles.length" class="na-related">
             <h2 class="na-related__title">Cùng chuyên mục</h2>
             <a *ngFor="let a of sameCategoryArticles" [routerLink]="['/news', a.slug]" class="na-related__item">
@@ -106,7 +99,6 @@
           </section>
         </article>
 
-        <!-- Cột phải: bài xem nhiều -->
         <aside class="na-side" aria-label="Bài viết xem nhiều">
           <h2 class="na-side__title">Bài viết xem nhiều</h2>
           <a *ngFor="let a of otherArticles" [routerLink]="['/news', a.slug]" class="na-side__item">
@@ -129,10 +121,8 @@
       </ng-template>
     </div>
 
-    <!-- ================= DANH SÁCH TIN TỨC ================= -->
     <div *ngIf="!requestedSlug" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
 
-      <!-- Header -->
       <div class="border-b border-neutral-200 pb-6">
         <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-950/40 text-amber-400 border border-amber-500/30 text-xs font-bold uppercase tracking-wider mb-2">
           <app-icon name="sparkles" [size]="14"></app-icon>
@@ -146,10 +136,8 @@
         </p>
       </div>
 
-      <!-- Sidebar + Content -->
       <div class="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-10">
 
-        <!-- Sidebar -->
         <aside class="space-y-8">
           <div>
             <h3 class="font-serif text-xs font-extrabold text-amber-800 uppercase tracking-wider mb-3">Danh mục</h3>
@@ -197,15 +185,12 @@
           </div>
         </aside>
 
-        <!-- Main content -->
         <div class="space-y-8">
 
-          <!-- Empty state -->
           <div *ngIf="displayedArticles.length === 0" class="text-center py-16 text-neutral-500 text-sm">
             Chưa có bài viết nào trong danh mục này.
           </div>
 
-          <!-- Featured row -->
           <div *ngIf="displayedArticles.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div
               *ngFor="let a of displayedArticles.slice(0, 2)"
@@ -228,7 +213,6 @@
             </div>
           </div>
 
-          <!-- Rest of the articles -->
           <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
             <div
               *ngFor="let a of displayedArticles.slice(2)"

@@ -90,11 +90,7 @@ export function normalizeVn(text: string): string {
     .trim();
 }
 
-/**
- * Tìm tỉnh/thành xuất hiện trong chuỗi địa chỉ; trả về null nếu không nhận ra.
- * Địa chỉ VN ghi tỉnh ở cuối, nên ưu tiên alias khớp ở vị trí sau cùng —
- * tránh nhầm tên đường như "Xa lộ Hà Nội, Thủ Đức" hay "Phố Huế, Hà Nội".
- */
+/** Tìm tỉnh/thành xuất hiện trong chuỗi địa chỉ */
 export function findProvince(address: string): VnProvince | null {
   const text = ` ${normalizeVn(address)} `;
   let best: VnProvince | null = null;

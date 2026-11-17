@@ -17,11 +17,7 @@ const STATUS_LABELS: Record<string, string> = {
   SUPERSEDED: 'Đã có phiên bản mới',
 };
 
-/**
- * Báo giá đặt làm phía khách: xem báo giá có phiên bản (hạng mục, chiết khấu, tiền cọc, hạn hiệu lực),
- * chấp nhận (bắt buộc đồng ý chính sách cọc) / từ chối. Đặt hàng đi qua trang thanh toán chung (/checkout).
- * Giá và tiền cọc do server tính từ báo giá — trang chỉ hiển thị, không gửi số tiền lên.
- */
+/** Báo giá đặt làm phía khách */
 @Component({
   selector: 'app-quote-panel',
   standalone: true,

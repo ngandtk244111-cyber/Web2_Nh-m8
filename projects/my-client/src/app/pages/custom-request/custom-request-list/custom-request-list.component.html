@@ -1,7 +1,6 @@
     <div [ngClass]="embedded ? 'rounded-3xl border border-neutral-200 bg-white p-5 sm:p-6 space-y-4' : 'max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8'">
       <ng-container *ngIf="!embedded">
       
-      <!-- Header -->
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-neutral-200 pb-6">
         <div>
           <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-950/40 text-amber-400 border border-amber-500/30 text-xs font-bold uppercase tracking-wider mb-2">
@@ -34,7 +33,6 @@
         </div>
       </div>
 
-      <!-- Process 5-Step Workflow Banner -->
       <div class="bg-[#FFFFFF] rounded-3xl p-6 border border-neutral-200 shadow-xl">
         <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider mb-4">
           Quy Trình Thực Hiện Sản Phẩm Theo Yêu Cầu
@@ -75,7 +73,6 @@
 
       </ng-container>
 
-      <!-- Requests List -->
       <div class="space-y-4">
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -95,7 +92,6 @@
               <div class="flex items-start justify-between gap-2">
                 <span class="text-[11px] font-mono text-neutral-600 font-semibold">{{ req.requestCode }}</span>
                 
-                <!-- Status Badge -->
                 <span [ngSwitch]="req.status" class="text-[11px] font-bold">
                   <span *ngSwitchCase="'PENDING_REVIEW'" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-amber-800 bg-amber-100 border border-amber-300">Đang xem xét</span>
                   <span *ngSwitchCase="'QUOTED'" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-blue-800 bg-blue-100 border border-blue-300">Đã có báo giá</span>
@@ -123,7 +119,6 @@
               </div>
             </div>
 
-            <!-- Footer Action -->
             <div class="pt-3 border-t border-neutral-200 flex items-center justify-between">
               <span class="text-[10px] text-neutral-500">{{ req.createdAt }}</span>
               <a 

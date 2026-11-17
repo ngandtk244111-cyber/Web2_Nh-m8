@@ -16,7 +16,6 @@
     </a>
   </div>
 
-  <!-- Một sản phẩm -->
   <div class="lp-extra" *ngIf="mode() === 'product'">
     <div class="lp-selected" *ngIf="selectedProduct() as p">
       <img class="thumb" [src]="p.images[0]" [alt]="p.name">
@@ -38,7 +37,6 @@
     </div>
   </div>
 
-  <!-- Tự nhập -->
   <div class="lp-extra" *ngIf="mode() === 'custom'">
     <input type="text" class="form-control" placeholder="/catalog?sale=1" [ngModel]="value()"
       (ngModelChange)="onCustomInput($event)" [disabled]="disabled" [class.is-invalid]="value() && !isValid">

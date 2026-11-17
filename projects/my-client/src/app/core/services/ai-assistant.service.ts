@@ -123,8 +123,6 @@ export class AiAssistantService {
     this.chatPanel.close('ai');
   }
 
-  // ===================== Gửi / dừng / thử lại / sửa =====================
-
   sendMessage(userText: string): void {
     const text = userText.trim();
     if (!text || this.isBusy()) return;
@@ -236,8 +234,6 @@ export class AiAssistantService {
     this.persist();
   }
 
-  // ===================== Hiệu ứng chữ hiện dần =====================
-
   /** Nội dung đang hiển thị của 1 tin — cắt ngắn nếu tin đó đang được "gõ". */
   displayText(msg: AiChatMessage): string {
     const typing = this.typingSignal();
@@ -267,8 +263,6 @@ export class AiAssistantService {
     if (this.typingTimer) clearInterval(this.typingTimer);
     this.typingTimer = null;
   }
-
-  // ===================== Lịch sử hội thoại =====================
 
   /** Bắt đầu cuộc trò chuyện mới (nút "Làm mới"/"Cuộc trò chuyện mới"). Cuộc cũ vẫn nằm trong lịch sử. */
   newChat(): void {
@@ -406,8 +400,6 @@ export class AiAssistantService {
     } catch { /* ignore */ }
   }
 
-  // ===================== Design Brief =====================
-
   private pickConceptImage(brief: DesignBrief): string {
     const text = `${brief.productType} ${brief.theme}`.toLowerCase();
     if (text.includes('đèn') || text.includes('mèo') || text.includes('cat')) {
@@ -451,8 +443,6 @@ export class AiAssistantService {
       }
     });
   }
-
-  // ===================== Helpers =====================
 
   /** Lịch sử gửi cho AI: bỏ lời chào mặc định và các tin báo lỗi. */
   private historyFor(msgs: AiChatMessage[]): { sender: 'USER' | 'AI'; text: string }[] {

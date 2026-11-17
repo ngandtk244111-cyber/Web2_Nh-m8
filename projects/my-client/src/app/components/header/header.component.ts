@@ -79,12 +79,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   expandedMobileGroup: string | null = null;
   private megaMenuCloseTimer: ReturnType<typeof setTimeout> | null = null;
 
-  /**
-   * Header rút gọn khi cuộn xuống quá COMPACT_AT (px) — ẩn top bar/Menu/vị trí giao hàng — và chỉ bung lại khi
-   * về gần đầu trang (EXPAND_AT). Khoảng cách giữa 2 ngưỡng phải lớn hơn phần chiều cao header bị co (~44px):
-   * header là sticky nên khi co lại nội dung bị kéo lên, scrollY tụt theo; dùng 1 ngưỡng duy nhất sẽ khiến
-   * header co/bung liên tục (giựt) quanh ngưỡng, nhất là ở trang ngắn.
-   */
+  /** Header rút gọn khi cuộn xuống quá COMPACT_AT (px) */
   private readonly SCROLL_COMPACT_AT = 120;
   private readonly SCROLL_EXPAND_AT = 20;
   isScrolled = false;

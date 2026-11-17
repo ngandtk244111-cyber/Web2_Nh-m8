@@ -1,12 +1,7 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
-/**
- * Ảnh sản phẩm dùng chung cho mọi thẻ sản phẩm (trừ Flash Sale): images[0] là ảnh chính, rê chuột vào thẻ
- * (phần tử cha <a>, hoặc phần tử có class .pp-hover) thì mờ dần sang images[1] kèm phóng nhẹ — một hiệu ứng
- * duy nhất trên toàn web (CSS ở styles.css, mục "Ảnh sản phẩm: đổi ảnh khi rê chuột").
- * Khung chứa quyết định kích thước; khối ảnh lấp đầy khung.
- */
+/** Ảnh sản phẩm dùng chung cho mọi thẻ sản phẩm (trừ Flash Sale) */
 @Component({
   selector: 'app-product-photo',
   standalone: true,

@@ -34,11 +34,7 @@ export interface StageLook {
   metalness?: number;
 }
 
-/**
- * Sân khấu 3D dùng chung cho các phòng xem sản phẩm (xem nhanh 3D & phòng 3D). Chỉ lo phần hiển thị
- * mô hình — xoay 360°, zoom, góc nhìn, đổi phiên bản — còn giao diện xung quanh do từng phòng tự dựng.
- * Nguồn mô hình: Product.modelUrl (GLB/GLTF thật) > Product.threeModelType (xem ProductSceneManager).
- */
+/** Sân khấu 3D dùng chung cho các phòng xem sản phẩm (xem nhanh 3D & phòng 3D) */
 @Component({
   selector: 'app-product-model-stage',
   standalone: true,

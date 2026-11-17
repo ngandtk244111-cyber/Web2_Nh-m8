@@ -90,13 +90,7 @@ function couponOwner(userId, phone) {
 
 class VoucherError extends Error {}
 
-/**
- * QUY TẮC: mỗi mã chỉ dùng được 1 lần — dùng rồi là hết mã.
- * - Voucher cá nhân: đánh dấu usedAt ngay (điều kiện usedAt: null nên 2 đơn đặt cùng lúc không dùng trùng được).
- * - Mã công khai của shop: mỗi khách (tài khoản hoặc SĐT) dùng 1 lần, ghi vào CouponUsage (unique).
- * Giữ chỗ mã TRƯỚC khi tạo đơn; tạo đơn lỗi thì gọi release(), tạo xong thì attach(orderNumber).
- * Mã không hợp lệ / đã dùng / chưa đủ giá trị tối thiểu -> ném VoucherError (thông điệp tiếng Việt).
- */
+/** QUY TẮC: mỗi mã chỉ dùng được 1 lần */
 /** Số lượt đã dùng của từng mã công khai. */
 async function couponUsageCounts() {
   const rows = await CouponUsage.aggregate([{ $group: { _id: '$code', count: { $sum: 1 } } }]);

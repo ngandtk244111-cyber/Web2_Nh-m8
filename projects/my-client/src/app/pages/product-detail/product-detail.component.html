@@ -1,9 +1,7 @@
     <div *ngIf="product" class="pd_page">
 
-      <!-- ===== Main: Gallery + Buy box ===== -->
       <div class="pd_container pd_main">
 
-        <!-- LEFT: Gallery grid + info accordion -->
         <div class="pd_gallery-col">
 
           <!-- PHẦN TRÊN: carousel lớn (ảnh sản phẩm, lifestyle, nhiều góc, cận chi tiết + model 3D nếu có) -->
@@ -77,7 +75,6 @@
             <app-icon name="chevron-right" [size]="16"></app-icon>
           </a>
 
-          <!-- Accordion thông tin -->
           <div class="pd_accordion">
             <div class="pd_accordion__item">
               <button type="button" class="pd_accordion__head" (click)="togglePanel('dimensions')" [attr.aria-expanded]="openPanel === 'dimensions'">
@@ -144,7 +141,6 @@
           </div>
         </div>
 
-        <!-- RIGHT: Buy box (sticky) -->
         <aside class="pd_buybox">
 
           <nav class="pd_breadcrumb" aria-label="Breadcrumb">
@@ -214,7 +210,6 @@
             </a>
           </div>
 
-          <!-- CTA -->
           <div class="pd_cta">
             <div class="pd_qty">
               <button type="button" (click)="quantity = quantity > 1 ? quantity - 1 : 1" class="pd_qty__btn" aria-label="Giảm số lượng">
@@ -248,7 +243,6 @@
             <span><app-icon name="truck" [size]="14"></app-icon> Miễn phí ship đơn từ 500.000₫</span>
           </div>
 
-          <!-- Nhận hàng -->
           <div class="pd_where">
             <div class="pd_where__head">
               <span>Nhận hàng</span>
@@ -291,7 +285,6 @@
         </aside>
       </div>
 
-      <!-- ===== Vì sao bạn sẽ thích: thẻ nhỏ có ảnh minh hoạ + dải lợi ích, gọn diện tích ===== -->
       <section *ngIf="featureHighlights.length || productPerks.length" class="pd_container pd_section pd_why">
         <h2 class="pd_h2">Vì sao bạn sẽ thích</h2>
         <div class="pd_why__grid" *ngIf="featureHighlights.length">
@@ -308,7 +301,6 @@
         </ul>
       </section>
 
-      <!-- ===== Đánh giá ===== -->
       <section id="pd-reviews" class="pd_container pd_section">
         <div class="pd_rv-top">
           <h2 class="pd_h2">Khách hàng nói gì về sản phẩm</h2>
@@ -398,7 +390,6 @@
         </nav>
       </section>
 
-      <!-- ===== Các hàng gợi ý sản phẩm ===== -->
       <section *ngFor="let row of pickRows" class="pd_container pd_section">
         <h2 class="pd_h2">{{ row.title }}</h2>
         <div class="pd_picks" #track (scroll)="onPickScroll(row.key, track)">
@@ -437,7 +428,6 @@
         </div>
       </section>
 
-      <!-- ===== Cộng đồng ===== -->
       <section *ngIf="taggedCommunityPosts.length > 0" class="pd_container pd_section">
         <h2 class="pd_h2">#GocDecorCungLumea</h2>
         <p class="pd_sub">Không gian thật từ cộng đồng có dùng sản phẩm này.</p>
@@ -452,7 +442,6 @@
         </div>
       </section>
 
-      <!-- ===== FAQ ===== -->
       <section class="pd_container pd_section pd_faq">
         <div>
           <h2 class="pd_h2">Câu hỏi thường gặp</h2>
@@ -487,7 +476,6 @@
         </div>
       </section>
 
-      <!-- Recently Viewed -->
       <div class="pd_container pd_section">
         <app-recently-viewed-section [excludeProductId]="product.id"></app-recently-viewed-section>
       </div>

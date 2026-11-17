@@ -76,12 +76,7 @@ async function adminHasPermission(adminId, ...rules) {
   return rules.some(rule => allows(permissions, rule));
 }
 
-/**
- * Tài khoản tạo trước khi có phân quyền chưa có vai trò. Nếu chưa có Super Admin nào đang hoạt động,
- * gán cho tài khoản quản trị gốc của seed (cùng biến ADMIN_DEFAULT_USERNAME) để chủ hệ thống không bị
- * khóa; các tài khoản còn lại do Super Admin gán ở tab Nhân viên. Không suy đoán theo thứ tự tạo vì
- * tài khoản nhân viên mẫu có thể cũ hơn tài khoản gốc.
- */
+/** Tài khoản tạo trước khi có phân quyền chưa có vai trò */
 async function ensureSuperAdmin() {
   if (await Admin.exists({ role: SUPER_ADMIN_NAME, active: true })) return;
   const username = process.env.ADMIN_DEFAULT_USERNAME || 'admin';

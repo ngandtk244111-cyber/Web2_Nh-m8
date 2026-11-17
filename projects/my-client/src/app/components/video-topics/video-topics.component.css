@@ -9,9 +9,7 @@
   padding: 0 var(--vt-pad);
 }
 
-/* Floating side banner (position: fixed, luôn nổi giữa màn hình 2 bên, xem
-   floating-side-banners.component.css) chỉ xuất hiện ở >1200px — chừa thêm khoảng trống để
-   carousel (kể cả mũi tên) không bao giờ chạm/đè lên banner. */
+/* Floating side banner */
 @media (min-width: 1201px) {
   .vt_slider {
     --vt-pad: 170px;
@@ -272,13 +270,7 @@
   }
 }
 
-/* ============ VIEWER VIDEO ============
-   Bố cục: [thẻ mascot] [video — lướt lên/xuống] [mũi tên ↑↓] [bảng mô tả].
-   - <=640px : video toàn màn hình (như reels), CTA gắn trên video.
-   - 641-979 : video + mũi tên, CTA gắn trên video.
-   - >=980   : thêm bảng mô tả bên phải.
-   - >=1180  : thêm thẻ mascot bên trái.
-   Banner nổi 2 bên của trang bị ẩn khi viewer mở (body.vw-open — xem styles.css). */
+/* VIEWER VIDEO Bố cục: [thẻ mascot] [video */
 
 .vw {
   --vw-bg: #F5F5F7;

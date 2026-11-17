@@ -1,7 +1,4 @@
-// Tài khoản ngân hàng nhận tiền chuyển khoản (cọc đơn đặt làm). Ưu tiên cấu hình ở my-admin
-// (AdminConfig key 'payment', chỉ quyền payments.config được sửa), thiếu thì dùng biến môi trường
-// BANK_CODE / BANK_NAME / BANK_ACCOUNT_NUMBER / BANK_ACCOUNT_NAME. Không có cả hai thì không nhận cọc.
-// Lúc tạo đơn, thông tin này được chụp vào đơn (paymentPlan.bank) — đổi tài khoản sau đó không ảnh hưởng đơn đang chờ.
+// Tài khoản ngân hàng nhận tiền chuyển khoản (cọc đơn đặt làm)
 
 const AdminConfig = require('../models/AdminConfig');
 

@@ -38,11 +38,7 @@ const VARIANT_LABELS: Record<string, string> = {
   'Peacock Velvet': 'Nhung Xanh Lông Công',
 };
 
-/**
- * PHÒNG 3D (mở từ nút "AR" ở trang chi tiết, tab mới) — bố cục tham khảo trình xem 3D của Nitori:
- * mô hình lớn giữa nền trắng, dải thumbnail phiên bản màu/chất liệu bên dưới, điều khiển dọc bên phải.
- * Chỉ xem 3D — KHÔNG dùng camera/AR thật.
- */
+/** PHÒNG 3D (mở từ nút "AR" ở trang chi tiết, tab mới) */
 @Component({
   selector: 'app-showroom-3d',
   standalone: true,

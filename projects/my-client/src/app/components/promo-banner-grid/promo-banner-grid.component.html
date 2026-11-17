@@ -2,7 +2,6 @@
   <div class="pg_row">
     <ng-container *ngFor="let banner of squareBanners; let i = index">
 
-      <!-- Thẻ ảnh phủ kín -->
       <a *ngIf="banner.layout === 'photo'" appScrollReveal="rise" [revealDelay]="i * 180" [routerLink]="banner.link" [queryParams]="banner.queryParams" class="pg_card pg_photo">
         <span class="pg_photo__frame" aria-hidden="true">
           <img [src]="banner.image" alt="" class="pg_photo__img" loading="lazy" draggable="false">
@@ -15,7 +14,6 @@
         </div>
       </a>
 
-      <!-- Thẻ ưu đãi có mascot -->
       <a *ngIf="banner.layout === 'mascot'" appScrollReveal="rise" [revealDelay]="i * 180" [routerLink]="banner.link" [queryParams]="banner.queryParams" class="pg_card pg_promo">
         <span class="pg_promo__glow" aria-hidden="true"></span>
         <div class="pg_promo__text">

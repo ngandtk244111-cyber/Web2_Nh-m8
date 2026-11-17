@@ -108,14 +108,7 @@ const ACK_OFFLINE = 'Mình chưa có dữ liệu để trả lời câu này, m�
 const ONLINE = 'Hiện mình chưa có dữ liệu để trả lời câu hỏi này. Mình đã gửi yêu cầu kết nối với nhân viên Luméa, bạn vui lòng đợi trong giây lát nhé! Trong lúc chờ, bạn có thể chọn nhanh vấn đề cần hỗ trợ bên dưới.';
 const OFFLINE = 'Hiện mình chưa có dữ liệu để trả lời câu hỏi này. Mình đã gửi yêu cầu kết nối với nhân viên Luméa, nhưng hiện chưa có nhân viên trực tuyến. Luméa sẽ phản hồi bạn sớm nhất có thể, bạn vui lòng đợi nhé! Trong lúc chờ, bạn có thể chọn nhanh vấn đề cần hỗ trợ bên dưới.';
 
-/**
- * Quyết định câu trả lời tự động cho 1 tin của khách.
- * @param text nội dung khách gửi
- * @param ctx  { isFirstMessage, staffOnline, recentAutoReply, staffChatting } — recentAutoReply: đã có tin tự động
- *             trong vài phút gần đây (gửi xác nhận ngắn thay vì lặp menu); staffChatting: nhân viên thật
- *             vừa trả lời gần đây (câu không rõ chủ đề thì để nhân viên xử lý).
- * @returns {{ text: string, links: {label: string, url: string}[] } | null}
- */
+/** Quyết định câu trả lời tự động cho 1 tin của khách */
 function buildAutoReply(text, { isFirstMessage, staffOnline, recentAutoReply, staffChatting }) {
   const norm = normalize(text);
   const matched = MATCHERS.filter(m => m.re.test(norm)).map(m => m.topic).slice(0, 2);

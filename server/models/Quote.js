@@ -1,11 +1,6 @@
 const mongoose = require('mongoose');
 
-// Báo giá có phiên bản cho 1 yêu cầu đặt làm (CustomRequest). Mỗi lần đổi giá / nội dung sau khi
-// đã gửi khách là 1 phiên bản mới; bản cũ chuyển SUPERSEDED. Báo giá đã gửi (SENT) trở đi không sửa
-// trực tiếp — chỉ DRAFT mới sửa được. Giá, tiền cọc và chính sách cọc được chụp lại lúc gửi khách để
-// đổi Cài đặt sau này không làm thay đổi báo giá / đơn cũ.
-//
-// DRAFT -> SENT -> ACCEPTED | REJECTED | EXPIRED | SUPERSEDED
+// Báo giá có phiên bản cho 1 yêu cầu đặt làm (CustomRequest)
 
 const quoteItemSchema = new mongoose.Schema({
   name: { type: String, required: true },

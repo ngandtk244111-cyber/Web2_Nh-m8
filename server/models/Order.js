@@ -45,9 +45,7 @@ const invoiceSchema = new mongoose.Schema({
   sentAt: { type: Date, default: null },
 }, { _id: false });
 
-// Yêu cầu trả hàng / hoàn tiền của khách sau khi đã nhận hàng (khác returnReason = giao thất bại).
-// PENDING: chờ shop duyệt -> APPROVED: đang hoàn (shop nhận lại hàng, hoàn tiền) -> COMPLETED: đã hoàn/trả.
-// REJECTED: shop từ chối (kèm lý do). Khách huỷ yêu cầu khi còn PENDING thì xoá hẳn returnRequest.
+// Yêu cầu trả hàng / hoàn tiền của khách sau khi đã nhận hàng (khác returnReason = giao thất bại)
 const returnRequestSchema = new mongoose.Schema({
   status: { type: String, enum: ['PENDING', 'APPROVED', 'COMPLETED', 'REJECTED'], default: 'PENDING' },
   reason: { type: String, required: true },

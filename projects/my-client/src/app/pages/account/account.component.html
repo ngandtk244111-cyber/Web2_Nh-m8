@@ -1,6 +1,5 @@
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
 
-  <!-- Not logged in -->
   <div *ngIf="!authService.currentUser()" class="text-center py-16 space-y-4">
     <h1 class="font-serif text-2xl font-bold text-amber-800">Bạn chưa đăng nhập</h1>
     <p class="text-sm text-neutral-500">Đăng nhập bằng số điện thoại để xem thông tin tài khoản và lịch sử đơn hàng.</p>
@@ -11,7 +10,6 @@
     </button>
   </div>
 
-  <!-- Logged in -->
   <div *ngIf="authService.currentUser() as user" class="space-y-6">
     <div class="flex items-center justify-between">
       <h1 class="font-serif text-2xl sm:text-3xl font-extrabold text-amber-800">Tài Khoản Của Tôi</h1>
@@ -21,7 +19,6 @@
       </button>
     </div>
 
-    <!-- Tab nav -->
     <div class="flex items-center gap-2 overflow-x-auto pb-1">
       <button
         *ngFor="let tab of tabs"
@@ -37,7 +34,6 @@
       </button>
     </div>
 
-    <!-- Tab content -->
     <app-account-profile-tab *ngIf="activeTab === 'profile'"></app-account-profile-tab>
     <app-account-orders-tab *ngIf="activeTab === 'orders'" (openReturns)="switchTab('returns')"></app-account-orders-tab>
     <app-custom-request-list *ngIf="activeTab === 'custom-requests'" [embedded]="true"></app-custom-request-list>

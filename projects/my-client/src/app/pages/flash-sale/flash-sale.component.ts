@@ -146,11 +146,7 @@ export class FlashSaleComponent implements OnInit, OnDestroy {
 
   // ---------- Dữ liệu deal (render 100% từ ProductService: flashSaleSlot + originalPrice + inStock) ----------
 
-  /**
-   * FALLBACK: model chưa có field "đã bán"/"tổng kho". Ước lượng số đã bán ≈ reviewCount
-   * (số đánh giá) và tổng kho ≈ reviewCount + inStock → % đã bán. Khi backend có field sold
-   * thật thì chỉ cần thay công thức ở đây.
-   */
+  /** FALLBACK: model chưa có field "đã bán"/"tổng kho" */
   private stateOf(p: Product): { soldPct: number; state: StockState } {
     if (p.inStock <= 0) return { soldPct: 100, state: 'soldout' };
     const soldPct = Math.min(99, Math.round((p.reviewCount / (p.reviewCount + p.inStock)) * 100));

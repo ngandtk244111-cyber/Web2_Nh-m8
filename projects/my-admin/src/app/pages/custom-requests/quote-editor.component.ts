@@ -20,12 +20,7 @@ const STATUS_CLASSES: Record<string, string> = {
 
 const emptyItem = (): QuoteItem => ({ name: '', material: '', size: '', description: '', quantity: 1, unitPrice: 0, discount: 0 });
 
-/**
- * Soạn & gửi báo giá có phiên bản cho 1 yêu cầu đặt làm (my-admin).
- * Nhập hạng mục (số lượng, đơn giá, chiết khấu), chiết khấu toàn báo giá, số ngày sản xuất, mức cọc riêng
- * (có lý do). Tổng & tiền cọc hiển thị ở đây chỉ để xem trước — server tính lại và chốt khi gửi khách.
- * Báo giá đã gửi không sửa; muốn đổi thì tạo phiên bản mới (bản cũ chuyển "Đã thay thế").
- */
+/** Soạn & gửi báo giá có phiên bản cho 1 yêu cầu đặt làm (my-admin) */
 @Component({
   selector: 'app-quote-editor',
   standalone: true,

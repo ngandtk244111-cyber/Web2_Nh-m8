@@ -1,10 +1,4 @@
-// Đặt tên tiếng Việt cho sản phẩm nhập từ nguồn tiếng Anh (dùng bởi seed/import-lumea-products.js).
-//
-// Cấu trúc tên: <Loại đồ> [Bên Trái/Phải] <tối đa 2 đặc điểm chính> [Ngoài Trời] [màu / quy cách]
-//   "Dalton Storage Bed"                     -> "Giường Có Ngăn Chứa"
-//   "Auburn Performance Fabric Sectional"    -> "Sofa Góc Vải Chống Bẩn"
-//   "Lily Dining Table With 4 Chairs"        -> "Bàn Ăn Kèm 4 Ghế"
-// Muốn đổi cách gọi 1 loại đồ / đặc điểm: sửa bảng NOUNS / MODS bên dưới rồi chạy lại bước normalize.
+// Đặt tên tiếng Việt cho sản phẩm nhập từ nguồn tiếng Anh (dùng bởi seed/import-lumea-products.js)
 
 // Loại đồ. Cụm dài được khớp trước cụm ngắn.
 const NOUNS = [
@@ -59,9 +53,7 @@ const NOUNS = [
   ['chair cover', 'Áo Trùm Ghế'], ['table cover', 'Áo Trùm Bàn'], ['armrest', 'Tay Vịn Sofa'], ['bar cart', 'Xe Đẩy Quầy Bar'],
 ].map(([en, vi]) => [en.split(' '), vi]).sort((a, b) => b[0].length - a[0].length);
 
-// Đặc điểm: [tiếng Anh, tiếng Việt, loại]. Loại null = bỏ, không đưa vào tên (thuật ngữ / từ thừa).
-//   shape: hình dáng, số chỗ   func: công năng   mat: chất liệu   size: kích cỡ
-//   place: ngoài trời          side: trái/phải
+// Đặc điểm: [tiếng Anh, tiếng Việt, loại]
 const MODS = [
   ['performance fabric', 'Vải Chống Bẩn', 'mat'], ['cane and leather', 'Mây Phối Da', 'mat'],
   ['egyptian cotton', 'Cotton Ai Cập', 'mat'], ['mulberry silk', 'Lụa Tơ Tằm', 'mat'], ['sintered stone', 'Đá Nung Kết', 'mat'],
@@ -144,9 +136,7 @@ const cap = s => s.replace(/(^|\s)(\S)/g, (m, sp, ch) => sp + ch.toUpperCase());
 const inchToCm = s => s.replace(/(\d+(?:\.\d+)?)"/g, (m, n) => `${Math.round(Number(n) * 2.54)}cm`);
 const matchAt = (words, i, list) => list.find(([w]) => w.every((x, k) => words[i + k] === x)) || null;
 
-// Dịch 1 cụm (không chứa "with" / "&").
-//   opts.series = false: bỏ tên dòng SP (dùng cho phần "Kèm ...")
-//   opts.detailed = true: thêm các chi tiết 'extra' + số module, dùng để phân biệt SP trùng tên.
+// Dịch 1 cụm (không chứa "with" / "&")
 function translatePhrase(phrase, opts = {}) {
   const maxMods = opts.maxMods ?? (opts.detailed ? 4 : MAX_MODS);
   let words = phrase.toLowerCase().replace(/[()]/g, ' ').split(/\s+/).filter(Boolean);

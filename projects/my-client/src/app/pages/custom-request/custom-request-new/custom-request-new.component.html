@@ -1,6 +1,5 @@
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
 
-      <!-- Back Link & Header -->
       <div>
         <a routerLink="/custom-request" class="text-xs font-semibold text-neutral-600 hover:text-amber-400 flex items-center gap-1 mb-2 transition">
           ← Quay lại danh sách yêu cầu
@@ -57,14 +56,12 @@
         </div>
       </section>
 
-      <!-- Main Form Card -->
       <form (ngSubmit)="submitRequest()" novalidate class="bg-[#FFFFFF] rounded-3xl p-6 sm:p-10 border border-neutral-200 shadow-xl space-y-8">
 
         <div *ngIf="submitted && errorCount > 0" class="crn-summary crn-error" role="alert">
           Còn {{ errorCount }} mục chưa đúng quy tắc in 3D — vui lòng kiểm tra các ô được đánh dấu đỏ.
         </div>
 
-        <!-- Section 1: Customer Info -->
         <div class="space-y-4">
           <h3 class="font-serif text-lg font-bold text-amber-800 border-b border-neutral-200 pb-2">
             1. Thông Tin Liên Hệ
@@ -112,7 +109,6 @@
           </div>
         </div>
 
-        <!-- Section 2: Request Brief Details -->
         <div class="space-y-4">
           <h3 class="font-serif text-lg font-bold text-amber-800 border-b border-neutral-200 pb-2">
             2. Chi Tiết Ý Tưởng & Quy Cách In 3D
@@ -249,7 +245,6 @@
               </div>
             </div>
 
-            <!-- Notes -->
             <div>
               <label class="block text-xs font-semibold text-neutral-700 mb-1.5">Ghi chú thêm cho shop</label>
               <textarea
@@ -269,7 +264,6 @@
             3. Hình Ảnh Phác Họa & Tham Khảo
           </h3>
 
-          <!-- AI Concept Preview if available -->
           <div *ngIf="aiConceptImage" class="p-4 bg-[#F6F5F2] rounded-2xl border border-neutral-200 space-y-2">
             <span class="text-xs font-bold text-amber-400">Ảnh Concept từ AI Assistant:</span>
             <img [src]="aiConceptImage" alt="AI Concept" class="max-h-48 rounded-xl object-cover border border-neutral-300">
@@ -289,7 +283,6 @@
           </div>
         </div>
 
-        <!-- Đồng ý quy tắc -->
         <div>
           <label class="crn-agree" [class.crn-agree--invalid]="errors.agreeRules">
             <input type="checkbox" [(ngModel)]="agreeRules" (ngModelChange)="revalidate()" name="agreeRules">
@@ -303,7 +296,6 @@
 
         <p *ngIf="serverError" class="crn-summary crn-error" role="alert">{{ serverError }}</p>
 
-        <!-- Submit Button -->
         <div class="pt-4 border-t border-neutral-200 flex items-center justify-between gap-4">
           <p class="text-[11px] text-neutral-600">
             Shop sẽ phản hồi và gửi báo giá trong vòng 24h làm việc.

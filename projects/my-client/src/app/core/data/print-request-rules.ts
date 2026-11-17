@@ -1,10 +1,4 @@
-/**
- * QUY TẮC NHẬN YÊU CẦU IN 3D THEO THIẾT KẾ RIÊNG.
- *
- * Nguồn duy nhất cho: khung "Quy tắc in 3D" trên form /custom-request/new, kiểm tra dữ liệu ở client.
- * Server kiểm tra lại các giới hạn số (kích thước, chất liệu, khắc chữ...) ở
- * server/utils/print-request-rules.js — sửa ở đây thì sửa cả bên đó cho khớp.
- */
+/** QUY TẮC NHẬN YÊU CẦU IN 3D THEO THIẾT KẾ RIÊNG */
 
 export type PrintMaterialKey = 'PLA' | 'PETG' | 'RESIN';
 

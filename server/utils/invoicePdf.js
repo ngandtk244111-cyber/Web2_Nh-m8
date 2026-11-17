@@ -1,7 +1,4 @@
-// Hoá đơn điện tử dạng PDF cho đơn hàng Luméa (pdfkit + font Roboto để hiển thị đủ tiếng Việt).
-// Bố cục theo mẫu hoá đơn giá trị gia tăng (VAT invoice): khung viền, nhãn song ngữ Việt/Anh, bảng hàng hoá
-// có dòng đánh số cột, thuế GTGT, số tiền bằng chữ và ô chữ ký điện tử của người bán.
-// Thông tin người mua lấy đúng như khách nhập lúc đặt hàng (cá nhân: người nhận; công ty: tên/MST/địa chỉ công ty).
+// Hoá đơn điện tử dạng PDF cho đơn hàng Luméa (pdfkit + font Roboto để hiển thị đủ tiếng Việt)
 const PDFDocument = require('pdfkit');
 const path = require('path');
 const crypto = require('crypto');
@@ -54,7 +51,6 @@ function formatMoney(value) {
   return Math.round(Number(value) || 0).toLocaleString('vi-VN');
 }
 
-// ===== Số tiền bằng chữ =====
 const DIGITS = ['không', 'một', 'hai', 'ba', 'bốn', 'năm', 'sáu', 'bảy', 'tám', 'chín'];
 
 /** Đọc 1 nhóm 3 chữ số; full = đọc đủ "không trăm/linh" khi đứng sau nhóm lớn hơn. */
@@ -105,7 +101,6 @@ function amountInWords(amount) {
   return `${words.charAt(0).toUpperCase()}${words.slice(1)} đồng chẵn.`;
 }
 
-// ===== Vẽ chữ =====
 function setFont(doc, seg) {
   return doc.font(seg.font || 'Regular').fontSize(seg.size || 9);
 }
@@ -231,7 +226,6 @@ function buildInvoicePdf(order) {
     );
     const id = invoiceIdentity(order, date.year);
 
-    // ===== Tiêu đề =====
     const titleW = 345;
     let y = MARGIN + 12;
     doc.font('Bold').fontSize(16).fillColor(COLOR_TITLE).text(issued ? 'HÓA ĐƠN GIÁ TRỊ GIA TĂNG' : 'PHIẾU XÁC NHẬN ĐƠN HÀNG', X0, y, { width: titleW, align: 'center' });
@@ -262,7 +256,6 @@ function buildInvoicePdf(order) {
     y += 17;
     hLine(doc, y, X0, X1);
 
-    // ===== Người bán =====
     y += 7;
     const strong = { font: 'Bold', size: 11, color: COLOR_VALUE };
     y = field(doc, 'Đơn vị bán', 'Seller', SELLER.name, innerX, y, innerW, strong);
@@ -273,7 +266,6 @@ function buildInvoicePdf(order) {
     y += 2;
     hLine(doc, y, X0, X1);
 
-    // ===== Người mua =====
     y += 7;
     const buyerValue = { font: 'Bold', color: COLOR_VALUE };
     const buyerAddress = isCompany
@@ -287,7 +279,6 @@ function buildInvoicePdf(order) {
     y = field(doc, 'Số tài khoản', 'Account No.', '', innerX, y, innerW);
     y += 4;
 
-    // ===== Bảng hàng hoá =====
     const tableHead = (yy) => {
       const h = Math.max(...COLS.map(c =>
         doc.font('Bold').fontSize(9).heightOfString(c.vi, { width: c.w - 6 })
@@ -333,7 +324,6 @@ function buildInvoicePdf(order) {
     });
     for (let i = rows.length; i < MIN_TABLE_ROWS; i++) y = drawRow(y, []);
 
-    // ===== Cộng tiền, thuế, tổng thanh toán =====
     const subtotal = rows.reduce((sum, r) => sum + r.amount, 0);
     const total = Math.round(Number(order.total) || 0);
     const vat = total - subtotal;
@@ -376,7 +366,6 @@ function buildInvoicePdf(order) {
 
     let lastBottom;
     if (issued) {
-    // ===== Chữ ký =====
     ensureSpace(140);
     y += 12;
     const halfW = W / 2;
@@ -410,7 +399,6 @@ function buildInvoicePdf(order) {
       lastBottom = doc.y + 16;
     }
 
-    // ===== Khung viền + chân trang mỗi trang =====
     const range = doc.bufferedPageRange();
     for (let i = range.start; i < range.start + range.count; i++) {
       doc.switchToPage(i);

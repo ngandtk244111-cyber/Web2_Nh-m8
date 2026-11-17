@@ -27,11 +27,7 @@ export class HeroBannerComponent {
     private productService: ProductService
   ) {}
 
-  /**
-   * Cụm sản phẩm minh hoạ cho từng slide (theo thứ tự slide), lấy từ dữ liệu thật (có ảnh).
-   * Mỗi sản phẩm chỉ xuất hiện ở 1 slide — kể cả khi 2 slide dùng chung nhóm (vd. 'top'), hoặc
-   * các nhóm trùng nhau (sản phẩm vừa giảm giá vừa có 3D), slide sau lấy tiếp các món chưa dùng.
-   */
+  /** Cụm sản phẩm minh hoạ cho từng slide (theo thứ tự slide), lấy từ dữ liệu thật (có ảnh) */
   readonly picks = computed<Product[][]>(() => {
     const all = [...this.productService.products().filter(p => p.images?.length)].sort((a, b) => b.rating - a.rating);
     const groups: Record<HeroPicks, (p: Product) => boolean> = {

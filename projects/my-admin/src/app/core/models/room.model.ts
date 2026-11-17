@@ -28,11 +28,7 @@ export interface Room {
   roomType: 'minimal_study' | 'cozy_bedroom' | 'glb_scene';
   /** Chỉ dùng khi roomType = 'glb_scene': đường dẫn tới file .glb thật trong assets/models. */
   modelUrl?: string;
-  /**
-   * Chỉ dùng khi roomType = 'glb_scene': vùng toạ độ gốc (chưa scale) chứa khu vực nội thất
-   * chính, dùng để canh giữa + scale thay vì lấy theo toàn bộ file (có thể lẫn hình khối
-   * kiến trúc/ngoại thất ở rất xa làm sai tỉ lệ). Không set thì dùng bounding box toàn bộ model.
-   */
+  /** Chỉ dùng khi roomType = 'glb_scene' */
   modelFocusBounds?: { min: [number, number, number]; max: [number, number, number] };
   hotspots: RoomHotspot[];
   totalLookPrice?: number;

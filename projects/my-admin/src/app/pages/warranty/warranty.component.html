@@ -79,7 +79,6 @@
   </div>
 </div>
 
-<!-- Cấp phiếu từ đơn đã giao -->
 <div class="modal-overlay" *ngIf="showCreate" (click)="showCreate = false">
   <div class="modal-box" (click)="$event.stopPropagation()">
     <div class="modal-header">
@@ -132,7 +131,6 @@
   </div>
 </div>
 
-<!-- Chi tiết phiếu -->
 <div class="modal-overlay" *ngIf="detail as w" (click)="detail = null">
   <div class="modal-box lg" (click)="$event.stopPropagation()">
     <div class="modal-header">
@@ -140,7 +138,6 @@
       <button type="button" class="close-btn" (click)="detail = null">&times;</button>
     </div>
     <div class="modal-body">
-      <!-- Thời hạn còn lại -->
       <div class="term-box" [ngClass]="daysLeft(w) <= 0 ? 'expired' : daysLeft(w) <= 30 ? 'soon' : 'ok'">
         <div class="term-head">
           <span class="term-days" *ngIf="daysLeft(w) > 0">Còn <strong>{{ daysLeft(w) }}</strong> ngày bảo hành</span>
@@ -158,7 +155,6 @@
       <div class="info-row"><span class="label">Sản phẩm bảo hành</span><span class="value">{{ w.productName }}</span></div>
       <div class="info-row"><span class="label">Khách hàng</span><span class="value">{{ w.customerName }} · {{ w.customerPhone }}</span></div>
 
-      <!-- Các món trong đơn -->
       <div class="divider"></div>
       <h4 class="section-title">
         Các món trong đơn
@@ -196,7 +192,6 @@
         </li>
       </ul>
 
-      <!-- Ghi chú nội bộ -->
       <div class="divider"></div>
       <h4 class="section-title">Ghi chú nội bộ</h4>
       <div class="empty-state py-3" *ngIf="!w.adminNotes?.length">Chưa có ghi chú.</div>
@@ -214,7 +209,6 @@
         </button>
       </div>
 
-      <!-- Gia hạn -->
       <ng-container *ngIf="canEdit">
         <div class="divider"></div>
         <h4 class="section-title">Gia hạn phiếu</h4>
@@ -242,7 +236,6 @@
   </div>
 </div>
 
-<!-- Đóng yêu cầu -->
 <div class="modal-overlay" *ngIf="resolving as w" (click)="resolving = null">
   <div class="modal-box sm" (click)="$event.stopPropagation()">
     <div class="modal-header">
@@ -273,7 +266,6 @@
   </div>
 </div>
 
-<!-- Tiếp nhận yêu cầu -->
 <div class="modal-overlay" *ngIf="processing as w" (click)="processing = null">
   <div class="modal-box sm" (click)="$event.stopPropagation()">
     <div class="modal-header">

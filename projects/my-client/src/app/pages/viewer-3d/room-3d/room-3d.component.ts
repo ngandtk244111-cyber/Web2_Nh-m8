@@ -166,8 +166,6 @@ export class Room3dComponent implements AfterViewInit, OnDestroy {
     this.renderer?.dispose();
   }
 
-  /* ============================== SCENE ============================== */
-
   private initThree(): void {
     const el = this.stage.nativeElement;
     const w = el.clientWidth || window.innerWidth;
@@ -337,8 +335,6 @@ export class Room3dComponent implements AfterViewInit, OnDestroy {
        () => this.ngZone.run(() => { this.modelError.set(true); if (this.slowTimer) clearTimeout(this.slowTimer); }));
   }
 
-  /* ============================== RENDER LOOP ============================== */
-
   private animate = (): void => {
     this.animationId = requestAnimationFrame(this.animate);
     const delta = Math.min(this.clock.getDelta(), 0.1);
@@ -421,8 +417,6 @@ export class Room3dComponent implements AfterViewInit, OnDestroy {
     // chỉ ẩn khi có vật chắn rõ ràng phía trước (tường, món đồ khác).
     return !!hit && hit.distance < dist - Math.max(0.35, dist * 0.15);
   }
-
-  /* ============================== INTERACTIONS ============================== */
 
   productOf(s: Spot): Product | undefined {
     return this.productService.getProductById(s.productId);

@@ -10,11 +10,7 @@ const LOADING_MAX_MS = 20000;
 /** 'thinking' luôn hiện ít nhất chừng này trước khi đổi sang biểu cảm kết quả — đủ để thấy, không nháy. */
 const MIN_THINKING_MS = 700;
 
-/**
- * Điều phối biểu cảm mascot Lami theo trạng thái tương tác thực của site (AI chat, tìm kiếm,
- * giỏ hàng, đăng nhập, flash sale, tùy biến 3D...). Biểu cảm phản ứng (react) tự quay về 'idle'
- * sau một khoảng ngắn; 'thinking' là trạng thái liên tục, chỉ đổi khi gọi stopThinking().
- */
+/** Điều phối biểu cảm mascot Lami theo trạng thái tương tác thực của site (AI chat, tìm kiếm, giỏ hàng, đăng nhập, flash sale, tùy biến 3D...) */
 @Injectable({ providedIn: 'root' })
 export class MascotService {
   private readonly expressionSignal = signal<MascotExpression>('idle');
@@ -88,13 +84,7 @@ export class MascotService {
   private loadingShowTimer: ReturnType<typeof setTimeout> | null = null;
   private loadingSafetyTimer: ReturnType<typeof setTimeout> | null = null;
 
-  /**
-   * Bắt đầu 1 tác vụ loading; phải gọi endLoading() tương ứng.
-   * - immediate: thao tác do người dùng bấm (gửi form, đặt hàng...) -> hiện 'thinking' ngay, giữ tối thiểu
-   *   MIN_THINKING_MS để người dùng thấy được phản hồi.
-   * - mặc định: tải nền (dữ liệu, dựng lại model 3D) -> chỉ hiện nếu kéo dài quá LOADING_SHOW_DELAY_MS,
-   *   tránh đổi biểu cảm liên tục cho các lần tải rất nhanh.
-   */
+  /** Bắt đầu 1 tác vụ loading; phải gọi endLoading() tương ứng */
   beginLoading(options: { immediate?: boolean } = {}): void {
     this.loadingCount++;
     if (this.loadingCount === 1) {

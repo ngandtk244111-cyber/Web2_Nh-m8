@@ -1,8 +1,6 @@
 const mongoose = require('mongoose');
 
-// userId = null nghĩa là thông báo chung (mọi người xem được, kể cả khách chưa đăng nhập).
-// visibleAt: thông báo hẹn giờ — chỉ hiện trong danh sách khi thời điểm này đã tới (null = hiện ngay).
-// refKey: khóa tham chiếu (vd "flash-sale:2026-09-25") để tìm/hủy đúng nhắc hẹn của 1 user.
+// userId = null nghĩa là thông báo chung (mọi người xem được, kể cả khách chưa đăng nhập)
 const notificationSchema = new mongoose.Schema({
   userId: { type: String, default: null },
   title: { type: String, required: true },

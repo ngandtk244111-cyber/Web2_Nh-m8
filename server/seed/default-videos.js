@@ -1,7 +1,4 @@
-// Bộ video mặc định — trùng với danh sách TOPICS đang hard-code trong
-// my-client/components/video-topics, dùng để nạp vào collection Video lần đầu (khi còn rỗng).
-// Nguồn: các video shorts của kênh https://www.youtube.com/@maiiuuel/shorts.
-// poster để trống: client tự lấy thumbnail YouTube của chính video.
+// Bộ video mặc định — trùng với danh sách TOPICS đang hard-code trong my-client/components/video-topics, dùng để nạp vào collection Video lần
 module.exports = [
   {
     title: 'Phòng Ngủ Kèm Góc Học Tập',

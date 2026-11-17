@@ -85,7 +85,6 @@ after(async () => {
   await mongoose.disconnect();
 });
 
-// ------------------------------------------------------------------------------------------------
 describe('VI. Xoá tài khoản nhân viên', () => {
   let victimId;
   let victimToken;
@@ -132,7 +131,6 @@ describe('VI. Xoá tài khoản nhân viên', () => {
   });
 });
 
-// ------------------------------------------------------------------------------------------------
 describe('P0.1 Bảo mật CustomRequest', () => {
   let request;
   before(async () => {
@@ -172,7 +170,6 @@ describe('P0.1 Bảo mật CustomRequest', () => {
   });
 });
 
-// ------------------------------------------------------------------------------------------------
 describe('P0.2 Báo giá có phiên bản', () => {
   let request;
   let draft;
@@ -266,7 +263,6 @@ describe('P0.2 Báo giá có phiên bản', () => {
   });
 });
 
-// ------------------------------------------------------------------------------------------------
 describe('P0.3–4 Checkout đơn đặt làm + tính cọc', () => {
   let request;
   let quote;
@@ -349,7 +345,6 @@ describe('P0.3–4 Checkout đơn đặt làm + tính cọc', () => {
   });
 });
 
-// ------------------------------------------------------------------------------------------------
 describe('P0.5 Đối soát cọc + chặn sản xuất', () => {
   let order;
 
@@ -440,7 +435,6 @@ describe('P0.5 Đối soát cọc + chặn sản xuất', () => {
   });
 });
 
-// ------------------------------------------------------------------------------------------------
 describe('P0.5 Hết hạn cọc', () => {
   const past = () => new Date(Date.now() - 60 * 1000);
 
@@ -529,7 +523,6 @@ describe('P0.5 Hết hạn cọc', () => {
   });
 });
 
-// ------------------------------------------------------------------------------------------------
 describe('P0 Hàng in 3D (PRINT_ON_DEMAND) trong giỏ hàng', () => {
   before(async () => {
     await model('Product').create({
@@ -561,7 +554,6 @@ describe('P0 Hàng in 3D (PRINT_ON_DEMAND) trong giỏ hàng', () => {
   });
 });
 
-// ------------------------------------------------------------------------------------------------
 describe('P0 Huỷ và hoàn tiền đơn đặt làm', () => {
   it('đang đối soát thì khách chưa huỷ được; đã nhận cọc thì phải nhập tài khoản nhận hoàn; hoàn 100%', async () => {
     const { request, order } = await createDepositOrder(500000);
@@ -610,7 +602,6 @@ describe('P0 Huỷ và hoàn tiền đơn đặt làm', () => {
   });
 });
 
-// ------------------------------------------------------------------------------------------------
 describe('Trả cọc qua cổng MoMo / ZaloPay (tự động xác nhận, không cần nhân viên)', () => {
   const crypto = require('crypto');
   const hmac = (data, key) => crypto.createHmac('sha256', key).update(data).digest('hex');

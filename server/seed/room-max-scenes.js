@@ -64,10 +64,7 @@ const MARBLE_LIVING_ROOM = {
   ],
 };
 
-// room-11 "Living Room - Kitchen" (Quan Tran): CoronaMtl, đơn vị mm -> mét
-// - assets/models/phong-khach-marble-den.glb (~9 triệu -> ~410 nghìn tam giác, ~10 MB)
-//   bỏ 4 trực thăng Apache nằm cách phòng ~4,8 km, phòng trống phía sau và đồ trang trí khuất sau tường tivi
-// - camera: room-scenes.ts gắn model thẳng vào roomGroup (bỏ scale của wrapper) nên world thực = raw - [7.8, 0, -1.675]
+// room-11 "Living Room - Kitchen" (Quan Tran)
 const BLACK_MARBLE_ROOM = {
   id: 'room-11',
   name: 'Phòng Khách Đá Marble Đen & Bếp Óc Chó (Black Marble Living)',

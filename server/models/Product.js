@@ -1,8 +1,6 @@
 const mongoose = require('mongoose');
 
-// Cấu trúc lồng nhau (customization, reviews) khớp 1:1 với interface TypeScript phía
-// frontend (product.model.ts) — dùng Mixed để không phải định nghĩa lại toàn bộ schema con,
-// nguồn sự thật về hình dạng dữ liệu vẫn là các interface Angular.
+// Cấu trúc lồng nhau (customization, reviews) khớp 1:1 với interface TypeScript phía frontend (product.model.ts)
 const productSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
   name: { type: String, required: true },

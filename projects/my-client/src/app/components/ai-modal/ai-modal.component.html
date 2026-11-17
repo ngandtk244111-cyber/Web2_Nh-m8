@@ -9,7 +9,6 @@
         role="dialog"
         aria-label="Trò chuyện với Lami, trợ lý AI của Luméa">
 
-        <!-- Header -->
         <header class="aic_head">
           <div class="aic_avatar ai_mascot" [attr.data-expression]="mascotService.expression()">
             <img [src]="mascotService.image()" alt="Lami - trợ lý Luméa" class="ai_mascot__img">
@@ -33,7 +32,6 @@
           </button>
         </header>
 
-        <!-- Lịch sử trò chuyện -->
         <div *ngIf="showHistory()" class="aic_history" aria-label="Lịch sử trò chuyện">
           <div class="aic_history__head">
             <h4>Lịch sử trò chuyện</h4>
@@ -65,7 +63,6 @@
           </p>
         </div>
 
-        <!-- Conversation -->
         <div class="aic_body" #body>
           <p class="aic_hint">Trợ lý phát triển ý tưởng &amp; phác thảo thiết kế đồ decor in 3D</p>
 
@@ -79,7 +76,6 @@
                 class="aic_msg__av"
                >
               <div class="aic_msg__col">
-                <!-- Đang sửa tin của khách -->
                 <div *ngIf="editingId() === msg.id; else bubble" class="aic_edit">
                   <textarea
                     [(ngModel)]="editText"
@@ -94,7 +90,6 @@
                 </div>
 
                 <ng-template #bubble>
-                  <!-- Thẻ lỗi kết nối -->
                   <div *ngIf="msg.error; else normalBubble" class="aic_bubble aic_bubble--error" role="alert">
                     {{ msg.text }}
                     <button *ngIf="isLast" type="button" class="aic_retry" [disabled]="aiService.isBusy()" (click)="aiService.regenerate()">
@@ -107,7 +102,6 @@
 
                   <div class="aic_meta">
                     <span class="aic_time">{{ msg.time }}</span>
-                    <!-- Thanh thao tác (kiểu Chatbox) -->
                     <div *ngIf="!msg.error && msg.id !== 'ai-init' && aiService.typingId() !== msg.id" class="aic_actions">
                       <button type="button" (click)="copy(msg)" [title]="copiedId() === msg.id ? 'Đã sao chép' : 'Sao chép'" aria-label="Sao chép">
                         <app-icon [name]="copiedId() === msg.id ? 'check' : 'copy'" [size]="13"></app-icon>
@@ -124,7 +118,6 @@
               </div>
             </div>
 
-            <!-- Quick replies -->
             <div *ngIf="isLast && msg.quickReplies && msg.quickReplies.length > 0 && !aiService.isBusy()" class="aic_qr">
               <button
                 *ngFor="let qr of msg.quickReplies"
@@ -135,7 +128,6 @@
               </button>
             </div>
 
-            <!-- Suggested products -->
             <div *ngIf="msg.suggestedProducts && msg.suggestedProducts.length > 0 && aiService.typingId() !== msg.id" class="aic_products">
               <button
                 *ngFor="let p of msg.suggestedProducts"
@@ -160,7 +152,6 @@
             </div>
           </div>
 
-          <!-- Typing -->
           <div *ngIf="aiService.isThinking()" class="aic_row">
             <div class="aic_msg">
               <img src="assets/mascot/goh-thinking.png" alt="Lami đang suy nghĩ" class="aic_msg__av">
@@ -171,7 +162,6 @@
             <p class="aic_typing__txt">Đang tổng hợp ý tưởng &amp; chuẩn bị Design Brief...</p>
           </div>
 
-          <!-- Design Brief -->
           <div *ngIf="aiService.currentBrief()" class="aic_brief">
             <div class="aic_brief__head">
               <h4>Bản Tổng Hợp Ý Tưởng</h4>
@@ -207,7 +197,6 @@
           </div>
         </div>
 
-        <!-- Input -->
         <form (ngSubmit)="onSubmit()" class="aic_input">
           <textarea
             rows="1"

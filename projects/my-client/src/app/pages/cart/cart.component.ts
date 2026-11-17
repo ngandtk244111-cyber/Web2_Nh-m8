@@ -37,9 +37,7 @@ export class CartComponent implements OnInit {
     public flow: CheckoutFlowService,
     private router: Router
   ) {
-    // Đồng bộ selection theo giỏ hàng thật: giữ lựa chọn cũ, tự chọn sẵn sản phẩm mới thêm vào.
-    // Đọc selectedIds() bằng untracked() để effect này KHÔNG phụ thuộc vào chính signal nó ghi ra
-    // (nếu không, mỗi lần .set() tạo Set mới sẽ tự kích hoạt lại effect này vô hạn lần).
+    // Đồng bộ selection theo giỏ hàng thật
     effect(() => {
       const items = this.cartService.items();
       const ids = new Set(items.map(i => i.id));
@@ -119,11 +117,7 @@ export class CartComponent implements OnInit {
     this.selectedIds.set(next);
   }
 
-  /**
-   * Hàm điều hướng bước DUY NHẤT dùng cho trang giỏ hàng — nút "Tiến hành thanh toán" gọi qua đây
-   * thay vì tự set trạng thái/điều hướng trực tiếp. Chỉ mang các sản phẩm ĐÃ CHỌN sang thanh toán,
-   * sản phẩm chưa chọn vẫn được giữ nguyên trong giỏ.
-   */
+  /** Hàm điều hướng bước DUY NHẤT dùng cho trang giỏ hàng */
   goToStep(step: 2): void {
     const selected = this.selectedItems();
     const ok = this.flow.goToStep(step, {

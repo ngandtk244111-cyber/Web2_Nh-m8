@@ -41,7 +41,6 @@
   }
 }
 
-/* ===== Chat panel ===== */
 .aic_backdrop {
   position: fixed; inset: 0; z-index: 50;
   background: rgba(31, 23, 18, 0.45); backdrop-filter: blur(3px);
@@ -172,7 +171,6 @@
 .aic_send:hover:not(:disabled) { background: #891226; }
 .aic_send:disabled { opacity: 0.45; cursor: default; }
 
-/* ===== Thanh thao tác tin nhắn (copy / sửa / trả lời lại) ===== */
 .aic_icon--on { background: rgba(255, 255, 255, 0.22); }
 .aic_meta { display: flex; align-items: center; gap: 8px; margin-top: 3px; }
 .aic_msg--user .aic_meta { flex-direction: row-reverse; }
@@ -218,7 +216,6 @@
 .aic_send--stop { background: #3C332D; }
 .aic_send--stop:hover { background: #1F1712 !important; }
 
-/* ===== Panel lịch sử trò chuyện ===== */
 .aic_history {
   position: absolute; top: 74px; left: 0; right: 0; bottom: 0; z-index: 2;
   display: flex; flex-direction: column; gap: 10px; padding: 16px;

@@ -1,5 +1,4 @@
 <div class="rv" *ngIf="!reviewItem">
-  <!-- Tiêu đề + tìm kiếm -->
   <div class="rv__head">
     <div>
       <h3 class="rv__title">Quản Lý Đánh Giá</h3>
@@ -24,7 +23,6 @@
 
   <div *ngIf="loading" class="rv__empty">Đang tải...</div>
 
-  <!-- ===== Chưa đánh giá ===== -->
   <ng-container *ngIf="!loading && tab === 'pending'">
     <div *ngIf="pendingList().length === 0" class="rv__empty">
       <app-icon name="star" [size]="28"></app-icon>
@@ -57,7 +55,6 @@
     </article>
   </ng-container>
 
-  <!-- ===== Đã đánh giá ===== -->
   <ng-container *ngIf="!loading && tab === 'reviewed'">
     <div *ngIf="reviewedList().length === 0" class="rv__empty">
       <app-icon name="star" [size]="28"></app-icon>
@@ -100,7 +97,6 @@
   </ng-container>
 </div>
 
-<!-- ===== Hộp đánh giá đơn hàng ===== -->
 <div *ngIf="editing as it" class="rvm" (click)="closeReview()" role="dialog" aria-modal="true" aria-label="Đánh giá đơn hàng">
   <div class="rvm__box" (click)="$event.stopPropagation()">
     <header class="rvm__head">
@@ -118,7 +114,6 @@
 
       <p class="rvm__hint">{{ editable ? 'Được sửa một lần trong 30 ngày kể từ ngày đăng.' : 'Đánh giá đã chỉnh sửa hoặc đã hết hạn sửa.' }}</p>
       <fieldset [disabled]="!editable || uploading || submitting">
-      <!-- Chọn số sao -->
       <div class="rvm__rate">
         <span class="rvm__label">Chất lượng sản phẩm</span>
         <div class="rvm__stars" (mouseleave)="hoverRating = 0">
@@ -138,7 +133,6 @@
         <span class="rvm__counter">{{ comment.length }}/{{ maxLength }}</span>
       </div>
 
-      <!-- Ảnh kèm đánh giá -->
       <div>
         <p class="rvm__label">Hình ảnh & video <span>({{ images.length }}/{{ maxImages }} ảnh)</span></p>
         <input #reviewImages type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple class="hidden" (change)="onImagesSelected($event)">

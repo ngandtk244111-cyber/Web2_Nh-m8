@@ -69,7 +69,6 @@
         </button>
       </div>
 
-      <!-- B1: nhập số -->
       <div *ngIf="phoneStep === 'enter'" class="space-y-2">
         <div class="flex gap-2">
           <input type="tel" [(ngModel)]="newPhone" (input)="phoneError = ''" (keydown.enter)="sendPhoneOtp()" inputmode="numeric" maxlength="10"
@@ -87,7 +86,6 @@
         </div>
       </div>
 
-      <!-- B2: nhập mã OTP -->
       <div *ngIf="phoneStep === 'otp'" class="space-y-2">
         <div class="flex gap-2">
           <input type="text" [(ngModel)]="phoneOtp" (input)="phoneError = ''" (keydown.enter)="confirmPhoneOtp()" inputmode="numeric" maxlength="6"

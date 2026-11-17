@@ -24,7 +24,6 @@
   </div>
 
   <div class="reviews-layout">
-    <!-- Danh sách -->
     <div>
       <div class="filter-bar">
         <div class="filter-left">
@@ -76,7 +75,6 @@
             <div>{{ r.reply?.text }}</div>
           </div>
 
-          <!-- Soạn phản hồi -->
           <div class="reply-editor" *ngIf="replyingId === key(r)">
             <div class="d-flex gap-2 flex-wrap mb-2">
               <button type="button" class="chip-tab" *ngFor="let t of replyTemplates" (click)="replyText = t" [title]="t">{{ t.slice(0, 34) }}…</button>
@@ -115,7 +113,6 @@
       </div>
     </div>
 
-    <!-- Tổng quan điểm -->
     <div class="info-card summary">
       <h3 class="section-title">Điểm đánh giá</h3>
       <div class="avg">
@@ -132,7 +129,6 @@
   </div>
 </div>
 
-<!-- Ẩn đánh giá -->
 <div class="modal-overlay" *ngIf="hiding as r" (click)="hiding = null">
   <div class="modal-box sm" (click)="$event.stopPropagation()">
     <div class="modal-header">

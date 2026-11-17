@@ -1,6 +1,5 @@
     <div class="rv relative w-full h-[440px] sm:h-[520px] lg:h-[600px] overflow-hidden select-none" [class.rv--fill]="fill">
 
-      <!-- Canvas Container -->
       <div
         #canvasContainer
         class="w-full h-full"
@@ -33,7 +32,6 @@
             {{ i + 1 }}
           </button>
 
-          <!-- Tooltip khi hover (desktop) -->
           <div class="rv_tip">
             <span class="rv_tip__name">{{ item.product?.name || item.hotspot.label }}</span>
             <span *ngIf="item.product" class="rv_tip__price">{{ item.product.basePrice | vnd }}</span>
@@ -41,7 +39,6 @@
         </div>
       </div>
 
-      <!-- Hướng dẫn + chọn chất lượng -->
       <div class="absolute top-4 left-4 right-4 flex items-start justify-between gap-3 pointer-events-none z-10">
         <div class="rv_glass rv_hint pointer-events-auto">
           <span class="rv_hint__dot">1</span>
@@ -96,7 +93,6 @@
         </div>
       </div>
 
-      <!-- Nút đặt lại góc nhìn -->
       <div *ngIf="interactive" class="absolute bottom-4 left-4 flex items-center gap-2 z-20 pointer-events-none">
         <button type="button" (click)="resetCamera()" class="rv_glass rv_reset pointer-events-auto">
           <app-icon name="rotate" [size]="14"></app-icon>

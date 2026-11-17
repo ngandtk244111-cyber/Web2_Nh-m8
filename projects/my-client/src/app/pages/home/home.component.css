@@ -748,7 +748,6 @@
   .str_ribbon span + span { border-left: 0; }
 }
 
-/* ===== Hàng ô ảnh kiểu Nitori (Tin Tức / Ý Tưởng Phối Đồ): 5 ô/hàng desktop, cuộn ngang trên mobile ===== */
 .nt-row {
   display: flex;
   gap: 12px;
@@ -844,7 +843,6 @@
 .ps-link:hover { border-color: #3B2418; background: #3B2418; color: #FFFFFF; }
 .ps-link:hover .ps-link__arrow { background: #A3152D; transform: translateX(2px); }
 
-/* ===== Mua theo không gian ===== */
 .sp-row {
   display: grid;
   grid-auto-flow: column;

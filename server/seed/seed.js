@@ -34,10 +34,7 @@ async function seedCollection(Model, data, label) {
   console.log(`[seed] ${label}: đã nạp ${data.length} bản ghi.`);
 }
 
-// Tạo sẵn 1 tài khoản admin mặc định nếu collection Admin còn trống, để có thể đăng nhập
-// my-admin lần đầu mà không cần thao tác tay trên MongoDB. Đổi ADMIN_DEFAULT_USERNAME/
-// ADMIN_DEFAULT_PASSWORD trong .env nếu muốn khác — luôn nên đổi password mặc định trước khi
-// deploy thật.
+// Tạo sẵn 1 tài khoản admin mặc định nếu collection Admin còn trống, để có thể đăng nhập my-admin lần đầu mà không cần thao tác tay trên
 async function seedDefaultAdmin() {
   const count = await Admin.countDocuments();
   if (count > 0) {

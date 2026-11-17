@@ -1,6 +1,5 @@
 <div class="xu-page">
 
-  <!-- ================= HERO ================= -->
   <section class="xu-hero">
     <div class="xu-wrap xu-hero__inner">
       <div class="xu-hero__top">
@@ -28,11 +27,9 @@
 
   <div class="xu-wrap xu-main">
 
-    <!-- ================= TRÒ CHƠI NHẬN VOUCHER ================= -->
     <section class="xu-section">
       <h2 class="xu-section__title">Chơi Game Nhận Voucher</h2>
 
-      <!-- Banner trò chơi tự chuyển -->
       <div class="xu-banners">
         <div class="xu-banners__track" [style.transform]="'translateX(-' + bannerIndex() * 100 + '%)'">
           <button
@@ -83,7 +80,6 @@
       </div>
     </section>
 
-    <!-- ================= MÃ ƯU ĐÃI CỦA SHOP ================= -->
     <section class="xu-section" id="ma-uu-dai" *ngIf="shopVouchers().length">
       <h2 class="xu-section__title">Mã Ưu Đãi Của Luméa</h2>
       <div class="vc-grid">
@@ -91,7 +87,6 @@
       </div>
     </section>
 
-    <!-- ================= VOUCHER CỦA TÔI ================= -->
     <section class="xu-section" id="voucher-cua-toi">
       <div class="vc-head">
         <h2 class="xu-section__title">Voucher Của Bạn</h2>
@@ -114,7 +109,6 @@
     </section>
   </div>
 
-  <!-- ================= MODAL TRÒ CHƠI ================= -->
   <div class="xu-modal" *ngIf="activeGame() as game" (click)="closeGame()">
     <div class="xu-modal__panel" role="dialog" aria-modal="true" [attr.aria-label]="gameTitle(game)" (click)="$event.stopPropagation()">
       <div class="xu-modal__head">

@@ -29,9 +29,7 @@ router.get('/', attachUserId, async (req, res) => {
 const SLOT_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const MAX_LEAD_MS = 4 * 24 * 3600 * 1000;
 
-// POST /api/notifications/flash-sale-reminder  (body: { userId, slotDate: 'YYYY-MM-DD', slotLabel, startAt: ISO })
-// Đặt nhắc Flash Sale: lưu ngay 1 thông báo xác nhận + 1 thông báo "deal đã bắt đầu" hẹn giờ
-// (visibleAt = giờ bắt đầu, createdAt = giờ bắt đầu để xếp/hiển thị đúng thời điểm).
+// POST /api/notifications/flash-sale-reminder
 router.post('/flash-sale-reminder', requireUserId, async (req, res) => {
   try {
     const { slotDate, slotLabel, startAt } = req.body || {};

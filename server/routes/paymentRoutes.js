@@ -28,11 +28,7 @@ async function cancelUnpaidOrder(orderNumber, gateway) {
 
 const router = express.Router();
 
-/**
- * Cổng thanh toán thử (chỉ khi chạy dev): tài khoản sandbox MoMo dùng chung hay bị MoMo khoá
- * (resultCode 13) -> thay vì báo lỗi, chuyển khách sang trang /thanh-toan-thu của shop để mô phỏng
- * bước thanh toán và hoàn tất đơn. Tắt bằng PAYMENT_SANDBOX=false; luôn tắt khi NODE_ENV=production.
- */
+/** Cổng thanh toán thử (chỉ khi chạy dev) */
 function paymentSandboxEnabled() {
   return process.env.NODE_ENV !== 'production' && process.env.PAYMENT_SANDBOX !== 'false';
 }
@@ -101,9 +97,7 @@ router.post('/momo/create', async (req, res) => {
   }
 });
 
-// ------------------------------------------------------------------ Trả cọc đơn đặt làm qua cổng
-// Khách (chủ đơn) trả phần cọc còn thiếu qua MoMo / thẻ ATM / ZaloPay. Số tiền do server tính; cổng báo
-// thành công (IPN / callback có chữ ký, hoặc chữ ký trên URL quay về) thì hệ thống tự xác nhận cọc.
+// Trả cọc đơn đặt làm qua cổng Khách (chủ đơn) trả phần cọc còn thiếu qua MoMo / thẻ ATM / ZaloPay
 router.post('/deposit/create', requireUserId, async (req, res) => {
   try {
     const method = String(req.body.method || '');

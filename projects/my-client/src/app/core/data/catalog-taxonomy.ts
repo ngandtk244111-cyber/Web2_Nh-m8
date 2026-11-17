@@ -1,12 +1,6 @@
 import { Product, ProductCategory, SpaceKey } from '../models/product.model';
 
-/**
- * CÂY DANH MỤC DÙNG CHUNG của Luméa (Nội thất + Decor + 3D Custom).
- *
- * Nguồn sự thật duy nhất cho: mega menu (header), sidebar filter (catalog), breadcrumb/thông tin
- * (product detail), danh mục trang chủ, footer, search. Mỗi danh mục con map về các
- * ProductCategory thật đang lưu ở DB — không tạo hệ thống category song song.
- */
+/** CÂY DANH MỤC DÙNG CHUNG của Luméa (Nội thất + Decor + 3D Custom) */
 
 export type DepartmentKey = 'noi-that' | 'anh-sang' | 'decor' | 'do-dung';
 
@@ -162,9 +156,7 @@ export const DEAL_LINKS: CatalogLink[] = [
   { label: 'Sản phẩm giảm giá', link: '/catalog', queryParams: { sale: '1' }, image: img('1607083206869-4c7672e72a8a') },
 ];
 
-// ---------------------------------------------------------------------------
 // Helpers
-// ---------------------------------------------------------------------------
 
 /** Chuẩn hoá để so khớp không dấu: "Giường" ~ "giuong". */
 export function normalizeText(s: string | undefined | null): string {
@@ -256,13 +248,7 @@ export function searchableText(p: Product): string {
   return normalizeText(parts.filter(Boolean).join(' '));
 }
 
-/**
- * Độ liên quan của 1 sản phẩm với từ khoá (đã bỏ dấu, tách từ):
- *  3 = khớp ngay trong TÊN sản phẩm;
- *  2 = khớp loại hàng (danh mục, nhóm, không gian, phong cách, màu, chất liệu);
- *  1 = chỉ khớp trong phần mô tả (vd "đặt cạnh giường") -> chỉ là kết quả phụ;
- *  0 = không khớp.
- */
+/** Độ liên quan của 1 sản phẩm với từ khoá (đã bỏ dấu, tách từ) */
 export function searchRelevance(p: Product, terms: string[]): number {
   if (!terms.length) return 0;
   const has = (text: string) => terms.every(t => text.includes(t));

@@ -1,11 +1,6 @@
-// Hai quy định đặt cọc ĐỘC LẬP, dùng field khác nhau trên Order:
-//  1. Cọc COD đơn lớn (đơn mua từ giỏ hàng): order.depositAmount / order.depositPaidAt.
-//  2. Cọc đơn đặt làm theo báo giá (orderType CUSTOM_QUOTE): order.paymentPlan.*, depositStatus, depositReceived.
+// Hai quy định đặt cọc ĐỘC LẬP, dùng field khác nhau trên Order
 
-// ================================================================ 1. Cọc COD đơn lớn
-// Quy định đặt cọc đơn COD giá trị lớn (nội thất cồng kềnh, giao xa — tránh bom hàng):
-// đơn COD từ 5.000.000đ phải chuyển khoản cọc trước 30% (làm tròn nghìn), phần còn lại trả khi nhận.
-// Đơn nhỏ hơn vẫn COD 100% như cũ. my-client (core/data/deposit-policy.ts) và chatbot dùng cùng số này.
+// Quy định đặt cọc đơn COD giá trị lớn
 const DEPOSIT_THRESHOLD = 5000000;
 const DEPOSIT_RATE = 0.3;
 
@@ -20,11 +15,7 @@ function awaitingDeposit(order) {
   return (order.depositAmount || 0) > 0 && !order.depositPaidAt;
 }
 
-// ================================================================ 2. Cọc đơn đặt làm theo báo giá
-// Chính sách đặt cọc cho đơn đặt làm theo báo giá (CUSTOM_QUOTE).
-// Các hàm tính tiền ở đây là hàm thuần (không đụng DB) để unit test được; cấu hình đọc từ
-// AdminConfig key 'settings' (trang Cài đặt của my-admin), thiếu thì dùng mặc định bên dưới.
-// Mọi số tiền là VND dạng số nguyên.
+// Chính sách đặt cọc cho đơn đặt làm theo báo giá (CUSTOM_QUOTE)
 
 const AdminConfig = require('../models/AdminConfig');
 
@@ -81,11 +72,7 @@ async function getDepositPolicy() {
   return normalizePolicy(doc?.value || {});
 }
 
-/**
- * Tiền cọc mặc định (phương án B):
- *   min(total, roundUp1000(max(total * rate%, minimum)))
- * total = tiền hàng đặt làm sau chiết khấu, không gồm phí vận chuyển.
- */
+/** Tiền cọc mặc định (phương án B) */
 function computeDefaultDeposit(total, policy = DEFAULT_DEPOSIT_POLICY) {
   if (!isNonNegativeInt(total)) throw new Error('Tổng tiền phải là số nguyên không âm');
   if (total === 0) return 0;

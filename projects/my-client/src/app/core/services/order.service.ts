@@ -130,9 +130,7 @@ export class OrderService {
     items: CartItem[];
     shippingAddress: ShippingAddress;
     paymentMethod: 'COD' | 'BANK_TRANSFER' | 'MOMO' | 'ZALOPAY' | 'ATM';
-    // subtotal/discount/shippingFee/total: chỉ để hiển thị optimistic ở FE — backend tự tính lại
-    // từ giá sản phẩm THẬT trong DB + couponCode, không tin các số này từ client (xem
-    // server/utils/pricing.js). couponCode dùng để backend verify lại giảm giá.
+    // subtotal/discount/shippingFee/total
     subtotal: number;
     discount: number;
     shippingFee: number;
@@ -240,11 +238,7 @@ export class OrderService {
     this.updateOrderStatus(orderNumber, status, progress).subscribe();
   }
 
-  /**
-   * Theo dõi trực tiếp 1 đơn: phát bản mới nhất mỗi khi nhân viên cập nhật (xác nhận, sản xuất,
-   * giao hàng, thanh toán...). Khi mất kết nối rồi nối lại sẽ tự tải lại đơn để không lỡ thay đổi.
-   * Huỷ subscribe = rời phòng theo dõi; hết người theo dõi thì đóng socket.
-   */
+  /** Theo dõi trực tiếp 1 đơn: phát bản mới nhất mỗi khi nhân viên cập nhật (xác nhận, sản xuất, giao hàng, thanh toán...) */
   watchOrder(orderNumber: string, phone = ''): Observable<Order> {
     return new Observable<Order>(subscriber => {
       const socket = this.acquireSocket();

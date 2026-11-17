@@ -23,11 +23,7 @@ const VERIFIED_OTP_WINDOW_MS = 10 * 60 * 1000;
 
 const INVALID_CONTACT = 'Vui lòng nhập email hoặc số điện thoại hợp lệ (VD: ten@gmail.com, 0912345678).';
 
-/**
- * Đăng ký/đăng nhập/quên mật khẩu đều nhận 1 ô `identifier` là SĐT hoặc email (giống các trang
- * TMĐT khác). Trả về { field, value } để query thẳng User/OtpCode theo đúng field, hoặc null
- * nếu không phải SĐT/email hợp lệ. Vẫn nhận phoneNumber/email riêng để không vỡ client cũ.
- */
+/** Đăng ký/đăng nhập/quên mật khẩu đều nhận 1 ô `identifier` là SĐT hoặc email (giống các trang TMĐT khác) */
 function readContact(body) {
   const raw = String(body?.identifier ?? body?.email ?? body?.phoneNumber ?? '').trim();
   if (EMAIL_REGEX.test(raw)) return { field: 'email', value: raw.toLowerCase() };
@@ -39,9 +35,7 @@ function contactLabel(contact) {
   return contact.field === 'email' ? 'Email' : 'Số điện thoại';
 }
 
-// Xác nhận đã có OTP xác thực thành công (consumed) cho SĐT/email này trong ít phút gần đây, rồi
-// xoá hết OTP của nó để không dùng lại được — bắt buộc phải gọi trước khi cho phép
-// register/reset-password, tránh chiếm tài khoản chỉ bằng cách biết SĐT/email.
+// Xác nhận đã có OTP xác thực thành công (consumed) cho SĐT/email này trong ít phút gần đây, rồi xoá hết OTP của nó để không dùng lại được
 async function consumeVerifiedOtp(contact) {
   const key = { [contact.field]: contact.value };
   const otpDoc = await OtpCode.findOne({ ...key, consumed: true }).sort({ updatedAt: -1 });
@@ -87,8 +81,6 @@ async function checkOtp(contact, otp) {
 function devOtpField({ code, delivered }) {
   return !delivered && process.env.OTP_DEV_MODE === 'true' ? { devOtp: code } : {};
 }
-
-// ===================== ĐĂNG KÝ (SĐT hoặc email → OTP → đặt mật khẩu) =====================
 
 router.post('/register-otp', async (req, res) => {
   try {
@@ -195,9 +187,7 @@ async function findOrCreateSocialUser({ idField, idValue, email, name, rawName, 
   return user;
 }
 
-// FE dùng Google Identity Services (google.accounts.id), lấy được 1 ID token (JWT) rồi gửi
-// nguyên token đó lên đây — BE verify chữ ký + audience qua google-auth-library (không cần
-// client secret, không cần redirect URI).
+// FE dùng Google Identity Services (google.accounts.id), lấy được 1 ID token (JWT) rồi gửi nguyên token đó lên đây
 router.post('/google', async (req, res) => {
   try {
     const { credential } = req.body;
@@ -233,9 +223,7 @@ router.post('/google', async (req, res) => {
   }
 });
 
-// FE dùng Facebook JS SDK (FB.login) lấy access token rồi gửi lên đây. Nếu server có cấu hình
-// FACEBOOK_APP_ID + FACEBOOK_APP_SECRET thì kiểm tra thêm token có đúng được cấp cho app của
-// Luméa không (debug_token) — tránh dùng token của app khác để đăng nhập hộ.
+// FE dùng Facebook JS SDK (FB.login) lấy access token rồi gửi lên đây
 router.post('/facebook', async (req, res) => {
   try {
     const { accessToken } = req.body;
@@ -279,8 +267,6 @@ router.post('/facebook', async (req, res) => {
   }
 });
 
-// ===================== ĐĂNG NHẬP (SĐT/email + mật khẩu, không JWT) =====================
-
 router.post('/login', async (req, res) => {
   try {
     const contact = readContact(req.body);
@@ -313,8 +299,6 @@ router.post('/login', async (req, res) => {
     sendError(res, err);
   }
 });
-
-// ===================== QUÊN MẬT KHẨU (OTP rồi đặt mật khẩu mới) =====================
 
 router.post('/forgot-password', async (req, res) => {
   try {
@@ -377,8 +361,6 @@ router.post('/reset-password', async (req, res) => {
     sendError(res, err);
   }
 });
-
-// ===================== HỒ SƠ / AVATAR =====================
 
 router.get('/me', requireUserId, async (req, res) => {
   try {
@@ -499,8 +481,6 @@ router.get('/avatars/:avatarId', async (req, res) => {
     sendError(res, err);
   }
 });
-
-// ===================== SỔ ĐỊA CHỈ =====================
 
 router.get('/addresses', requireUserId, async (req, res) => {
   try {

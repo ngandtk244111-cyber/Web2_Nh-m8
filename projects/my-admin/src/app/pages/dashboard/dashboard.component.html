@@ -36,7 +36,6 @@
     <app-mascot-loading *ngIf="loading()" message="Đang tải dữ liệu tổng quan…" [overlay]="false"></app-mascot-loading>
 
     <div [hidden]="loading()">
-      <!-- Hàng số liệu (xếp ngang) -->
       <div class="stats-row">
         <button type="button" class="stat-card-mini" (click)="openStat('revenue')">
           <span class="stat-top">
@@ -76,7 +75,6 @@
         </button>
       </div>
 
-      <!-- Biểu đồ doanh số -->
       <div class="main-dashboard-grid">
         <div class="info-card chart-card mb-0">
           <div class="chart-head">
@@ -126,7 +124,6 @@
         </div>
       </div>
 
-      <!-- Biểu đồ tròn -->
       <div class="mid-charts-grid">
         <div class="info-card mb-0">
           <h3 class="section-title">Trạng thái đơn hàng</h3>
@@ -145,7 +142,6 @@
         </div>
       </div>
 
-      <!-- Hàng đợi xưởng in 3D -->
       <div class="info-card">
         <h3 class="section-title">
           Hàng đợi xưởng in 3D
@@ -163,7 +159,6 @@
         </div>
       </div>
 
-      <!-- Bản đồ -->
       <app-lumea-map class="mb-3"
         [orders]="orders()"
         [suppliers]="suppliers()"
@@ -171,7 +166,6 @@
         (orderSelect)="openOrder($event)">
       </app-lumea-map>
 
-      <!-- Đơn gần đây -->
       <div class="section-head">
         <h3 class="section-title mb-0">Đơn hàng gần đây</h3>
         <div class="actions-group">

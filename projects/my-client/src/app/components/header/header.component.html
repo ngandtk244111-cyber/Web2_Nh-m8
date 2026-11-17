@@ -1,6 +1,5 @@
 <header class="hd" [class.hd--scrolled]="isScrolled">
 
-  <!-- ============ MOBILE HEADER (< 1024px) ============ -->
   <div class="hd_m">
     <div class="hd_m__top">
       <button type="button" class="hd_m__icon-btn" (click)="mobileMenuOpen = true" aria-label="Mở menu">
@@ -28,7 +27,6 @@
     </form>
   </div>
 
-  <!-- Overlay + Drawer (mobile) -->
   <div class="hd_overlay" *ngIf="mobileMenuOpen" (click)="mobileMenuOpen = false"></div>
   <aside class="hd_drawer" [class.hd_drawer--open]="mobileMenuOpen">
     <div class="hd_drawer__head">
@@ -99,7 +97,6 @@
     </div>
   </aside>
 
-  <!-- ============ TẦNG 1: TOP STRIP ============ -->
   <div class="hd_top">
     <div class="hd_container hd_top__inner">
       <a routerLink="/ve-lumea" class="hd_top__left">Tìm hiểu về LUMÉA</a>
@@ -107,7 +104,6 @@
     </div>
   </div>
 
-  <!-- ============ TẦNG 2: MAIN BAR (logo | search | actions) ============ -->
   <div class="hd_main">
     <div class="hd_container hd_main__inner">
 
@@ -124,7 +120,6 @@
         </form>
 
         <div class="hd_search-suggest" *ngIf="searchSuggestionsOpen" (click)="$event.stopPropagation()">
-          <!-- Kết quả khớp ngay khi gõ -->
           <ng-container *ngIf="searchText.trim()">
             <div class="hd_search-results" *ngIf="searchResults.length; else noSearchResults">
               <a
@@ -301,7 +296,6 @@
     </div>
   </div>
 
-  <!-- ============ TẦNG 3: UTILITY BAR (menu | vị trí giao hàng) ============ -->
   <div class="hd_utility" (mouseleave)="onMegaMenuAreaLeave()">
     <div class="hd_container hd_utility__inner">
       <button
@@ -325,7 +319,6 @@
       </button>
     </div>
 
-    <!-- MEGA MENU -->
     <div
       class="hd_overlay hd_overlay--mega"
       [class.hd_overlay--mega-closing]="megaMenuClosing"
@@ -355,7 +348,6 @@
           </a>
         </nav>
 
-        <!-- Nội dung nhóm đang chọn -->
         <div class="hd_mega-panel" *ngFor="let section of [activeMegaSection]; trackBy: trackSection">
           <div class="hd_mega-panel__head">
             <div>

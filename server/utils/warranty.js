@@ -21,12 +21,7 @@ async function createWarranty(fields) {
   throw new Error('Không tạo được mã bảo hành, vui lòng thử lại');
 }
 
-/**
- * Cấp phiếu cho các món chưa có mã của 1 đơn đã giao và gán mã vào order.items[i].warrantyCode
- * (chỉ sửa document trong bộ nhớ, caller tự lưu). Phiếu tạo trước đó chưa gắn món (admin tạo tay,
- * dữ liệu mẫu) được nhận lại theo tên sản phẩm thay vì tạo trùng.
- * Trả về các path đã gán, dạng { 'items.0.warrantyCode': 'WR-123456' } — rỗng nếu không có gì mới.
- */
+/** Cấp phiếu cho các món chưa có mã của 1 đơn đã giao và gán mã vào order.items[i].warrantyCode (chỉ sửa document trong bộ nhớ, caller tự lưu) */
 async function issueWarrantiesForOrder(order) {
   const assigned = {};
   if (order.status !== 'DELIVERED') return assigned;

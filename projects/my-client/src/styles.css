@@ -209,7 +209,6 @@ html {
   animation: cart-bump 0.5s ease !important;
 }
 
-/* ===== Scroll-reveal effect (IntersectionObserver toggling .visible) ===== */
 .reveal-up {
   opacity: 0;
   transform: translateY(28px);
@@ -218,11 +217,7 @@ html {
 
 .reveal-up.visible {
   opacity: 1;
-  /* transform: none (không phải translateY(0)) sau khi hiệu ứng chạy xong — bất kỳ giá trị
-     transform khác none nào, kể cả translateY(0), cũng biến phần tử thành containing block,
-     khiến mọi con cháu position:fixed (ví dụ viewer video dạng reels) bị kẹt trong khung của nó
-     thay vì phủ toàn màn hình. transition vẫn chạy mượt vì trình duyệt nội suy được từ transform
-     sang none. */
+  /* transform: none (không phải translateY(0)) sau khi hiệu ứng chạy xong */
   transform: none;
 }
 
@@ -259,9 +254,7 @@ html {
   transform: none;
 }
 
-/* Poster/banner lớn: trồi lên từ dưới, mờ dần thành rõ, phóng nhẹ — chậm hơn các hiệu ứng khác.
-   Dùng animation (không phải transition) để không đụng transition hover riêng của thẻ; độ trễ lần lượt
-   lấy từ --rd (ScrollRevealDirective gán theo revealDelay). */
+/* Poster/banner lớn: trồi lên từ dưới, mờ dần thành rõ, phóng nhẹ */
 .reveal-rise:not(.visible) {
   opacity: 0;
 }
@@ -280,10 +273,7 @@ html {
   .reveal-rise.visible { animation: none; }
 }
 
-/* ===== Stagger + "in 3D từng lớp" =====
-   Đặt appScrollReveal="stagger" lên lưới/hàng: mỗi phần tử con hiện lần lượt (--sd),
-   ảnh bên trong (.print-layer, ảnh thẻ sản phẩm .pc__img) lộ dần từ dưới lên theo từng
-   nấc — steps() tạo cảm giác từng lớp nhựa được in chồng lên nhau. */
+/* Stagger + "in 3D từng lớp" Đặt appScrollReveal="stagger" lên lưới/hàng */
 /* Dùng animation (fill-mode backwards) thay vì transition: không đè transition riêng của thẻ
    (.cat-card, .nt-tile...) và sau khi chạy xong không giữ transform, nên hiệu ứng hover vẫn hoạt động. */
 .reveal-stagger:not(.visible) > * {
@@ -366,7 +356,6 @@ html {
   }
 }
 
-/* ===== Page transition (fade khi chuyển route) ===== */
 .route-fade {
   transition: opacity 0.22s ease;
 }
@@ -375,9 +364,7 @@ html {
   opacity: 0;
 }
 
-/* ===== Legacy pinned overrides (giá trị hand-tune cũ, khác công thức chung, giữ nguyên để không đổi giao diện) =====
-   !important vì Tailwind CLI luôn chèn các utility có variant (hover:, responsive...) ở cuối file,
-   sau mọi CSS thường — xem CLAUDE.md/ghi chú build. */
+/* Legacy pinned overrides (giá trị hand-tune cũ, khác công thức chung, giữ nguyên để không đổi giao diện) !important vì Tailwind CLI luôn */
 .font-serif {
   font-weight: 600 !important;
 }
@@ -418,13 +405,7 @@ body.vw-open .fsb {
   color: #3B2418;
 }
 
-/* ======================================================================
-   TIÊU ĐỀ SECTION — chữ in hoa đậm, phẳng, màu chữ thường (kiểu tiêu đề mục của các sàn TMĐT),
-   không đổ bóng / viền / gradient.
-   Dùng: <h2 class="... lm-3d" data-text="Tiêu đề">Tiêu đề</h2>
-   Tên class giữ nguyên để không phải sửa template; data-text không còn được dùng.
-   !important vì style riêng của component (.ps-title, .cat-title...) có độ ưu tiên cao hơn.
-   ====================================================================== */
+/* TIÊU ĐỀ SECTION — chữ in hoa đậm, phẳng, màu chữ thường (kiểu tiêu đề mục của các sàn TMĐT), không đổ bóng / viền / gradient */
 .lm-3d {
   display: block;
   margin: 0 0 4px !important;
@@ -450,13 +431,7 @@ body.vw-open .fsb {
   display: none !important;
 }
 
-/* ======================================================================
-   CHỪA CHỖ CHO 2 BANNER DỌC HAI BÊN (app-floating-side-banners)
-   body.fsb-left / body.fsb-right do component gắn khi banner bên đó đang hiện.
-   Chỉ áp dụng 1200–1599px: rộng hơn thì lề sẵn đủ chỗ, hẹp hơn thì banner đã ẩn.
-   144px = banner 116px + cách mép 18px + khe 10px với nội dung.
-   Header/footer không bị co (chỉ đệm <main>).
-   ====================================================================== */
+/* CHỪA CHỖ CHO 2 BANNER DỌC HAI BÊN (app-floating-side-banners) body.fsb-left / body.fsb-right do component gắn khi banner bên đó đang hiện */
 @media (min-width: 1200px) and (max-width: 1599px) {
   body.fsb-left main {
     padding-left: 144px;
@@ -467,12 +442,7 @@ body.vw-open .fsb {
   }
 }
 
-/* ======================================================================
-   ẢNH SẢN PHẨM: ĐỔI ẢNH KHI RÊ CHUỘT (app-product-photo)
-   Một hiệu ứng duy nhất cho mọi thẻ sản phẩm (trừ Flash Sale): ảnh 1 mờ dần sang ảnh 2, phóng nhẹ.
-   Kích hoạt khi rê vào thẻ chứa nó (<a> bao ngoài hoặc phần tử có class .pp-hover).
-   !important để thắng hiệu ứng zoom riêng cũ của từng khu (br-prod, cd-prod, pd_pick...).
-   ====================================================================== */
+/* ẢNH SẢN PHẨM: ĐỔI ẢNH KHI RÊ CHUỘT (app-product-photo) Một hiệu ứng duy nhất cho mọi thẻ sản phẩm (trừ Flash Sale) */
 .pp {
   position: relative;
   display: block;

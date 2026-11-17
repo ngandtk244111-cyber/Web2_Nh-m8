@@ -32,7 +32,6 @@
 }
 .sr__loading { padding: 80px 16px; text-align: center; color: var(--muted); }
 
-/* ===== HERO ===== */
 .sr-hero {
   position: relative;
   display: grid;
@@ -164,7 +163,6 @@
 }
 @keyframes srFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
 
-/* ===== Lọc loại phòng ===== */
 .sr-filter { display: flex; align-items: center; gap: 12px; margin-top: 8px; }
 .sr-filter__chips {
   flex: 1;
@@ -210,7 +208,6 @@
 }
 .sr-filter__nav button:hover { background: var(--wine); color: #fff; border-color: var(--wine); }
 
-/* ===== Lưới phòng ===== */
 .sr-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
 .sr-card {
   overflow: hidden;
@@ -277,7 +274,6 @@
 }
 .sr-card__go:hover { background: var(--wine-dark); transform: scale(1.1); }
 
-/* ===== Dải cam kết ===== */
 .sr-ribbon {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -300,7 +296,6 @@
 .sr-ribbon span + span { border-left: 1.5px solid rgba(142, 21, 48, 0.35); }
 .sr-ribbon app-icon { flex-shrink: 0; color: var(--wine); }
 
-/* ===== Responsive ===== */
 @media (max-width: 1100px) {
   .sr-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .sr-hero__mascot { width: 120px; left: calc(45% - 20px); }

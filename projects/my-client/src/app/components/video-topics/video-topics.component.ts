@@ -220,9 +220,7 @@ export class VideoTopicsComponent implements OnInit, AfterViewInit, OnDestroy {
   topics: VideoTopic[] = TOPICS.map(withQuery);
   private loadedIndices = new Set<number>();
   private players = new Map<number, any>();
-  /** Index của các topic có youtubeId nhưng video lỗi (không tồn tại, riêng tư, hoặc chủ sở hữu
-   *  tắt nhúng) — YouTube vẫn bắn onReady cho player rỗng nên phải tự bắt onError, nếu không
-   *  poster bị ẩn nhưng video không hiện gì (khung đen trống thay vì ảnh nền). */
+  /** Index của các topic có youtubeId nhưng video lỗi (không tồn tại, riêng tư, hoặc chủ sở hữu tắt nhúng) */
   private erroredIndices = new Set<number>();
   /** Thẻ đang được trỏ chuột vào (desktop hover) — video phát khi hover, dừng khi rời chuột,
    *  thay cho việc dùng ảnh poster tĩnh không liên quan tới video thật. */
@@ -399,9 +397,7 @@ export class VideoTopicsComponent implements OnInit, AfterViewInit, OnDestroy {
           this.players.set(index, player);
           if (this.hoveredIndex === index) player.playVideo();
         },
-        // Video không tồn tại/riêng tư/chủ sở hữu tắt nhúng (mã lỗi 2/5/100/101/150) — YouTube
-        // vẫn coi player là "ready" nhưng không có gì để phát. Dọn player hỏng và quay lại hiện
-        // ảnh poster tĩnh như thẻ không có video, thay vì để khung đen/nhúng lỗi trống trơn.
+        // Video không tồn tại/riêng tư/chủ sở hữu tắt nhúng (mã lỗi 2/5/100/101/150)
         onError: () => {
           this.erroredIndices.add(index);
           this.loadedIndices.delete(index);
@@ -640,9 +636,7 @@ export class VideoTopicsComponent implements OnInit, AfterViewInit, OnDestroy {
    *  CSS khi đổi video, giống hiệu ứng chuyển cảnh dọc của Reels/TikTok. */
   viewerAnimDirection: 'next' | 'prev' | null = null;
 
-  /** Chuyển video kế/trước trong viewer — bấm nút mũi tên, vuốt dọc, hoặc lăn chuột đều gọi hàm này.
-   *  Khóa trong lúc animation trượt còn đang chạy (viewerAnimDirection != null) để vuốt/lăn chuột
-   *  liên tục không bị "nuốt" nhiều bước cùng lúc — mỗi lượt kéo/lăn chỉ chuyển đúng 1 video. */
+  /** Chuyển video kế/trước trong viewer */
   viewerStep(direction: 1 | -1): void {
     if (this.viewerAnimDirection !== null) return;
     const next = this.viewerIndex + direction;

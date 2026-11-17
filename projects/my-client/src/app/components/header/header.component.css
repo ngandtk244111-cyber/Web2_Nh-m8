@@ -81,7 +81,6 @@
   color: #ffffff;
 }
 
-/* ================= TẦNG 2: MAIN BAR ================= */
 .hd_main {
   position: relative;
   z-index: 2;
@@ -859,7 +858,6 @@
   background: rgba(163, 21, 45, 0.08);
 }
 
-/* ================= TẦNG 3: UTILITY BAR + MEGA MENU ================= */
 .hd_utility {
   position: relative;
   z-index: 1;

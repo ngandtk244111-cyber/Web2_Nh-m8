@@ -298,7 +298,6 @@
   line-height: 1.4;
 }
 
-/* ===== Tablet: 2 cột ===== */
 @media (max-width: 1023px) and (min-width: 641px) {
   .ft_cols {
     grid-template-columns: 1fr 1fr;
@@ -310,7 +309,6 @@
   }
 }
 
-/* ===== Mobile: accordion ===== */
 @media (max-width: 640px) {
   .ft {
     padding: 40px 0 24px;
@@ -395,7 +393,6 @@
   }
 }
 
-/* ===== Desktop: cột luôn mở ===== */
 @media (min-width: 641px) {
   .ft_links {
     display: flex !important;

@@ -69,7 +69,6 @@
     </div>
   </div>
 
-  <!-- ============ VIEWER VIDEO — mở khi bấm 1 thẻ ============ -->
   <div class="vw" *ngIf="viewerOpen" (click)="closeViewer()">
     <button type="button" class="vw__close" (click)="closeViewer()" aria-label="Đóng">
       <app-icon name="x" [size]="18"></app-icon>
@@ -82,7 +81,6 @@
         <img [src]="mascotImg()" alt="" draggable="false">
       </div>
 
-      <!-- Thẻ chính: video -->
       <div
         class="vw__video"
         [class.vw__video--slide-next]="viewerAnimDirection === 'next'"
@@ -128,7 +126,6 @@
         </button>
       </div>
 
-      <!-- Bên phải: mô tả -->
       <aside class="vw__panel">
         <div class="vw__count">
           <span class="vw__count-now">{{ pad2(viewerIndex + 1) }}</span>

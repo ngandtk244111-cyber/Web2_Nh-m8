@@ -1,7 +1,6 @@
     <div class="cm-page mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
       <div class="cm-layout">
 
-        <!-- ============ SIDEBAR TRÁI: điều hướng feed (lg+) ============ -->
         <aside class="cm-left hidden lg:block">
           <div class="cm-sticky space-y-6">
             <div>
@@ -37,10 +36,8 @@
           </div>
         </aside>
 
-        <!-- ============ CỘT GIỮA: feed / thread ============ -->
         <main class="min-w-0">
 
-          <!-- Tiêu đề cột giữa -->
           <div class="flex items-center justify-center relative h-10 mb-3">
             <button
               *ngIf="activePost"
@@ -81,9 +78,7 @@
           </nav>
           <div class="cm-panel">
 
-            <!-- ---------- FEED ---------- -->
             <ng-container *ngIf="!activePost">
-              <!-- Composer "Có gì mới?" -->
               <div class="flex items-center gap-3 px-5 sm:px-6 py-4 border-b border-neutral-100">
                 <img [src]="currentAvatar" alt="" class="w-10 h-10 rounded-full object-cover border border-neutral-200 flex-shrink-0">
                 <button type="button" (click)="openCreateModal()" class="flex-1 text-left text-[15px] text-neutral-400 py-2">
@@ -92,7 +87,6 @@
                 <button type="button" (click)="openCreateModal()" class="cm-btn-outline">Đăng</button>
               </div>
 
-              <!-- Tabs -->
               <div *ngIf="feedMode === 'all'" class="grid grid-cols-2 border-b border-neutral-100">
                 <button
                   *ngFor="let t of feedTabs"
@@ -111,7 +105,6 @@
                   <option value="oldest">Cũ nhất</option>
                 </select>
               </div>
-              <!-- Empty state -->
               <div *ngIf="filteredPosts.length === 0" class="py-20 px-6 text-center">
                 <div class="w-14 h-14 rounded-full bg-neutral-50 flex items-center justify-center mx-auto mb-3">
                   <app-icon [name]="feedMode === 'saved' ? 'bookmark' : feedMode === 'liked' ? 'heart' : 'search'" [size]="22" class="text-neutral-400"></app-icon>
@@ -120,7 +113,6 @@
                 <p class="text-xs text-neutral-500 mt-1">Thử đổi bộ lọc hoặc từ khoá tìm kiếm khác nhé.</p>
               </div>
 
-              <!-- Danh sách bài dạng thread -->
               <article
                 *ngFor="let post of visiblePosts"
                 (click)="openPost(post)"
@@ -187,7 +179,6 @@
                 </div>
               </article>
 
-              <!-- Load more -->
               <div *ngIf="filteredPosts.length > 0" class="flex justify-center py-5">
                 <button
                   *ngIf="hasMorePosts"
@@ -201,7 +192,6 @@
               </div>
             </ng-container>
 
-            <!-- ---------- THREAD CHI TIẾT ---------- -->
             <ng-container *ngIf="activePost as post">
               <article class="px-5 sm:px-6 pt-5 pb-4 border-b border-neutral-100">
                 <div class="flex items-center gap-3">
@@ -273,7 +263,6 @@
                   </span>
                 </div>
 
-                <!-- Sản phẩm trong không gian -->
                 <div *ngIf="post.productTags.length > 0" class="mt-4 space-y-2">
                   <span class="text-[12px] font-semibold text-neutral-500 block">Sản phẩm trong không gian</span>
                   <div
@@ -293,7 +282,6 @@
                 </div>
               </article>
 
-              <!-- Ô trả lời -->
               <div *ngIf="!replyTo" class="flex items-center gap-3 px-5 sm:px-6 py-4 border-b border-neutral-100">
                 <img [src]="currentAvatar" alt="" class="w-9 h-9 rounded-full object-cover border border-neutral-200 flex-shrink-0">
                 <input
@@ -311,7 +299,6 @@
                 </button>
               </div>
 
-              <!-- Câu trả lời -->
               <div class="px-5 sm:px-6 py-3 flex items-center justify-between border-b border-neutral-100">
                 <span class="text-[14px] font-semibold text-neutral-900">Câu trả lời</span>
                 <span class="text-[13px] text-neutral-400">{{ post.commentsCount }}</span>
@@ -362,7 +349,6 @@
           </div>
         </main>
 
-        <!-- ============ SIDEBAR PHẢI: Trending + Danh mục (xl+) ============ -->
         <aside class="cm-right">
           <div class="cm-sticky space-y-5">
             <section class="cm-panel p-5">
@@ -412,7 +398,6 @@
         <app-icon name="plus" [size]="22"></app-icon>
       </button>
 
-      <!-- ============ CREATE POST MODAL ============ -->
       <div
         *ngIf="showCreateModal"
         (click)="closeCreateModal()"

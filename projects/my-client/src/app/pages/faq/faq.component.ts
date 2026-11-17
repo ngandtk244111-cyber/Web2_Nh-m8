@@ -13,9 +13,7 @@ interface FaqCategory {
   items: FaqItem[];
 }
 
-/** Nội dung tổng hợp lại từ các trang chính sách hiện có (giao hàng/đổi trả/thanh toán)
- *  và diễn giải ngắn gọn hơn cho định dạng accordion — không phát sinh chính sách mới.
- *  Chia sẵn thành 2 cột độc lập để khi mở 1 câu trả lời, cột kia không bị đẩy/xáo trộn. */
+/** Nội dung tổng hợp lại từ các trang chính sách hiện có (giao hàng/đổi trả/thanh toán) và diễn giải ngắn gọn hơn cho định dạng accordion */
 const FAQ_LEFT_COLUMN: FaqCategory[] = [
   {
     title: 'Đặt hàng & Thanh toán',

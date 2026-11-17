@@ -8,7 +8,6 @@
       <p class="qp__muted">Đây là báo giá cũ. Nhắn shop để nhận bảng báo giá chi tiết và đặt hàng.</p>
     </div>
   </div>
-  <!-- Chưa có báo giá -->
   <div *ngIf="!loading && !current && !error && request.quotationPrice == null" class="qp__empty">
     <app-icon name="clock" [size]="18"></app-icon>
     <span>Shop đang xem xét yêu cầu và sẽ gửi báo giá kèm mức cọc. Bạn có thể trao đổi thêm ở khung chat bên cạnh.</span>
@@ -23,7 +22,6 @@
       <span class="qp__chip" [class.qp__chip--ok]="q.status === 'ACCEPTED'" [class.qp__chip--off]="q.status !== 'SENT' && q.status !== 'ACCEPTED' || isExpired">{{ statusLabel(q) }}</span>
     </div>
 
-    <!-- Hạng mục -->
     <div class="qp__items">
       <div *ngFor="let it of q.items" class="qp__item">
         <div class="qp__item-main">
@@ -52,7 +50,6 @@
     <p *ngIf="q.deposit?.overridden" class="qp__note">Mức cọc riêng cho báo giá này: {{ q.deposit?.overrideReason }}</p>
     <p *ngIf="q.note" class="qp__note">💬 {{ q.note }}</p>
 
-    <!-- Chấp nhận / từ chối -->
     <ng-container *ngIf="canRespond">
       <div class="qp__policy">
         <strong>Chính sách đặt cọc</strong>
@@ -92,7 +89,6 @@
       Xem đơn {{ request.orderNumber }} & thanh toán cọc →
     </a>
 
-    <!-- Phiên bản cũ -->
     <div *ngIf="olderQuotes.length" class="qp__old">
       <button type="button" class="qp__toggle" (click)="showOld = !showOld">{{ showOld ? 'Ẩn' : 'Xem' }} {{ olderQuotes.length }} phiên bản báo giá trước</button>
       <div *ngIf="showOld">

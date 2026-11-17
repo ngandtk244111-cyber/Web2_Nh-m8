@@ -41,7 +41,6 @@
           </button>
         </nav>
 
-        <!-- Mô hình -->
         <main class="sr__stage" [hidden]="tab !== '3d'">
           <app-product-model-stage
             [product]="p"
@@ -65,7 +64,6 @@
           <p *ngIf="stageState === 'ready'" class="sr__hint">Kéo để xoay 360° · Cuộn hoặc chụm 2 ngón để phóng to</p>
         </main>
 
-        <!-- Phiên bản màu / chất liệu -->
         <footer class="sr__variants" [hidden]="tab !== '3d'" *ngIf="options.length || (p.customization?.materials?.length ?? 0) > 1">
           <div class="sr__variants-head" *ngIf="options.length">
             <span class="sr__variants-label">Màu sắc / Chất liệu</span>
@@ -126,7 +124,6 @@
           </div>
         </section>
 
-        <!-- Tab Thông số -->
         <section *ngIf="tab === 'specs'" class="sr__specs">
           <h2>Thông số kỹ thuật</h2>
           <dl>
@@ -140,7 +137,6 @@
           </ul>
         </section>
 
-        <!-- Thanh mua hàng cố định đáy -->
         <div class="sr__buy">
           <img class="sr__buy-img" [src]="p.images[0]" [alt]="p.name">
           <div class="sr__buy-info">

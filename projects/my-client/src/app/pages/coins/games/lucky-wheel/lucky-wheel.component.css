@@ -61,9 +61,7 @@
   opacity: 0.85;
 }
 
-/* Viền ngoài có chấm đèn.
-   Gradient phải dùng "closest-side" để 100% = đúng bán kính bánh xe; mặc định (farthest-corner) tính tới góc khung
-   vuông nên viền + đèn bị vẽ lọt vào giữa bánh xe, đè lên chữ. */
+/* Viền ngoài có chấm đèn. Gradient phải dùng "closest-side" để 100% = đúng bán kính bánh xe */
 .lw__rim {
   position: absolute;
   inset: 0;

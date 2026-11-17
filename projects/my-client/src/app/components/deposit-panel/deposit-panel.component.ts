@@ -20,12 +20,7 @@ const STATUS_LABELS: Record<string, string> = {
   REFUNDED: 'Đã hoàn tiền cọc',
 };
 
-/**
- * Khung "Thanh toán cọc" của đơn đặt làm theo báo giá (trang đơn hàng của khách).
- * Cách chính: trả qua MoMo / thẻ ATM / ZaloPay — cổng báo thành công là đơn tự chuyển "Đã đủ cọc",
- * không cần nhân viên. Dự phòng: chuyển khoản VietQR rồi báo shop để đối soát.
- * Mọi số tiền lấy từ server (phần cọc còn thiếu), không tính ở trình duyệt.
- */
+/** Khung "Thanh toán cọc" của đơn đặt làm theo báo giá (trang đơn hàng của khách) */
 @Component({
   selector: 'app-deposit-panel',
   standalone: true,

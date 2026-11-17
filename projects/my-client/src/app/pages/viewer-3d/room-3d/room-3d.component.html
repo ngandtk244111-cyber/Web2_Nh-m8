@@ -91,7 +91,6 @@
       <app-icon name="chevron-up" [size]="15"></app-icon>
     </button>
 
-    <!-- Chấm sáng trên từng món đồ -->
     <button
       *ngFor="let s of spots; trackBy: trackSpot"
       type="button"
@@ -105,7 +104,6 @@
       <span class="r3__spot-label">{{ s.label }}</span>
     </button>
 
-    <!-- Bảng thông tin món đang xem -->
     <aside *ngIf="active() as s" class="r3__panel">
       <button type="button" class="r3__panel-close" (click)="zoomOut()" aria-label="Quay lại tổng quan" title="Quay lại tổng quan (Esc)">
         <app-icon name="x" [size]="16"></app-icon>
@@ -167,7 +165,6 @@
         </p>
       </div>
 
-      <!-- Select All Checkbox -->
       <div class="flex items-center justify-between text-xs pb-2 border-b border-neutral-200">
         <label class="flex items-center gap-2 font-semibold text-neutral-800 cursor-pointer select-none">
           <input 
@@ -182,7 +179,6 @@
         </span>
       </div>
 
-      <!-- Products in Room List -->
       <div class="space-y-3 max-h-[380px] overflow-y-auto pr-1">
         <div 
           *ngFor="let p of roomProducts; let i = index"
@@ -217,7 +213,6 @@
         </div>
       </div>
 
-      <!-- Price & Buy The Look CTA -->
       <div class="border-t border-neutral-200 pt-4 space-y-3">
         <div class="flex justify-between items-baseline text-sm">
           <span class="text-neutral-600">Tổng giá trị các món đã chọn:</span>

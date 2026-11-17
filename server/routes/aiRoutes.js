@@ -265,9 +265,7 @@ async function resolveProducts(modelProducts, message) {
   }));
 }
 
-// Có danh sách sản phẩm thật -> viết lại PHẦN DANH SÁCH cho khớp đúng các thẻ hiển thị bên dưới, nhưng giữ
-// câu mở đầu / câu kết AI viết (nơi AI trả lời câu hỏi kèm theo: quy định cọc, phí ship...). Trước đây cả câu
-// trả lời bị thay bằng mẫu cố định nên khách hỏi "COD toàn bộ được không?" chỉ nhận về danh sách sản phẩm.
+// Có danh sách sản phẩm thật -> viết lại PHẦN DANH SÁCH cho khớp đúng các thẻ hiển thị bên dưới, nhưng giữ câu mở đầu / câu kết AI viết
 function buildProductReply(products, aiReply = '') {
   const items = products.map((p, i) => {
     const price = p.price > 0 ? ` (khoảng ${p.price.toLocaleString('vi-VN')}đ)` : '';
@@ -329,9 +327,7 @@ router.post('/assistant', async (req, res) => {
       { timeout: 35000 }
     );
 
-    // Quá tải (503) / hết hạn mức (429) thường chỉ thoáng qua -> gọi lại 1 lần bằng model dự phòng
-    // (có thể trùng model chính). Vẫn lỗi (key bị chặn, Google chậm...) -> nhờ server Render trả lời
-    // thay, để khách không thấy "Không thể kết nối AI".
+    // Quá tải (503) / hết hạn mức (429) thường chỉ thoáng qua -> gọi lại 1 lần bằng model dự phòng (có thể trùng model chính)
     const callWithRetry = async () => {
       try {
         return await callGemini(GEMINI_MODEL);

@@ -128,9 +128,7 @@ router.patch('/admin/:warrantyCode/extend', requirePermission('orders.edit'), as
   }
 });
 
-// Admin: cấp phiếu cho các món của 1 đơn ĐÃ GIAO. Khách, sản phẩm, ngày mua lấy từ chính đơn (không
-// nhập tay) và mã phiếu ghi lên món trong đơn — phiếu luôn khớp với trang chi tiết đơn của khách.
-// Món đã có phiếu (tự cấp khi giao hàng) thì bỏ qua, không tạo trùng.
+// Admin: cấp phiếu cho các món của 1 đơn ĐÃ GIAO
 router.post('/', requirePermission('orders.edit'), async (req, res) => {
   try {
     const orderNumber = String(req.body.orderNumber || '').trim();

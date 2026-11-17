@@ -1,7 +1,4 @@
-// Bộ trắc nghiệm phong cách mặc định — nạp vào MongoDB lần đầu (khi collection còn rỗng), sau đó
-// nhân viên sửa ở my-admin (trang Trắc nghiệm phong cách). Trùng với bản dự phòng
-// my-client/core/data/quiz-data.ts. Mỗi lựa chọn cộng 1 điểm cho 1 trong 4 phong cách (tag);
-// thứ tự lựa chọn được xáo để khách không đoán được quy luật.
+// Bộ trắc nghiệm phong cách mặc định
 const q = (text, options) => ({ text, options: options.map(([label, tag], i) => ({ id: 'abcdef'[i], label, tag })) });
 
 const QUESTIONS = [

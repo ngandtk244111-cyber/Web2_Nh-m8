@@ -27,7 +27,6 @@
     </div>
 
     <div class="layout-grid">
-      <!-- CỘT TRÁI -->
       <div>
         <div class="info-card">
           <div class="status-steps">
@@ -85,7 +84,6 @@
           </div>
         </div>
 
-        <!-- Tiến độ in 3D -->
         <div class="info-card" *ngIf="o.hasPrintOnDemandItems && !isFinal(o)">
           <h3 class="section-title">
             Tiến độ xưởng in 3D
@@ -115,7 +113,6 @@
           </div>
         </div>
 
-        <!-- Vận đơn -->
         <div class="info-card" *ngIf="o.shipment">
           <h3 class="section-title">Vận đơn</h3>
           <div class="info-row"><span class="label">Hãng vận chuyển</span><span class="value">{{ o.shipment.carrierName }}</span></div>
@@ -170,7 +167,6 @@
         </div>
       </div>
 
-      <!-- CỘT PHẢI -->
       <div>
         <div class="info-card">
           <h3 class="section-title">
@@ -243,7 +239,6 @@
           </ng-container>
         </div>
 
-        <!-- Thao tác xử lý đơn -->
         <div class="info-card" *ngIf="canEdit && !isFinal(o)">
           <h3 class="section-title">Xử lý đơn</h3>
 

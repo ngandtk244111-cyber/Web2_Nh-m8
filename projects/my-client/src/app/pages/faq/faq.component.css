@@ -3,7 +3,6 @@
   color: #1F1712;
 }
 
-/* ===== Banner ===== */
 /* 2 lớp ảnh: nếu ảnh trên lỗi thì ảnh dưới (đã dùng ở trang khác) vẫn hiển thị,
    cuối cùng là màu nền be ấm. */
 .faq-hero {
@@ -33,7 +32,6 @@
   text-shadow: 0 2px 24px rgba(0, 0, 0, 0.18);
 }
 
-/* ===== Nội dung ===== */
 .faq-body {
   max-width: 1120px;
   margin: 0 auto;

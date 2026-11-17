@@ -1,6 +1,5 @@
 <div class="br" *ngIf="style() as st; else notFound">
 
-  <!-- Dải giới thiệu thương hiệu -->
   <header class="br-strip">
     <span class="br-strip__eyebrow">Bộ sưu tập</span>
     <h1 class="br-strip__name">Luméa <em>{{ st }}</em></h1>
@@ -10,7 +9,6 @@
 
   <div class="br-container">
 
-    <!-- ===== Banner carousel (mũi tên + chấm, banner kế bên lấp ló) ===== -->
     <section class="br-hero" aria-roledescription="carousel" [attr.aria-label]="'Banner Luméa ' + st">
       <div class="br-hero__track" #banner (scroll)="onBannerScroll(banner)">
         <a *ngFor="let b of banners" [routerLink]="b.link" [queryParams]="b.queryParams" class="br-slide">
@@ -35,7 +33,6 @@
       </div>
     </section>
 
-    <!-- ===== Bài viết nổi bật ===== -->
     <section class="br-section" *ngIf="featuredArticles().length > 0">
       <div class="br-head">
         <h2 class="br-title">Bài viết nổi bật</h2>
@@ -49,7 +46,6 @@
       </div>
     </section>
 
-    <!-- ===== Danh mục sản phẩm ===== -->
     <section class="br-section" *ngIf="categoryTiles().length > 0">
       <div class="br-head">
         <h2 class="br-title">Danh mục sản phẩm Luméa {{ st }}</h2>
@@ -66,7 +62,6 @@
       </div>
     </section>
 
-    <!-- ===== Bài đăng của mọi người ===== -->
     <section class="br-section" *ngIf="posts().length > 0">
       <div class="br-head">
         <h2 class="br-title">Bài đăng của mọi người</h2>
@@ -85,7 +80,6 @@
       </div>
     </section>
 
-    <!-- ===== Điều phối từ đội ngũ ===== -->
     <section class="br-section" *ngIf="rooms().length > 0">
       <div class="br-head">
         <h2 class="br-title">Điều phối từ đội ngũ Luméa</h2>
@@ -111,7 +105,6 @@
       </div>
     </section>
 
-    <!-- ===== Các mặt hàng giảm giá ===== -->
     <section class="br-section" *ngIf="saleProducts().length > 0">
       <div class="br-head">
         <h2 class="br-title">Các mặt hàng giảm giá</h2>
@@ -140,7 +133,6 @@
       </div>
     </section>
 
-    <!-- ===== Hàng mới về ===== -->
     <section class="br-section" *ngIf="newProducts().length > 0">
       <div class="br-head">
         <h2 class="br-title">Hàng mới về</h2>
@@ -159,7 +151,6 @@
       </div>
     </section>
 
-    <!-- ===== Blog ===== -->
     <section class="br-section" *ngIf="blogArticles().length > 0">
       <div class="br-head">
         <h2 class="br-title">blog</h2>
@@ -176,7 +167,6 @@
       </div>
     </section>
 
-    <!-- ===== Khối cuối trang ===== -->
     <a routerLink="/catalog" [queryParams]="{ q: st }" class="br-find">Xem toàn bộ sản phẩm Luméa {{ st }}</a>
   </div>
 </div>

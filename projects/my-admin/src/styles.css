@@ -1,6 +1,5 @@
 
 
-/* ========== TOKENS ========== */
 :root {
   --color-primary: #A3152D;
   --color-primary-hover: #861124;
@@ -65,7 +64,6 @@
   --bs-border-color: var(--color-neutral-40);
 }
 
-/* ========== BASE ========== */
 html,
 body {
   height: 100%;
@@ -128,7 +126,6 @@ a {
   margin-top: 4px;
 }
 
-/* ========== PAGE SHELL (breadcrumb + page header) ========== */
 .admin-page {
   display: flex;
   flex-direction: column;
@@ -264,7 +261,6 @@ a {
   cursor: not-allowed;
 }
 
-/* ========== STATS GRID (thẻ thống kê bấm để lọc) ========== */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -332,7 +328,6 @@ a {
 }
 
 
-/* ========== FILTER BAR ========== */
 .filter-bar {
   display: flex;
   align-items: center;
@@ -520,7 +515,6 @@ a {
   color: #fff;
 }
 
-/* ========== DATA TABLE ========== */
 .table-scrollable {
   background: var(--color-bg-secondary);
   border-radius: var(--radius-lg);
@@ -646,7 +640,6 @@ a {
   border-top: 1px solid var(--color-neutral-30);
 }
 
-/* ========== STATUS BADGE (nhãn bo tròn, nền nhạt cùng tông chữ) ========== */
 .status-badge {
   display: inline-flex;
   align-items: center;
@@ -867,7 +860,6 @@ a {
 .step-item.current .step-chip { background: var(--color-warning-bg); color: var(--color-warning); }
 .step-item.failed .step-chip { background: var(--color-danger-bg); color: var(--color-danger); }
 
-/* ========== MODAL ========== */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -980,7 +972,6 @@ a {
   to { opacity: 1; }
 }
 
-/* ========== MISC ========== */
 .text-muted-2 {
   color: var(--color-text-tertiary);
 }

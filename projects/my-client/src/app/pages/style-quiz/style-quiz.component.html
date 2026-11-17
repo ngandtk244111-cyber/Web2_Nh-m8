@@ -1,6 +1,5 @@
 <div class="quiz-page">
 
-  <!-- ============ INTRO ============ -->
   <section class="quiz-intro" *ngIf="screen === 'intro'">
     <div class="quiz-intro__badge">
       <app-icon name="sparkles" [size]="14"></app-icon>
@@ -25,7 +24,6 @@
     </div>
   </section>
 
-  <!-- ============ QUIZ ============ -->
   <section class="quiz-run" *ngIf="screen === 'quiz' && currentQuestion">
     <div class="quiz-progress">
       <div class="quiz-progress__bar" [style.width.%]="progress"></div>
@@ -49,7 +47,6 @@
     </button>
   </section>
 
-  <!-- ============ CHƯA ĐĂNG NHẬP: khoá kết quả ============ -->
   <section class="quiz-intro" *ngIf="screen === 'locked'">
     <div class="quiz-intro__badge">
       <app-icon name="lock" [size]="14"></app-icon>
@@ -64,7 +61,6 @@
     <button type="button" class="quiz-btn quiz-btn--ghost" (click)="retakeQuiz()">Làm lại bài test</button>
   </section>
 
-  <!-- ============ RESULT ============ -->
   <section class="quiz-result" *ngIf="screen === 'result' && result">
     <div class="quiz-result__hero" [style.backgroundImage]="'url(' + result.image + ')'"></div>
 
@@ -73,7 +69,6 @@
       <h2 class="quiz-result__title">{{ result.title }}</h2>
       <p class="quiz-result__desc">{{ result.description }}</p>
 
-      <!-- Tỉ lệ 4 phong cách -->
       <div class="qr-block">
         <h3 class="qr-heading">Gu của bạn gồm những gì?</h3>
         <p class="qr-note" *ngIf="scores.length">
@@ -86,7 +81,6 @@
         </div>
       </div>
 
-      <!-- Đặc điểm + bảng màu -->
       <div class="qr-grid">
         <div class="qr-block" *ngIf="result.traits?.length">
           <h3 class="qr-heading">Dấu hiệu nhận biết</h3>
@@ -105,7 +99,6 @@
         </div>
       </div>
 
-      <!-- Bí quyết + nên tránh -->
       <div class="qr-grid">
         <div class="qr-block" *ngIf="result.tips?.length">
           <h3 class="qr-heading">Bí quyết phối đồ</h3>
@@ -121,7 +114,6 @@
         </div>
       </div>
 
-      <!-- Bộ phối sẵn -->
       <div class="qr-block" *ngIf="comboProducts.length">
         <div class="qr-combo__head">
           <div>
@@ -180,7 +172,6 @@
         </div>
       </div>
 
-      <!-- Bước tiếp theo -->
       <div class="qr-block">
         <h3 class="qr-heading">Bước tiếp theo</h3>
         <div class="qr-next">
@@ -199,7 +190,6 @@
         </div>
       </div>
 
-      <!-- Voucher reward -->
       <div class="quiz-reward">
         <div class="quiz-reward__info">
           <app-icon name="tag" [size]="20" class="quiz-reward__icon"></app-icon>
@@ -222,7 +212,6 @@
     </div>
   </section>
 
-  <!-- ============ Celebration popup ============ -->
   <div class="quiz-overlay" *ngIf="showCelebration" (click)="closeCelebration()">
     <div class="quiz-modal" (click)="$event.stopPropagation()">
       <app-icon name="tag" [size]="40" class="quiz-modal__icon"></app-icon>
@@ -235,7 +224,6 @@
     </div>
   </div>
 
-  <!-- ============ Flying coin effect ============ -->
   <div class="quiz-flying-coin" *ngIf="showFlyingCoin">
     <app-icon name="tag" [size]="28"></app-icon>
   </div>

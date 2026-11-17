@@ -9,8 +9,6 @@ function isDevMode() {
   return process.env.OTP_DEV_MODE === 'true';
 }
 
-// ===================== EMAIL (Gmail SMTP qua Nodemailer) =====================
-
 let mailTransporter = null;
 
 function isEmailConfigured() {
@@ -70,17 +68,11 @@ async function sendOtpEmail(email, code) {
   throw new Error('Chưa cấu hình gửi email (SMTP_USER/SMTP_PASS). Đặt OTP_DEV_MODE=true để test.');
 }
 
-// ===================== SMS (eSMS.vn) =====================
-
 function isSmsConfigured() {
   return !!(process.env.ESMS_API_KEY && process.env.ESMS_SECRET_KEY);
 }
 
-/**
- * Gửi OTP qua SMS bằng eSMS.vn (tin nhắn Brandname CSKH). Nội dung tin phải khớp mẫu đã đăng ký
- * với eSMS — đặt qua ESMS_TEMPLATE, {code} sẽ được thay bằng mã OTP. Cùng quy ước trả về như
- * sendOtpEmail: true = đã gửi thật, false = dev mode chưa cấu hình.
- */
+/** Gửi OTP qua SMS bằng eSMS.vn (tin nhắn Brandname CSKH) */
 async function sendOtpSms(phoneNumber, code) {
   if (isSmsConfigured()) {
     const template = process.env.ESMS_TEMPLATE || '{code} la ma xac minh dang ky Baotrixemay cua ban';

@@ -16,9 +16,7 @@ const OUT_DIR = path.join(__dirname, 'lumea-products');
 const OUT_FILE = path.join(OUT_DIR, 'products.normalized.json');
 const REPORT_FILE = path.join(OUT_DIR, 'report.md');
 
-// ---------------------------------------------------------------------------
 // Tiện ích
-// ---------------------------------------------------------------------------
 
 // Số ngẫu nhiên cố định theo id sản phẩm: chạy lại bao nhiêu lần cũng ra cùng kết quả.
 function rng(seed) {
@@ -61,9 +59,7 @@ function storePrice(v) {
   return Math.max(9_000, Math.round(v / 10_000) * 10_000 - 1_000);
 }
 
-// ---------------------------------------------------------------------------
 // Phân loại: tên sản phẩm -> ProductCategory (khớp product.model.ts / catalog-taxonomy.ts)
-// ---------------------------------------------------------------------------
 
 // Món không khớp được quy tắc nào -> bỏ qua (ghi vào report).
 const SKIP_RULES = [];
@@ -467,9 +463,7 @@ const { translateName, buildCollections } = require('./lumea-products/name-vi');
 // Dòng SP gốc -> bộ sưu tập Luméa, dựng 1 lần ở đầu bước normalize.
 let COLLECTIONS = new Map();
 
-// ---------------------------------------------------------------------------
 // Bước 1: chuẩn hoá
-// ---------------------------------------------------------------------------
 
 function normalizeOne(src) {
   const name = decodeEntities(src.name);
@@ -662,9 +656,7 @@ function buildReport(total, products, skipped, moves, flash, nameEn, unknownWord
   return lines.join('\n') + '\n';
 }
 
-// ---------------------------------------------------------------------------
 // Bước 2: nạp vào MongoDB
-// ---------------------------------------------------------------------------
 
 async function importToDb(apply) {
   if (!fs.existsSync(OUT_FILE)) throw new Error(`Chưa có ${OUT_FILE} — chạy bước normalize trước.`);
@@ -734,8 +726,6 @@ async function importToDb(apply) {
     await mongoose.connection.close();
   }
 }
-
-// ---------------------------------------------------------------------------
 
 const [cmd, ...args] = process.argv.slice(2);
 (async () => {

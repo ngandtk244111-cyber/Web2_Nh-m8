@@ -22,7 +22,6 @@
   </div>
 
   <div class="chat-shell">
-    <!-- Danh sách cuộc chat -->
     <aside class="session-pane" [class.mobile-hidden]="chat.activeSessionId() || selectedDesign()">
       <div class="session-search">
         <div class="search-wrapper w-100">
@@ -71,7 +70,6 @@
       </div>
     </aside>
 
-    <!-- Hội thoại -->
     <section class="thread-pane" [class.mobile-hidden]="!chat.activeSessionId() && !selectedDesign()">
       <ng-container *ngIf="selectedDesign() as request; else supportThread">
         <div class="thread-head">

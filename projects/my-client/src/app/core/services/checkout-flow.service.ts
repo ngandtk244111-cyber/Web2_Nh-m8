@@ -3,16 +3,7 @@ import { Injectable, signal } from '@angular/core';
 export type CheckoutStep = 1 | 2 | 3 | 4;
 export type CheckoutStepStatus = 'completed' | 'active' | 'disabled';
 
-/**
- * Nguồn sự thật DUY NHẤT cho bước hiện tại của luồng Giỏ hàng → Thanh toán.
- * Là service (singleton) chứ không phải field trong component vì /cart và /checkout
- * là 2 route riêng — Angular huỷ/khởi tạo lại component mỗi lần điều hướng, nên state
- * bước phải sống ở tầng service mới không bị "nhảy loạn" khi chuyển trang.
- *
- * - currentStep: bước đang hiển thị trên màn hình.
- * - maxReachedStep: bước xa nhất đã được validate hợp lệ — quyết định bước nào là
- *   "completed" (được phép bấm quay lại) so với "disabled" (chưa đủ điều kiện, khoá).
- */
+/** Nguồn sự thật DUY NHẤT cho bước hiện tại của luồng Giỏ hàng → Thanh toán */
 @Injectable({ providedIn: 'root' })
 export class CheckoutFlowService {
   private readonly currentStepSignal = signal<CheckoutStep>(1);
@@ -28,14 +19,7 @@ export class CheckoutFlowService {
     return step <= this.maxReachedStepSignal() ? 'completed' : 'disabled';
   }
 
-  /**
-   * Hàm điều hướng bước DUY NHẤT của toàn bộ luồng — mọi nút bấm (Tiến hành thanh toán,
-   * Quay lại, click thẳng vào Stepper) đều phải gọi qua đây, không tự set currentStep ở nơi khác.
-   *
-   * - Lùi về một bước đã hoàn thành (`target <= maxReachedStep`): luôn cho phép, không cần validate lại.
-   * - Tiến lên bước kế tiếp (`target === maxReachedStep + 1`): bắt buộc `validate()` trả về true.
-   * - Nhảy cóc qua bước chưa hoàn thành: luôn bị chặn, trả về false.
-   */
+  /** Hàm điều hướng bước DUY NHẤT của toàn bộ luồng */
   goToStep(target: CheckoutStep, opts?: { validate?: () => boolean }): boolean {
     if (this.currentStepSignal() === 4 && target !== 4) return false;
 

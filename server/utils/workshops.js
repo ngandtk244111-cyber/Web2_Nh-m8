@@ -1,8 +1,6 @@
 const AdminConfig = require('../models/AdminConfig');
 
-// Xưởng sản xuất đối tác: Luméa thiết kế, đặt xưởng làm thành phẩm rồi nhập về kho (hàng có sẵn),
-// hoặc gửi đơn in 3D / làm theo yêu cầu của khách cho xưởng làm. Danh sách lưu ở AdminConfig (khóa
-// `workshops`); chưa lưu lần nào thì dùng DEFAULT_WORKSHOPS bên dưới.
+// Xưởng sản xuất đối tác: Luméa thiết kế, đặt xưởng làm thành phẩm rồi nhập về kho (hàng có sẵn), hoặc gửi đơn in 3D / làm theo yêu cầu của
 
 // Nhóm hàng xưởng nhận làm. Bảng này dùng chung với my-admin (core/data/workshop-specialties.ts) —
 // sửa ở đây thì sửa cả bên đó.

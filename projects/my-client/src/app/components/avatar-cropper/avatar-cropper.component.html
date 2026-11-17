@@ -10,7 +10,6 @@
       </button>
     </header>
 
-    <!-- B1: chọn nguồn ảnh -->
     <div *ngIf="step === 'choose'" class="ac_choose">
       <img src="assets/mascot/goh-happy.png" alt="" class="ac_goh" aria-hidden="true">
       <p class="ac_hint">Chọn một tấm thật xinh nhé! Bạn có thể chụp ngay hoặc chọn ảnh có sẵn.</p>
@@ -35,7 +34,6 @@
       <input #fileInput type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden (change)="onFileSelected($event)">
     </div>
 
-    <!-- B2: camera -->
     <div *ngIf="step === 'camera'" class="ac_body">
       <div class="ac_stage ac_stage--camera">
         <video #video class="ac_video" autoplay playsinline muted></video>
@@ -50,7 +48,6 @@
       </button>
     </div>
 
-    <!-- B3: cắt ảnh -->
     <div *ngIf="step === 'crop'" class="ac_body">
       <div
         class="ac_stage ac_stage--crop"

@@ -1,6 +1,4 @@
-// Đơn COD có cần nhân viên gọi xác nhận trước khi giao không.
-// Đơn nhỏ, không có hàng in 3D theo yêu cầu thì giao luôn: rủi ro bom hàng thấp, gọi chỉ làm chậm.
-// Đơn có hàng in 3D vẫn phải gọi vì in khắc tên riêng xong khách bỏ là không bán lại được.
+// Đơn COD có cần nhân viên gọi xác nhận trước khi giao không
 
 const AdminConfig = require('../models/AdminConfig');
 

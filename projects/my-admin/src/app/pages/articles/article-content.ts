@@ -1,8 +1,4 @@
-/**
- * Nội dung bài lưu dạng markdown rút gọn mà my-client đọc (pages/news parseContent):
- * dòng "### " là tiêu đề, "- " là gạch đầu dòng, **chữ** là in đậm, dòng trống ngăn đoạn.
- * Trình soạn Quill làm việc với HTML nên đổi qua lại ở đây.
- */
+/** Nội dung bài lưu dạng markdown rút gọn mà my-client đọc (pages/news parseContent) */
 
 function escape(text: string): string {
   return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');

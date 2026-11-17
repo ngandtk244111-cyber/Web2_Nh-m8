@@ -132,7 +132,6 @@
       <button type="button" class="close-btn" [disabled]="importing" (click)="closeImport()">&times;</button>
     </div>
 
-    <!-- ===== Danh sách ===== -->
     <div class="modal-body" *ngIf="!draft">
       <ol class="import-steps">
         <li>
@@ -201,7 +200,6 @@
       </ng-container>
     </div>
 
-    <!-- ===== Chi tiết 1 dòng ===== -->
     <div class="modal-body" *ngIf="draft" (input)="onDraftChange()" (change)="onDraftChange()">
       <div class="import-check" *ngIf="draftRow">
         <span class="tag success" *ngIf="!draftRow.errors.length"><i class="bi bi-check2"></i> Dòng này hợp lệ</span>

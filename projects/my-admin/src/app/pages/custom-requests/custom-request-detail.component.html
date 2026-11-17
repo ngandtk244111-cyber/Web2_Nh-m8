@@ -31,7 +31,6 @@
     </div>
 
     <div class="layout-grid">
-      <!-- CỘT TRÁI -->
       <div>
         <div class="info-card">
           <div class="status-steps" *ngIf="r.status !== 'REJECTED'; else rejectedTpl">
@@ -92,7 +91,6 @@
           <app-quote-editor [request]="r" (changed)="reload()"></app-quote-editor>
         </div>
 
-        <!-- Trao đổi với khách -->
         <div class="info-card">
           <h3 class="section-title">Trao đổi với khách ({{ r.messages.length }}) <a class="action-btn sm" routerLink="/messages" [queryParams]="{ request: r.id }">Mở trong hộp thư</a></h3>
           <div class="thread" #thread>
@@ -115,7 +113,6 @@
         </div>
       </div>
 
-      <!-- CỘT PHẢI -->
       <div>
         <div class="info-card">
           <h3 class="section-title">Khách hàng</h3>
@@ -158,7 +155,6 @@
   </ng-container>
 </div>
 
-<!-- Xem ảnh lớn -->
 <div class="modal-overlay" *ngIf="zoomImage" (click)="zoomImage = null">
   <img class="zoomed" [src]="zoomImage" alt="Ảnh phóng to" (click)="$event.stopPropagation()">
 </div>

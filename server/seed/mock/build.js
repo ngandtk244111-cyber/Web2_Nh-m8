@@ -102,7 +102,7 @@ function buildOrder(spec) {
     createdAt,
   };
   let last = createdAt;
-  const staff = adminId('donhang');
+  const staff = adminId('bang');
 
   const online = spec.pay === 'MOMO' || spec.pay === 'ZALOPAY';
   if (online && (spec.paid || spec.failed)) order.paymentTransactionId = txnId(createdAt, spec.no);

@@ -63,7 +63,7 @@ Atlas là MongoDB đặt trên cloud, cả nhóm và bản deploy cùng kết n�
 Database trên cloud có lúc không kết nối được: mạng trường hoặc công ty chặn cổng MongoDB, Atlas bảo trì, cụm miễn phí bị tạm dừng... Khi đó web không có dữ liệu để hiển thị.
 Lệnh seed là **phương án dự phòng**: dựng một database ngay trên máy, không cần Internet, có cùng nội dung với web thật.
 
-Phần nội dung (sản phẩm, phòng 3D, tin tức...) khớp với web từ MongoDB Atlas (`server/seed/snapshot/`).
+Phần nội dung (sản phẩm, phòng 3D, tin tức...) lấy từ dữ liệu lưu sẵn trong `server/seed/backup-data/`.
 Tài khoản, đơn hàng, bình luận dùng dữ liệu mẫu để không đưa thông tin cá nhân của thành viên lên Git.
 Sau khi nạp, `npm run seed:verify --prefix server` kiểm tra lại: số bản ghi, dữ liệu đúng schema, liên kết giữa các bảng, không trùng khoá.
 
@@ -82,7 +82,7 @@ Cần MongoDB cài trên máy.
 3. Chạy lại `npm run dev`.
 
 `seed:backup` làm 2 bước:
-- Nạp phần nội dung từ bản chụp web thật trong `server/seed/snapshot/`: 1471 sản phẩm, phòng 3D, tin tức, video, mã giảm giá, câu hỏi trắc nghiệm, cấu hình danh mục và phân quyền.
+- Nạp phần nội dung lưu sẵn trong `server/seed/backup-data/`: 1471 sản phẩm, phòng 3D, tin tức, video, mã giảm giá, câu hỏi trắc nghiệm, cấu hình danh mục và phân quyền.
 - Thêm dữ liệu mẫu: tài khoản demo, đơn hàng, bảo hành, bài cộng đồng, bình luận, thông báo...
 
 Tài khoản khách đăng nhập thử sau khi chạy seed: `khachhang1@test.com` / `123456789`.

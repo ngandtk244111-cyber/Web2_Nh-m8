@@ -124,11 +124,11 @@ const USERS = [
 }));
 
 const ADMINS = [
-  { key: 'donhang', username: 'staff.donhang', fullName: 'Nguyễn Hoàng Phúc — Điều phối đơn hàng', active: true, lastLoginDaysAgo: 0 },
-  { key: 'cskh', username: 'staff.cskh', fullName: 'Trần Bích Ngọc — Chăm sóc khách hàng', active: true, lastLoginDaysAgo: 0 },
-  { key: 'noidung', username: 'staff.noidung', fullName: 'Lê Quang Vinh — Biên tập nội dung', active: true, lastLoginDaysAgo: 2 },
-  // Nhân viên đã nghỉ — tài khoản bị khoá, đăng nhập phải bị từ chối.
-  { key: 'nghiviec', username: 'staff.nghiviec', fullName: 'Phan Thanh Tâm (đã nghỉ việc)', active: false, lastLoginDaysAgo: 90 },
+  { key: 'bang', username: 'bangpsl', fullName: 'Phùng Sương Lý Băng', role: 'Store Manager', active: true, lastLoginDaysAgo: 0 },
+  { key: 'nhu', username: 'nhuttk', fullName: 'Trần Thảo Như', role: 'Customer Care', active: true, lastLoginDaysAgo: 0 },
+  { key: 'ngan', username: 'ngandotu', fullName: 'Đỗ Tú Ngân', role: 'Content Editor', active: true, lastLoginDaysAgo: 1 },
+  { key: 'thinh', username: 'thinhpq', fullName: 'Phùng Quang Thịnh', role: '3D Specialist', active: true, lastLoginDaysAgo: 1 },
+  { key: 'thao', username: 'thaomtp', fullName: 'Mai Thị Phương Thảo', role: 'Warehouse Lead', active: true, lastLoginDaysAgo: 2 },
 ].map(a => ({ _id: oid(`admin:${a.key}`), password: STAFF_PASSWORD, ...a }));
 
 function toUserDoc(u) {

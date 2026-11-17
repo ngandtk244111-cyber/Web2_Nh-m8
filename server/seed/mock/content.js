@@ -138,7 +138,7 @@ const COMMUNITY_POSTS = [
   {
     // Nhân viên ẩn bài vì nội dung mua bán — kiểm thử bộ lọc HIDDEN ở my-admin.
     id: 'post-seed-14', user: 'khang', days: 14, handle: '@khang.hp', status: 'HIDDEN',
-    moderationReason: 'Nội dung mua bán, quảng cáo ngoài nền tảng', moderatedBy: 'cskh', moderatedDaysAgo: 13,
+    moderationReason: 'Nội dung mua bán, quảng cáo ngoài nền tảng', moderatedBy: 'nhu', moderatedDaysAgo: 13,
     title: 'Pass lại đồ decor giá rẻ',
     caption: 'Mình pass lại vài món decor, ai cần ib Zalo mình nhé.',
     imageUrl: img('photo-1493663284031-b7e3aefcae8e'), tags: ['#pass'], productTags: [], likesCount: 2, comments: [],
@@ -187,7 +187,7 @@ const NEWS_COMMENTS = [
 // customer: null = khách vãng lai; read = nhân viên đã mở xem tin của khách hay chưa.
 const CHAT_SESSIONS = [
   {
-    session: 'sess-seed-0001', user: 'thaomy', staff: 'cskh', days: 14, read: true,
+    session: 'sess-seed-0001', user: 'thaomy', staff: 'nhu', days: 14, read: true,
     lines: [
       ['customer', 'Shop ơi đơn ORD-270263 của mình khi nào giao vậy ạ?', 0],
       ['staff', 'Chào Thảo My! Đơn đã bàn giao GHN, dự kiến giao trong 2 ngày tới nhé.', 4],
@@ -195,7 +195,7 @@ const CHAT_SESSIONS = [
     ],
   },
   {
-    session: 'sess-seed-0002', user: 'duchuy', staff: 'cskh', days: 3, read: true,
+    session: 'sess-seed-0002', user: 'duchuy', staff: 'nhu', days: 3, read: true,
     lines: [
       ['customer', 'Đèn mặt trăng có bảo hành mạch LED không shop?', 0],
       ['staff', 'Có anh nhé, bảo hành 12 tháng cả mạch LED và pin sạc. Anh tra cứu bằng mã WR trên phiếu.', 3],
@@ -211,7 +211,7 @@ const CHAT_SESSIONS = [
     ],
   },
   {
-    session: 'sess-seed-0004', user: 'thuha', staff: 'donhang', days: 5, read: true,
+    session: 'sess-seed-0004', user: 'thuha', staff: 'bang', days: 5, read: true,
     lines: [
       ['customer', 'Mình đã chuyển khoản đơn ORD-276120 rồi nha shop.', 0],
       ['staff', 'Shop đã nhận thông tin, đang đối soát sao kê và sẽ xác nhận trong ngày ạ.', 15],
@@ -224,7 +224,7 @@ const CHAT_SESSIONS = [
     ],
   },
   {
-    session: 'sess-seed-0006', user: null, staff: 'cskh', days: 8, read: true,
+    session: 'sess-seed-0006', user: null, staff: 'nhu', days: 8, read: true,
     lines: [
       ['customer', 'Mã FREESHIP còn dùng được không ạ?', 0],
       ['staff', 'Còn bạn nhé, áp dụng cho đơn từ 300.000đ, giảm tối đa 30.000đ phí vận chuyển.', 2],

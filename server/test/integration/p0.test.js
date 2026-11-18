@@ -193,10 +193,17 @@ describe('Cọc đơn COD đặt làm + chặn sản xuất', () => {
   });
 
   it('nhân viên có quyền xác nhận đã nhận cọc; xác nhận lần hai bị từ chối', async () => {
-    const ok = await api('PATCH', `/orders/${n}/deposit-received`, { token: tok.manager });
+    const amount = (await freshOrder(n)).paymentPlan.depositAmount;
+    const ok = await api('POST', `/orders/${n}/deposit/transactions`, {
+      token: tok.manager,
+      body: { receivedAmount: amount, bankTxnRef: `CODDEP-${n}` },
+    });
     assert.equal(ok.status, 200, JSON.stringify(ok.data));
-    assert.ok(ok.data.order.depositPaidAt);
-    assert.equal((await api('PATCH', `/orders/${n}/deposit-received`, { token: tok.manager })).status, 400);
+    assert.equal(ok.data.order.depositStatus, 'PAID');
+    assert.equal((await api('POST', `/orders/${n}/deposit/transactions`, {
+      token: tok.manager,
+      body: { receivedAmount: amount, bankTxnRef: `CODDEP-DUP-${n}` },
+    })).status, 400);
   });
 
   it('đủ cọc: gọi chốt với khách thì đơn vào sản xuất, ghi thời điểm bắt đầu và nhật ký', async () => {
@@ -336,7 +343,12 @@ describe('Huỷ và hoàn tiền đơn đặt làm', () => {
   it('đơn COD đã nhận cọc mà bị huỷ: tạo yêu cầu hoàn lại tiền cọc cho khách', async () => {
     const { order } = await createQuoteOrder(500000, 'COD');
     const n = order.orderNumber;
-    await api('PATCH', `/orders/${n}/deposit-received`, { token: tok.manager });
+    const deposit = await api('POST', `/orders/${n}/deposit/transactions`, {
+      token: tok.manager,
+      body: { receivedAmount: order.paymentPlan.depositAmount, bankTxnRef: `CODDEP-${n}` },
+    });
+    assert.equal(deposit.status, 200, JSON.stringify(deposit.data));
+    assert.equal(deposit.data.order.depositReceived, order.paymentPlan.depositAmount);
     const res = await api('PATCH', `/orders/${n}/production`, { token: tok.manager, body: { status: 'CANCELLED', cancelReason: 'Xưởng không nhận được vật liệu' } });
     assert.equal(res.status, 200, JSON.stringify(res.data));
     assert.ok(res.data.order.refund, 'phải có yêu cầu hoàn tiền cọc');

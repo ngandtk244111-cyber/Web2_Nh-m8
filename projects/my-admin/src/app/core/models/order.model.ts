@@ -84,6 +84,8 @@ export interface Order {
   /** Tiền cọc khách chuyển trước khi chọn COD: đơn từ 5 triệu cọc 30%, đơn in 3D theo báo giá cọc theo báo giá;
    *  depositPaidAt = lúc nhân viên xác nhận đã nhận. */
   depositAmount?: number;
+  depositReceived?: number;
+  depositStatus?: 'UNPAID' | 'VERIFYING' | 'PAID' | 'REFUND_PENDING' | 'PARTIALLY_REFUNDED' | 'REFUNDED' | null;
   /** CUSTOM_QUOTE = đơn đặt làm in 3D tạo từ báo giá. */
   orderType?: 'STANDARD' | 'CUSTOM_QUOTE';
   depositPaidAt?: string | null;

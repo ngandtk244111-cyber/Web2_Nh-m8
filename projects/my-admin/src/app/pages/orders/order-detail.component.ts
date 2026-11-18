@@ -80,6 +80,8 @@ export class OrderDetailComponent implements OnInit {
   returnReason = '';
   refundRef = '';
   refundNote = '';
+  depositReceiptAmount = 0;
+  depositTransactionRef = '';
 
   shippingOptions: ShippingOptions | null = null;
   shipForm = { carrier: '', trackingCode: '', fee: 0, note: '' };
@@ -198,10 +200,36 @@ export class OrderDetailComponent implements OnInit {
 
   /** Đơn COD lớn còn chờ khách chuyển cọc. */
   awaitingDeposit(o: Order): boolean {
+    if (o.orderType === 'CUSTOM_QUOTE') {
+      return (o.depositReceived || 0) < (o.depositAmount || 0) && o.depositStatus !== 'PAID';
+    }
     return (o.depositAmount || 0) > 0 && !o.depositPaidAt;
   }
 
+  depositPaid(o: Order): boolean {
+    return o.orderType === 'CUSTOM_QUOTE' ? o.depositStatus === 'PAID' : !!o.depositPaidAt;
+  }
+
+  depositRemaining(o: Order): number {
+    return Math.max(0, (o.depositAmount || 0) - (o.depositReceived || 0));
+  }
+
   confirmDeposit(o: Order): void {
+    if (o.orderType === 'CUSTOM_QUOTE') {
+      const amount = Number(this.depositReceiptAmount);
+      const ref = this.depositTransactionRef.trim();
+      if (!Number.isInteger(amount) || amount <= 0 || amount > this.depositRemaining(o) || ref.length < 4) {
+        this.toast.error('Nhập số tiền thực nhận hợp lệ và mã giao dịch sao kê (ít nhất 4 ký tự)');
+        return;
+      }
+      this.apply(
+        this.orderService.recordDepositTransaction(o.orderNumber, amount, ref),
+        `Đã ghi nhận ${amount.toLocaleString('vi-VN')}đ tiền cọc đơn ${o.orderNumber}`,
+        `Đối soát cọc ${amount.toLocaleString('vi-VN')}đ · mã GD ${ref}`
+      );
+      this.depositTransactionRef = '';
+      return;
+    }
     this.apply(this.orderService.depositReceived(o.orderNumber), `Đã xác nhận nhận cọc đơn ${o.orderNumber}`, 'Xác nhận đã nhận tiền cọc');
   }
 

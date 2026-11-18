@@ -190,12 +190,21 @@
           <div class="info-row"><span class="label">Trạng thái</span><span class="value"><span class="status-badge" [ngClass]="payClass(o)">{{ payLabel(o) }}</span></span></div>
           <ng-container *ngIf="o.depositAmount">
             <div class="info-row"><span class="label">Tiền cọc {{ o.orderType === 'CUSTOM_QUOTE' ? '(theo báo giá)' : '(30%)' }}</span><span class="value">{{ o.depositAmount | vnd }}
-              <span class="status-badge ms-1" [ngClass]="o.depositPaidAt ? 'status-green' : 'status-yellow'">{{ o.depositPaidAt ? 'Đã nhận cọc' : 'Chờ chuyển cọc' }}</span></span></div>
+              <span class="status-badge ms-1" [ngClass]="depositPaid(o) ? 'status-green' : 'status-yellow'">{{ depositPaid(o) ? 'Đã nhận cọc' : 'Chờ chuyển cọc' }}</span></span></div>
             <div class="info-row"><span class="label">Còn thu khi giao</span><span class="value">{{ o.total - o.depositAmount | vnd }}</span></div>
-            <div class="pay-actions" *ngIf="awaitingDeposit(o) && canApprove && o.status !== 'CANCELLED'">
-              <button type="button" class="action-btn success" [disabled]="busy()" (click)="confirmDeposit(o)">
-                <i class="bi bi-piggy-bank"></i> Xác nhận đã nhận cọc
-              </button>
+            <div class="pay-actions stack" *ngIf="awaitingDeposit(o) && canApprove && o.status !== 'CANCELLED'">
+              <ng-container *ngIf="o.orderType === 'CUSTOM_QUOTE'; else confirmStandardDeposit">
+                <input type="number" min="1" step="1" class="form-control" [ngModel]="depositRemaining(o)" (ngModelChange)="depositReceiptAmount = $event" placeholder="Số tiền thực nhận">
+                <input type="text" class="form-control" [(ngModel)]="depositTransactionRef" maxlength="100" placeholder="Mã giao dịch trên sao kê">
+                <button type="button" class="action-btn success" [disabled]="busy() || depositRemaining(o) <= 0 || !depositTransactionRef.trim()" (click)="confirmDeposit(o)">
+                  <i class="bi bi-piggy-bank"></i> Ghi nhận tiền cọc
+                </button>
+              </ng-container>
+              <ng-template #confirmStandardDeposit>
+                <button type="button" class="action-btn success" [disabled]="busy()" (click)="confirmDeposit(o)">
+                  <i class="bi bi-piggy-bank"></i> Xác nhận đã nhận cọc
+                </button>
+              </ng-template>
             </div>
           </ng-container>
           <div class="info-row" *ngIf="o.transferReportedAt && o.paymentStatus !== 'PAID'">
@@ -243,7 +252,7 @@
           <h3 class="section-title">Xử lý đơn</h3>
 
           <div class="notice-box warning mb-2" *ngIf="o.status === 'PENDING' && awaitingDeposit(o)">
-            {{ o.orderType === 'CUSTOM_QUOTE' ? 'Đơn đặt làm in 3D trả COD' : 'Đơn COD từ 5 triệu' }}: chờ khách chuyển cọc {{ o.depositAmount | vnd }}. Xác nhận đã nhận cọc (mục Thanh toán) rồi mới chốt đơn.
+            {{ o.orderType === 'CUSTOM_QUOTE' ? 'Đơn đặt làm in 3D trả COD' : 'Đơn COD từ 5 triệu' }}: chờ khách chuyển cọc {{ depositRemaining(o) | vnd }}. Đối soát khoản cọc (mục Thanh toán) rồi mới chốt đơn.
           </div>
           <ng-container *ngIf="o.status === 'PENDING' && needsPhoneConfirm(o)">
             <p class="small text-muted-2 mb-2">Gọi {{ o.shippingAddress.phone }} để xác nhận đơn COD trước khi chuẩn bị hàng.</p>

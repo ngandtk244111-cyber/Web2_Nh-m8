@@ -163,6 +163,15 @@ export class OrderService {
     );
   }
 
+  recordDepositTransaction(orderNumber: string, receivedAmount: number, bankTxnRef: string): Observable<Order> {
+    return this.http.post<OrderApiResponse>(`${this.baseUrl}/${encodeURIComponent(orderNumber)}/deposit/transactions`, {
+      receivedAmount, bankTxnRef,
+    }).pipe(
+      map(res => this.normalize(res.order!)),
+      tap(order => this.replaceInSignal(order))
+    );
+  }
+
   /** Ghi nhận 1 lần gọi xác nhận không liên lạc được khách (gọi lại sau, chưa huỷ). */
   callFailed(orderNumber: string): Observable<Order> {
     return this.http.patch<OrderApiResponse>(`${this.baseUrl}/${encodeURIComponent(orderNumber)}/call-failed`, {}).pipe(

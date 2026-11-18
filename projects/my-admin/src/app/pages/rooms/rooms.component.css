@@ -17,13 +17,23 @@
   text-overflow: ellipsis;
 }
 
-/* <fieldset> mặc định không co trong flex (min-height = cao nội dung) -> phần thân form tràn, bị .modal-box cắt mất */
-fieldset.modal-body {
+/* Thân form là <div> cuộn được; <fieldset> chỉ dùng để khoá form khi không có quyền sửa
+   (Chrome không cắt nội dung tràn của <fieldset> khi làm vùng cuộn -> các dòng đè lên nút Lưu). */
+.modal-box .modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.modal-box .modal-header,
+.modal-box .modal-footer {
+  flex-shrink: 0;
+}
+
+fieldset.room-form {
   border: 0;
   margin: 0;
+  padding: 0;
   min-width: 0;
-  min-height: 0;
-  flex: 1 1 auto;
 }
 
 .cover-box {

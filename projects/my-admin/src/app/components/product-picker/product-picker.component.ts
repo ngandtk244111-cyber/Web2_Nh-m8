@@ -22,7 +22,7 @@ const fold = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/
     <div class="pp-wrap">
       <button type="button" class="pp-trigger" (click)="toggle()" [class.pp-trigger--empty]="!selected()">
         <img *ngIf="selected()?.images?.[0]" [src]="selected()!.images[0]" alt="">
-        <span class="pp-trigger__name">{{ selected()?.name || (productId ? 'Sản phẩm không còn tồn tại' : '— Chọn sản phẩm —') }}</span>
+        <span class="pp-trigger__name">{{ selected()?.name || (!productId ? '— Chọn sản phẩm —' : loaded() ? 'Sản phẩm không còn tồn tại' : 'Đang tải sản phẩm...') }}</span>
         <i class="bi bi-chevron-down"></i>
       </button>
 
@@ -76,6 +76,7 @@ export class ProductPickerComponent {
   @Input() productId = '';
   @Output() productIdChange = new EventEmitter<string>();
 
+  readonly loaded = this.productService.loaded;
   open = signal(false);
   query = signal('');
   category = signal('');

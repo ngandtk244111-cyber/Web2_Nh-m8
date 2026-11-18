@@ -77,7 +77,8 @@
       <h3 class="modal-title">{{ editing ? (adminAuth.can('content.edit') ? 'Sửa phòng: ' : 'Phòng: ') + editing.name : 'Thêm phòng mẫu' }}</h3>
       <button type="button" class="close-btn" (click)="showModal = false">&times;</button>
     </div>
-    <fieldset class="modal-body" [disabled]="editing ? !adminAuth.can('content.edit') : false">
+    <div class="modal-body">
+    <fieldset class="room-form" [disabled]="editing ? !adminAuth.can('content.edit') : false">
       <div class="row g-3">
         <div class="col-md-8">
           <div class="row g-3">
@@ -140,7 +141,7 @@
           <div class="row g-2">
             <div class="col-md-6">
               <app-product-picker [(productId)]="h.productId" (productIdChange)="onHotspotProduct(h)"></app-product-picker>
-              <span class="tag danger mt-1" *ngIf="h.productId && !product(h.productId)">Sản phẩm không còn tồn tại</span>
+              <span class="tag danger mt-1" *ngIf="isMissing(h.productId)">Sản phẩm không còn tồn tại</span>
             </div>
             <div class="col-md-6">
               <input class="form-control form-control-sm" [(ngModel)]="h.label" placeholder="Nhãn hiển thị">
@@ -154,6 +155,7 @@
       </div>
       <div class="empty-state py-3" *ngIf="form.hotspots.length === 0">Phòng chưa gắn sản phẩm nào.</div>
     </fieldset>
+    </div>
     <div class="modal-footer">
       <button type="button" class="btn-cancel" (click)="showModal = false">{{ editing && !adminAuth.can('content.edit') ? 'Đóng' : 'Huỷ' }}</button>
       <button type="button" class="btn-save" *ngIf="editing ? adminAuth.can('content.edit') : adminAuth.can('content.create')"

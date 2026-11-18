@@ -28,6 +28,9 @@ export class ProductService {
 
   // Public readonly signals
   readonly products = this.productsSignal.asReadonly();
+  // true sau khi tải danh sách thành công; trước đó chưa được coi sản phẩm nào là "không tồn tại".
+  private loadedSignal = signal(false);
+  readonly loaded = this.loadedSignal.asReadonly();
 
   readonly customizableProducts = computed(() =>
     this.productsSignal().filter(p => p.customizable)
@@ -56,7 +59,10 @@ export class ProductService {
   refresh(): void {
     this.http.get<{ success: boolean; products: Product[] }>(BASE).subscribe({
       next: (res) => {
-        if (res.success) this.productsSignal.set(res.products);
+        if (res.success) {
+          this.productsSignal.set(res.products);
+          this.loadedSignal.set(true);
+        }
       },
       error: (err) => console.warn('Failed to load products from backend', err),
     });

@@ -66,6 +66,13 @@ export class RoomsComponent implements OnInit {
 
   ngOnInit(): void {
     this.roomService.refresh();
+    // Lần tải đầu có thể lỗi khi server Render đang khởi động: mở trang thì tải lại.
+    if (!this.productService.loaded()) this.productService.refresh();
+  }
+
+  /** Chỉ coi là "không còn tồn tại" khi danh sách sản phẩm đã tải xong mà vẫn không tìm thấy. */
+  isMissing(id: string): boolean {
+    return !!id && this.productService.loaded() && !this.product(id);
   }
 
   roomTypeLabel(type: RoomType): string {
@@ -90,7 +97,7 @@ export class RoomsComponent implements OnInit {
   }
 
   missingProducts(room: Room): number {
-    return room.hotspots.filter(h => !this.product(h.productId)).length;
+    return room.hotspots.filter(h => this.isMissing(h.productId)).length;
   }
 
   openCreate(): void {

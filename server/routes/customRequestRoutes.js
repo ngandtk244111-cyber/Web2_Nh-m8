@@ -15,6 +15,7 @@ const {
   getDepositPolicy, resolveQuoteDeposit, priceQuoteItems, DEPOSIT_TERMS_VERSION,
 } = require('../utils/deposit');
 const { codNeedsPhoneConfirm } = require('../utils/cod-policy');
+const { getReceivingBank } = require('../utils/payment-config');
 const { paymentInstructions } = require('../utils/custom-order');
 const { resolveShippingFee } = require('../utils/pricing');
 const { generateOrderNumber } = require('../utils/order-number');
@@ -571,6 +572,8 @@ router.post('/:id/checkout', requireUserId, async (req, res) => {
     const shippingFee = resolveShippingFee(quote.total);
     const total = quote.total + shippingFee;
     const depositAmount = paymentMethod === 'COD' ? quote.deposit.amount : 0;
+    const depositDeadlineHours = Number(quote.policySnapshot?.depositPaymentDeadlineHours) || 24;
+    const receivingBank = depositAmount > 0 ? await getReceivingBank() : null;
     const image = request.aiConceptImage || request.customerImages?.[0] || '';
 
     const items = quote.items.map((item, index) => ({
@@ -610,6 +613,26 @@ router.post('/:id/checkout', requireUserId, async (req, res) => {
           paymentMethod,
           paymentStatus: 'UNPAID',
           depositAmount,
+          depositStatus: depositAmount > 0 ? 'UNPAID' : null,
+          paymentPlan: {
+            type: depositAmount > 0 ? 'DEPOSIT' : 'FULL',
+            goodsSubtotal: quote.subtotal,
+            goodsDiscount: quote.itemDiscountTotal + quote.quoteDiscount,
+            goodsTotal: quote.total,
+            depositRate: quote.deposit.rate,
+            depositMinimum: quote.deposit.minimum,
+            depositAmount,
+            depositOverridden: quote.deposit.overridden,
+            depositOverrideReason: quote.deposit.overrideReason,
+            shippingFee,
+            remainingAmount: total - depositAmount,
+            balanceMethod: paymentMethod === 'COD' ? 'COD' : 'BANK_TRANSFER',
+            termsVersion: quote.acceptedTermsVersion || DEPOSIT_TERMS_VERSION,
+            policySnapshot: quote.policySnapshot || null,
+            bank: receivingBank,
+            transferContent: `LUMEA ${orderNumber}`,
+            deadlineAt: depositAmount > 0 ? new Date(now.getTime() + depositDeadlineHours * 60 * 60 * 1000) : null,
+          },
           subtotal: quote.subtotal,
           discount: quote.itemDiscountTotal + quote.quoteDiscount,
           shippingFee,

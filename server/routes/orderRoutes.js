@@ -104,6 +104,9 @@ const CUSTOMER_CANCEL_REASONS = [
 const CUSTOMER_CANCELLABLE = ['PENDING'];
 
 const router = express.Router();
+const orderAwaitingDeposit = order => isDepositOrder(order)
+  ? order.depositStatus !== 'PAID'
+  : awaitingDeposit(order);
 
 const { generateOrderNumber } = require('../utils/order-number');
 
@@ -575,7 +578,7 @@ router.patch('/:orderNumber/confirm', requirePermission('orders.edit'), async (r
     const order = await loadOpenOrder(req, res);
     if (!order) return;
     if (order.status !== 'PENDING') return res.status(400).json({ success: false, error: 'Đơn đã được xác nhận rồi' });
-    if (awaitingDeposit(order)) return res.status(400).json({ success: false, error: 'Đơn chưa nhận tiền cọc — xác nhận đã nhận cọc trước' });
+    if (orderAwaitingDeposit(order)) return res.status(400).json({ success: false, error: 'Đơn chưa nhận tiền cọc — xác nhận đã nhận cọc trước' });
     if (order.paymentMethod === 'COD' && order.phoneConfirmRequired !== false && !order.phoneConfirmedAt) {
       return res.status(400).json({ success: false, error: 'Đơn COD này cần gọi xác nhận với khách trước' });
     }
@@ -599,7 +602,7 @@ router.patch('/:orderNumber/confirm-phone', requirePermission('orders.edit'), as
   try {
     const order = await loadOpenOrder(req, res);
     if (!order) return;
-    if (awaitingDeposit(order)) return res.status(400).json({ success: false, error: 'Đơn chưa nhận tiền cọc — xác nhận đã nhận cọc trước khi chốt đơn với khách' });
+    if (orderAwaitingDeposit(order)) return res.status(400).json({ success: false, error: 'Đơn chưa nhận tiền cọc — xác nhận đã nhận cọc trước khi chốt đơn với khách' });
     order.phoneConfirmedAt = new Date();
     order.phoneConfirmedBy = req.adminId;
     if (order.status === 'PENDING') {
@@ -620,6 +623,9 @@ router.patch('/:orderNumber/deposit-received', requirePermission('orders.approve
   try {
     const order = await loadOpenOrder(req, res);
     if (!order) return;
+    if (isDepositOrder(order)) {
+      return res.status(400).json({ success: false, error: 'Đơn đặt làm cần ghi nhận khoản cọc kèm mã giao dịch sao kê' });
+    }
     if (!(order.depositAmount > 0)) return res.status(400).json({ success: false, error: 'Đơn này không cần đặt cọc' });
     if (order.depositPaidAt) return res.status(400).json({ success: false, error: 'Đã xác nhận nhận cọc rồi' });
     order.depositPaidAt = new Date();
@@ -1047,6 +1053,9 @@ router.post('/:orderNumber/deposit/transactions', requirePermission('orders.appr
     if (['REFUNDED', 'PARTIALLY_REFUNDED'].includes(existing.depositStatus)) {
       return res.status(400).json({ success: false, error: 'Đơn đã hoàn tiền xong, không ghi thêm khoản cọc' });
     }
+    const remaining = Math.max(0, (existing.paymentPlan.depositAmount || 0) - (existing.depositReceived || 0));
+    if (remaining <= 0) return res.status(400).json({ success: false, error: 'Đơn đã nhận đủ tiền cọc' });
+    if (v.receivedAmount > remaining) return res.status(400).json({ success: false, error: 'Số tiền nhận vượt quá phần cọc còn thiếu' });
     const actor = await Admin.findById(req.adminId);
     let txn;
     try {
